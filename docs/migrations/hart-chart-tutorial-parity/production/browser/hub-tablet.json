@@ -1,0 +1,11 @@
+{
+  "name": "hub-tablet",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --tablet --hard --small",
+  "startedAt": "2026-10-18T11:39:16.098Z",
+  "finishedAt": "2026-10-18T11:39:28.675Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": true,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

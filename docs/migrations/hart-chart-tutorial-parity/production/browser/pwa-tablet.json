@@ -1,0 +1,11 @@
+{
+  "name": "pwa-tablet",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --tablet --english --small",
+  "startedAt": "2026-10-18T11:39:16.132Z",
+  "finishedAt": "2026-10-18T11:39:26.348Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": false,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

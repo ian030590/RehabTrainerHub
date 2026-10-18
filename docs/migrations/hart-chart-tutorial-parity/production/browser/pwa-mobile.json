@@ -1,0 +1,11 @@
+{
+  "name": "pwa-mobile",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --mobile --hard",
+  "startedAt": "2026-10-18T11:38:17.027Z",
+  "finishedAt": "2026-10-18T11:38:26.768Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": false,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

@@ -12,7 +12,7 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   })()`);
   await until(() => game(`document.querySelector('form h2').textContent === ${JSON.stringify(english ? 'Hart Chart Training' : '哈特圖訓練')}`), 'private init language');
   assert.equal(await game(`document.querySelector('dialog').matches(':modal')`), true);
-  assert.equal(await game(`document.querySelectorAll('.hart-preview-chart .hart-chart-cell').length`), 100);
+  assert.equal(await game(`document.querySelectorAll('.hart-chart-cell').length`), 100);
   assert.equal(await game(`Boolean(document.querySelector('.game-tour'))`), false);
   await setInput('[name=rounds]', process.argv.includes('--hard') ? 30 : 5);
   await setInput('[name=chartSize]', process.argv.includes('--small') ? 'small' : 'large');
@@ -26,9 +26,24 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await game(`document.querySelector('form .btn-primary').click()`);
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted tour');
-  const chartTarget = await game(`({ target:document.querySelector('.hart-preview-chart').getBoundingClientRect().width, chart:document.querySelector('.hart-preview-chart .hart-chart-grid').getBoundingClientRect().width })`);
-  assert.ok(Math.abs(chartTarget.target-chartTarget.chart)<=1, 'The chart spotlight follows the chart itself: '+JSON.stringify(chartTarget));
-  for (const target of ['.hart-preview-chart', '.hart-preview-decoder', '.hart-preview-tools']) {
+  assert.equal(await game(`Boolean(document.querySelector('.hart-page .hart-workspace .hart-chart-grid'))`), true,
+    'The tutorial uses the real training workspace, rather than a separate preview.');
+  const scene = () => game(`(() => {
+    const chart=document.querySelector('.hart-chart-grid');
+    return {dock:document.querySelector('.hart-page').className,
+      fonts:['--hart-font-min','--hart-font-fluid','--hart-font-max'].map(name=>chart.style.getPropertyValue(name)),
+      fields:document.querySelectorAll('.hart-code-input').length,
+      letters:[...document.querySelectorAll('.hart-chart-cell')].map(cell=>cell.textContent).join(''),
+      coordinates:[...document.querySelectorAll('.hart-code-input')].map(input=>input.placeholder),
+      tools:[...document.querySelectorAll('.hart-topbar-controls button')].map(button=>button.textContent)};
+  })()`);
+  const tutorialScene = await scene();
+  assert.equal(tutorialScene.fields, settings.rounds, 'The tutorial shows every requested decoder field.');
+  assert.equal(await game(`document.querySelector('.hart-page').inert`), true);
+  await setInput('.hart-code-input', 'A');
+  assert.equal(await game(`document.querySelector('.hart-code-input').value`), '', 'Tutorial input cannot count as a training attempt.');
+  assert.equal(getSaveAttempts(), 0);
+  for (const target of ['.hart-chart-grid', '.hart-decoder-panel', '.hart-topbar-controls']) {
     const state = await checkSpotlight(target);
     assert.equal(state.target.left < state.panel.right && state.target.right > state.panel.left
       && state.target.top < state.panel.bottom && state.target.bottom > state.panel.top, false, `${target} stays visible`);
@@ -52,7 +67,8 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
     }
   };
   await tap('.training-confirmation .btn-primary');
-  await until(() => game(`Boolean(document.querySelector('.hart-page'))`), 'real Hart gameplay');
+  await until(() => game(`Boolean(document.querySelector('.hart-page:not([inert])'))`), 'real Hart gameplay');
+  assert.deepEqual(await scene(), tutorialScene, 'Training keeps the tutorial layout, typography, complete decoder and tools.');
   await until(() => game(`document.fullscreenElement === document.querySelector('.hart-chart-game-root')`), 'native fullscreen');
   if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
   const layout = await game(`(() => { const root=document.documentElement,r=document.querySelector('.hart-page').getBoundingClientRect();return {left:r.left,right:innerWidth-r.right,scrollWidth:root.scrollWidth,width:root.clientWidth,scrollHeight:root.scrollHeight,height:root.clientHeight};})()`);

@@ -1,0 +1,319 @@
+{
+  "checkedAt": "2026-10-18T11:36:48.875Z",
+  "official": [
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.10",
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.5",
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+    },
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.7",
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "version": "2.0.3",
+      "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+    },
+    {
+      "gameId": "oculomotor-training",
+      "version": "2.1.2",
+      "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+    },
+    {
+      "gameId": "moving-card",
+      "version": "2.0.3",
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+    },
+    {
+      "gameId": "gabor-patching",
+      "version": "2.0.2",
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    },
+    {
+      "gameId": "reading-training",
+      "version": "2.0.1",
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    },
+    {
+      "gameId": "hart-chart",
+      "version": "2.0.0",
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+    },
+    {
+      "gameId": "driving-rehab",
+      "version": "2.0.0",
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    }
+  ],
+  "previousCatalog": {
+    "schemaVersion": 1,
+    "gameId": "hart-chart",
+    "currentVersion": "2.0.0",
+    "releases": {
+      "2.0.0": {
+        "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+      }
+    }
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+    "privateFilesVerified": true,
+    "publicFiles": [
+      {
+        "path": "assets/index-D-FSrxlx.js",
+        "size": 605863,
+        "sha256": "31b2c4b83ae4dd5bbb91cea6138d90747e41e7218765212f44ee161e50dea8eb",
+        "contentType": "text/javascript; charset=utf-8",
+        "status": 200,
+        "cspVerified": true
+      },
+      {
+        "path": "assets/style-UcKHB6lS.css",
+        "size": 31178,
+        "sha256": "d9c7295ada73df993dd788440f84ba5c043ad7eba900cbbca479a37a72db1478",
+        "contentType": "text/css; charset=utf-8",
+        "status": 200,
+        "cspVerified": true
+      },
+      {
+        "path": "game.json",
+        "size": 458,
+        "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+        "contentType": "application/json; charset=utf-8",
+        "status": 200,
+        "cspVerified": true
+      },
+      {
+        "path": "index.html",
+        "size": 405,
+        "sha256": "6cf84f65d1b0db301f1c7cde9da7e2a2f46f8952f63507df22b1b440ba93c704",
+        "contentType": "text/html; charset=utf-8",
+        "status": 200,
+        "cspVerified": true
+      },
+      {
+        "path": "preview.webp",
+        "size": 15752,
+        "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+        "contentType": "image/webp",
+        "status": 200,
+        "cspVerified": true
+      }
+    ],
+    "executed": false
+  },
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "7ab7e21e-df68-4e0d-a958-884acfeebc2d",
+      "status": "success"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+      "status": "success"
+    }
+  ],
+  "sourceBaseCommit": "682afd20e267f8567d093c18fce1b22a35538478",
+  "sourceFiles": [
+    {
+      "path": "HartChartPage.tsx",
+      "sha256": "4e296df25340e5bfe78f91a4f828169b7abccccf0ab416a03ab76f367eb260d6",
+      "size": 32655
+    },
+    {
+      "path": "ScoreAnalysis.tsx",
+      "sha256": "140f60d9313122a6b003bfc72f8f59d11ec882e6d1c1aee0db0f10eb025bf3d7",
+      "size": 7521
+    },
+    {
+      "path": "game.css",
+      "sha256": "9c85d4f1a72aa04c2bcd9784f98c662c92f170bccf84226a4e2ae5a174fbfcfd",
+      "size": 2968
+    },
+    {
+      "path": "i18n/en.ts",
+      "sha256": "5069da1d92a2f27222f5dbb3107f47b426f4600fb2676cd723341cd8fc725df6",
+      "size": 8100
+    },
+    {
+      "path": "i18n/index.ts",
+      "sha256": "f1e10be0856208036c2074ec773a372d9a4634d9bab51afdc50543a8ef51308b",
+      "size": 94
+    },
+    {
+      "path": "i18n/useT.tsx",
+      "sha256": "d4ead58a9a0c118977711d4b46ca4e96a16d5be61c5f9521a715e98007381259",
+      "size": 1474
+    },
+    {
+      "path": "i18n/zh.ts",
+      "sha256": "0857f027ec81c9b7950d26d373ab2eb84617a44d56f2df80967f31782daf4e40",
+      "size": 8099
+    },
+    {
+      "path": "index.html",
+      "sha256": "52e48c27bc915ee62bdce1fafeb91314816b036e1bfb3fbf1a6b2bff694ff2bd",
+      "size": 322
+    },
+    {
+      "path": "logic/hartChart.ts",
+      "sha256": "5a1c0cd8b3392f70b0eecae01d12e85aa95dd9a86297c2a752815b0c5a0cf285",
+      "size": 3910
+    },
+    {
+      "path": "main.tsx",
+      "sha256": "3adfe6d2e6ef6f1a3211f28177c7b5a65e3d2da0dbad84ef88929e3371105106",
+      "size": 445
+    },
+    {
+      "path": "music.ts",
+      "sha256": "980dff635671db20b59db5d3789aaa426ddc58ede65d9e426f424965ab60c07f",
+      "size": 286
+    },
+    {
+      "path": "package.json",
+      "sha256": "53585dd69fca3de677406cb971bb4183cfff44e357eda3026b9d25c91dabcfc2",
+      "size": 568
+    },
+    {
+      "path": "public/game.json",
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "size": 458
+    },
+    {
+      "path": "public/preview.webp",
+      "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+      "size": 15752
+    },
+    {
+      "path": "results.css",
+      "sha256": "cc9c1967d279de062ce2618f378d3f25ae9ad43de352a04e9654324083da4e10",
+      "size": 6062
+    },
+    {
+      "path": "rules.css",
+      "sha256": "e1dc590a238d1adda53d693cc570d891cf20b337c4572a6ea17567b4133fbb50",
+      "size": 11055
+    },
+    {
+      "path": "rules/tutorialSteps.ts",
+      "sha256": "02b02f20903b8fb3418cca1ad3221e5710296e3f72e7a080a512c421b6fec530",
+      "size": 1652
+    },
+    {
+      "path": "runtime/hubBridge.ts",
+      "sha256": "ddd1172da1a90ead30efb0518a16b30ff9e34a3424eef60264c55224bc9e4acb",
+      "size": 3570
+    },
+    {
+      "path": "runtime/jsPsychLifecycle.ts",
+      "sha256": "8874de17ccd3c267d79f8b79bc81838e34c0cad17ddeec364d318809779cc852",
+      "size": 5402
+    },
+    {
+      "path": "runtime/settingsMemory.ts",
+      "sha256": "a6108e57814734eb583abe0cb63f8bb79a071071e9db1b4efc7e861e9a658397",
+      "size": 612
+    },
+    {
+      "path": "runtime/soundManager.ts",
+      "sha256": "fdab859496f9b3b02c652be25209ebedc571156a2a8cd6eff7c5df0e85da9264",
+      "size": 7444
+    },
+    {
+      "path": "runtime/tour.ts",
+      "sha256": "87b78d2c9b23404310d576652938573a646242d6c27f6040b1402a6aa79df799",
+      "size": 5460
+    },
+    {
+      "path": "score.ts",
+      "sha256": "dd6e09b9e844abd1ba110ed015bcd312a31a6ca84687c7017499062aa297080c",
+      "size": 666
+    },
+    {
+      "path": "scoreStatistics.ts",
+      "sha256": "d45927f8d9d109c3edbdf432c00875e751e2a6e352aea872ab51a6eaf5fe0e27",
+      "size": 769
+    },
+    {
+      "path": "settings.ts",
+      "sha256": "187be195f8121f5e2bc974736c38f9251af134019aa57f8e1df90b643390496f",
+      "size": 600
+    },
+    {
+      "path": "styles/hart-chart.css",
+      "sha256": "7871cb1bdb89916d46a822b420ef56dfd3fbc9c9cab7c03124f1379b87275f0d",
+      "size": 18166
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "2623564ef2010805591c2deff1012a7520b289a2254d7bf9749dc33ebadc05b2",
+      "size": 560
+    }
+  ],
+  "manifest": {
+    "schemaVersion": 1,
+    "status": "approved",
+    "gameId": "hart-chart",
+    "version": "2.0.1",
+    "name": "哈特圖訓練",
+    "description": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。",
+    "entry": "index.html",
+    "runtime": {
+      "name": "native",
+      "major": 1
+    },
+    "presentation": "game",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "keyboard",
+      "pointer",
+      "settings-storage",
+      "touch"
+    ],
+    "files": [
+      {
+        "path": "assets/index-Dg7xJzzX.js",
+        "size": 605155,
+        "sha256": "9920213b63435f5f085220a1e470496936e0283318d208c26fc3f087c33a6a75",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CpLa1Sme.css",
+        "size": 29997,
+        "sha256": "71d0fe578712003da8883757c87e6c83e9906eeb284d2f3e8eeec1026d2fc1c4",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "size": 458,
+        "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "size": 405,
+        "sha256": "385053cb9427437821fba14feba9ca97e8ea52b38a4adba9b7823aae2182d789",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "size": 15752,
+        "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+        "contentType": "image/webp"
+      }
+    ],
+    "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366",
+    "approvedAt": "2026-10-18T11:36:41.720Z"
+  }
+}

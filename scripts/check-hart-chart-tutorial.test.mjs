@@ -10,7 +10,7 @@ test('Hart spotlights explain the chart, row-column decoding and tools in both l
   const { GetHartTutorialSteps } = await LoadModule('rules/tutorialSteps.ts');
   for (const language of ['zh', 'en']) {
     const steps = GetHartTutorialSteps(language);
-    assert.deepEqual(steps.map(step => step.target), ['.hart-preview-chart', '.hart-preview-decoder', '.hart-preview-tools']);
+    assert.deepEqual(steps.map(step => step.target), ['.hart-chart-grid', '.hart-decoder-panel', '.hart-topbar-controls']);
     assert.match(steps[0].text, /10/);
     assert.match(steps[1].text, language === 'en' ? /row[\s\S]*column/ : /列[\s\S]*欄/);
     assert.match(steps[2].text, /QR/);
@@ -19,6 +19,70 @@ test('Hart spotlights explain the chart, row-column decoding and tools in both l
     }
   }
 });
+
+test('Hart tutorial renders the training chart, complete decoder and tools with the selected size and dock', async () => {
+  for (const language of ['zh', 'en']) for (const chartSize of ['small', 'medium', 'large']) for (const rounds of [5, 30]) {
+    const settings = { chartSize, rounds };
+    const tutorial = await RenderHart('rules', settings, language);
+    const playing = await RenderHart('playing', settings, language);
+    for (const scene of [tutorial, playing]) {
+      assert.ok(scene.find('hart-page'), 'The tutorial renders the actual training layout.');
+      assert.equal(scene.all('hart-chart-cell').length, 100);
+      assert.equal(scene.all('hart-code-input').length, rounds);
+      assert.ok(scene.find('hart-decoder-panel'));
+      assert.equal(scene.all('hart-tool-button').length, 3);
+    }
+    assert.deepEqual(tutorial.find('hart-chart-grid').props.style, playing.find('hart-chart-grid').props.style);
+    assert.equal(tutorial.find('hart-page').props.className, playing.find('hart-page').props.className);
+    assert.equal(tutorial.find('hart-page').props.inert, true, 'Training controls are unavailable during teaching.');
+    tutorial.find('hart-code-input').props.onChange({ target: { value: 'A' } });
+    assert.deepEqual(tutorial.changes, [], 'Teaching cannot change answers or attempt counts.');
+    playing.find('hart-code-input').props.onChange({ target: { value: 'A' } });
+    assert.ok(playing.changes.length > 0, 'Training still accepts answers.');
+  }
+});
+
+async function RenderHart(phase, settings, language) {
+  const changes = [];
+  const { ChartScale } = await LoadModule('settings.ts');
+  const dependencies = {
+    './settings': await LoadModule('settings.ts'),
+    './logic/hartChart': await LoadModule('logic/hartChart.ts'),
+    './i18n/useT': { useT: () => ({ t: key => key, lang: language }) },
+    react: {
+      useState: initial => {
+        let value = typeof initial === 'function' ? initial() : initial;
+        if (value === 'menu') value = phase;
+        if (value?.rounds) value = settings;
+        if (initial === 1) value = ChartScale(settings.chartSize);
+        return [value, next => changes.push(next)];
+      },
+      useRef: current => ({ current }), useMemo: create => create(), useEffect() {}, useCallback: callback => callback,
+    },
+    'react/jsx-runtime': {
+      jsx: (type, props) => typeof type === 'function' ? type(props) : ({ type, props }),
+      jsxs: (type, props) => typeof type === 'function' ? type(props) : ({ type, props }),
+    },
+    './runtime/hubBridge': { IsHubGame: () => false },
+  };
+  const source = await readFile(resolve(gameRoot, 'HartChartPage.tsx'), 'utf8');
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', 'window', ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText)(name => dependencies[name] ?? {}, module, module.exports, {
+    location: { hash: '', href: 'https://example.test/' }, matchMedia: () => ({ matches: false }), requestAnimationFrame() {},
+  });
+  const nodes = [];
+  const visit = node => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(visit); return; }
+    nodes.push(node);
+    visit(node.props?.children);
+  };
+  visit(module.exports.HartChartPage());
+  const all = className => nodes.filter(node => node.props?.className?.split(' ').includes(className));
+  return { all, find: className => all(className)[0], changes };
+}
 
 test('spotlight follows targets and resize; finishing, skipping, back and disposal clean up', async () => {
   for (const action of ['finish', 'skip', 'back', 'dispose']) {

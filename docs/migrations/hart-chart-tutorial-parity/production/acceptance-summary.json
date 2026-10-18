@@ -1,0 +1,79 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.0.1",
+  "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366",
+  "acceptedAt": "2026-10-18T11:42:19.620Z",
+  "filesVerified": 5,
+  "browserPassed": 9,
+  "localGatesPassed": 7,
+  "otherGamesUnchanged": [
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.10",
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.5",
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+    },
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.7",
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "version": "2.0.3",
+      "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+    },
+    {
+      "gameId": "oculomotor-training",
+      "version": "2.1.2",
+      "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+    },
+    {
+      "gameId": "moving-card",
+      "version": "2.0.3",
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+    },
+    {
+      "gameId": "gabor-patching",
+      "version": "2.0.2",
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    },
+    {
+      "gameId": "reading-training",
+      "version": "2.0.1",
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    }
+  ],
+  "concurrentReleaseChanges": [
+    {
+      "gameId": "driving-rehab",
+      "before": {
+        "gameId": "driving-rehab",
+        "version": "2.0.0",
+        "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+      },
+      "after": {
+        "version": "2.0.1",
+        "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+      },
+      "independentlyPublished": {
+        "gameId": "driving-rehab",
+        "version": "2.0.1",
+        "bucket": "rehab-game-releases",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.1/package/index.html",
+        "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9",
+        "verifiedAt": "2026-10-18T11:40:52.417Z"
+      },
+      "currentAndApprovedManifestVerified": true,
+      "modifiedByHartPublisher": false
+    }
+  ],
+  "hartPublisherTouchedOtherGames": false,
+  "hubDeployed": false,
+  "runnerDeployed": false,
+  "productionTrainingRecordsCreated": false
+}

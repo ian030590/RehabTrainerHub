@@ -1,0 +1,11 @@
+{
+  "name": "hub-mobile",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --mobile --hard --session-failure",
+  "startedAt": "2026-10-18T11:38:16.198Z",
+  "finishedAt": "2026-10-18T11:38:28.198Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": true,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

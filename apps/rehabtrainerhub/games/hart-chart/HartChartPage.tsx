@@ -132,7 +132,7 @@ function HartChartRuntime() {
   const [seed, setSeed] = useState(CreateHartSeed);
   const [scale, setScale] = useState(1);
   const rounds = settings.rounds;
-  const [decoderOpen, setDecoderOpen] = useState(false);
+  const [decoderOpen, setDecoderOpen] = useState(true);
   const [decoderDock, setDecoderDock] = useState<DecoderDock>(() => window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right');
   const [decoderDragging, setDecoderDragging] = useState(false);
   const [decoderDragTarget, setDecoderDragTarget] = useState<DecoderDock>(decoderDock);
@@ -380,6 +380,7 @@ function HartChartRuntime() {
   };
 
   const handleAnswer = (index: number, event: ChangeEvent<HTMLInputElement>) => {
+    if (phaseRef.current !== 'playing') return;
     const value = event.target.value.replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
     const nextAnswers = [...answers];
     nextAnswers[index] = value;
@@ -436,6 +437,9 @@ function HartChartRuntime() {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
     SaveGameSettings({ ...settings, decoderDock });
     setScale(ChartScale(settings.chartSize));
+    setDecoderOpen(true);
+    setShowHints(false);
+    resetChart();
     setPhase('rules');
   };
   const startTraining = async () => {
@@ -447,7 +451,6 @@ function HartChartRuntime() {
       if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
       return;
     }
-    resetChart();
     setDecoderOpen(true);
     setShowHints(false);
     SendGameEvent('active');
@@ -457,12 +460,6 @@ function HartChartRuntime() {
   return (
     <div ref={fullscreenRootRef} className="hart-chart-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-      {(phase === 'menu' || phase === 'rules') && <section className="hart-tutorial" aria-label={en ? 'Game tutorial scene' : '遊戲說明場景'}>
-        <header className="hart-preview-tools"><h1>{t('hart.title')}</h1><p>{t('hart.fontSize')} · {t('hart.showHints')} · QR</p></header>
-        <section className="hart-preview-chart"><HartChartGrid cells={chart} scale={ChartScale(settings.chartSize)} /></section>
-        <section className="hart-preview-decoder"><h2>{t('hart.decoder')}</h2><div className="hart-preview-fields">
-          {decoder.tokens.filter(token => token.coordinate).slice(0, 5).map((token, index) => <span key={index}>[{token.coordinate!.row},{token.coordinate!.col}]</span>)}
-        </div><p>{t('hart.decoderPrompt')}</p></section>
         {phase === 'rules' && tourFinished && <section className="training-panel hart-tutorial-ready" role="dialog" aria-modal="true" aria-label={t('hart.title')}
           onKeyDown={event => {
             if (event.key === 'Escape') { event.preventDefault(); backToSettings(); }
@@ -485,7 +482,6 @@ function HartChartRuntime() {
             </div></footer>
           </div>
         </section>}
-      </section>}
       {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog hart-chart-phase-menu" aria-labelledby="hart-settings-title"
         onCancel={event => { event.preventDefault(); exitTraining(); }}>
         <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
@@ -535,8 +531,8 @@ function HartChartRuntime() {
         </main>
       )}
 
-      {phase === 'playing' && (
-        <main className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
+      {phase !== 'results' && (
+        <main inert={phase !== 'playing'} className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
           <header className="hart-topbar">
         <div className="hart-topbar-leading">
           <button className="btn btn-ghost hart-back-button" type="button" aria-label={en ? 'Stop training' : '停止訓練'} onClick={exitTraining}>

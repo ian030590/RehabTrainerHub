@@ -1,0 +1,4 @@
+Hub iframe ready.
+Game settings ready.
+Settings memory passed (standalone launcher): {"rounds":10,"chartSize":"small","decoderDock":"bottom"}
+Settings memory check complete.

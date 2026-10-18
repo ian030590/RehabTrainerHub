@@ -19,16 +19,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
 .game-settings-dialog::backdrop, .hart-qr-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
 .game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
-.hart-tutorial { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 24px; padding: 24px; }
-.hart-preview-tools { grid-column: 1 / -1; text-align: center; }
-.hart-preview-tools h1 { margin: 0; }
-.hart-preview-tools p { margin: 6px 0 0; }
-.hart-preview-chart { display: grid; place-items: center; min-width: 0; min-height: 0; align-self: center; justify-self: center; width: min(44vh, 100%, 420px); aspect-ratio: 1; }
-.hart-preview-chart .hart-chart-grid { width: 100%; height: 100%; --hart-font-min: 12px !important; --hart-font-fluid: 3vmin !important; --hart-font-max: 30px !important; }
-.hart-preview-decoder { align-self: center; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-.hart-preview-decoder h2 { margin: 0 0 12px; }
-.hart-preview-fields { display: flex; flex-wrap: wrap; gap: 8px; }
-.hart-preview-fields span { padding: 8px; border: 1px solid var(--border); border-radius: 4px; }
+.hart-tutorial-ready { z-index: 1200; }
 .hart-display { width: 100%; height: 100%; display: grid; place-items: center; padding: 8px; background: white; }
 .hart-share-url { overflow-wrap: anywhere; font-size: .85rem; }
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
@@ -40,9 +31,3 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
 .results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
 .results-scroll { overflow-x: auto; }
-@media (max-width: 640px) {
-  .hart-tutorial { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px; padding: 16px; }
-  .hart-preview-chart { width: min(32vh, 100%, 280px); }
-  .hart-preview-tools h1 { font-size: 24px; }
-  .hart-preview-decoder { padding: 12px; }
-}

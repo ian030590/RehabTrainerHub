@@ -1,0 +1,5 @@
+Hub iframe ready.
+Hub overlay viewport passed: {"width":752,"documentWidth":752,"overflow":"hidden","frameLeft":0,"frameRight":752,"scrollbarWidth":0}
+Game settings ready.
+Settings memory passed (Hub): {"rounds":10,"chartSize":"small","decoderDock":"right"}
+Settings memory check complete.

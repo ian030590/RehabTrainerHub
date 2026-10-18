@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+哈特圖目前 current 為 `hart-chart@2.0.1` 教學對齊版，已於 2026-10-18 依「核准發佈」發布精確五檔／`contentSha256: d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366`。聚光燈直接使用實際字母表、完整解碼器與工具列，開始後保留教學字母／座標；教學 inert、playing 輸入檢查與原計時／五項數值成果保留。七項本機 gate、正式 API／session／公開 bytes 與九項 Hub／PWA 流程通過，未部署 Hub／runner、未建正式帳號或紀錄，也未新增 Git commit／push。`2.0.0` 五檔私人／公開 bytes 已核對為回退版，未實際回退。驗收期間駕駛由另一工作流程獨立發布 `2.0.1`，其發布收據／current／manifest 已核對，另外八款不變；哈特圖 publisher 未寫入其他遊戲。見 `docs/hart-chart-tutorial-parity.md`、`docs/releases/hart-chart-2.0.1.json`；下列 `2.0.0` 為首次遷移歷史。
+
 哈特圖訓練 `hart-chart@2.0.0` 已於 2026-10-18 依「核准，並請git push」核准精確五檔／`contentSha256: 67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec`，完成 R2 發布／回讀／current 後才部署 Hub。保留原設定、字母表／座標解碼／提示／停靠／縮放／QR 及五項數值成果，採自有設定／成績與三步聚光燈；沙盒／CSP 不變。七項 CI、正式 API／session／五檔 bytes 與九項 Hub／PWA 流程通過，沒有正式帳號或訓練紀錄。正式現為十款 R2／30 款舊流程，其他九款 current 不變；來源 `f8f5ccb9` 已推至 `feat/hart-chart-r2`，Hub `7ab7e21e`、runner 沿用 `56fca01e`。收據、首次 native 回退基準與硬體限制見 `docs/hart-chart-r2-migration.md`、`docs/releases/hart-chart-2.0.0.json`。下列九款／31 款為哈特圖之前的歷史狀態，現況以本段與最新收據為準。
 
 駕駛注意力模擬練習目前 current 為 `driving-rehab@2.0.1` 設定面板樣式修正版，已於 2026-10-18 依「核准發佈」並於對話中確認精確摘要，發布八檔／`contentSha256: d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9`。設定改用與其他 R2 遊戲相同的 `training-setting` 卡片與下拉選單（難度、畫面品質、操作裝置；未偵測裝置保留但停用），移除覆蓋卡片樣式的自訂單選格；設定值、驗證、玩法、計分、成果與 capabilities 不變，故未部署 Hub／runner。`test:game-architecture`、本機桌機／平板、publisher 回讀、公開八檔 bytes、穩定入口 302 及正式 `--production-hub --lobby`／`--remote --standalone --mobile` 流程通過；未建正式帳號或紀錄，未 commit／push。`2.0.0` 為回退版（`--activate-version 2.0.0`），未實際回退。見 `docs/releases/driving-rehab-2.0.1.json`；下段為首次遷移歷史。

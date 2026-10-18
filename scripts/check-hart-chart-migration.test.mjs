@@ -69,7 +69,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {
@@ -131,7 +131,7 @@ async function LoadFunction(file, name, context) {
   return new Function(...Object.keys(context), `${js}; return action;`)(...Object.values(context));
 }
 
-test('Hart starts only after fullscreen resolves and cancels a late start without activity or results', async () => {
+test('Hart keeps the taught chart when starting after fullscreen, and cancels a late start without activity or results', async () => {
   for (const cancelled of [false,true]) {
     let resolveFullscreen;
     const pendingFullscreen = new Promise(resolve => { resolveFullscreen = resolve; });
@@ -146,7 +146,7 @@ test('Hart starts only after fullscreen resolves and cancels a late start withou
     const pending = start(); assert.deepEqual(actions, []);
     if (cancelled) { context.generationRef.current++; context.phaseRef.current = 'menu'; }
     resolveFullscreen(); await pending;
-    assert.deepEqual(actions, cancelled ? ['exit-fullscreen'] : ['reset','active','playing']);
+    assert.deepEqual(actions, cancelled ? ['exit-fullscreen'] : ['active','playing']);
   }
 });
 
