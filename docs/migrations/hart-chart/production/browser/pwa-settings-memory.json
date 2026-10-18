@@ -1,0 +1,11 @@
+{
+  "name": "pwa-settings-memory",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --mobile --settings-memory",
+  "startedAt": "2026-10-18T07:15:25.979Z",
+  "finishedAt": "2026-10-18T07:15:30.762Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": false,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

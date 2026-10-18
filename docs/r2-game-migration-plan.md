@@ -1,6 +1,6 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-2026-10-18 哈特圖訓練 `hart-chart@2.0.0` 已完成本機候選、自有設定／完整成果及三步聚光燈，精確摘要 `67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec`。七項 gate、遊戲／Hub build 與九項本機 Brave 流程通過；仍待擁有者核准、R2 發布、Hub 切換及正式驗收，正式維持九款／31 款。審查單、TDD、原圖／原功能、同 slug D1 查核及回退基準見[哈特圖候選](hart-chart-r2-migration.md)，不能直接部署本機 registry 候選。
+2026-10-18 哈特圖訓練 `hart-chart@2.0.0` 已依擁有者「核准，並請git push」核准精確摘要 `67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec`，完成五檔 R2 發布／回讀／current、Hub 切換與正式驗收。保留原設定、字母表／解碼／提示／停靠／QR 與數值成果，採自有 UI、三步聚光燈與私有 bridge。來源 `f8f5ccb9` 推至 `feat/hart-chart-r2`，七項 CI、正式 API／session／五檔 bytes 及九項 Hub／PWA 流程通過，未建正式訓練紀錄。正式十款 R2／30 款舊流程，其他九款 current 不變；runner 保持 `56fca01e`，Hub 為 `7ab7e21e`。詳見[哈特圖搬遷驗收](hart-chart-r2-migration.md)與[正式收據](releases/hart-chart-2.0.0.json)。
 
 2026-10-18 駕駛注意力模擬練習 `driving-rehab@2.0.0` 已依「核准並git push」核准精確摘要 `a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863`，完成第 7 節 A–F：相容 runner 先部署，R2 八檔發布／回讀／current 完備後才切換 Hub。保留原設定、引擎、模型、數值成果與方向盤校正，採自有 UI、三步聚光燈與私有 bridge；七項 CI、正式 API／八檔 bytes、Hub／PWA 九項瀏覽器流程全部通過，未建正式紀錄，其他八款 current 不變。正式九款 R2／31 款舊流程；詳見[駕駛搬遷驗收](driving-rehab-r2-migration.md)與[正式收據](releases/driving-rehab-2.0.0.json)。
 

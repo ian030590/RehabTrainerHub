@@ -1,0 +1,153 @@
+{
+  "verifiedAt": "2026-10-18T07:14:00.566Z",
+  "files": [
+    {
+      "path": "assets/index-D-FSrxlx.js",
+      "size": 605863,
+      "sha256": "31b2c4b83ae4dd5bbb91cea6138d90747e41e7218765212f44ee161e50dea8eb",
+      "contentType": "text/javascript; charset=utf-8",
+      "status": 200
+    },
+    {
+      "path": "assets/style-UcKHB6lS.css",
+      "size": 31178,
+      "sha256": "d9c7295ada73df993dd788440f84ba5c043ad7eba900cbbca479a37a72db1478",
+      "contentType": "text/css; charset=utf-8",
+      "status": 200
+    },
+    {
+      "path": "game.json",
+      "size": 458,
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "contentType": "application/json; charset=utf-8",
+      "status": 200
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "6cf84f65d1b0db301f1c7cde9da7e2a2f46f8952f63507df22b1b440ba93c704",
+      "contentType": "text/html; charset=utf-8",
+      "status": 200
+    },
+    {
+      "path": "preview.webp",
+      "size": 15752,
+      "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+      "contentType": "image/webp",
+      "status": 200
+    }
+  ],
+  "stableStatus": 302,
+  "oldHubSettingsStatus": 410,
+  "productionRecordsCreated": false,
+  "publicCatalog": {
+    "id": "hart-chart",
+    "slug": "hart-chart",
+    "title": "哈特圖訓練",
+    "summary": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。",
+    "trainer": "vision",
+    "category": "vision",
+    "developerName": "居家訓練網",
+    "updatedAt": "2026-10-18T07:12:00.410Z",
+    "copy": {
+      "zh-TW": {
+        "title": "哈特圖訓練",
+        "description": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。"
+      },
+      "en": {
+        "title": "Hart Chart Training",
+        "description": "Alternate near and far focus to practise accommodation, saccades, and localization."
+      }
+    },
+    "previewUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/package/preview.webp",
+    "release": {
+      "id": "hart-chart@2.0.0",
+      "version": "2.0.0",
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "approvedAt": "2026-10-18T07:12:00.410Z",
+      "presentation": "game",
+      "launchUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/",
+      "installUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/"
+    }
+  },
+  "officialCount": 10,
+  "otherNineCurrentUnchanged": [
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.10",
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.5",
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+    },
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.7",
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "version": "2.0.3",
+      "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+    },
+    {
+      "gameId": "oculomotor-training",
+      "version": "2.1.2",
+      "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+    },
+    {
+      "gameId": "moving-card",
+      "version": "2.0.3",
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+    },
+    {
+      "gameId": "gabor-patching",
+      "version": "2.0.2",
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    },
+    {
+      "gameId": "reading-training",
+      "version": "2.0.1",
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    },
+    {
+      "gameId": "driving-rehab",
+      "version": "2.0.0",
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    }
+  ],
+  "unversionedSession": {
+    "status": 201,
+    "version": "2.0.0",
+    "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+    "tokenRedacted": true
+  },
+  "legacyAssets": [
+    {
+      "path": "settings.json",
+      "status": 410
+    },
+    {
+      "path": "score.json",
+      "status": 410
+    },
+    {
+      "path": "sw.js",
+      "status": 410
+    },
+    {
+      "path": "assets/legacy.js",
+      "status": 410
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "hub-desktop",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --wide --windowed",
+  "startedAt": "2026-10-18T07:14:27.990Z",
+  "finishedAt": "2026-10-18T07:14:45.055Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": true,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}

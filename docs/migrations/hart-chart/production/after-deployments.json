@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-18T07:13:34.766Z",
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "7ab7e21e-df68-4e0d-a958-884acfeebc2d",
+      "url": "https://7ab7e21e.rehabtrainerhub.pages.dev",
+      "status": "success",
+      "createdOn": "2026-10-18T07:13:28.467192Z",
+      "commit": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+      "d1Bindings": [
+        "REHAB_DB"
+      ],
+      "kvBindings": [
+        "ARTICLE_CACHE"
+      ],
+      "r2Bindings": {
+        "ASSET_BUCKET": {
+          "name": "rehab-storage"
+        },
+        "GAME_QUARANTINE_BUCKET": {
+          "name": "rehab-game-quarantine"
+        },
+        "GAME_RELEASE_BUCKET": {
+          "name": "rehab-game-releases"
+        },
+        "OCULOMOTOR_DATA": {
+          "name": "oculomotor-data"
+        }
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+      "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+      "status": "success",
+      "createdOn": "2026-10-17T23:02:06.011875Z",
+      "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+      "d1Bindings": [],
+      "kvBindings": [],
+      "r2Bindings": {
+        "GAME_RELEASE_BUCKET": {
+          "name": "rehab-game-releases"
+        }
+      }
+    }
+  ]
+}

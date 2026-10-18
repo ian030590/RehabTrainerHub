@@ -1,11 +1,11 @@
 # 哈特圖訓練 R2 搬遷審查單
 
-狀態：2026-10-18 擁有者已依「核准，並請git push」核准以下精確版本／摘要，[核准紀錄](migrations/hart-chart/approval.json)。正在依序執行 Git／CI、R2 發布與回讀、Hub 切換及正式驗收；完成前不標記搬遷完成。正式目前仍為九款 R2／31 款舊流程，本機為十款／30 款。不得在 R2 核准版本就緒前部署本工作樹的 Hub registry。
+狀態：**2026-10-18 已依擁有者「核准，並請git push」核准以下精確版本／摘要，完成 R2 發布／current、Hub 切換及正式驗收**。五檔 bytes、正式 API／不指定版本 session、九項 Hub／PWA 瀏覽器流程通過；正式為十款 R2／30 款舊流程，其他九款 current 不變，沒有建立正式帳號或訓練紀錄。來源 `f8f5ccb9` 已推送至 `feat/hart-chart-r2`，[七項 CI 全部成功](https://github.com/ian030590/RehabTrainerHub/actions/runs/39106286245)；Hub 部署 `7ab7e21e`，runner 沿用相容的 `56fca01e`。見[核准紀錄](migrations/hart-chart/approval.json)、[正式收據](releases/hart-chart-2.0.0.json)與[正式驗收摘要](migrations/hart-chart/production/acceptance-summary.json)。
 
 | 項目 | 審查內容 |
 | --- | --- |
 | gameId／slug | `hart-chart` |
-| 候選版本 | `2.0.0` |
+| 正式版本 | `2.0.0` |
 | contentSha256 | `67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec` |
 | 檔案 | 5 檔，653,656 bytes；[逐檔候選清單](migrations/hart-chart/candidate.json) |
 | 原碼基準 | `aeff24a1d2e8e94545446fa7a977686dd77a4171`；原設定／成果 JSON 保存在 `scripts/fixtures/hart-chart/` |
@@ -65,8 +65,14 @@ QR 依目前 seed／scale 生成，連至同版本套件的 `#/hart-chart/displa
 
 截圖：[桌機設定](migrations/hart-chart/screenshots/desktop-settings.png)、[桌機聚光燈](migrations/hart-chart/screenshots/desktop-tutorial.png)、[手機教學](migrations/hart-chart/screenshots/mobile-tutorial.png)、[手機玩法](migrations/hart-chart/screenshots/mobile-gameplay.png)、[完整成績](migrations/hart-chart/screenshots/desktop-results.png)。
 
-## 核准後的發布順序與限制
+## 正式發布與驗收
 
-依搬遷計畫第 7 節 E，擁有者須先核准上表的精確 version／contentSha256。重跑 dry-run 核對同一批 bytes 後，以單一發布者發布 R2、逐檔回讀並切換 current，然後才部署 Hub registry。runner 格式與既有能力已支援，本次無 runner 產品變更；先核對正式相容性。發布後再直接驗正式 API／session／五檔公開 bytes、Hub 桌機手機平板英文／獨立 PWA，完成 `docs/releases/` 正式收據後才標記搬遷完成。
+依搬遷計畫第 7 節 E，先核對擁有者核准的精確版本／摘要與既有九款基準，推送專用分支並完成七項 CI；以正式公開設定重建 Hub 並固定 807 個輸出檔。確認 R2 五檔與 manifest 回讀、current 及真正手機 PWA 通過，且舊 Hub 設定仍為 HTTP 200 後，才以固定輸出部署 Hub。本次 runner 格式／能力無產品變更，正式 R2 與 PWA 實測證明現有 launcher 相容，沒有重部署 runner 或更改其 bindings。
 
-未驗收：正式候選發布／切換／部署、實體手機觸控、實體音訊、跨實體裝置 QR 掃描、Safari／iOS、長時間完整離線，以及正式舊版完成／保存（刻意阻擋正式寫入）。候選只經 Brave 模擬驗證，不能視為上述硬體或正式驗收。
+正式公開 API 只列一個 `hart-chart@2.0.0`，分類 `vision`，不再附通用 settingsUrl；不指定版本的 session 為 201 並綁定核准摘要（token 不保存至證據）。逐檔下載核對 HTTP 200／Content-Type／SHA-256／CSP，穩定入口 302／no-store；舊 settings／score／JS／SW 回 410。其他九款 API current 的 version／digest 逐筆與發布前比對相同。見[正式 API 與 bytes](migrations/hart-chart/production/production-verification.json)。
+
+九項正式 browser 均通過：Hub 桌機視窗、手機 session 失敗重試、平板 30 字母小視標、英文登入 30 字母；獨立手機 PWA 完成、獨立平板 PWA 完成／停止；Hub 與手機 PWA 的設定保存／還原。四項 `--production-hub` 及 Hub 設定記憶讀取真正部署頁面與 R2，僅將 `/api/*` 攔至本機 SQLite；PWA 直接讀真正 runner／R2。驗證碼只在此本機 fixture 模擬，正式防護保持啟用。完整[驗收 metadata、日誌與截圖](migrations/hart-chart/production/browser/)；沒有正式帳號或成果寫入。
+
+本機 OAuth 於發布前失效，透過 Wrangler 既有登入自動更新後才發布，沒有變更憑證設定或記錄秘密。發布 bytes 全程未修改。測試日誌另轉為 UTF-8 供 Git 檢閱，不影響核准產物。
+
+未驗收：實體手機觸控、實體音訊、跨實體裝置 QR 掃描、Safari／iOS、長時間完整離線，以及正式舊版完成／保存（刻意阻擋正式寫入）。手機／平板為 Brave 模擬，不代表實體硬體驗收。正式回退或撤回均未執行。

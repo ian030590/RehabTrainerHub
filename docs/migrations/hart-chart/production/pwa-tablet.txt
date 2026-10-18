@@ -1,0 +1,4 @@
+Hub iframe ready.
+Game settings ready.
+Hart viewport: {"left":0,"right":0,"scrollWidth":820,"width":820,"scrollHeight":1180,"height":1180}
+Hart settings, three spotlights, actual decoding, QR, hints, results and save lifecycle passed.

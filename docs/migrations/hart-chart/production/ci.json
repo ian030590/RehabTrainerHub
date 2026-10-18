@@ -1,0 +1,36 @@
+{
+  "conclusion": "success",
+  "headSha": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+  "jobs": [
+    {
+      "name": "Verify (trainer-entrypoints)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (cloudflare-deploy)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (naming)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (game-architecture)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (gamerunner)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (hub-functions)",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify (pwa)",
+      "conclusion": "success"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39106286245"
+}

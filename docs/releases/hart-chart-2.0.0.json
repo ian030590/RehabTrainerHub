@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "status": "published-and-production-accepted",
+  "gameId": "hart-chart",
+  "version": "2.0.0",
+  "name": "哈特圖訓練",
+  "description": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-D-FSrxlx.js",
+      "size": 605863,
+      "sha256": "31b2c4b83ae4dd5bbb91cea6138d90747e41e7218765212f44ee161e50dea8eb",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-UcKHB6lS.css",
+      "size": 31178,
+      "sha256": "d9c7295ada73df993dd788440f84ba5c043ad7eba900cbbca479a37a72db1478",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 458,
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "6cf84f65d1b0db301f1c7cde9da7e2a2f46f8952f63507df22b1b440ba93c704",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15752,
+      "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+  "approvedAt": "2026-10-18T07:12:00.410Z",
+  "bucket": "rehab-game-releases",
+  "totalBytes": 653656,
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this conversation",
+    "message": "核准，並請git push",
+    "approvedAt": "2026-10-18T07:02:38Z",
+    "gameId": "hart-chart",
+    "version": "2.0.0",
+    "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+    "scope": "Publish the exact reviewed R2 package, verify all files before current and Hub cutover, complete production acceptance, commit and push the dedicated branch."
+  },
+  "sourceCommit": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+  "sourceBranch": "feat/hart-chart-r2",
+  "published": {
+    "gameId": "hart-chart",
+    "version": "2.0.0",
+    "bucket": "rehab-game-releases",
+    "launchUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/package/index.html",
+    "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+    "verifiedAt": "2026-10-18T07:12:23.792Z",
+    "publisherReadback": "All 5 immutable files and approved manifest verified before current activation",
+    "stableUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/"
+  },
+  "ci": {
+    "conclusion": "success",
+    "headSha": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+    "jobs": [
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39106286245"
+  },
+  "deploymentSequence": {
+    "method": "Dedicated branch CI followed by scoped Hub production deployment from frozen verified output",
+    "before": [
+      {
+        "project": "rehabtrainerhub",
+        "id": "4a27cfb9-bf6b-4a98-bf8d-e98caf8c353f",
+        "url": "https://4a27cfb9.rehabtrainerhub.pages.dev",
+        "status": "success",
+        "createdOn": "2026-10-17T23:05:13.969563Z",
+        "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+        "d1Bindings": [
+          "REHAB_DB"
+        ],
+        "kvBindings": [
+          "ARTICLE_CACHE"
+        ],
+        "r2Bindings": {
+          "ASSET_BUCKET": {
+            "name": "rehab-storage"
+          },
+          "GAME_QUARANTINE_BUCKET": {
+            "name": "rehab-game-quarantine"
+          },
+          "GAME_RELEASE_BUCKET": {
+            "name": "rehab-game-releases"
+          },
+          "OCULOMOTOR_DATA": {
+            "name": "oculomotor-data"
+          }
+        }
+      },
+      {
+        "project": "trainerhub-user-games",
+        "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+        "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+        "status": "success",
+        "createdOn": "2026-10-17T23:02:06.011875Z",
+        "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+        "d1Bindings": [],
+        "kvBindings": [],
+        "r2Bindings": {
+          "GAME_RELEASE_BUCKET": {
+            "name": "rehab-game-releases"
+          }
+        }
+      }
+    ],
+    "after": [
+      {
+        "project": "rehabtrainerhub",
+        "id": "7ab7e21e-df68-4e0d-a958-884acfeebc2d",
+        "url": "https://7ab7e21e.rehabtrainerhub.pages.dev",
+        "status": "success",
+        "createdOn": "2026-10-18T07:13:28.467192Z",
+        "commit": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+        "d1Bindings": [
+          "REHAB_DB"
+        ],
+        "kvBindings": [
+          "ARTICLE_CACHE"
+        ],
+        "r2Bindings": {
+          "ASSET_BUCKET": {
+            "name": "rehab-storage"
+          },
+          "GAME_QUARANTINE_BUCKET": {
+            "name": "rehab-game-quarantine"
+          },
+          "GAME_RELEASE_BUCKET": {
+            "name": "rehab-game-releases"
+          },
+          "OCULOMOTOR_DATA": {
+            "name": "oculomotor-data"
+          }
+        }
+      },
+      {
+        "project": "trainerhub-user-games",
+        "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+        "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+        "status": "success",
+        "createdOn": "2026-10-17T23:02:06.011875Z",
+        "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+        "d1Bindings": [],
+        "kvBindings": [],
+        "r2Bindings": {
+          "GAME_RELEASE_BUCKET": {
+            "name": "rehab-game-releases"
+          }
+        }
+      }
+    ],
+    "runnerDeployed": false,
+    "runnerCompatibility": "Existing settings-storage/fullscreen/audio launcher accepted exact Hart release; verified public bytes and standalone PWA before Hub cutover",
+    "order": [
+      "Push source and pass seven CI jobs",
+      "Build with production public flags and freeze output",
+      "Publish exact approved R2 bytes, verify manifest and activate current",
+      "Verify exact public bytes and standalone mobile PWA while old Hub settings remain HTTP 200",
+      "Deploy Hub with ten-game registry and 30 legacy bundles",
+      "Verify production API, session and nine Hub/PWA browser modes"
+    ],
+    "frozenOutput": {
+      "sourceCommit": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+      "fileCount": 807,
+      "inventorySha256": "0fb8170cac160fd0d8d548593881063390df09e436d6067f7d098a51005b2d2a",
+      "legacyBundleCount": 30
+    },
+    "preHubVerification": {
+      "verifiedAt": "2026-10-18T07:12:45.304Z",
+      "files": [
+        {
+          "path": "assets/index-D-FSrxlx.js",
+          "size": 605863,
+          "sha256": "31b2c4b83ae4dd5bbb91cea6138d90747e41e7218765212f44ee161e50dea8eb",
+          "contentType": "text/javascript; charset=utf-8",
+          "status": 200
+        },
+        {
+          "path": "assets/style-UcKHB6lS.css",
+          "size": 31178,
+          "sha256": "d9c7295ada73df993dd788440f84ba5c043ad7eba900cbbca479a37a72db1478",
+          "contentType": "text/css; charset=utf-8",
+          "status": 200
+        },
+        {
+          "path": "game.json",
+          "size": 458,
+          "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+          "contentType": "application/json; charset=utf-8",
+          "status": 200
+        },
+        {
+          "path": "index.html",
+          "size": 405,
+          "sha256": "6cf84f65d1b0db301f1c7cde9da7e2a2f46f8952f63507df22b1b440ba93c704",
+          "contentType": "text/html; charset=utf-8",
+          "status": 200
+        },
+        {
+          "path": "preview.webp",
+          "size": 15752,
+          "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+          "contentType": "image/webp",
+          "status": 200
+        }
+      ],
+      "stableStatus": 302,
+      "oldHubSettingsStatus": 200,
+      "productionRecordsCreated": false
+    }
+  },
+  "productionChecks": {
+    "verifiedAt": "2026-10-18T07:14:00.566Z",
+    "files": [
+      {
+        "path": "assets/index-D-FSrxlx.js",
+        "size": 605863,
+        "sha256": "31b2c4b83ae4dd5bbb91cea6138d90747e41e7218765212f44ee161e50dea8eb",
+        "contentType": "text/javascript; charset=utf-8",
+        "status": 200
+      },
+      {
+        "path": "assets/style-UcKHB6lS.css",
+        "size": 31178,
+        "sha256": "d9c7295ada73df993dd788440f84ba5c043ad7eba900cbbca479a37a72db1478",
+        "contentType": "text/css; charset=utf-8",
+        "status": 200
+      },
+      {
+        "path": "game.json",
+        "size": 458,
+        "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+        "contentType": "application/json; charset=utf-8",
+        "status": 200
+      },
+      {
+        "path": "index.html",
+        "size": 405,
+        "sha256": "6cf84f65d1b0db301f1c7cde9da7e2a2f46f8952f63507df22b1b440ba93c704",
+        "contentType": "text/html; charset=utf-8",
+        "status": 200
+      },
+      {
+        "path": "preview.webp",
+        "size": 15752,
+        "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+        "contentType": "image/webp",
+        "status": 200
+      }
+    ],
+    "stableStatus": 302,
+    "oldHubSettingsStatus": 410,
+    "productionRecordsCreated": false,
+    "publicCatalog": {
+      "id": "hart-chart",
+      "slug": "hart-chart",
+      "title": "哈特圖訓練",
+      "summary": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。",
+      "trainer": "vision",
+      "category": "vision",
+      "developerName": "居家訓練網",
+      "updatedAt": "2026-10-18T07:12:00.410Z",
+      "copy": {
+        "zh-TW": {
+          "title": "哈特圖訓練",
+          "description": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。"
+        },
+        "en": {
+          "title": "Hart Chart Training",
+          "description": "Alternate near and far focus to practise accommodation, saccades, and localization."
+        }
+      },
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/package/preview.webp",
+      "release": {
+        "id": "hart-chart@2.0.0",
+        "version": "2.0.0",
+        "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer",
+          "settings-storage",
+          "touch"
+        ],
+        "approvedAt": "2026-10-18T07:12:00.410Z",
+        "presentation": "game",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/hart-chart/"
+      }
+    },
+    "officialCount": 10,
+    "otherNineCurrentUnchanged": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.0",
+        "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+      }
+    ],
+    "unversionedSession": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+      "tokenRedacted": true
+    },
+    "legacyAssets": [
+      {
+        "path": "settings.json",
+        "status": 410
+      },
+      {
+        "path": "score.json",
+        "status": 410
+      },
+      {
+        "path": "sw.js",
+        "status": 410
+      },
+      {
+        "path": "assets/legacy.js",
+        "status": 410
+      }
+    ],
+    "legacyBundleCount": 30,
+    "browser": {
+      "passed": 9,
+      "failed": 0,
+      "cases": [
+        {
+          "name": "hub-desktop",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --wide --windowed",
+          "startedAt": "2026-10-18T07:14:27.990Z",
+          "finishedAt": "2026-10-18T07:14:45.055Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": true,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "hub-english",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --signed-in --english --hard",
+          "startedAt": "2026-10-18T07:14:29.680Z",
+          "finishedAt": "2026-10-18T07:14:46.330Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": true,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "hub-mobile",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --mobile --session-failure",
+          "startedAt": "2026-10-18T07:14:27.265Z",
+          "finishedAt": "2026-10-18T07:14:44.336Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": true,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "hub-settings-memory",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --settings-memory",
+          "startedAt": "2026-10-18T07:15:25.633Z",
+          "finishedAt": "2026-10-18T07:15:33.444Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": true,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "hub-tablet",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --tablet --hard --small",
+          "startedAt": "2026-10-18T07:14:28.711Z",
+          "finishedAt": "2026-10-18T07:14:45.811Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": true,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "pwa-mobile",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --mobile",
+          "startedAt": "2026-10-18T07:12:48.924Z",
+          "finishedAt": "2026-10-18T07:12:57.125Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": false,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "pwa-settings-memory",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --mobile --settings-memory",
+          "startedAt": "2026-10-18T07:15:25.979Z",
+          "finishedAt": "2026-10-18T07:15:30.762Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": false,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "pwa-tablet-stop",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --tablet --stop",
+          "startedAt": "2026-10-18T07:15:24.603Z",
+          "finishedAt": "2026-10-18T07:15:30.880Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": false,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        },
+        {
+          "name": "pwa-tablet",
+          "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --remote --standalone --tablet --hard --small",
+          "startedAt": "2026-10-18T07:15:55.669Z",
+          "finishedAt": "2026-10-18T07:16:04.231Z",
+          "status": "passed",
+          "exitCode": 0,
+          "realProductionHub": false,
+          "productionR2": true,
+          "onlyLocalSqliteRecordWrites": true
+        }
+      ],
+      "recordWrites": "Only intercepted local SQLite; no production accounts or training records created"
+    }
+  },
+  "rollback": {
+    "firstNativeRelease": true,
+    "otherApprovedNativeVersionAvailable": false,
+    "executed": false,
+    "priorHubDeployment": {
+      "project": "rehabtrainerhub",
+      "id": "4a27cfb9-bf6b-4a98-bf8d-e98caf8c353f",
+      "url": "https://4a27cfb9.rehabtrainerhub.pages.dev",
+      "status": "success",
+      "createdOn": "2026-10-17T23:05:13.969563Z",
+      "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+      "d1Bindings": [
+        "REHAB_DB"
+      ],
+      "kvBindings": [
+        "ARTICLE_CACHE"
+      ],
+      "r2Bindings": {
+        "ASSET_BUCKET": {
+          "name": "rehab-storage"
+        },
+        "GAME_QUARANTINE_BUCKET": {
+          "name": "rehab-game-quarantine"
+        },
+        "GAME_RELEASE_BUCKET": {
+          "name": "rehab-game-releases"
+        },
+        "OCULOMOTOR_DATA": {
+          "name": "oculomotor-data"
+        }
+      }
+    },
+    "runnerDeployment": {
+      "project": "trainerhub-user-games",
+      "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+      "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+      "status": "success",
+      "createdOn": "2026-10-17T23:02:06.011875Z",
+      "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+      "d1Bindings": [],
+      "kvBindings": [],
+      "r2Bindings": {
+        "GAME_RELEASE_BUCKET": {
+          "name": "rehab-game-releases"
+        }
+      }
+    },
+    "verifiedLegacyBytes": "docs/migrations/hart-chart/legacy/bytes.json",
+    "verifiedLegacyBrowser": "docs/migrations/hart-chart/legacy/browser.json",
+    "procedure": "Restore only Hart legacy registry/dependency/output and launch flow from the verified Hub baseline; preserve the other nine R2 releases. Legacy JSON 1.0.0 is not a native activate-version target. No production revocation executed."
+  },
+  "localValidation": "docs/migrations/hart-chart/tests/",
+  "productionEvidence": "docs/migrations/hart-chart/production/",
+  "operationalNotes": [
+    "Cached OAuth expired before release; Wrangler refreshed the existing login before any publication. No credential values were logged or committed.",
+    "No product bytes changed after approval. Test evidence text was converted from PowerShell UTF-16 to UTF-8 for review."
+  ],
+  "limitations": [
+    "Brave mobile/tablet emulation only; physical touch and cross-device QR scanning unverified",
+    "Safari/iOS and long-duration full offline training unverified",
+    "No physical speaker/audio or clinical/measurement validation",
+    "Legacy baseline was stopped before completion with records API blocked; no production rollback or revocation performed"
+  ]
+}

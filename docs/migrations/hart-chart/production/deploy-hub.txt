@@ -1,0 +1,31 @@
+node : npm notice run rehab-workspace@1.0.0 npx
+位於 線路:2 字元:1
++ node .tmp/hart-release-operations.mjs deploy-hub *> .tmp/hart-release ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run rehab-workspace@1.0.0 npx:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run wrangler pages deploy out --project-name=rehabtrainerhub --branch=main --commit-hash=f8f5ccb99ccba9cd48e
+ed0a0587ed322a7a0dcaa --commit-dirty=false --commit-message=feat: migrate Hart chart to R2
+
+ ⛅️ wrangler 4.151.1
+────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mWarning: Your working directory is a git repo and has uncommitted chan
+ges[0m
+
+  To silence this warning, pass in --commit-dirty=true
+
+
+✨ Compiled Worker successfully
+Uploading... (753/806)
+Uploading... (771/806)
+Uploading... (789/806)
+Uploading... (806/806)
+✨ Success! Uploaded 53 files (753 already uploaded) (1.44 sec)
+
+✨ Uploading _headers
+✨ Uploading Functions bundle
+🌎 Deploying...
+✨ Deployment complete! Take a peek over at https://7ab7e21e.rehabtrainerhub.pages.dev
+rehabtrainerhub: 7ab7e21e-df68-4e0d-a958-884acfeebc2d success
+trainerhub-user-games: 56fca01e-67a6-4bbf-a24d-cce839752f15 success

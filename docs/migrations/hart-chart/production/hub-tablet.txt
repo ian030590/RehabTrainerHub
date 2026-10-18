@@ -1,0 +1,6 @@
+Hub iframe ready.
+Hub overlay viewport passed: {"width":820,"documentWidth":820,"overflow":"hidden","frameLeft":0,"frameRight":820,"scrollbarWidth":0}
+Game settings ready.
+Hart viewport: {"left":0,"right":0,"scrollWidth":820,"width":820,"scrollHeight":1180,"height":1180}
+Hart settings, three spotlights, actual decoding, QR, hints, results and save lifecycle passed.
+Lobby scrolling restored: {"top":4718,"overflow":"visible"}

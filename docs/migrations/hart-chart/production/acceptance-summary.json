@@ -1,0 +1,14 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.0.0",
+  "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+  "sourceCommit": "f8f5ccb99ccba9cd48eed0a0587ed322a7a0dcaa",
+  "ci": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39106286245",
+  "hubDeployment": "7ab7e21e-df68-4e0d-a958-884acfeebc2d",
+  "runnerUnchanged": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+  "officialCount": 10,
+  "legacyBundleCount": 30,
+  "browserPassed": 9,
+  "productionTrainingRecordsCreated": false,
+  "acceptedAt": "2026-10-18T07:17:17.648Z"
+}

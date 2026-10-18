@@ -1,0 +1,11 @@
+{
+  "name": "hub-english",
+  "command": "node scripts/check-r2-game-browser.mjs --game hart-chart --production-hub --lobby --signed-in --english --hard",
+  "startedAt": "2026-10-18T07:14:29.680Z",
+  "finishedAt": "2026-10-18T07:14:46.330Z",
+  "status": "passed",
+  "exitCode": 0,
+  "realProductionHub": true,
+  "productionR2": true,
+  "onlyLocalSqliteRecordWrites": true
+}
