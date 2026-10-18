@@ -2,7 +2,7 @@
   font-family: system-ui, sans-serif;
   --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
   --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
-  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
   --game-background: #f2f4f3;
   --game-card-border: #c2c6d4; --game-card-text: #1a1c1e;

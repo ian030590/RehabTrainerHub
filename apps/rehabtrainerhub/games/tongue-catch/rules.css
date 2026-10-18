@@ -317,7 +317,7 @@
   min-height: 44px;
   padding: 8px 16px;
   border-radius: var(--radius, 8px);
-  border: 1px solid var(--border-strong, #aeb6bd);
+  border: 1px solid var(--border-strong, #7d868e);
   background: var(--surface, #ffffff);
   color: var(--heading, #14212b);
   font-family: inherit;
@@ -326,7 +326,6 @@
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  outline: none;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -360,7 +359,6 @@
   gap: 8px;
   text-decoration: none;
   cursor: pointer;
-  outline: none;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: none;
@@ -395,4 +393,9 @@
   .training-panel .training-config-navigation-buttons .config-start-btn {
     width: 100%;
   }
+}
+
+.training-panel .training-config-navigation-buttons .btn:focus-visible {
+  outline: 3px solid var(--primary, #146c5b);
+  outline-offset: 3px;
 }

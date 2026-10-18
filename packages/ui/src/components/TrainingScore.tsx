@@ -118,8 +118,10 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
   const numberFormat = useMemo(() => new Intl.NumberFormat(en ? 'en' : 'zh-TW', {
     maximumFractionDigits: 2,
   }), [en]);
-  const format = (value: number | null) => value === null ? '—' : numberFormat.format(value);
+  const missing = en ? 'N/A' : '無';
+  const format = (value: number | null) => value === null ? missing : numberFormat.format(value);
   const field = definition.columns.find(column => column.key === metricKey) ?? definition.columns[0];
+  const measure = (value: number | null) => value === null ? missing : <>{format(value)} {field.unit && <small>{field.unit}</small>}</>;
   const values = useMemo(() => score.rounds
     .map(row => row[field.key])
     .filter((value): value is number => value !== null), [field.key, score.rounds]);
@@ -201,7 +203,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
         <dl className="training-score-compact-list">
           <div><dt>{copy.usableValues}</dt><dd>{numberFormat.format(values.length)}</dd></div>
           <div><dt>{copy.missingValues}</dt><dd>{numberFormat.format(missingCount)}</dd></div>
-          <div><dt>{copy.completeness}</dt><dd>{format(completeness)} <small>%</small></dd></div>
+          <div><dt>{copy.completeness}</dt><dd>{completeness === null ? missing : <>{format(completeness)} <small>%</small></>}</dd></div>
           {qualityMetrics.map(metric => <div key={metric.field.key}>
             <dt>{metric.field.label[language]}</dt><dd>{format(metric.value)} {metric.field.unit && <small>{metric.field.unit}</small>}</dd>
           </div>)}
@@ -220,11 +222,11 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
       </header>
       <dl className="training-score-stat-strip">
         <div><dt>{copy.observations}</dt><dd>{numberFormat.format(values.length)}</dd></div>
-        <div><dt>{copy.mean}</dt><dd>{format(statistics.mean)} {field.unit && <small>{field.unit}</small>}</dd></div>
-        <div><dt>{copy.median}</dt><dd>{format(statistics.median)} {field.unit && <small>{field.unit}</small>}</dd></div>
-        <div><dt>{copy.sampleSd}</dt><dd>{format(statistics.sampleSd)} {field.unit && <small>{field.unit}</small>}</dd></div>
-        <div><dt>{copy.range}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)} {field.unit && <small>{field.unit}</small>}</dd></div>
-        {field.total && <div><dt>{copy.total}</dt><dd>{format(total)} {field.unit && <small>{field.unit}</small>}</dd></div>}
+        <div><dt>{copy.mean}</dt><dd>{measure(statistics.mean)}</dd></div>
+        <div><dt>{copy.median}</dt><dd>{measure(statistics.median)}</dd></div>
+        <div><dt>{copy.sampleSd}</dt><dd>{measure(statistics.sampleSd)}</dd></div>
+        <div><dt>{copy.range}</dt><dd>{statistics.minimum === null ? missing : <>{format(statistics.minimum)}–{format(statistics.maximum)} {field.unit && <small>{field.unit}</small>}</>}</dd></div>
+        {field.total && <div><dt>{copy.total}</dt><dd>{measure(total)}</dd></div>}
       </dl>
       {values.length > 0 ? <div className="training-score-chart-wrap">
         <p>{copy.trend}<span>{copy.page} {page + 1} / {pageCount}</span></p>

@@ -2,7 +2,7 @@
   font-family: system-ui, sans-serif; color: #202428; background: #005eb8;
   --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
   --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
-  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #146c5b; --error: #a12b2b;
 }
 * { box-sizing: border-box; }

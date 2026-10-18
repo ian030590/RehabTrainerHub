@@ -266,7 +266,11 @@
 .hart-decoder-drag-handle:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 24%, transparent);
   background: color-mix(in srgb, var(--accent) 7%, transparent);
-  outline: none;
+}
+
+.hart-decoder-drag-handle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .hart-decoder-drag-handle:active {
@@ -353,14 +357,13 @@
 .hart-code-input {
   width: 49px;
   height: 38px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 7px;
   background: #fff;
   color: var(--text-primary);
   font: 700 17px/1 var(--font-family);
   text-align: center;
   text-transform: uppercase;
-  outline: none;
 }
 
 .hart-code-input::placeholder {
@@ -372,6 +375,11 @@
 .hart-code-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.hart-code-input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .hart-code-input.is-correct {

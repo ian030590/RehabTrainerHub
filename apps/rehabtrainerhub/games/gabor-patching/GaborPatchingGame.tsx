@@ -132,6 +132,7 @@ export function GaborPatchingGame() {
     { label: en ? 'Sound feedback' : '聲音回饋', value: settings.soundEnabled ? (en ? 'On' : '開啟') : (en ? 'Off' : '關閉') },
   ];
   const score = BuildGameScore(results);
+  const missing = en ? 'N/A' : '無';
   return <div ref={rootRef} className="gabor-patching-game-root">
     {(phase === 'menu' || phase === 'rules') && <GaborTutorial active={phase === 'rules'} ready={ready} title={title}
       settings={settings} summaryItems={summaryItems} onStart={startTraining} onBack={backToSettings} />}
@@ -167,9 +168,9 @@ export function GaborPatchingGame() {
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
       <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title} · {en ? 'Earlier clicks earn more points.' : '越早點擊得分越高。'}</p></header>
       <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
-        <div className="score-key-metric"><p>{en ? 'Weighted points' : '加權積分'}</p><strong>{score.summary.score ?? '—'}</strong></div>
-        <div className="score-key-metric"><p>{en ? 'Targets clicked' : '點擊目標數'}</p><strong>{score.summary.hits ?? '—'}</strong></div>
-        <div className="score-key-metric"><p>{en ? 'Configured activity duration' : '設定活動時間'}</p><strong>{score.summary.durationMs === null ? '—' : score.summary.durationMs / 1000} s</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Weighted points' : '加權積分'}</p><strong>{score.summary.score ?? missing}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Targets clicked' : '點擊目標數'}</p><strong>{score.summary.hits ?? missing}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Configured activity duration' : '設定活動時間'}</p><strong>{score.summary.durationMs === null ? missing : `${score.summary.durationMs / 1000} s`}</strong></div>
       </div></section>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}

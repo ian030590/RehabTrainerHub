@@ -2,7 +2,7 @@
   font-family: system-ui, sans-serif;
   --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
   --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
-  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px;
   --accent: #005eb8; --accent-dark: #00478d; --bg: #f6f7f9; --bg-card: #fff; --bg-panel: #fff;
   --text-secondary: #606970; --text-primary: #202428; --fw-bold: 700; --radius-m: 8px; --radius-md: 8px; --radius-l: 12px; --radius-xl: 16px;

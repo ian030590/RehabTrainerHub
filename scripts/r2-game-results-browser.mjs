@@ -10,6 +10,10 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
     await game('innerWidth <= 600') ? '16px' : '24px');
   assert.equal(await game('getComputedStyle(document.querySelector(".score-return-button")).backgroundColor === getComputedStyle(document.querySelector(".score-key-metric")).backgroundColor'), true, 'The main result action uses the same primary color.');
   assert.equal(await game('document.querySelectorAll(".score-key-grid > div").length'), 3);
+  const resultsText = await game('document.querySelector(".experiment-results").textContent');
+  for (const placeholder of [String.fromCharCode(0x2014), 'undefined', 'NaN']) {
+    assert.ok(!resultsText.includes(placeholder), `Results show 無 or N/A for missing values, never "${placeholder}".`);
+  }
   assert.equal(await game('Boolean(document.querySelector(".score-context dl"))'), true);
   assert.equal(await game('document.querySelector(".score-analysis select").value'), defaultMetric);
   assert.equal(await game('Boolean(document.querySelector(".score-chart svg[role=img]"))'), true);

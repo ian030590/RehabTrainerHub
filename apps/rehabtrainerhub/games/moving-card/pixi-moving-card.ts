@@ -568,7 +568,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
     RunPixiTrial(movingCardPixiScope, displayElement, runWithApp);
 
-    // Returns void (undefined) — jsPsych waits for finishTrial()
+    // Returning undefined makes jsPsych wait for finishTrial().
   }
 }
 

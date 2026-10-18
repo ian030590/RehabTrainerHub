@@ -39,7 +39,7 @@ export const en = {
       noResultsTitle: 'No matching modules',
       noResultsAction: 'Clear filters',
       guide: {
-        kicker: 'How it works',
+        kicker: 'User guide',
         title: 'What is Rehab Trainer Hub?',
         definition: 'Rehab Trainer Hub (trainerhub.cc) is a free, installable web application for general home-practice tools and educational information. It brings together self-directed movement, visual, cognitive, and oral activities, including built-in games and reviewed developer games. Users can compare activities, adjust stimulus parameters, and start a session in the browser. The site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.',
         updated: 'Site content and feature description last updated: September 2, 2026',
@@ -54,7 +54,7 @@ export const en = {
         limitsTitle: 'How should I understand scores and activity results?',
         limitsBody: 'Scores, response times, completion counts, stimulus parameters, and converted reference values describe only the current session. They can help review settings and activity progress within the same tool. They do not represent a diagnosis, eyesight, contrast sensitivity, individualized assessment, or treatment outcome and cannot replace professional assessment or treatment.',
         reviewTitle: 'How are developer games published?',
-        reviewBody: 'Submitted HTML or ZIP games are scanned for dangerous APIs and obfuscated code. Current rules check 18 dangerous APIs and block source lines over 5000 characters or code with escape-character density above 5%. An administrator must also review source code, perform an isolated play test, and confirm the public description before an approved version moves into immutable release storage. This review concerns platform safety and public content; it is not certification of medical effectiveness or individual suitability.',
+        reviewBody: 'Submitted HTML or ZIP games are scanned for dangerous APIs and obfuscated code. Current rules block network requests, cookies, page navigation, dynamic code execution, workers, external URLs, and nested frames, and they block source lines over 5000 characters or code with escape-character density above 5%. An administrator must also review source code, perform an isolated play test, and confirm the public description before an approved version moves into immutable release storage. This review concerns platform safety and public content; it is not certification of medical effectiveness or individual suitability.',
         aboutLink: 'Learn about the site, content responsibility, and contact options',
         educationLink: 'Read educational information and author background',
         privacyLink: 'View the privacy policy',
@@ -98,6 +98,7 @@ export const en = {
       daysSinceStart: 'Days since first training session',
       rehabilitationDays: 'Current training streak',
       days: 'days',
+      loadingValue: 'Loading',
       startedOn: 'Started on {date}',
       noRecords: 'No training records yet',
       streakNote: 'Restarts after a break; milestones are based on this streak.',
@@ -151,7 +152,7 @@ export const en = {
       aboutBody: 'Rehab Trainer Hub brings together motor, vision, cognitive, and oral self-practice tools. Signed-in users can save session records and view daily tasks. Results reflect only the current activity and are not medical assessments, diagnoses, or measures of treatment effectiveness.',
       professionalKicker: 'Author background and accountability',
       professionalTitle: 'Hung-En Tsai | Occupational Therapist',
-      professionalBody: 'Board-Certified Occupational Therapist. Graduated from the Department of Occupational Therapy at National Taiwan University and currently pursuing a Master degree in the same department, with experience in visual function assessment, visual rehabilitation, and clinical research. Based on clinical experience, this website was created to provide home-based practice programs via personal computers, tablets, and mobile phones. This website is not a medical institution or an occupational therapy clinic; it does not provide diagnoses, medical advice, or individualized occupational therapy, and using this website does not establish a medical or occupational therapy service relationship. Professional background verified on August 12, 2026.',
+      professionalBody: 'Passed the Taiwan occupational therapist licensing examination and holds an occupational therapist certificate. Graduated from the Department of Occupational Therapy at National Taiwan University and currently pursuing a master’s degree in the same department, with experience in visual function assessment, visual rehabilitation, and clinical research. Based on clinical experience, this website was created to provide home-based practice programs via personal computers, tablets, and mobile phones. This website is not a medical institution or an occupational therapy clinic; it does not provide diagnoses, medical advice, or individualized occupational therapy, and using this website does not establish a medical or occupational therapy service relationship. Professional background verified on August 12, 2026.',
       professionalWebsiteLabel: 'Personal website:',
       professionalWebsiteLink: "Visit Hung-En Tsai's personal website",
     },
@@ -182,19 +183,19 @@ export const en = {
       steps: {
         welcome: {
           title: 'Welcome to Rehab Trainer Hub',
-          text: 'This platform provides self-guided home practice activities and health resources. Practice according to your comfort; results serve as practice records only.',
+          text: 'This site offers self-guided home practice activities and educational information. Practice at a level that feels comfortable; results are practice records only.',
         },
         navigation: {
           title: 'Main Navigation',
-          text: 'Switch between Training Lobby, Progress, Resources, and Download app to explore features and records.',
+          text: 'Switch between Training Lobby, Progress, Education, and Download app.',
         },
         search: {
           title: 'Activity Search',
-          text: 'Type keywords here to quickly find specific practice modules or games.',
+          text: 'Type part of a name to find a practice activity or game.',
         },
         filters: {
           title: 'Category & Purpose Filters',
-          text: 'Filter by Motor, Vision, Brain, or Speech & Oral categories to quickly find suitable practice topics.',
+          text: 'Filter by Motor, Mouth, Brain, or Vision, or select individual subcategories.',
         },
         activityCards: {
           title: 'Practice Activity Cards',
@@ -202,7 +203,7 @@ export const en = {
         },
         guideHelp: {
           title: 'Restart Tour Anytime',
-          text: 'Whenever you want to review features again, click this tour button anytime to reopen the guide.',
+          text: 'Select Site Tour to replay this guide.',
         },
       },
     },

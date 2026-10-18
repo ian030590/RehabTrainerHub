@@ -23,7 +23,7 @@
   --gold: #a66d00;
   --gold-soft: #fff1c7;
   --border: #d4d9de;
-  --border-strong: #aeb6bd;
+  --border-strong: #7d868e;
   --focus: #1d6fd1;
   --error: #b3261e;
   --shadow-sm: 0 1px 2px rgba(20, 33, 43, 0.08);
@@ -431,7 +431,7 @@ summary:focus-visible {
   font-weight: 800;
 }
 
-/* Training overlay — full-viewport native <dialog> rendered over the lobby */
+/* Training overlay: full-viewport native <dialog> rendered over the lobby */
 html:has(dialog.training-overlay[open]) {
   overflow: hidden;
 }
@@ -949,14 +949,14 @@ html:has(dialog.training-overlay[open]) {
   width: 100%;
   height: 50px;
   padding: 10px 48px;
-  border: 0;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--text);
   background: var(--surface);
 }
 
 .module-search input::placeholder {
-  color: #737d85;
+  color: var(--text-muted);
 }
 
 .module-search input::-webkit-search-cancel-button {

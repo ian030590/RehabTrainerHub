@@ -107,7 +107,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.1');
+  assert.equal(pkg.version, '2.0.2');
   for (const name of ['react', 'react-dom', 'three', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('gamepad'));
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));

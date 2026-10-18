@@ -340,7 +340,7 @@ export function GameReleaseManager() {
 }
 
 function FormatBytes(value: number): string {
-  if (!Number.isFinite(value) || value < 0) return '—';
+  if (!Number.isFinite(value) || value < 0) return '無';
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / 1024 / 1024).toFixed(1)} MB`;

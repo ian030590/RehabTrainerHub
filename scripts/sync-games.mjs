@@ -18,7 +18,7 @@ console.log(`Found ${gameIds.length} games in catalog.ts...`);
 
 let madeChanges = false;
 
-// 1. Ensure each game has package.json and vite.config.ts
+// Ensure each game has package.json and vite.config.ts
 for (const gameId of gameIds) {
   const gameDir = resolve(gamesDir, gameId);
   if (!existsSync(gameDir)) continue;
@@ -71,7 +71,7 @@ export default defineConfig({
   }
 }
 
-// 2. Sync Hub package.json
+// Sync Hub package.json
 const hubPkgPath = resolve(repoRoot, 'apps/rehabtrainerhub/package.json');
 const hubPkg = JSON.parse(readFileSync(hubPkgPath, 'utf8'));
 let hubPkgChanged = false;
@@ -110,7 +110,7 @@ if (hubPkgChanged) {
   madeChanges = true;
 }
 
-// 3. Sync Root package.json workspaces
+// Sync root package.json workspaces
 const rootPkgPath = resolve(repoRoot, 'package.json');
 const rootPkg = JSON.parse(readFileSync(rootPkgPath, 'utf8'));
 if (!rootPkg.workspaces.includes('apps/rehabtrainerhub/games/*')) {

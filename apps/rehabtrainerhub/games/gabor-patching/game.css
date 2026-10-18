@@ -2,7 +2,7 @@
   font-family: system-ui, sans-serif;
   --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
   --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
-  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
   --game-background: #808080; --game-text-shadow: 0 2px 4px rgba(0,0,0,.5);
   color: var(--text); background: var(--game-background);

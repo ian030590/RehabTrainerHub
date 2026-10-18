@@ -36,7 +36,7 @@ export const drivingText = {
   en: {
     controllerConnected: 'Controller connected: {id}',
     controllerDisconnected: 'Steering wheel disconnected; reconnect it to continue',
-    inputPausedTitle: 'Control device disconnected — training paused',
+    inputPausedTitle: 'Control device disconnected; training paused',
     inputPausedDetail: 'Reconnect the calibrated steering wheel to resume timing and events. Press Escape to leave training.',
     taskDelivery: 'Task: deliver from point A to point B',
     watchRoad: 'Stay in lane and watch for hazards',

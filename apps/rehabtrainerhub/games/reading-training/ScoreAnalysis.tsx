@@ -35,7 +35,9 @@ export function ScoreAnalysis({ rounds, language, details = [] }: {
   const statistics = CalculateScoreStatistics(rows.map(row => row[metric.key]));
   const en = language === 'en';
   const numberFormat = new Intl.NumberFormat(en ? 'en' : 'zh-TW', { maximumFractionDigits: 2 });
-  const format = (value: number | null) => value === null ? '—' : numberFormat.format(value);
+  const missing = en ? 'N/A' : '無';
+  const format = (value: number | null) => value === null ? missing : numberFormat.format(value);
+  const measure = (value: number | null) => value === null ? missing : `${format(value)} ${metric.unit ?? ''}`;
   const pageCount = Math.max(1, Math.ceil(rows.length / 50));
   const pageRows = rows.slice(page * 50, (page + 1) * 50);
   const minimum = Math.min(0, statistics.minimum ?? 0);
@@ -51,7 +53,7 @@ export function ScoreAnalysis({ rounds, language, details = [] }: {
     return command;
   }).join(' ');
   const cell = (column: ScoreColumn, value: number | null | undefined) => {
-    if (value === null || value === undefined) return '—';
+    if (value === null || value === undefined) return missing;
     if (column.labels) return column.labels[language][value] ?? format(value);
     if (column.option) return String.fromCharCode(65 + value);
     return format(value);
@@ -69,15 +71,15 @@ export function ScoreAnalysis({ rounds, language, details = [] }: {
     </header>
     <dl className="score-statistics">
       <div className="score-statistic"><dt>{en ? 'Observations' : '有效筆數'}</dt><dd>{statistics.observations}</dd></div>
-      <div className="score-statistic"><dt>{en ? 'Mean' : '平均數'}</dt><dd>{format(statistics.mean)} {metric.unit}</dd></div>
-      <div className="score-statistic"><dt>{en ? 'Median' : '中位數'}</dt><dd>{format(statistics.median)} {metric.unit}</dd></div>
-      <div className="score-statistic"><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{format(statistics.sampleSd)} {metric.unit}</dd></div>
-      <div className="score-statistic"><dt>{en ? 'Range' : '範圍'}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)} {metric.unit}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Mean' : '平均數'}</dt><dd>{measure(statistics.mean)}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Median' : '中位數'}</dt><dd>{measure(statistics.median)}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{measure(statistics.sampleSd)}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Range' : '範圍'}</dt><dd>{statistics.minimum === null ? missing : `${format(statistics.minimum)}–${format(statistics.maximum)} ${metric.unit ?? ''}`}</dd></div>
     </dl>
     <dl className="score-quality">
       <div className="score-quality-item"><dt>{en ? 'Recorded rounds' : '紀錄回合'}</dt><dd>{rows.length}</dd></div>
       <div className="score-quality-item"><dt>{en ? 'Missing values' : '缺漏值'}</dt><dd>{rows.length - statistics.observations}</dd></div>
-      <div className="score-quality-item"><dt>{en ? 'Completeness' : '完整率'}</dt><dd>{format(rows.length ? statistics.observations / rows.length * 100 : null)}%</dd></div>
+      <div className="score-quality-item"><dt>{en ? 'Completeness' : '完整率'}</dt><dd>{rows.length ? `${format(statistics.observations / rows.length * 100)}%` : missing}</dd></div>
     </dl>
     <div className="score-chart">
       <p>{en ? 'Round-by-round trend' : '逐回合趨勢'} · {en ? 'Page' : '頁次'} {page + 1} / {pageCount}</p>
@@ -109,7 +111,7 @@ export function ScoreAnalysis({ rounds, language, details = [] }: {
           const detail = details[page * 50 + index];
           return <tr key={page * 50 + index}>
             <td>{page * 50 + index + 1}</td>
-            <td className="reading-question-text">{detail?.question ?? '—'}</td>
+            <td className="reading-question-text">{detail?.question ?? missing}</td>
             {columns.map(column => <td key={column.key}>{cell(column, row[column.key])}
               {column.key === 'choice' && detail?.response ? ` · ${detail.response}` : ''}
               {column.key === 'expectedChoice' && detail?.answer ? ` · ${detail.answer}` : ''}</td>)}

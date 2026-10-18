@@ -1320,7 +1320,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.sideRearviewMirrorsEnabled = true;
 
-    // Create mini-map
     const miniMapWrapper = this.createMiniMap();
 
     const cockpit = this.createCockpitMask();
@@ -1534,7 +1533,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     ctx.arc(cs.sx, cs.sy, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Update direction label
     const dirLabel = this.miniMapDirectionLabel;
     if (dirLabel) {
       let nextText = '';
@@ -1988,9 +1986,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  /* ================================================================
-   * WORLD BUILDING
-   * ================================================================ */
   private buildWorld() {
     const three = this.requireThree();
     if (!this.scene) return;
@@ -3124,9 +3119,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  /* ================================================================
-   * MAIN LOOP
-   * ================================================================ */
   private loop(time: number, trial: TrialType<Info>, displayElement: HTMLElement) {
     if (this.finished || !this.renderer || !this.scene || !this.camera) return;
     if (!displayElement.isConnected) {
@@ -3240,12 +3232,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return this.trialStartTime > 0 && time - this.trialStartTime >= durationMs;
   }
 
-  /* ================================================================
-   * FREE-STEERING VEHICLE PHYSICS
-   * Vehicle has world position (x, z) and heading angle.
-   * Steering changes heading; vehicle moves in heading direction.
-   * "progress" and "lateralOffset" are projected from world pos.
-   * ================================================================ */
+  // Free steering: the vehicle keeps a world position (x, z) and heading, and steering turns the heading.
+  // progress and lateralOffset are projected from that world position.
   private updateVehicleFree(input: DrivingInput, dt: number, time: number) {
     const accelerationResponse = 2.65;
     const coastResponse = 1.35;
@@ -4268,9 +4256,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  /* ================================================================
-   * HAZARD MESHES
-   * ================================================================ */
   private createHazardMesh(id: HazardId) {
     switch (id) {
       case 'child-crossing':
@@ -4418,9 +4403,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return group;
   }
 
-  /* ================================================================
-   * CAMERA - deterministic vehicle-relative rig with view switching
-   * ================================================================ */
+  // Camera: a deterministic vehicle-relative rig with view switching.
   private updateCameraFree() {
     this.applyCameraPose();
   }
@@ -4537,9 +4520,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }, 120);
   }
 
-  /* ================================================================
-   * INPUT
-   * ================================================================ */
   private readInput(): DrivingInput {
     let steering = 0;
     let throttle = this.keyState.up ? 1 : 0;
@@ -4800,9 +4780,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return this.getDistanceToRoute(box.centerX, box.centerZ) <= reach;
   }
 
-  /* ================================================================
-   * ROUTE HELPERS (used for hazard placement, minimap, etc.)
-   * ================================================================ */
+  // Route helpers, also used for hazard placement and the minimap.
   private ensureRoute(route: RouteSegment[]): RouteSegment[] {
     const clean = route.filter((segment) => (
       Number.isFinite(segment.length)
@@ -4930,9 +4908,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return '\u2191';
   }
 
-  /* ================================================================
-   * TRIAL FINISH & CLEANUP
-   * ================================================================ */
   private finishTrial(displayElement: HTMLElement, response: string) {
     if (this.finished) return;
     this.finished = true;

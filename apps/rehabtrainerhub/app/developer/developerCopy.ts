@@ -460,7 +460,7 @@ const copy = {
         'Every visible string requires zh-TW and en. Limits: 16 sections, 64 fields, and 64 KiB of JSON.',
         'Supported controls are slider, list, checkbox, and color. Slider defaults must align with min, max, and step.',
         'Keys start with a lowercase letter and may contain letters, numbers, dots, underscores, or hyphens. Sensitive names such as auth, email, name, token, and user are rejected.',
-        'Include only stimulus and interaction parameters for this session—never free text, URLs, account data, or health information.',
+        'Include only stimulus and interaction parameters for this session. Never include free text, URLs, account data, or health information.',
       ],
       fieldTitle: 'Choosing a control',
       fields: [

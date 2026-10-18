@@ -19,7 +19,7 @@
 .score-section-header > div { min-width: 0; }
 .score-section-header p { color: var(--text-muted); margin: 0; }
 .score-section-header label { min-width: 15rem; margin: 0; }
-.score-section-header select { padding: 8px; min-height: 44px; color: var(--text); border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); }
+.score-section-header select { padding: 8px; min-height: 44px; color: var(--text); border: 1px solid var(--border-strong); background: var(--surface); border-radius: var(--radius); }
 .score-analysis .score-statistics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
 .score-statistics dd { margin: 8px 0 0; font-size: 1.25rem; font-weight: 800; overflow-wrap: anywhere; }
 .score-quality { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 12px 0 24px; }

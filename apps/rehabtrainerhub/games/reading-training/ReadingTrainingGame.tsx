@@ -142,7 +142,8 @@ export function ReadingTrainingGame() {
   const score = BuildGameScore(results, settings);
   const details = results.filter(row => typeof row.correct === 'boolean')
     .map(row => ({ question: row.target ?? '', response: row.response_text ?? null, answer: row.correct_text ?? null }));
-  const seconds = (value: number | null) => value === null ? '—' : new Intl.NumberFormat(en ? 'en' : 'zh-TW', { maximumFractionDigits: 1 }).format(value / 1000);
+  const missing = en ? 'N/A' : '無';
+  const seconds = (value: number | null) => value === null ? missing : `${new Intl.NumberFormat(en ? 'en' : 'zh-TW', { maximumFractionDigits: 1 }).format(value / 1000)} s`;
   return <div ref={rootRef} className="reading-training-game-root">
     {(phase === 'menu' || phase === 'rules') && <ReadingTutorial active={phase === 'rules'} ready={ready} title={title}
       settings={settings} summaryItems={summaryItems} onStart={startTraining} onBack={backToSettings} />}
@@ -182,13 +183,13 @@ export function ReadingTrainingGame() {
       <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
       <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Correct answers' : '理解題答對'}</p><strong>{score.summary.correct} / {score.summary.questions}</strong></div>
-        <div className="score-key-metric"><p>{en ? 'Presentation time (incl. countdown)' : '文字呈現時間（含倒數）'}</p><strong>{seconds(score.summary.presentationMs)} s</strong></div>
-        <div className="score-key-metric"><p>{en ? 'Segments shown' : '已呈現片段'}</p><strong>{score.summary.presented ?? '—'} / {score.summary.wordCount ?? '—'}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Presentation time (incl. countdown)' : '文字呈現時間（含倒數）'}</p><strong>{seconds(score.summary.presentationMs)}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Segments shown' : '已呈現片段'}</p><strong>{score.summary.presented ?? missing} / {score.summary.wordCount ?? missing}</strong></div>
       </div></section>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
-        <div className="score-context-item"><dt>{en ? 'Passage used' : '本次文章'}</dt><dd>{score.summary.passage === null ? '—' : passageLabel(score.summary.passage)}</dd></div>
-        <div className="score-context-item"><dt>{en ? 'Passage shown in full' : '文章完整呈現'}</dt><dd>{score.summary.finished === null ? '—' : score.summary.finished ? (en ? 'Yes' : '是') : (en ? 'No' : '否')}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Passage used' : '本次文章'}</dt><dd>{score.summary.passage === null ? missing : passageLabel(score.summary.passage)}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Passage shown in full' : '文章完整呈現'}</dt><dd>{score.summary.finished === null ? missing : score.summary.finished ? (en ? 'Yes' : '是') : (en ? 'No' : '否')}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} details={details} />
       <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')

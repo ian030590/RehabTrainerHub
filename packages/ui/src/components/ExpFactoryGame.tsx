@@ -322,8 +322,8 @@ export function ExpFactoryGame({ config, onExit }: {
           </h1>
           <dl style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', marginBottom: '2rem' }}>
             <ResultMetric label="分析單位 / Trials" value={summary.totalTrials} />
-            <ResultMetric label="正確率 / Accuracy" value={summary.accuracyPercent === null ? '—' : `${summary.accuracyPercent}%`} />
-            <ResultMetric label="平均作答時間 / Mean RT" value={summary.meanRtMs === null ? '—' : `${summary.meanRtMs} ms`} />
+            <ResultMetric label="正確率 / Accuracy" value={summary.accuracyPercent === null ? '無 / N/A' : `${summary.accuracyPercent}%`} />
+            <ResultMetric label="平均作答時間 / Mean RT" value={summary.meanRtMs === null ? '無 / N/A' : `${summary.meanRtMs} ms`} />
           </dl>
           <TrainingResultActions
             backLabel="返回入口 / Back to entry"

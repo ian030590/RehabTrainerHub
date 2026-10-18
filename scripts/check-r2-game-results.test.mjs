@@ -70,7 +70,10 @@ for (const fixture of cases) {
     ] });
     const markup = view.render();
     assert.match(markup, /<dd>2(?:<| )/);
-    assert.match(markup, /<td[^>]*>—<\/td>/);
+    assert.match(markup, /<td[^>]*>N\/A<\/td>/);
+    const zh = await LoadAnalysis(fixture.id, { language: 'zh', rounds: [{ ...fixture.row, [fixture.defaultMetric]: null }] });
+    assert.match(zh.render(), /<td[^>]*>無<\/td>/);
+    assert.ok(!markup.includes('\u2014') && !zh.render().includes('\u2014'));
     assert.equal((markup.match(/<circle /g) ?? []).length, 2);
     assert.match(markup, /class="chart-trend" d="M[^L]* M/);
     const empty = await LoadAnalysis(fixture.id, { language: 'en', rounds: [] });
@@ -78,7 +81,7 @@ for (const fixture of cases) {
     assert.match(empty.render(), /No round records/);
     assert.doesNotMatch(empty.render(), /<svg|NaN|Infinity/);
     const single = await LoadAnalysis(fixture.id, { language: 'en', rounds: [fixture.row] });
-    assert.match(single.render(), /Sample standard deviation<\/dt><dd>—/);
+    assert.match(single.render(), /Sample standard deviation<\/dt><dd>N\/A</);
   });
 }
 

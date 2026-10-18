@@ -58,7 +58,7 @@ function IsStaffRole(role: string): role is StaffRole {
 }
 
 function FormatDateTime(value: string | null): string {
-  if (!value) return '—';
+  if (!value) return '無';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat('zh-TW', {
@@ -416,14 +416,14 @@ export function AdminDashboard() {
                       {patients.map((patient) => (
                         <tr key={patient.id}>
                           <th scope="row">{patient.displayName}</th>
-                          <td>{patient.email ?? '—'}</td>
+                          <td>{patient.email ?? '無'}</td>
                           <td>{patient.recordCount}</td>
                           <td>
                             {patient.lastTrainedAt ? (
                               <time dateTime={patient.lastTrainedAt}>
                                 {FormatDateTime(patient.lastTrainedAt)}
                               </time>
-                            ) : '—'}
+                            ) : '無'}
                           </td>
                         </tr>
                       ))}
@@ -610,8 +610,8 @@ export function AdminDashboard() {
                       </th>
                       <td>{GetRuntimeLabel(record.runtimeId)}</td>
                       <td>{record.moduleId}</td>
-                      <td>{record.gameId ?? '—'}</td>
-                      <td>{record.difficulty ?? '—'}</td>
+                      <td>{record.gameId ?? '無'}</td>
+                      <td>{record.difficulty ?? '無'}</td>
                       <td>
                         <time dateTime={record.savedAt}>{FormatDateTime(record.savedAt)}</time>
                         <details className="admin-record-details">

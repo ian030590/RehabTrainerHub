@@ -7,7 +7,8 @@
   --primary: #005eb8;
   --primary-hover: #00478d;
   --border: #d4d9de;
-  --border-strong: #aeb6bd;
+  --border-strong: #7d868e;
+  --cue-folded: #aeb6bd;
   --bg-overlay: #14212b99;
   --arena: #dce9c8;
   --hp: #538446;
@@ -66,7 +67,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-calibration-progress { height: 16px; background: var(--border); margin: 12px 0; }
 .gesture-calibration-progress span { display: block; height: 100%; background: var(--primary); }
 .gesture-cue { text-align: center; }
-.gesture-cue svg { width: 100%; max-height: 150px; fill: var(--border-strong); }
+.gesture-cue svg { width: 100%; max-height: 150px; fill: var(--cue-folded); }
 .gesture-cue .extended { fill: var(--primary); }
 .gesture-cue strong, .gesture-calibration-notice { display: block; }
 .gesture-orientation-gate { display: none; }

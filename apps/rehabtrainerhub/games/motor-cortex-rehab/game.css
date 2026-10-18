@@ -1,7 +1,7 @@
 :root {
   --surface: #ffffff; --background: #f6f7f9; --text: #202428; --heading: #14212b;
   --text-muted: #606970; --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e3eef8;
-  --border: #d4d9de; --border-strong: #aeb6bd; --bg-overlay: #14212b99;
+  --border: #d4d9de; --border-strong: #7d868e; --bg-overlay: #14212b99;
   --arena: #e5eee8; --target: #277956; --target-soft: #27795625; --success: #35ae70;
   --hand-line: #67e8f9; --hand-point: #fef08a; --text-on-accent: #ffffff; --radius: 8px;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

@@ -72,7 +72,7 @@ test('Gabor owns UI, dependencies, metadata and the exact original preview; the 
   }
   for (const file of ['settings.json', 'score.json', 'results/GaborResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.2');
+  assert.equal(pkg.version, '2.0.3');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);

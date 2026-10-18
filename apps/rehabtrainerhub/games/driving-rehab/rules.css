@@ -317,7 +317,7 @@
   min-height: 44px;
   padding: 8px 16px;
   border-radius: var(--radius, 8px);
-  border: 1px solid var(--border-strong, #aeb6bd);
+  border: 1px solid var(--border-strong, #7d868e);
   background: var(--surface, #ffffff);
   color: var(--heading, #14212b);
   font-family: inherit;
@@ -326,7 +326,6 @@
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  outline: none;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -360,7 +359,6 @@
   gap: 8px;
   text-decoration: none;
   cursor: pointer;
-  outline: none;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: none;
@@ -402,7 +400,7 @@
 .training-setting > h3 { margin: 0 0 12px; color: var(--heading); font-size: calc(1.125rem * 1.15); font-weight: 900; line-height: 1.35; }
 .training-setting p { color: var(--text-muted); }
 .training-config-body label { display: block; margin-top: 16px; font-weight: 700; line-height: 1.6; }
-.training-config-body label > input:not([type=checkbox]), .training-config-body label > select { display: block; width: 100%; margin-top: 6px; min-height: 44px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); background: var(--surface); }
+.training-config-body label > input:not([type=checkbox]), .training-config-body label > select { display: block; width: 100%; margin-top: 6px; min-height: 44px; padding: 8px; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); background: var(--surface); }
 .training-config-summary { display: grid; gap: 12px; }
 .training-config-summary-item { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin: 0; overflow-wrap: anywhere; font-weight: 700; }
 .training-config-summary-item strong { color: var(--heading); }

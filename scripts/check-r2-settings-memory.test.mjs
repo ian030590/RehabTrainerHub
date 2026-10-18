@@ -10,16 +10,16 @@ import ts from 'typescript';
 const root = resolve(import.meta.dirname, '..');
 const gamesRoot = resolve(root, 'apps/rehabtrainerhub/games');
 const games = {
-  'hart-chart': { version: '2.0.1', file: 'HartChartPage.tsx', settings: 'settings.ts' },
-  'driving-rehab': { version: '2.0.1', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
-  'reading-training': { version: '2.0.1', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
-  'gabor-patching': { version: '2.0.2', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
-  'asteroid-shield': { version: '2.0.10', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
-  'gesture-battler': { version: '2.0.5', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
-  'motor-cortex-rehab': { version: '2.0.3', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
-  'drawing-defense': { version: '2.0.7', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },
-  'moving-card': { version: '2.0.3', file: 'MovingCardGame.tsx', settings: 'settings.ts' },
-  'oculomotor-training': { version: '2.1.2', file: 'OculomotorTrainingGame.tsx', settings: 'settings.ts' },
+  'hart-chart': { version: '2.0.2', file: 'HartChartPage.tsx', settings: 'settings.ts' },
+  'driving-rehab': { version: '2.0.2', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
+  'reading-training': { version: '2.0.2', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
+  'gabor-patching': { version: '2.0.3', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
+  'asteroid-shield': { version: '2.0.11', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
+  'gesture-battler': { version: '2.0.6', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
+  'motor-cortex-rehab': { version: '2.0.4', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
+  'drawing-defense': { version: '2.0.8', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },
+  'moving-card': { version: '2.0.4', file: 'MovingCardGame.tsx', settings: 'settings.ts' },
+  'oculomotor-training': { version: '2.1.3', file: 'OculomotorTrainingGame.tsx', settings: 'settings.ts' },
 };
 const nonce = 'a'.repeat(64);
 

@@ -181,8 +181,8 @@ export function ProgressDashboard() {
       <section className="progress-metrics" aria-label={copy.rehabilitationDays}>
         <article>
           <span>{copy.daysSinceStart}</span>
-          <strong>{status === 'loading' ? '—' : progress?.daysSinceStart ?? 0}</strong>
-          <small>{copy.days}</small>
+          <strong>{status === 'loading' ? copy.loadingValue : progress?.daysSinceStart ?? 0}</strong>
+          {status !== 'loading' && <small>{copy.days}</small>}
           <p>
             {progress?.startedOn
               ? t('progress.startedOn', { date: dateFormatter.format(new Date(`${progress.startedOn}T00:00:00+08:00`)) })
@@ -191,8 +191,8 @@ export function ProgressDashboard() {
         </article>
         <article>
           <span>{copy.rehabilitationDays}</span>
-          <strong>{status === 'loading' ? '—' : progress?.rehabilitationDays ?? 0}</strong>
-          <small>{copy.days}</small>
+          <strong>{status === 'loading' ? copy.loadingValue : progress?.rehabilitationDays ?? 0}</strong>
+          {status !== 'loading' && <small>{copy.days}</small>}
           <p>{copy.streakNote}</p>
         </article>
       </section>

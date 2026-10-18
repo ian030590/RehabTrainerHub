@@ -179,7 +179,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
                 <button
                   aria-controls="hub-account-panel"
                   aria-expanded={isAccountOpen}
-                  aria-label={user ? `${user.displayName} — ${copy.accountMenu}` : copy.accountMenu}
+                  aria-label={user ? `${user.displayName} (${copy.accountMenu})` : copy.accountMenu}
                   className={`account-menu-button ${user ? 'is-signed-in' : ''}`}
                   onClick={() => setIsAccountOpen((open) => !open)}
                   title={user ? user.displayName : copy.accountMenu}
