@@ -29,6 +29,11 @@
 `AUTH_SESSION_SECRET`、`AUTH_STATE_SECRET`、`GOOGLE_CLIENT_ID`、
 `GOOGLE_CLIENT_SECRET`；啟用 Turnstile 時另設 `TURNSTILE_SECRET_KEY`。
 
+部署 Workers 時，`CLOUDFLARE_API_TOKEN` 需要 Workers 角色 `Admin`（產品層級）與 zone
+`trainerhub.cc` 的 Workers Routes Edit。Cloudflare 規定建立新 Worker 需要產品層級
+`Admin`；`Editor`（舊 Workers Scripts Edit 的對應角色）只能部署已存在的 Worker。
+`trainerhub`、`trainerhubgames` 都建立後，可改成只對這兩個 Worker 的 `Editor`。
+
 公開 variables 包含 `TURNSTILE_SITE_KEY`、`TURNSTILE_REQUIRED`、
 `TURNSTILE_RECORDS_REQUIRED`、`CF_WEB_ANALYTICS_TOKEN`、
 `R2_AI_ASSET_BUCKET`、`AI_ASSET_BASE_URL` 與 `ASSET_PUBLIC_BASE_URL`。
