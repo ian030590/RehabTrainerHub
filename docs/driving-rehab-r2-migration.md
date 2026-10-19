@@ -87,9 +87,9 @@ Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 
 
 手機／平板為 Brave 觸控模擬，方向盤為虛擬 G29；實體方向盤、觸控及音訊輸出、Safari／iOS、長時間完整離線訓練仍未驗收。
 
-## 2.1.0 候選：像素駕駛室（未發布）
+## 2.1.0：像素駕駛室（已發布）
 
-2026-10-19，依擁有者要求把場景改成 [javascript-racer](https://github.com/jakesgordon/javascript-racer) 式的 2D 像素投影，不再使用 three.js。正式 current 仍為 2.0.2；發布前須由擁有者核准下列精確候選。
+2026-10-19，依擁有者要求把場景改成 [javascript-racer](https://github.com/jakesgordon/javascript-racer) 式的 2D 像素投影，不再使用 three.js。擁有者回覆「核准發佈，遊戲手把模式暫緩」後，發布下列精確版本並切換 current；回退版為 2.0.2。見[正式收據](releases/driving-rehab-2.1.0.json)。
 
 | 項目 | 值 |
 | --- | --- |
@@ -106,3 +106,5 @@ Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 
 - `models/car.glb` 與 `scenes/taipei-xinyi-osm.json` 原檔保留（legacy fixture 雜湊固定），2.1.0 套件不載入。
 
 驗證：七項 gate 通過（game-architecture 312／312）；本機 Brave 大廳桌機、手機、平板、英文、寬螢幕低畫質方向盤與停止、設定保存、繪圖失敗後重試，以及獨立 PWA 手機共八項流程通過，截圖在 `.tmp/driving-rehab-validation/`。同上，這些不代表實體觸控、方向盤或效能驗收。
+
+正式驗收：發布工具逐檔上傳並回讀雜湊後才切換 current。正式 runner 八檔公開 bytes 與收據一致，穩定入口以 no-store 302 導向 2.1.0，正式 session 回覆 201 並固定 2.1.0／上列摘要。正式 Hub 桌機、正式 Hub 手機與獨立 PWA 手機三項 Brave 流程通過，Hub `/api/*` 只攔截到本機 SQLite，未建立正式帳號或紀錄。capabilities 與 2.0.2 相同，因此沒有另外部署 Hub 或 runner。遊戲手把模式由擁有者暫緩。

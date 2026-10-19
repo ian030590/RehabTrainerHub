@@ -1,0 +1,248 @@
+{
+  "gameId": "driving-rehab",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.1.0/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/",
+  "publishedAt": "2026-10-19T04:36:37.949Z",
+  "verifiedAt": "2026-10-19T04:37:31.810Z",
+  "fileCount": 8,
+  "totalBytes": 1281420,
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/driving-sprites-BiQdvI-R.png",
+      "size": 318396,
+      "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-CUQbueXD.js",
+      "size": 728042,
+      "sha256": "474ebcc8f3bb2a27d97122ad6a3d0dbc6281e2edfaaea026eed9875c339be680",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-CU-EYMyz.svg",
+      "size": 3334,
+      "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-R6ztmDRb.css",
+      "size": 18569,
+      "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "275e8ba3b5956637a20e77a3889aba1e89246211f6fb203d4ed07ddfb9cc66e6",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13202,
+      "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    },
+    "2.0.1": {
+      "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+    },
+    "2.0.2": {
+      "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+    },
+    "2.1.0": {
+      "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "核准發佈，遊戲手把模式暫緩",
+    "recordedAt": "2026-10-19T04:36:37.949Z",
+    "scope": "Publish and activate driving-rehab@2.1.0 with the contentSha256 reported for commit 91efe09a. The gamepad control mode is deferred and not part of this release.",
+    "games": [
+      {
+        "gameId": "driving-rehab",
+        "version": "2.1.0",
+        "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46",
+    "command": "node scripts/publish-official-game.mjs driving-rehab --activate-version 2.0.2",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability. 2.0.3 was built and dry-run only, never published."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/driving-rehab/2.1.0/",
+  "changes": [
+    "Pixel renderer in the javascript-racer style: road segments projected onto a low-resolution 2D canvas, pre-rendered CC0 sprites, no three.js, GLB or vehicle-data.js",
+    "Left-hand-drive first-person cockpit: wheel, dashboard speedometer following the real speed, two A-pillars, two door mirrors and an interior mirror, each mirror a rear projection",
+    "Rear traffic of 2/3/4 vehicles by quality that follows, overtakes and respawns behind; all traffic stops at red or yellow stop lines",
+    "Scoring, the 10 summary fields, per-round fields, the wrong-way event and its reaction-time rules are unchanged; Space brakes like the brake key",
+    "Scooters use their own collision box; asset URLs resolve at module load; touch steering wheel visible; phone status panel, CAM button and desktop map no longer cover mirrors or the speedometer",
+    "Includes the 2.0.3 change: controls are preselected from the device"
+  ],
+  "sourceCommit": "91efe09a8d4ab14819b112e8daa877b19a7c12bf",
+  "platformDeploy": {
+    "commit": "91efe09a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39199047466",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "Commit 91efe09a message",
+    "tests": [
+      "scripts/check-driving-pixel-view.test.mjs",
+      "scripts/check-driving-rehab-core.test.mjs",
+      "scripts/check-driving-rehab-migration.test.mjs",
+      "scripts/driving-rehab-r2-browser.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game driving-rehab with --lobby, --lobby --mobile, --lobby --tablet, --lobby --english, --lobby --wide --low --wheel --stop, --lobby --settings-memory, --lobby --renderer-failure and --standalone --mobile passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-19T04:37:31.810Z",
+    "files": [
+      {
+        "path": "assets/car-pedals-BXQENW7T.svg",
+        "status": 200,
+        "size": 198908,
+        "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/driving-sprites-BiQdvI-R.png",
+        "status": 200,
+        "size": 318396,
+        "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-CUQbueXD.js",
+        "status": 200,
+        "size": 728042,
+        "sha256": "474ebcc8f3bb2a27d97122ad6a3d0dbc6281e2edfaaea026eed9875c339be680",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/steering-wheel-CU-EYMyz.svg",
+        "status": 200,
+        "size": 3334,
+        "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/style-R6ztmDRb.css",
+        "status": 200,
+        "size": 18569,
+        "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 552,
+        "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "275e8ba3b5956637a20e77a3889aba1e89246211f6fb203d4ed07ddfb9cc66e6",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 13202,
+        "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/driving-rehab/2.1.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.1.0",
+      "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game driving-rehab with --production-hub --lobby, --production-hub --lobby --mobile and --remote --standalone --mobile passed: production Hub front end or stable runner PWA with the published R2 files, /api/* intercepted into local SQLite only. Pixel cockpit, mirrors with rear traffic, three spotlights, full results and save lifecycle passed."
+  }
+}
