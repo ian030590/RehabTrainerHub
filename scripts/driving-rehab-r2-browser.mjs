@@ -91,7 +91,7 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   await capture('confirmation');
   await tap('.training-confirmation .btn-primary');
   if (rendererFailure) {
-    await until(() => game(`Boolean(document.querySelector('dialog[open] [role=alert]'))`), 'visible WebGL failure');
+    await until(() => game(`Boolean(document.querySelector('dialog[open] [role=alert]'))`), 'visible renderer failure');
     assert.equal(getSaveAttempts(),0);
     assert.equal(await game('document.fullscreenElement'),null);
     await capture('renderer-error');
@@ -101,17 +101,31 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
     await until(() => game(`Boolean(document.querySelector('.training-confirmation'))`), 'skip retry tutorial');
     await tap('.training-confirmation .btn-primary');
   }
-  await until(() => game(`document.querySelector('.driving-rehab-root')?.getAttribute('aria-busy') === 'false'`), 'real Three scene and jsPsych started', 90000);
+  await until(() => game(`document.querySelector('.driving-rehab-root')?.getAttribute('aria-busy') === 'false'`), 'pixel scene and jsPsych started', 90000);
   assert.equal(await game(`document.fullscreenElement === document.querySelector('.driving-rehab-game-root')`),true);
   if (process.argv.includes('--windowed')) await game('document.exitFullscreen()');
   const layout = await game(`(() => { const canvas=document.querySelector('.driving-rehab-root canvas').getBoundingClientRect();const root=document.documentElement;return {left:canvas.left,right:canvas.right,top:canvas.top,bottom:canvas.bottom,width:innerWidth,height:innerHeight,overflowX:root.scrollWidth-root.clientWidth,overflowY:root.scrollHeight-root.clientHeight}; })()`);
   assert.equal(layout.left,0); assert.equal(layout.top,0); assert.equal(layout.right,layout.width); assert.equal(layout.bottom,layout.height); assert.equal(layout.overflowX,0); assert.equal(layout.overflowY,0);
   console.log('Driving viewport:',JSON.stringify(layout));
+  const view = await game(`(() => { const root=document.querySelector('.driving-rehab-root');const canvas=root.querySelector('canvas');return {renderer:root.dataset.drivingRenderer,imageRendering:getComputedStyle(canvas).imageRendering,width:canvas.width,cssWidth:canvas.getBoundingClientRect().width,cockpit:root.dataset.drivingCockpit}; })()`);
+  assert.equal(view.renderer,'canvas-2d-pixel');assert.equal(view.imageRendering,'pixelated');
+  assert.ok(view.width < view.cssWidth, 'The view is drawn at a low resolution and scaled up as pixel art.');
+  assert.equal(view.cockpit,'left-hand-drive','Play starts in the left-hand-drive cockpit.');
+  // Door mirrors start at 52% of the height; the interior mirror spans 52% to 72% of the width.
+  const map = await game(`(() => { const box=document.querySelector('[data-minimap-dir]').parentElement.getBoundingClientRect();return {left:box.left,right:box.right,bottom:box.bottom}; })()`);
+  assert.ok(map.bottom <= layout.height * 0.52 && (map.right <= layout.width * 0.52 || map.left >= layout.width * 0.72), `The navigation map leaves the mirrors visible: ${JSON.stringify(map)}`);
+  await until(() => game(`Number(document.querySelector('.driving-rehab-root').dataset.drivingMirrorVehicles) > 0`), 'a vehicle behind shows in the mirrors');
+  console.log('Driving pixel view:',JSON.stringify(view));
   await capture('gameplay');
   if (mobile) {
     assert.equal(await game(`['steering','pedals','camera'].every(group=>{const r=document.querySelector('[data-driving-control-group='+group+']').getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;})`), true, 'Touch controls remain in view.');
+    const touch = await game(`(() => { const root=document.querySelector('.driving-rehab-root');const canvas=root.querySelector('canvas[data-driving-view=main]');const cam=document.querySelector('[data-driving-control-group=camera]').getBoundingClientRect();const panel=root.querySelector('[data-driving-hud=status]').getBoundingClientRect();return {wheel:getComputedStyle(document.querySelector('[data-driving-control-visual=wheel]')).backgroundColor,camLeft:cam.left,camRight:cam.right,panelBottom:panel.bottom,mirrorTop:Number(canvas.dataset.drivingMirrorTop)*canvas.getBoundingClientRect().height/canvas.height}; })()`);
+    assert.notEqual(touch.wheel, 'rgba(0, 0, 0, 0)', 'The touch steering wheel is drawn in a visible colour.');
+    assert.ok(touch.camRight <= layout.width * 0.4 || touch.camLeft >= layout.width * 0.6, `The camera button leaves the speedometer in the middle visible: ${JSON.stringify(touch)}`);
+    assert.ok(touch.panelBottom <= touch.mirrorTop, `The status panel leaves the interior mirror visible: ${JSON.stringify(touch)}`);
     await tap('[data-driving-control-group=camera]');
     await until(() => game(`document.querySelector('.driving-rehab-root').textContent.includes(${JSON.stringify(english?'Third-person':'第三人稱')})`), 'touch camera switches to third person');
+    assert.equal(await game(`document.querySelector('.driving-rehab-root').dataset.drivingCockpit`),'hidden');
     await capture('gameplay-third-person');
     await tap('[data-driving-control-group=camera]');
     await until(() => game(`document.querySelector('.driving-rehab-root').textContent.includes(${JSON.stringify(english?'First-person':'第一人稱')})`), 'touch camera returns to first person');
@@ -132,6 +146,8 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
     const point = await game(`(() => {const r=document.querySelector('[data-driving-control-group=pedals] button:last-child').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()`);
     await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]},pointerSession);
   } else await press(english ? 'KeyW' : 'ArrowUp',english ? 'w' : 'ArrowUp');
+  await until(() => game(`Number(document.querySelector('.driving-rehab-root')?.dataset.drivingSpeedometer) >= 20`), 'the speedometer follows the throttle');
+  await capture('gameplay-moving');
   await until(() => game(`Boolean(document.querySelector('.experiment-results'))`), 'full driving session completes', 240000);
   if (mobile) await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]},pointerSession);
   else await press(english ? 'KeyW' : 'ArrowUp',english ? 'w' : 'ArrowUp','keyUp');
@@ -147,7 +163,8 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
     const scope = await evaluate('navigator.serviceWorker.ready.then(registration=>new URL(registration.scope).pathname)');
     assert.equal(scope,`/games/driving-rehab/${version}/`);assert.equal(getSaveAttempts(),0);
     const cached = await evaluate(`(async()=>{const paths=[];for(const name of await caches.keys())for(const request of await(await caches.open(name)).keys())paths.push(new URL(request.url).pathname);return paths;})()`);
-    for (const path of ['package/game.json','package/preview.webp','package/vehicle-data.js']) assert.ok(cached.includes(scope+path),path);
+    for (const path of ['package/game.json','package/preview.webp']) assert.ok(cached.includes(scope+path),path);
+    assert.ok(cached.some(path=>path.startsWith(scope+'package/assets/driving-sprites-')&&path.endsWith('.png')),'The sprite atlas is cached for offline play.');
     assert.ok(cached.filter(path=>path.startsWith('/games/')).every(path=>path.startsWith(scope)), 'PWA caches stay within this game version.');
   } else {
     await until(() => game(`Boolean(document.querySelector('.score-retry-button'))`), 'save error offers retry');
@@ -163,5 +180,5 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   assert.deepEqual(errors,[]);assert.equal(requests.some(url=>/driving-rehab.*(?:settings|score)\.json/.test(url)),false);
   await game(`document.querySelector('.score-return-button').click()`);
   await until(() => standalone ? game(`Boolean(document.querySelector('dialog[open]'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'return to source');
-  console.log('Driving controls, three spotlights, real Three session, full results and save lifecycle passed.');
+  console.log('Driving controls, three spotlights, pixel cockpit session, full results and save lifecycle passed.');
 }

@@ -64,41 +64,34 @@ test('original driving physics, input calibration, timing, map and model bytes r
   }
 });
 
-test('the model script preserves exact GLB bytes under 8 MiB and runs before the classic game entry', async () => {
-  const bytes = await readFile(resolve(gameRoot, 'models/car.glb'));
+test('the game loads as one classic script without the old model data script', async () => {
   const { default: config } = await LoadModule('vite.config.ts', {
     vite: { defineConfig: value => value }, '@vitejs/plugin-react': { default: () => ({}) },
-    'node:fs': { readFileSync: () => bytes },
   });
   const plugin = config.plugins[1];
-  let asset;
-  plugin.generateBundle.call({ emitFile: file => { asset = file; } });
-  assert.equal(asset.fileName, 'vehicle-data.js');
-  assert.ok(Buffer.byteLength(asset.source) <= 8 * 1024 * 1024);
-  const sandbox = {};
-  new Function('window', asset.source)(sandbox);
-  assert.deepEqual(Buffer.from(sandbox.DrivingRehabVehicleData, 'base64'), bytes);
+  assert.equal(plugin.generateBundle, undefined, 'No vehicle-data.js is emitted.');
   const html = plugin.transformIndexHtml.handler('<script type="module" crossorigin src="./game.js"></script>');
-  assert.equal(html, '<script defer src="./vehicle-data.js"></script><script defer src="./game.js"></script>');
+  assert.equal(html, '<script defer src="./game.js"></script>');
   assert.equal(config.build.rollupOptions.output.format, 'iife');
 });
 
-test('embedded GLB textures use image elements allowed by img-src, avoiding ImageBitmapLoader fetch', async () => {
-  const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
-  const ast = ts.createSourceFile('driving.ts', source, ts.ScriptTarget.Latest, true);
-  const method = ast.statements.find(ts.isClassDeclaration).members.find(node => node.name?.getText(ast) === 'loadReferenceVehicleModel').getText(ast);
-  const compiled = ts.transpileModule(`class RuntimeHarness { ${method} }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const parser = { textureLoader: 'fetch-based', options: { manager: {} } };
-  class TextureLoader {}
-  class GLTFLoader {
-    register(callback) { callback(parser); return this; }
-    parse() {}
+test('the sprite atlas loads as an image allowed by img-src, never through fetch', async () => {
+  const created = [];
+  globalThis.Image = class {
+    constructor() { created.push(this); }
+    set src(value) { this.loaded = value; queueMicrotask(() => this.onload?.()); }
+  };
+  try {
+    const { LoadSpriteAtlasImage } = await LoadModule('pixel/spriteAtlas.ts');
+    const image = await LoadSpriteAtlasImage('https://runner.example/games/driving-rehab/2.1.0/package/assets/driving-sprites.png');
+    assert.equal(created.length, 1);
+    assert.equal(image, created[0]);
+    assert.equal(image.loaded, 'https://runner.example/games/driving-rehab/2.1.0/package/assets/driving-sprites.png');
+  } finally {
+    delete globalThis.Image;
   }
-  const runtimeClass = new Function('GLTFLoader', 'TextureLoader', 'window', `${compiled};return RuntimeHarness;`)(GLTFLoader, TextureLoader, { DrivingRehabVehicleData: 'AAAA' });
-  const runtime = new runtimeClass();
-  Object.assign(runtime, { renderQuality: { useReferenceVehicleModel: true }, vehicleRoot: {} });
-  void runtime.loadReferenceVehicleModel();
-  assert.ok(parser.textureLoader instanceof TextureLoader);
+  const source = await readFile(resolve(gameRoot, 'pixel/spriteAtlas.ts'), 'utf8');
+  assert.doesNotMatch(source, /fetch\(/);
 });
 
 test('driving owns its UI and resources and is excluded from the Hub bundle', async () => {
@@ -107,8 +100,8 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.3');
-  for (const name of ['react', 'react-dom', 'three', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
+  assert.equal(pkg.version, '2.1.0');
+  for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('gamepad'));
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -122,7 +115,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   assert.deepEqual(await readFile(resolve(gameRoot, 'public', metadata.preview)), await readFile(resolve(root, 'apps/rehabtrainerhub/public/assets/training-modules/driving-rehab.webp')));
   const runtime = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
   assert.doesNotMatch(runtime, /fetch\(|loader\.load\(|VITE_AI_ASSET/);
-  assert.match(runtime, /loader\.parse\(/);
+  assert.match(runtime, /driving-sprites\.png', import\.meta\.url/);
   const wheel = await readFile(resolve(gameRoot, 'input/drivingInputCapabilities.ts'), 'utf8');
   assert.match(wheel, /IsDrivingWheelCalibrationUsable/);
   const component = await readFile(resolve(gameRoot, 'DrivingRehabGame.tsx'), 'utf8');

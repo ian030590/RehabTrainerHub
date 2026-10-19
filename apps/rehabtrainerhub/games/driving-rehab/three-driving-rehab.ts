@@ -1,9 +1,8 @@
-// Game-owned driving runtime.
+// Game-owned driving runtime. The view is a pseudo-3D pixel renderer in the
+// style of jakesgordon/javascript-racer: projected road polygons and scaled
+// sprites on a small 2D canvas.
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { TextureLoader } from 'three';
-import taipeiOsm from './scenes/taipei-xinyi-osm.json';
 import { MeasureDisplayRefreshRate } from './runtime/displayTiming';
 const typography = { fontFamily: 'system-ui, sans-serif' };
 import { soundManager } from './runtime/soundManager';
@@ -13,23 +12,32 @@ import {
   drivingRouteVariants,
   BuildDrivingRoute,
   PickRandomDrivingRoute,
-  ProjectTaipeiLonLat,
   type DrivingRouteVariant,
 } from './route/driving-route';
-import { three, type ThreeModule } from './scenes/driving-scene';
 import {
   CalculateDrivingCameraPose,
   type DrivingCameraMode,
 } from './camera/driving-camera';
 import {
-  CalculateDrivingViewport,
-  CaptureDrivingRendererPassState,
   CreateDrivingRenderQuality,
   DrivingViewportController,
-  RestoreDrivingRendererPassState,
   type DrivingRenderQuality,
-  type DrivingRenderQualityLevel,
 } from './rendering/driving-rendering';
+import { CalculateDriverEyePose } from './pixel/pixelCamera';
+import { CalculateDesktopMiniMapRect, CalculateSteeringWheelAngle } from './pixel/pixelCockpit';
+import { PixelDrivingRenderer, type PixelScene, type PixelVehicle } from './pixel/pixelRenderer';
+import { PixelWorldBuilder, groundLayer, type PixelWorld } from './pixel/pixelWorld';
+import { carModels, facadeIds, treeFrames, type CarModel, type VehicleColor } from './pixel/spriteNames';
+import spriteSheet from './sprites/driving-sprites.json';
+import {
+  CalculateFollowingSpeed,
+  CalculateRearSpawnDistance,
+  FindTrafficLeaderGap,
+  PlanRearTraffic,
+  ShouldRespawnRearTraffic,
+  minimumFollowingGap,
+  type TrafficBody,
+} from './traffic/drivingTraffic';
 import {
   CalculateDrivingFixedSteps,
   CalculateEstimatedPresentationTime,
@@ -58,6 +66,7 @@ import type {
   DrivingLanguage,
   HazardId,
   HazardTemplate,
+  HazardVisual,
   IntersectionZone,
   RoutePoint,
   RouteSegment,
@@ -66,26 +75,36 @@ import type {
   VehicleResetPose,
 } from './types/types';
 
+// Ground colours for the pixel world (0xRRGGBB, blended into fog at draw time).
+const worldColors = {
+  asphalt: 0x4c5157,
+  asphaltBand: 0x52575d,
+  intersection: 0x4a4f55,
+  curb: 0xc6c3b8,
+  curbRed: 0xb3392f,
+  sidewalk: 0xb3a998,
+  sidewalkBand: 0xaba18f,
+  white: 0xf0f0ea,
+  yellow: 0xf0c02a,
+  scooterBox: 0x2f8a59,
+};
+
+// Resolved while this module first runs: the IIFE build resolves these
+// against document.currentScript, which is gone once a trial starts.
+const spriteAtlasUrl = new URL('./sprites/driving-sprites.png', import.meta.url).href;
+const steeringWheelUrl = new URL('./textures/steering-wheel.svg', import.meta.url).href;
+const carPedalsUrl = new URL('./textures/car-pedals.svg', import.meta.url).href;
+
 type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
 
-interface VehicleWheelBinding {
-  node: any;
-  initialY: number;
-  baseRotationX: number;
-  baseRotationY: number;
-  baseRotationZ: number;
-  front: boolean;
-}
-
-interface AmbientTrafficActor {
-  group: any;
-  shadow: any;
-  distance: number;
-  lateral: number;
-  direction: 1 | -1;
-  speed: number;
-  targetSpeed: number;
+// Ambient vehicles move along the route; x, z and heading follow from
+// distance and lateral every step. Rear traffic (rearSlot set) stays hidden
+// while it waits for room behind the player.
+interface AmbientTrafficActor extends TrafficBody, PixelVehicle {
+  kind: 'car' | 'scooter';
   cruiseSpeed: number;
+  rearSlot: number | null;
+  waiting: boolean;
 }
 
 interface MiniMapRouteSample {
@@ -98,13 +117,6 @@ interface RouteLookup {
   segment: RouteSegment;
   index: number;
   local: number;
-}
-
-interface BoxInstanceSpec {
-  x: number;
-  y: number;
-  z: number;
-  yaw: number;
 }
 
 const info = {
@@ -172,15 +184,12 @@ type Info = typeof info;
 class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   static info = info;
 
-  private renderer: any = null;
-  private scene: any = null;
-  private camera: any = null;
-  private vehicleRoot: any = null;
-  private vehicleModel: any = null;
-  private fallbackVehicle: any = null;
-  private vehicleBlobShadow: any = null;
-  private blobShadowTexture: any = null;
-  private wheelBindings: VehicleWheelBinding[] = [];
+  private renderer: PixelDrivingRenderer | null = null;
+  private root: HTMLDivElement | null = null;
+  private pixelWorld: PixelWorld | null = null;
+  // DrivingViewportController updates a camera's aspect. The pixel camera is
+  // rebuilt from the canvas size every frame, so this one only absorbs it.
+  private readonly viewportCamera = { aspect: 1, updateProjectionMatrix() {} };
   private raf = 0;
   private unregisterRuntimeDisposer: (() => void) | null = null;
   private finished = false;
@@ -230,9 +239,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetActive = false;
   private laneResetBlackoutTimer: number | null = null;
   private laneResetClearTimer: number | null = null;
-  private needsFirstFrameCameraSnap = false;
   private cameraMode: DrivingCameraMode = 'first-person';
-  private wheelSpin = 0;
 
   // Intersection / turning state
   private intersections: IntersectionZone[] = [];
@@ -243,24 +250,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   // Mini-map
   private miniMapCanvas: HTMLCanvasElement | null = null;
   private miniMapCtx: CanvasRenderingContext2D | null = null;
-  private rearviewMirrorCanvases: Partial<Record<'center' | 'left' | 'right', HTMLCanvasElement>> = {};
-  private rearviewRenderTargets: Partial<Record<'center' | 'left' | 'right', any>> = {};
-  private rearviewPixelBuffers: Partial<Record<'center' | 'left' | 'right', Uint8Array>> = {};
-  private rearviewImageData = new WeakMap<HTMLCanvasElement, ImageData>();
-  private rearviewCamera: any = null;
-  private rearviewLookAt: any = null;
   private rearviewLastUpdateTime = 0;
-  private sideRearviewMirrorsEnabled = true;
-  private rearviewQualityLevel: DrivingRenderQualityLevel = 'high';
   private miniMapLastUpdateTime = 0;
   private miniMapLastDirectionText = '';
-  private asphaltTexture: any = null;
-  private asphaltMaterials = new Map<number, any>();
-  private signTextureCache = new Map<string, any>();
   private miniMapDirectionLabel: HTMLDivElement | null = null;
-  private cockpitSteeringWheel: HTMLDivElement | null = null;
-  private cockpitSpeedNeedle: HTMLDivElement | null = null;
-  private cockpitSpeedText: HTMLDivElement | null = null;
 
   private keyState = {
     left: false,
@@ -272,6 +265,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private keydownListener: ((event: KeyboardEvent) => void) | null = null;
   private keyupListener: ((event: KeyboardEvent) => void) | null = null;
   private touchControlsRoot: HTMLDivElement | null = null;
+  private hudPanelObserver: ResizeObserver | null = null;
   private inputPauseOverlay: HTMLDivElement | null = null;
   private inputPausedAt = 0;
   private visibilityPausedAt: number | null = null;
@@ -294,7 +288,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     event: HTMLDivElement;
     redFlash: HTMLDivElement;
     blackout?: HTMLDivElement;
-    cockpit?: HTMLDivElement;
     panel?: HTMLDivElement;
     miniMapWrapper?: HTMLDivElement;
   } | null = null;
@@ -310,10 +303,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly maxVehicleSpeed = 18;
   private readonly fixedSimulationStepMs = 1000 / 120;
   private readonly maxSimulationCatchUpMs = 250;
-  private readonly baseCameraFov = 68;
   private readonly initialRouteDistance = 18;
   private readonly routeTurnBlendDistance = 14;
-  private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
   private readonly buildingRoadMargin = 0.35;
@@ -346,11 +337,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.routeLength = total;
     this.miniMapRouteSamples = this.createMiniMapRouteSamples();
   }
-
-  private configureInitialRearviewQuality() {
-    this.rearviewQualityLevel = this.renderQuality.level;
-  }
-
   trial(displayElement: HTMLElement, trial: TrialType<Info>) {
     displayElement.replaceChildren();
     this.resetTrialState(trial);
@@ -388,21 +374,22 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.initTouchControls(root);
         this.initInputPauseOverlay(root);
-        if (this.renderQuality.useReferenceVehicleModel) {
-          await this.loadReferenceVehicleModel();
-        }
         if (this.finished) return;
         if (!displayElement.isConnected) {
           this.finishTrial(displayElement, 'aborted');
           return;
         }
-        this.updateVehicleVisual(0);
         this.updateTrafficLights(0);
         this.renderFirstFrameBeforeReveal(performance.now());
+        // The sprite atlas loads while the display refresh is measured. A load
+        // failure is held here and reported once the measurement ends.
+        // initScene() has just set the renderer; the guard above narrowed it to null.
+        const renderer = this.renderer as PixelDrivingRenderer | null;
+        const spritesLoaded = Promise.resolve(renderer?.ready).then(() => null, (error: unknown) => error);
 
-        // Measure only after high-quality scene/model initialization and a GPU
-        // warm-up render. Heavy startup work must not consume the sampling
-        // timeout or make a fast display look like the 60 Hz fallback.
+        // Measure after the scene is built and drawn once, so startup work
+        // does not eat the sampling timeout or make a fast display look like
+        // the 60 Hz fallback.
         const displayRefresh = await MeasureDisplayRefreshRate({
           signal: this.startupAbort.signal,
           sampleCount: 48,
@@ -420,6 +407,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           : 'fallback';
         root.dataset.drivingRefreshSamples = String(this.refreshSampleCount);
         if (this.finished) return;
+        const spriteError = await spritesLoaded;
+        if (spriteError) throw spriteError;
+        if (this.finished) return;
         if (!displayElement.isConnected) {
           this.finishTrial(displayElement, 'aborted');
           return;
@@ -431,7 +421,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
         this.updateVehicleFree(initialInput, 0, this.trialStartTime);
-        this.updateVehicleVisual(0);
         this.updateTrafficLights(this.trialStartTime);
         this.lastBrakePressed = initialInput.brake > 0.35;
         this.renderFirstFrameBeforeReveal(this.trialStartTime);
@@ -517,7 +506,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.previousProgress = startDistance;
     this.lateralOffset = startLaneOffset;
     this.cameraMode = 'first-person';
-    this.wheelSpin = 0;
     this.trialStartTime = 0;
     this.simulationTime = 0;
     this.simulationAccumulatorMs = 0;
@@ -532,7 +520,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.laneDeparturePose = null;
     this.laneResetActive = false;
     this.clearLaneResetTimers();
-    this.needsFirstFrameCameraSnap = true;
     this.lastBrakePressed = false;
     this.pendingBrakeTimestamp = null;
     this.fpsSamples = [];
@@ -549,31 +536,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.keyState = { left: false, right: false, up: false, down: false };
     this.miniMapCanvas = null;
     this.miniMapCtx = null;
-    this.rearviewMirrorCanvases = {};
-    this.rearviewRenderTargets = {};
-    this.rearviewPixelBuffers = {};
-    this.rearviewImageData = new WeakMap<HTMLCanvasElement, ImageData>();
-    this.rearviewCamera = null;
-    this.rearviewLookAt = null;
     this.rearviewLastUpdateTime = 0;
-    this.sideRearviewMirrorsEnabled = true;
-    this.rearviewQualityLevel = 'high';
     this.miniMapLastUpdateTime = 0;
     this.miniMapLastDirectionText = '';
-    this.asphaltTexture = null;
-    this.asphaltMaterials = new Map<number, any>();
-    this.signTextureCache = new Map<string, any>();
     this.miniMapDirectionLabel = null;
-    this.cockpitSteeringWheel = null;
-    this.cockpitSpeedNeedle = null;
-    this.cockpitSpeedText = null;
     this.gamepadConnected = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []) !== null;
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
     this.wheelCalibration = ParseDrivingWheelCalibration((trial as any)?.wheel_calibration);
     this.language = this.getLanguage((trial as any)?.language);
     this.text = drivingText[this.language];
     this.renderQuality = CreateDrivingRenderQuality((trial as any)?.render_quality);
-    this.configureInitialRearviewQuality();
 
     // Difficulty
     const diffKey = (trial as any)?.driving_difficulty ?? 'beginner';
@@ -674,15 +646,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       pointerEvents: 'auto',
     });
 
+    // Above the pedals, so the speedometer in the middle stays visible.
     const camera = CreateDrivingTouchButton('CAM', 'Switch camera view');
     camera.dataset.drivingControlGroup = 'camera';
     Object.assign(camera.style, {
       position: 'absolute',
-      left: '50%',
-      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      right: 'max(14px, env(safe-area-inset-right))',
+      bottom: 'calc(max(14px, env(safe-area-inset-bottom)) + 74px)',
       minWidth: '64px',
       height: '44px',
-      transform: 'translateX(-50%)',
       pointerEvents: 'auto',
       fontSize: '13px',
     });
@@ -697,9 +669,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     Object.assign(wheel.style, {
       position: 'absolute',
       inset: '0',
-      background: 'var(--accent)',
-      mask: `url(${new URL('./textures/steering-wheel.svg', import.meta.url).href}) center / contain no-repeat`,
-      WebkitMask: `url(${new URL('./textures/steering-wheel.svg', import.meta.url).href}) center / contain no-repeat`,
+      background: 'var(--primary)',
+      mask: `url(${steeringWheelUrl}) center / contain no-repeat`,
+      WebkitMask: `url(${steeringWheelUrl}) center / contain no-repeat`,
       filter: 'drop-shadow(0 4px 8px var(--bg-overlay))',
       pointerEvents: 'none',
       transition: 'transform 120ms ease-out',
@@ -742,7 +714,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       padding: '9px 24px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--success) 72%, transparent)',
-      backgroundImage: `url(${new URL('./textures/car-pedals.svg', import.meta.url).href})`,
+      backgroundImage: `url(${carPedalsUrl})`,
       backgroundPosition: '25% 52%',
       backgroundRepeat: 'no-repeat',
       backgroundSize: '650% auto',
@@ -757,7 +729,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       padding: '12px 10px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--error) 76%, transparent)',
-      backgroundImage: `url(${new URL('./textures/car-pedals.svg', import.meta.url).href})`,
+      backgroundImage: `url(${carPedalsUrl})`,
       backgroundPosition: '59% 54%',
       backgroundRepeat: 'no-repeat',
       backgroundSize: '650% auto',
@@ -871,7 +843,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (code === 'ArrowLeft') this.keyState.left = pressed;
       if (code === 'ArrowRight') this.keyState.right = pressed;
       if (code === 'ArrowUp') this.keyState.up = pressed;
-      if (code === 'ArrowDown') {
+      if (code === 'ArrowDown' || code === 'Space') {
         if (pressed && !this.keyState.down) {
           this.captureBrakeInputTimestamp(eventTimestamp);
         }
@@ -884,7 +856,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (code === 'KeyA') this.keyState.left = pressed;
       if (code === 'KeyD') this.keyState.right = pressed;
       if (code === 'KeyW') this.keyState.up = pressed;
-      if (code === 'KeyS') {
+      if (code === 'KeyS' || code === 'Space') {
         if (pressed && !this.keyState.down) {
           this.captureBrakeInputTimestamp(eventTimestamp);
         }
@@ -910,52 +882,41 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private initScene(root: HTMLDivElement) {
-    const three = this.requireThree();
-    this.scene = new three.Scene();
-    this.scene.background = new three.Color(0xd9eaf1);
-    this.scene.fog = new three.Fog(0xcbd7d9, this.renderQuality.fogNear, this.renderQuality.fogFar);
-
-    const initialViewport = CalculateDrivingViewport(
-      root.clientWidth,
-      root.clientHeight,
-      window.devicePixelRatio || 1,
-      this.renderQuality.pixelRatioCap,
-    );
-    this.camera = new three.PerspectiveCamera(
-      this.baseCameraFov,
-      initialViewport.aspect,
-      0.1,
-      this.renderQuality.cameraFar,
-    );
-    this.rearviewCamera = new three.PerspectiveCamera(66, 3.2, 0.1, Math.min(this.renderQuality.cameraFar, 360));
-    this.rearviewLookAt = new three.Vector3();
-
-    this.renderer = new three.WebGLRenderer({
-      antialias: this.renderQuality.antialias,
-      alpha: false,
-      powerPreference: 'high-performance',
+    this.root = root;
+    const renderer = new PixelDrivingRenderer({
+      pixelBudget: this.getPixelBudget(),
+      spriteUrl: spriteAtlasUrl,
+      wheelUrl: steeringWheelUrl,
     });
-    this.renderer.shadowMap.enabled = false;
-    this.renderer.outputColorSpace = three.SRGBColorSpace;
-    this.renderer.domElement.style.width = '100%';
-    this.renderer.domElement.style.height = '100%';
-    this.renderer.domElement.style.display = 'block';
-    root.appendChild(this.renderer.domElement);
+    this.renderer = renderer;
+    root.dataset.drivingRenderer = 'canvas-2d-pixel';
+    root.appendChild(renderer.domElement);
     this.viewportController = new DrivingViewportController({
-      renderer: this.renderer,
-      camera: this.camera,
+      renderer,
+      camera: this.viewportCamera,
       root,
       pixelRatioCap: this.renderQuality.pixelRatioCap,
       onLayoutChange: () => this.syncMobileHudLayout(),
     });
     this.viewportController.start();
 
-    this.createSceneEnvironment();
     this.buildWorld();
-    this.createVehicleVisual();
     this.createAmbientTraffic();
+    this.createRearTraffic();
     this.preloadHazardEvents();
-    if (this.renderQuality.useOsmCity) void this.loadTaipeiOsmCity();
+  }
+
+  // Number of game pixels on screen; CSS scales them up without smoothing.
+  private getPixelBudget(): number {
+    if (this.renderQuality.level === 'low') return 64_000;
+    if (this.renderQuality.level === 'medium') return 96_000;
+    return 129_600;
+  }
+
+  private getMainDrawDistance(): number {
+    if (this.renderQuality.level === 'low') return 180;
+    if (this.renderQuality.level === 'medium') return 240;
+    return 300;
   }
 
   private isTouchLandscape() {
@@ -1012,15 +973,30 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (camera) {
       camera.style.minWidth = compact ? '54px' : '64px';
       camera.style.height = compact ? '40px' : '44px';
-      camera.style.bottom = compact
-        ? `calc(${bottomInset} + ${veryNarrow ? pedalHeight + steeringSize + 26 : pedalHeight + 18}px)`
-        : bottomInset;
+      camera.style.right = pedals?.style.right ?? '';
+      camera.style.bottom = `calc(${bottomInset} + ${veryNarrow ? pedalHeight + steeringSize + 26 : pedalHeight + 10}px)`;
       camera.style.fontSize = compact ? '11px' : '13px';
     }
   }
 
   private syncMobileHudLayout() {
     this.syncTouchControlsLayout();
+    this.applyHudLayout();
+    this.syncCockpitTopOverlay();
+  }
+
+  // Lets the renderer hang the interior mirror below the status panel when
+  // the panel would cover it.
+  private syncCockpitTopOverlay() {
+    const panel = this.hud?.panel;
+    const root = this.root;
+    if (!panel || !root || !this.renderer) return;
+    const rootBox = root.getBoundingClientRect();
+    const box = panel.getBoundingClientRect();
+    this.renderer.setTopOverlay({ left: box.left - rootBox.left, right: box.right - rootBox.left, bottom: box.bottom - rootBox.top });
+  }
+
+  private applyHudLayout() {
     const hud = this.hud;
     const miniMapWrapper = hud?.miniMapWrapper;
     if (!miniMapWrapper) return;
@@ -1101,13 +1077,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       return;
     }
 
+    const root = this.root;
+    const mapRect = CalculateDesktopMiniMapRect(root?.clientWidth || window.innerWidth, root?.clientHeight || window.innerHeight);
     Object.assign(miniMapWrapper.style, {
-      top: 'auto',
+      top: `${mapRect.y}px`,
       left: 'auto',
       right: '18px',
-      bottom: '28px',
-      width: '236px',
-      height: '278px',
+      bottom: 'auto',
+      width: `${mapRect.w}px`,
+      height: `${mapRect.h}px`,
       borderRadius: '16px',
       transform: 'none',
     });
@@ -1119,7 +1097,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         lineHeight: '1.25',
       });
     }
-    if (titleBar) titleBar.style.display = 'flex';
+    if (titleBar) titleBar.style.display = mapRect.h >= 220 ? 'flex' : 'none';
     if (hudPanel) {
       Object.assign(hudPanel.style, {
         top: '16px',
@@ -1133,23 +1111,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         lineHeight: '1.3',
       });
     }
-  }
-
-  private createSceneEnvironment() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const fogRange = this.getDifficultyFogRange();
-    this.scene.fog = new three.Fog(0xcbd7d9, fogRange.near, fogRange.far);
-
-    const ambient = new three.AmbientLight(0xffffff, 1.28);
-    const sun = new three.DirectionalLight(0xffe7c2, 1.55);
-    sun.position.set(38, 62, 26);
-    sun.castShadow = false;
-
-    const hemi = new three.HemisphereLight(0xbfd4df, 0x4d6b50, 0.92);
-    this.scene.add(ambient, sun, hemi);
-    this.addSkyDome();
   }
 
   private getDifficultyFogRange(): { near: number; far: number } {
@@ -1171,71 +1132,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       near: this.renderQuality.fogNear,
       far: this.renderQuality.fogFar,
     };
-  }
-
-  private addSkyDome() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const routeBounds = this.getRouteBounds();
-    const sky = new three.Mesh(
-      new three.SphereGeometry(1200, 32, 16),
-      new three.MeshBasicMaterial({
-        map: this.createSkyTexture(),
-        side: three.DoubleSide,
-        depthWrite: false,
-        fog: false,
-      }),
-    );
-    sky.name = 'driving-sky-dome';
-    sky.position.set(
-      (routeBounds.minX + routeBounds.maxX) / 2,
-      -120,
-      (routeBounds.minZ + routeBounds.maxZ) / 2,
-    );
-    sky.renderOrder = -1000;
-    this.scene.add(sky);
-  }
-
-  private createSkyTexture() {
-    const three = this.requireThree();
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#5f9ed0');
-      gradient.addColorStop(0.42, '#a8d3e5');
-      gradient.addColorStop(0.66, '#e4eef0');
-      gradient.addColorStop(1, '#f7dfbd');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const sun = ctx.createRadialGradient(384, 74, 2, 384, 74, 92);
-      sun.addColorStop(0, 'rgba(255,246,205,0.95)');
-      sun.addColorStop(0.22, 'rgba(255,226,156,0.56)');
-      sun.addColorStop(1, 'rgba(255,226,156,0)');
-      ctx.fillStyle = sun;
-      ctx.fillRect(250, 0, 262, 190);
-
-      ctx.fillStyle = 'rgba(255,255,255,0.28)';
-      for (const [x, y, w] of [
-        [54, 72, 92],
-        [154, 48, 68],
-        [286, 96, 116],
-        [418, 122, 82],
-      ] as const) {
-        ctx.beginPath();
-        ctx.ellipse(x, y, w, 12, 0, 0, Math.PI * 2);
-        ctx.ellipse(x + w * 0.38, y + 4, w * 0.7, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    const texture = new three.CanvasTexture(canvas);
-    texture.colorSpace = three.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
   }
 
   private initHud(root: HTMLDivElement, redFlashEnabled: boolean) {
@@ -1261,6 +1157,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     event.textContent = this.text.watchRoad;
 
     const hudPanel = document.createElement('div');
+    hudPanel.dataset.drivingHud = 'status';
     Object.assign(hudPanel.style, {
       position: 'absolute',
       top: '16px',
@@ -1318,17 +1215,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       transition: `opacity ${this.laneResetBlackoutMs}ms ease`,
     });
 
-    this.sideRearviewMirrorsEnabled = true;
-
     const miniMapWrapper = this.createMiniMap();
 
-    const cockpit = this.createCockpitMask();
-    hud.append(redFlash, cockpit, hudPanel, miniMapWrapper, blackout);
+    hud.append(redFlash, hudPanel, miniMapWrapper, blackout);
     root.appendChild(hud);
 
-    this.hud = { status, route, speed, distance, view, event, redFlash, blackout, cockpit, panel: hudPanel, miniMapWrapper };
+    this.hud = { status, route, speed, distance, view, event, redFlash, blackout, panel: hudPanel, miniMapWrapper };
     this.updateCameraModeHud();
     this.syncMobileHudLayout();
+    // Longer event text can wrap the panel onto another line.
+    if (typeof ResizeObserver === 'function') {
+      this.hudPanelObserver = new ResizeObserver(() => this.syncCockpitTopOverlay());
+      this.hudPanelObserver.observe(hudPanel);
+    }
   }
 
   /** Create the GPS-style mini-map navigation panel */
@@ -1586,442 +1485,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  private createCockpitMask(): HTMLDivElement {
-    const cockpit = document.createElement('div');
-    Object.assign(cockpit.style, {
-      position: 'absolute',
-      inset: '0',
-      pointerEvents: 'none',
-      boxShadow: 'inset 0 0 0 10px rgba(4, 12, 18, 0.68), inset 0 80px 90px rgba(4, 12, 18, 0.28)',
-    });
-
-    const dash = document.createElement('div');
-    Object.assign(dash.style, {
-      position: 'absolute',
-      left: '0',
-      right: '0',
-      bottom: '0',
-      height: '24%',
-      background: 'linear-gradient(180deg, rgba(30,39,44,0.92), rgba(8,12,16,0.98))',
-      borderTop: '3px solid rgba(255,255,255,0.10)',
-      borderRadius: '50% 50% 0 0 / 16% 16% 0 0',
-    });
-
-    // Left-hand-drive cockpit: driver and steering wheel are on the left side.
-    const wheel = document.createElement('div');
-    Object.assign(wheel.style, {
-      position: 'absolute',
-      left: '38%',
-      bottom: '4%',
-      width: '220px',
-      height: '110px',
-      transform: 'translateX(-50%)',
-      transformOrigin: '50% 100%',
-      border: '18px solid rgba(9, 14, 18, 0.96)',
-      borderBottom: '0',
-      borderRadius: '140px 140px 0 0',
-      boxShadow: '0 0 0 2px rgba(255,255,255,0.08), inset 0 8px 24px rgba(255,255,255,0.06)',
-    });
-    const wheelSpoke = document.createElement('div');
-    Object.assign(wheelSpoke.style, {
-      position: 'absolute',
-      left: '50%',
-      bottom: '-8px',
-      width: '18px',
-      height: '74px',
-      transform: 'translateX(-50%)',
-      borderRadius: '12px',
-      background: 'linear-gradient(180deg, rgba(28,34,40,0.96), rgba(8,12,16,0.96))',
-      boxShadow: '0 0 0 1px rgba(255,255,255,0.08)',
-    });
-    const wheelHub = document.createElement('div');
-    Object.assign(wheelHub.style, {
-      position: 'absolute',
-      left: '50%',
-      bottom: '-18px',
-      width: '56px',
-      height: '34px',
-      transform: 'translateX(-50%)',
-      borderRadius: '999px',
-      background: 'linear-gradient(180deg, rgba(33,41,49,0.98), rgba(8,12,16,0.98))',
-      boxShadow: 'inset 0 6px 12px rgba(255,255,255,0.06)',
-    });
-    wheel.append(wheelSpoke, wheelHub);
-    this.cockpitSteeringWheel = wheel;
-
-    const cluster = document.createElement('div');
-    Object.assign(cluster.style, {
-      position: 'absolute',
-      left: '30%',
-      bottom: '8%',
-      width: '148px',
-      height: '58px',
-      transform: 'translateX(-50%)',
-      borderRadius: '48px 48px 12px 12px',
-      background: 'linear-gradient(180deg, rgba(15,23,31,0.94), rgba(3,7,12,0.96))',
-      border: '1px solid rgba(255,255,255,0.08)',
-      boxShadow: '0 8px 18px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.10)',
-    });
-    const dial = document.createElement('div');
-    Object.assign(dial.style, {
-      position: 'absolute',
-      left: '16px',
-      top: '8px',
-      width: '44px',
-      height: '44px',
-      borderRadius: '50%',
-      border: '2px solid rgba(125,211,252,0.42)',
-      background: 'radial-gradient(circle at 50% 58%, rgba(14,23,34,0.9), rgba(2,6,10,0.96))',
-    });
-    const needle = document.createElement('div');
-    Object.assign(needle.style, {
-      position: 'absolute',
-      left: '20px',
-      bottom: '20px',
-      width: '2px',
-      height: '18px',
-      transformOrigin: '50% 100%',
-      transform: 'rotate(-115deg)',
-      background: '#f87171',
-      borderRadius: '2px',
-      boxShadow: '0 0 8px rgba(248,113,113,0.75)',
-    });
-    dial.appendChild(needle);
-    const speedReadout = document.createElement('div');
-    Object.assign(speedReadout.style, {
-      position: 'absolute',
-      right: '16px',
-      top: '12px',
-      color: '#dff7ff',
-      fontSize: '15px',
-      fontWeight: '900',
-      lineHeight: '1',
-      textShadow: '0 0 10px rgba(56,189,248,0.45)',
-    });
-    speedReadout.textContent = '0';
-    const speedUnit = document.createElement('div');
-    Object.assign(speedUnit.style, {
-      position: 'absolute',
-      right: '16px',
-      top: '31px',
-      color: 'rgba(223,247,255,0.72)',
-      fontSize: '9px',
-      fontWeight: '800',
-      lineHeight: '1',
-    });
-    speedUnit.textContent = 'km/h';
-    cluster.append(dial, speedReadout, speedUnit);
-    dash.appendChild(cluster);
-    this.cockpitSpeedNeedle = needle;
-    this.cockpitSpeedText = speedReadout;
-
-    const hood = document.createElement('div');
-    Object.assign(hood.style, {
-      position: 'absolute',
-      left: '50%',
-      bottom: '19%',
-      width: '44%',
-      height: '10%',
-      transform: 'translateX(-50%)',
-      borderRadius: '50% 50% 0 0 / 70% 70% 0 0',
-      background: 'linear-gradient(180deg, rgba(59,130,246,0.72), rgba(18,31,46,0.92))',
-      boxShadow: 'inset 0 14px 28px rgba(255,255,255,0.10), 0 -8px 30px rgba(15,23,42,0.16)',
-    });
-
-    const leftPillar = document.createElement('div');
-    Object.assign(leftPillar.style, {
-      position: 'absolute',
-      left: '0',
-      top: '0',
-      width: '9%',
-      height: '100%',
-      background: 'linear-gradient(90deg, rgba(5,10,14,0.88), rgba(5,10,14,0.10))',
-      clipPath: 'polygon(0 0, 100% 0, 42% 100%, 0 100%)',
-    });
-
-    const rightPillar = document.createElement('div');
-    Object.assign(rightPillar.style, {
-      position: 'absolute',
-      right: '0',
-      top: '0',
-      width: '9%',
-      height: '100%',
-      background: 'linear-gradient(270deg, rgba(5,10,14,0.88), rgba(5,10,14,0.10))',
-      clipPath: 'polygon(0 0, 100% 0, 100% 100%, 58% 100%)',
-    });
-
-    const centerMirror = this.createRearviewMirror('center');
-    cockpit.append(hood, dash, wheel, leftPillar, rightPillar, centerMirror);
-    if (this.sideRearviewMirrorsEnabled) {
-      cockpit.append(this.createRearviewMirror('left'), this.createRearviewMirror('right'));
-    }
-    return cockpit;
-  }
-
-  private createRearviewMirror(position: 'center' | 'left' | 'right'): HTMLDivElement {
-    const mirror = document.createElement('div');
-    const isCenter = position === 'center';
-    const isLeft = position === 'left';
-    mirror.dataset.rearviewWrapper = position;
-
-    Object.assign(mirror.style, {
-      position: 'absolute',
-      overflow: 'hidden',
-      background: 'linear-gradient(145deg, rgba(5, 10, 14, 0.98), rgba(18, 27, 34, 0.98))',
-      border: isCenter ? '5px solid rgba(7, 11, 15, 0.98)' : '4px solid rgba(7, 11, 15, 0.96)',
-      borderRadius: isCenter ? '10px' : '18px 22px 20px 18px / 16px 18px 22px 20px',
-      boxShadow: '0 10px 22px rgba(0,0,0,0.36), inset 0 0 0 1px rgba(255,255,255,0.10)',
-    });
-
-    if (isCenter) {
-      Object.assign(mirror.style, {
-        left: '50%',
-        top: '112px',
-        width: '210px',
-        height: '52px',
-        transform: 'translateX(-50%)',
-      });
-    } else {
-      Object.assign(mirror.style, {
-        top: '44%',
-        width: '128px',
-        height: '72px',
-        transform: isLeft ? 'skewY(-5deg) rotate(-2deg)' : 'skewY(5deg) rotate(2deg)',
-      });
-      if (isLeft) {
-        mirror.style.left = '18px';
-      } else {
-        mirror.style.right = '18px';
-      }
-    }
-
-    const glass = document.createElement('div');
-    Object.assign(glass.style, {
-      position: 'absolute',
-      inset: isCenter ? '4px 6px' : '5px',
-      overflow: 'hidden',
-      borderRadius: isCenter ? '6px' : '14px 18px 16px 14px / 12px 14px 18px 16px',
-      background: '#071118',
-      boxShadow: 'inset 0 0 18px rgba(0,0,0,0.44)',
-    });
-
-    const canvas = document.createElement('canvas');
-    const canvasSize = this.getRearviewCanvasSize(position);
-    canvas.width = canvasSize.width;
-    canvas.height = canvasSize.height;
-    canvas.dataset.rearviewMirror = position;
-    Object.assign(canvas.style, {
-      position: 'absolute',
-      inset: '0',
-      width: '100%',
-      height: '100%',
-      display: 'block',
-      background: '#071118',
-      transform: 'scaleX(-1)',
-    });
-    this.rearviewMirrorCanvases[position] = canvas;
-
-    const highlight = document.createElement('div');
-    Object.assign(highlight.style, {
-      position: 'absolute',
-      inset: '0',
-      background: 'linear-gradient(120deg, rgba(255,255,255,0.18), rgba(255,255,255,0.02) 30%, rgba(255,255,255,0) 54%)',
-    });
-
-    const vignette = document.createElement('div');
-    Object.assign(vignette.style, {
-      position: 'absolute',
-      inset: '0',
-      boxShadow: 'inset 0 0 18px rgba(0,0,0,0.62)',
-    });
-
-    glass.append(canvas, highlight, vignette);
-    mirror.appendChild(glass);
-    return mirror;
-  }
-
-  private updateRearviewMirrors(time: number) {
-    if (!this.renderer || !this.scene || !this.rearviewCamera) return;
-    if (this.cameraMode !== 'first-person') return;
-    if (time - this.rearviewLastUpdateTime < this.getRearviewUpdateIntervalMs()) return;
-    this.rearviewLastUpdateTime = time;
-
-    const centerCanvas = this.rearviewMirrorCanvases.center;
-    const leftCanvas = this.sideRearviewMirrorsEnabled ? this.rearviewMirrorCanvases.left : null;
-    const rightCanvas = this.sideRearviewMirrorsEnabled ? this.rearviewMirrorCanvases.right : null;
-    const centerConnected = Boolean(centerCanvas?.isConnected);
-    const leftConnected = Boolean(leftCanvas?.isConnected);
-    const rightConnected = Boolean(rightCanvas?.isConnected);
-    if (!centerConnected && !leftConnected && !rightConnected) return;
-
-    const vehicleBox = this.getVehicleCollisionBox();
-    const forward = this.getForwardVector(this.vehicleHeading);
-    const right = this.getRightVector(this.vehicleHeading);
-    const three = this.requireThree();
-    const rendererState = CaptureDrivingRendererPassState(
-      this.renderer,
-      () => new three.Vector4(),
-    );
-    const previousVehicleVisible = this.vehicleRoot?.visible;
-    if (this.vehicleRoot) this.vehicleRoot.visible = false;
-
-    try {
-      if (centerConnected && centerCanvas) {
-        this.renderRearviewMirror('center', centerCanvas, vehicleBox, forward, right);
-      }
-
-      if (leftConnected && leftCanvas) {
-        this.renderRearviewMirror('left', leftCanvas, vehicleBox, forward, right);
-      }
-      if (rightConnected && rightCanvas) {
-        this.renderRearviewMirror('right', rightCanvas, vehicleBox, forward, right);
-      }
-    } finally {
-      RestoreDrivingRendererPassState(this.renderer, rendererState);
-      if (this.vehicleRoot && previousVehicleVisible !== undefined) {
-        this.vehicleRoot.visible = previousVehicleVisible;
-      }
-    }
-  }
-
-  private renderRearviewMirror(
-    position: 'center' | 'left' | 'right',
-    canvas: HTMLCanvasElement,
-    vehicleBox: CollisionBox2D,
-    forward: Vec2,
-    right: Vec2,
-  ) {
-    if (!this.renderer || !this.scene || !this.rearviewCamera) return;
-
-    const three = this.requireThree();
-    const width = Math.max(1, canvas.width);
-    const height = Math.max(1, canvas.height);
-    const target = this.getRearviewRenderTarget(position, width, height);
-    const side = position === 'center' ? 0 : position === 'left' ? -1 : 1;
-    const sideOffset = position === 'center' ? 0 : side * 1.45;
-    const sideLook = position === 'center' ? 0 : side * 32;
-    const eyeBack = position === 'center' ? 1.2 : 0.45;
-    const eyeHeight = position === 'center' ? 2.22 : 1.84;
-    const lookDistance = position === 'center' ? 115 : 82;
-
-    this.rearviewCamera.fov = position === 'center' ? 52 : 66;
-    this.rearviewCamera.aspect = width / height;
-    this.rearviewCamera.updateProjectionMatrix();
-    this.rearviewCamera.position.set(
-      vehicleBox.centerX - forward.x * eyeBack + right.x * sideOffset,
-      eyeHeight,
-      vehicleBox.centerZ - forward.z * eyeBack + right.z * sideOffset,
-    );
-    const lookAt = this.rearviewLookAt ?? new three.Vector3();
-    this.rearviewLookAt = lookAt;
-    lookAt.set(
-      vehicleBox.centerX - forward.x * lookDistance + right.x * sideLook,
-      1.28,
-      vehicleBox.centerZ - forward.z * lookDistance + right.z * sideLook,
-    );
-    this.rearviewCamera.lookAt(lookAt);
-
-    this.renderer.setRenderTarget(target);
-    this.renderer.clear(true, true, true);
-    this.renderer.render(this.scene, this.rearviewCamera);
-    const pixels = this.getRearviewPixelBuffer(position, width, height);
-    this.renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
-    this.copyRearviewPixelsToCanvas(pixels, canvas);
-  }
-
   private getRearviewUpdateIntervalMs(): number {
     return 1000 / 30;
   }
 
-  private getRearviewCanvasSize(position: 'center' | 'left' | 'right') {
-    const isCenter = position === 'center';
-    const baseWidth = isCenter ? 320 : 192;
-    const baseHeight = isCenter ? 82 : 108;
-    const scale = this.rearviewQualityLevel === 'high'
-      ? 1
-      : this.rearviewQualityLevel === 'medium'
-        ? 0.72
-        : 0.5;
-    return {
-      width: Math.max(1, Math.round(baseWidth * scale)),
-      height: Math.max(1, Math.round(baseHeight * scale)),
-    };
-  }
-
-  private getRearviewRenderTarget(position: 'center' | 'left' | 'right', width: number, height: number) {
-    const existing = this.rearviewRenderTargets[position];
-    if (existing?.width === width && existing?.height === height) return existing;
-    existing?.dispose?.();
-    const three = this.requireThree();
-    const target = new three.WebGLRenderTarget(width, height, { depthBuffer: true, stencilBuffer: false });
-    target.texture.colorSpace = three.SRGBColorSpace;
-    this.rearviewRenderTargets[position] = target;
-    this.rearviewPixelBuffers[position] = new Uint8Array(width * height * 4);
-    return target;
-  }
-
-  private getRearviewPixelBuffer(position: 'center' | 'left' | 'right', width: number, height: number): Uint8Array {
-    const existing = this.rearviewPixelBuffers[position];
-    if (existing && existing.length === width * height * 4) return existing;
-    const next = new Uint8Array(width * height * 4);
-    this.rearviewPixelBuffers[position] = next;
-    return next;
-  }
-
-  private copyRearviewPixelsToCanvas(pixels: Uint8Array, canvas: HTMLCanvasElement) {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const { width, height } = canvas;
-    let imageData = this.rearviewImageData.get(canvas);
-    if (!imageData || imageData.width !== width || imageData.height !== height) {
-      imageData = ctx.createImageData(width, height);
-      this.rearviewImageData.set(canvas, imageData);
-    }
-    const rowLength = width * 4;
-    for (let y = 0; y < height; y += 1) {
-      const sourceStart = (height - y - 1) * rowLength;
-      const targetStart = y * rowLength;
-      imageData.data.set(pixels.subarray(sourceStart, sourceStart + rowLength), targetStart);
-    }
-    ctx.putImageData(imageData, 0, 0);
-  }
-
   private buildWorld() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
     this.roadCollisionBoxes = [];
     this.buildingCollisionBoxes = [];
-
-    const roadBaseMat = new three.MeshStandardMaterial({ color: 0x2b3035, roughness: 0.9, metalness: 0.08 });
-    const centerLineMat = new three.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.76, metalness: 0.05 });
-    const laneDividerMat = new three.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.72, metalness: 0.03 });
-    const stopLineMat = new three.MeshStandardMaterial({ color: 0xffffff, roughness: 0.68, metalness: 0.04 });
-    const edgeMat = new three.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.7,
-      metalness: 0.08,
-      emissive: 0xaa1111,
-      emissiveIntensity: 0.24,
-    });
-    const grassMat = new three.MeshStandardMaterial({
-      color: 0x4f8d55,
-      roughness: 0.86,
-      metalness: 0.02,
-      dithering: true,
-    });
-
-    const routeBounds = this.getRouteBounds();
-    const groundSize = Math.max(
-      1800,
-      routeBounds.maxX - routeBounds.minX + 720,
-      routeBounds.maxZ - routeBounds.minZ + 720,
-    );
-    const ground = new three.Mesh(new three.PlaneGeometry(groundSize, groundSize, 64, 64), grassMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set((routeBounds.minX + routeBounds.maxX) / 2, -0.52, (routeBounds.minZ + routeBounds.maxZ) / 2);
-    ground.receiveShadow = false;
-    this.scene.add(ground);
+    const world = new PixelWorldBuilder();
 
     let segmentStartDistance = 0;
     for (const segment of this.route) {
@@ -2030,24 +1501,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         z: segment.start.z + segment.dir.z * segment.length / 2,
       };
       const heading = this.getHeadingFromDirection(segment.dir);
-      const angle = this.getSceneYawFromHeading(heading);
       const normal = this.getRouteRightVector(segment.dir);
       const roadWidth = this.getSegmentRoadWidth(segment);
 
-      const roadBase = new three.Mesh(new three.BoxGeometry(roadWidth + 0.44, 0.08, segment.length), roadBaseMat);
-      roadBase.position.set(mid.x, -0.03, mid.z);
-      roadBase.rotation.y = angle;
-      roadBase.receiveShadow = false;
-      this.scene.add(roadBase);
-
-      const road = new three.Mesh(
-        new three.BoxGeometry(roadWidth, 0.045, segment.length),
-        this.createAsphaltRoadMaterial(segment.length),
-      );
-      road.position.set(mid.x, 0.015, mid.z);
-      road.rotation.y = angle;
-      road.receiveShadow = false;
-      this.scene.add(road);
+      this.addRoadSurface(world, segment.start, segment.dir, normal, 0, segment.length, roadWidth, segmentStartDistance);
       this.roadCollisionBoxes.push({
         centerX: mid.x,
         centerZ: mid.z,
@@ -2056,29 +1513,31 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         halfLength: segment.length / 2,
       });
 
-      this.addRoadEdgeMarkings(segment, segmentStartDistance, angle, normal, edgeMat);
-      this.addLaneMarkings(segment, segmentStartDistance, angle, normal, centerLineMat, laneDividerMat);
+      this.addRoadEdgeMarkings(world, segment, segmentStartDistance, normal);
+      this.addLaneMarkings(world, segment, segmentStartDistance, normal);
       segmentStartDistance += segment.length;
     }
 
-    this.addLeftDriveStopLines(stopLineMat);
-    this.addTrafficLights();
+    this.addLeftDriveStopLines(world);
+    this.addTrafficLights(world);
 
     for (const inter of this.intersections) {
       const point = this.getRoutePoint(inter.distance);
       const approachWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex]);
       const nextWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex + 1] ?? this.route[inter.segmentIndex]);
       const intersectionWidth = Math.max(approachWidth, nextWidth) + 18;
-      const cross = new three.Mesh(
-        new three.BoxGeometry(approachWidth + 18, 0.04, intersectionWidth),
-        this.createAsphaltRoadMaterial(intersectionWidth),
-      );
-      cross.position.set(point.x, 0.025, point.z);
       const crossHeading = this.getHeadingFromDirection(point.normal);
-      const crossAngle = this.getSceneYawFromHeading(crossHeading);
-      cross.rotation.y = crossAngle;
-      cross.receiveShadow = false;
-      this.scene.add(cross);
+      world.addStrip(
+        point,
+        point.dir,
+        point.normal,
+        -(approachWidth + 18) / 2,
+        (approachWidth + 18) / 2,
+        -intersectionWidth / 2,
+        intersectionWidth / 2,
+        worldColors.intersection,
+        groundLayer.asphalt,
+      );
       this.roadCollisionBoxes.push({
         centerX: point.x,
         centerZ: point.z,
@@ -2086,304 +1545,193 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         halfWidth: (approachWidth + 18) / 2,
         halfLength: intersectionWidth / 2,
       });
+      this.addCrossStreets(world, inter, point, approachWidth, nextWidth, intersectionWidth);
     }
-    this.addBuildings();
-    this.addTaiwanStreetDetails();
-    this.addTurnSignage();
-    this.addDestinationMarker();
+    this.addBuildings(world);
+    this.addTaiwanStreetDetails(world);
+    this.addTurnSignage(world);
+    this.addDestinationMarker(world);
+    this.pixelWorld = world.finish();
   }
 
-  private addLeftDriveStopLines(material: any) {
-    const three = this.requireThree();
-    if (!this.scene) return;
+  // Asphalt in alternating bands, the speed cue javascript-racer uses, with a
+  // curb and a sidewalk on both sides. Curbs near intersections are painted
+  // red (no stopping), as on Taipei streets.
+  private addRoadSurface(
+    world: PixelWorldBuilder,
+    origin: Vec2,
+    dir: Vec2,
+    normal: Vec2,
+    from: number,
+    to: number,
+    roadWidth: number,
+    routeStart: number | null,
+  ) {
+    const half = roadWidth / 2;
+    const step = 6;
+    const curbWidth = 0.25;
+    const curbPiece = 1.5;
+    for (let start = from; start < to - 0.01; start += step) {
+      const end = Math.min(to, start + step);
+      const band = Math.floor(((routeStart ?? 0) + start) / step) % 2 === 0;
+      world.addStrip(origin, dir, normal, start, end, -half, half, band ? worldColors.asphalt : worldColors.asphaltBand, groundLayer.asphalt);
+      const redCurb = routeStart !== null && this.isNearIntersection(routeStart + (start + end) / 2, this.roadMarkingIntersectionClearance);
+      for (const side of [-1, 1]) {
+        const curbInner = side * half;
+        const curbOuter = side * (half + curbWidth);
+        const walkOuter = side * (half + curbWidth + this.sidewalkWidth);
+        world.addStrip(
+          origin, dir, normal, start, end,
+          Math.min(curbOuter, walkOuter), Math.max(curbOuter, walkOuter),
+          band ? worldColors.sidewalk : worldColors.sidewalkBand,
+          groundLayer.sidewalk,
+        );
+        if (!redCurb) {
+          world.addStrip(origin, dir, normal, start, end, Math.min(curbInner, curbOuter), Math.max(curbInner, curbOuter), worldColors.curb, groundLayer.curb);
+          continue;
+        }
+        for (let piece = start; piece < end - 0.01; piece += curbPiece) {
+          const red = Math.floor(((routeStart ?? 0) + piece) / curbPiece) % 2 === 0;
+          world.addStrip(
+            origin, dir, normal, piece, Math.min(end, piece + curbPiece),
+            Math.min(curbInner, curbOuter), Math.max(curbInner, curbOuter),
+            red ? worldColors.curbRed : worldColors.curb,
+            groundLayer.curb,
+          );
+        }
+      }
+    }
+  }
 
+  // Side streets leave each intersection so it reads as a crossing, not a
+  // corner. They are scenery only and have no collision boxes.
+  private addCrossStreets(world: PixelWorldBuilder, inter: IntersectionZone, point: RoutePoint, approachWidth: number, nextWidth: number, intersectionWidth: number) {
+    const armLength = 60;
+    const next = this.route[inter.segmentIndex + 1];
+    const arms: Array<{ dir: Vec2; from: number; width: number }> = [
+      { dir: point.dir, from: (approachWidth + 18) / 2, width: approachWidth },
+      { dir: point.normal, from: intersectionWidth / 2, width: nextWidth },
+      { dir: { x: -point.normal.x, z: -point.normal.z }, from: intersectionWidth / 2, width: nextWidth },
+    ];
+    for (const arm of arms) {
+      // The route itself already paves the arm it continues along.
+      if (next && arm.dir.x * next.dir.x + arm.dir.z * next.dir.z > 0.9) continue;
+      this.addRoadSurface(world, point, arm.dir, this.getRouteRightVector(arm.dir), arm.from, armLength, arm.width, null);
+    }
+  }
+
+  private addLeftDriveStopLines(world: PixelWorldBuilder) {
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
       if (!segment) continue;
 
       const localDistance = Math.max(1, segment.length - this.stopLineSetback);
       const normal = this.getRouteRightVector(segment.dir);
-      const angle = this.getSceneYawForDirection(segment.dir);
       const roadWidth = this.getSegmentRoadWidth(segment);
       const laneOffset = this.getDrivingLaneOffset(inter.distance - this.stopLineSetback);
       const laneWidth = Math.max(3.0, roadWidth / 2 - 1.6);
-      const stopLine = new three.Mesh(new three.BoxGeometry(laneWidth, 0.052, 0.72), material);
-      stopLine.position.set(
-        segment.start.x + segment.dir.x * localDistance + normal.x * laneOffset,
-        0.085,
-        segment.start.z + segment.dir.z * localDistance + normal.z * laneOffset,
-      );
-      stopLine.rotation.y = angle;
-      this.scene.add(stopLine);
+      this.addMarking(world, segment.start, segment.dir, normal, localDistance, laneOffset, laneWidth, 0.72, worldColors.white);
     }
   }
 
-  private addTrafficLights() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const postMat = new three.MeshStandardMaterial({ color: 0x29323a, roughness: 0.58, metalness: 0.35 });
-    const housingMat = new three.MeshStandardMaterial({ color: 0x111827, roughness: 0.62, metalness: 0.18 });
-    const pedestrianMat = new three.MeshStandardMaterial({ color: 0x0b1720, roughness: 0.62, metalness: 0.14 });
-    const walkMat = new three.MeshBasicMaterial({ color: 0x21e66f });
-
-    for (const inter of this.intersections) {
+  private addTrafficLights(world: PixelWorldBuilder) {
+    this.intersections.forEach((inter, index) => {
       const segment = this.route[inter.segmentIndex];
-      if (!segment) continue;
+      if (!segment) return;
 
       const normal = this.getRouteRightVector(segment.dir);
-      const angle = this.getSceneYawForDirection(segment.dir);
       const localDistance = Math.max(2, segment.length - this.stopLineSetback - 2.4);
       const roadWidth = this.getSegmentRoadWidth(segment);
-      const baseX = segment.start.x + segment.dir.x * localDistance + normal.x * (roadWidth / 2 + 1.2);
-      const baseZ = segment.start.z + segment.dir.z * localDistance + normal.z * (roadWidth / 2 + 1.2);
-
-      const group = new three.Group();
-      const post = new three.Mesh(new three.CylinderGeometry(0.12, 0.16, 4.4, 10), postMat);
-      post.position.y = 2.2;
-      const housing = new three.Mesh(new three.BoxGeometry(0.78, 2.25, 0.36), housingMat);
-      housing.position.set(0, 4.35, 0);
-      const red = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x451414 }));
-      const yellow = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x4a3a16 }));
-      const green = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x123d24 }));
-      red.position.set(0, 4.9, 0.2);
-      yellow.position.set(0, 4.35, 0.2);
-      green.position.set(0, 3.8, 0.2);
-      const pedestrianBox = new three.Mesh(new three.BoxGeometry(0.68, 0.58, 0.18), pedestrianMat);
-      pedestrianBox.position.set(0, 2.62, 0.18);
-      const littleGreenHead = new three.Mesh(new three.SphereGeometry(0.07, 10, 8), walkMat);
-      littleGreenHead.position.set(0, 2.72, 0.29);
-      const littleGreenBody = new three.Mesh(new three.BoxGeometry(0.08, 0.16, 0.03), walkMat);
-      littleGreenBody.position.set(0, 2.56, 0.29);
-      const littleGreenLeg = new three.Mesh(new three.BoxGeometry(0.2, 0.04, 0.03), walkMat);
-      littleGreenLeg.position.set(0.02, 2.43, 0.29);
-      littleGreenLeg.rotation.z = -0.35;
-      group.add(post, housing, red, yellow, green, pedestrianBox, littleGreenHead, littleGreenBody, littleGreenLeg);
-      group.position.set(baseX, 0, baseZ);
-      group.rotation.y = angle;
-      group.traverse?.((child: any) => {
-        child.castShadow = false;
-        child.receiveShadow = false;
-      });
-      this.scene.add(group);
-      inter.trafficLightGroup = group;
-      inter.trafficLightLamps = { red, yellow, green };
-    }
+      const base = {
+        x: segment.start.x + segment.dir.x * localDistance + normal.x * (roadWidth / 2 + 1.2),
+        z: segment.start.z + segment.dir.z * localDistance + normal.z * (roadWidth / 2 + 1.2),
+      };
+      // A small kerbed island keeps the signal post off the intersection asphalt.
+      world.addStrip(base, segment.dir, normal, -0.9, 0.9, -0.9, 0.9, worldColors.sidewalk, groundLayer.paint);
+      world.addProp({ x: base.x, z: base.z, signal: index });
+    });
   }
 
-  private addTaiwanStreetDetails() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const scooterBoxMat = new three.MeshStandardMaterial({ color: 0x0f8b57, roughness: 0.72, metalness: 0.04 });
-    const laneMarkMat = new three.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, metalness: 0.02 });
-    const poleMat = new three.MeshStandardMaterial({ color: 0x27272a, roughness: 0.74, metalness: 0.08 });
-    const yellowMat = new three.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65, metalness: 0.04 });
-    const utilityMat = new three.MeshStandardMaterial({ color: 0x9aa3a9, roughness: 0.76, metalness: 0.12 });
-    const arcadeMat = new three.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.82, metalness: 0.02 });
-    const columnMat = new three.MeshStandardMaterial({ color: 0xb9b3a7, roughness: 0.86, metalness: 0.02 });
-
+  private addTaiwanStreetDetails(world: PixelWorldBuilder) {
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
       if (!segment) continue;
       const normal = this.getRouteRightVector(segment.dir);
-      const angle = this.getSceneYawForDirection(segment.dir);
       const boxDistance = Math.max(2, segment.length - this.stopLineSetback - 6.2);
       const roadWidth = this.getSegmentRoadWidth(segment);
       const laneOffset = this.getDrivingLaneOffset(inter.distance - this.stopLineSetback);
-      const center = {
-        x: segment.start.x + segment.dir.x * boxDistance + normal.x * laneOffset,
-        z: segment.start.z + segment.dir.z * boxDistance + normal.z * laneOffset,
-      };
 
-      const waitingBox = new three.Mesh(new three.BoxGeometry(Math.max(3.4, roadWidth / 2 - 1.4), 0.036, 4.8), scooterBoxMat);
-      waitingBox.position.set(center.x, 0.105, center.z);
-      waitingBox.rotation.y = angle;
-      this.scene.add(waitingBox);
-
+      // Scooter waiting box with its white side lines.
+      this.addMarking(world, segment.start, segment.dir, normal, boxDistance, laneOffset, Math.max(3.4, roadWidth / 2 - 1.4), 4.8, worldColors.scooterBox);
       for (const side of [-1, 1]) {
-        const line = new three.Mesh(new three.BoxGeometry(0.14, 0.048, 4.8), laneMarkMat);
-        line.position.set(
-          center.x + normal.x * side * (roadWidth / 4 - 0.35),
-          0.13,
-          center.z + normal.z * side * (roadWidth / 4 - 0.35),
-        );
-        line.rotation.y = angle;
-        this.scene.add(line);
+        this.addMarking(world, segment.start, segment.dir, normal, boxDistance, laneOffset + side * (roadWidth / 4 - 0.35), 0.14, 4.8, worldColors.white);
       }
     }
 
     const streetDetailStep = this.renderQuality.level === 'low' ? 44 : 22;
-    const arcadeStep = this.renderQuality.level === 'low' ? 72 : this.renderQuality.level === 'medium' ? 48 : 36;
-    const utilityBoxInstances: BoxInstanceSpec[] = [];
-    const parkingBayInstances: BoxInstanceSpec[] = [];
-
     for (let d = 18; d < this.routeLength - 12; d += streetDetailStep) {
-      if (this.isNearIntersection(d, 14)) continue;
       const point = this.getRoutePoint(d);
-      const angle = this.getSceneYawForDirection(point.dir);
       const roadWidth = point.roadWidth;
+      const slot = Math.floor(d / 22);
+      const nearIntersection = this.isNearIntersectionPlaza(d, 1);
+      const treeDistance = d + streetDetailStep / 2;
+      const treePoint = treeDistance < this.routeLength - 12 && !this.isNearIntersectionPlaza(treeDistance, 1)
+        ? this.getRoutePoint(treeDistance)
+        : null;
 
       for (const side of [-1, 1]) {
-        if ((Math.floor(d / 22) + side) % 2 === 0) {
-          const pole = new three.Group();
-          const shaft = new three.Mesh(new three.CylinderGeometry(0.13, 0.16, 5.2, 10), poleMat);
-          shaft.position.y = 2.6;
-          pole.add(shaft);
-          for (let band = 0; band < 4; band += 1) {
-            const stripe = new three.Mesh(new three.BoxGeometry(0.34, 0.18, 0.04), yellowMat);
-            stripe.position.set(0, 0.75 + band * 0.32, -0.16);
-            stripe.rotation.z = band % 2 ? -0.25 : 0.25;
-            pole.add(stripe);
-          }
-          const arm = new three.Mesh(new three.BoxGeometry(2.4, 0.08, 0.08), poleMat);
-          arm.position.set(side * 0.95, 4.85, 0);
-          pole.add(arm);
-          pole.position.set(
-            point.x + point.normal.x * side * (roadWidth / 2 + 2.0),
-            0,
-            point.z + point.normal.z * side * (roadWidth / 2 + 2.0),
-          );
-          pole.rotation.y = angle;
-          this.scene.add(pole);
+        if (treePoint) {
+          const tree = this.getRouteLateralPoint(treePoint, side * (treePoint.roadWidth / 2 + 2.4));
+          world.addProp({ ...tree, frame: treeFrames[(slot + (side > 0 ? 1 : 0)) % treeFrames.length] });
+        }
+        if (nearIntersection) continue;
+
+        if ((slot + side) % 2 === 0) {
+          // The lamp arm reaches over the road from either side.
+          const lamp = this.getRouteLateralPoint(point, side * (roadWidth / 2 + 2.0));
+          world.addProp({ ...lamp, frame: 'prop/street-light', mirrored: side > 0 });
+          continue;
         }
 
-        if ((Math.floor(d / 22) + side) % 3 === 0) {
-          utilityBoxInstances.push({
-            x: point.x + point.normal.x * side * (roadWidth / 2 + 1.4),
-            y: 0.9,
-            z: point.z + point.normal.z * side * (roadWidth / 2 + 1.4),
-            yaw: angle,
-          });
+        const bayOffset = side * (roadWidth / 2 + 0.65);
+        for (const across of [-0.95, 0.95]) {
+          this.addMarking(world, point, point.dir, point.normal, 0, bayOffset + across, 0.1, 4.0, worldColors.white);
         }
-
-        if ((Math.floor(d / 22) + side) % 2 !== 0) {
-          const bayCenter = {
-            x: point.x + point.normal.x * side * (roadWidth / 2 + 0.65),
-            z: point.z + point.normal.z * side * (roadWidth / 2 + 0.65),
-          };
-          parkingBayInstances.push({
-            x: bayCenter.x,
-            y: 0.11,
-            z: bayCenter.z,
-            yaw: angle,
-          });
-          if (this.renderQuality.level !== 'low' && d % 44 === 18) {
-            const scooter = this.createScooterMesh(0x2563eb);
-            scooter.position.set(bayCenter.x, 0.12, bayCenter.z);
-            scooter.rotation.y = angle + Math.PI * 0.5 * side;
-            scooter.scale.setScalar(0.86);
-            this.scene.add(scooter);
-          }
+        for (const along of [-1.95, 1.95]) {
+          this.addMarking(world, point, point.dir, point.normal, along, bayOffset, 2.0, 0.1, worldColors.white);
         }
-      }
-    }
-
-    this.addBoxInstances(1.2, 1.8, 0.72, utilityMat, utilityBoxInstances);
-    this.addBoxInstances(2.0, 0.035, 4.0, laneMarkMat, parkingBayInstances);
-
-    for (let d = 28; d < this.routeLength - 25; d += arcadeStep) {
-      if (this.isNearIntersection(d, 18)) continue;
-      const point = this.getRoutePoint(d);
-      const angle = this.getSceneYawForDirection(point.dir);
-      const roadWidth = point.roadWidth;
-      for (const side of [-1, 1]) {
-        const arcade = new three.Group();
-        const canopy = new three.Mesh(new three.BoxGeometry(12, 0.28, 3.2), arcadeMat);
-        canopy.position.y = 3.05;
-        arcade.add(canopy);
-        for (const x of [-4.8, -2.4, 0, 2.4, 4.8]) {
-          const column = new three.Mesh(new three.BoxGeometry(0.22, 3.0, 0.22), columnMat);
-          column.position.set(x, 1.5, 1.18);
-          arcade.add(column);
+        if (this.renderQuality.level !== 'low' && d % 44 === 18) {
+          world.addProp({ ...this.getRouteLateralPoint(point, bayOffset), frame: 'prop/parked-scooter' });
         }
-        arcade.position.set(
-          point.x + point.normal.x * side * (roadWidth / 2 + 5.2),
-          0,
-          point.z + point.normal.z * side * (roadWidth / 2 + 5.2),
-        );
-        arcade.rotation.y = angle + (side > 0 ? 0 : Math.PI);
-        arcade.traverse?.((child: any) => {
-          child.castShadow = false;
-          child.receiveShadow = false;
-        });
-        this.scene.add(arcade);
+        if ((slot + side) % 3 === 0) {
+          world.addProp({ ...this.getRouteLateralPoint(point, side * (roadWidth / 2 + 3.0)), frame: 'prop/utility-pole' });
+        }
       }
     }
   }
 
-  private addRoadEdgeMarkings(
-    segment: RouteSegment,
-    segmentStartDistance: number,
-    angle: number,
-    normal: Vec2,
-    material: any,
-  ) {
-    if (!this.scene) return;
+  // Thin painted rectangle centred on (along, across) in a road's frame.
+  private addMarking(world: PixelWorldBuilder, origin: Vec2, dir: Vec2, normal: Vec2, along: number, across: number, width: number, length: number, color: number) {
+    world.addStrip(origin, dir, normal, along - length / 2, along + length / 2, across - width / 2, across + width / 2, color, groundLayer.paint);
+  }
 
+  private addRoadEdgeMarkings(world: PixelWorldBuilder, segment: RouteSegment, segmentStartDistance: number, normal: Vec2) {
     const edgeLength = 10;
     const roadWidth = this.getSegmentRoadWidth(segment);
-    const instances: BoxInstanceSpec[] = [];
     for (let d = edgeLength / 2; d < segment.length; d += edgeLength + 1.5) {
       if (this.isNearIntersection(segmentStartDistance + d, this.roadMarkingIntersectionClearance)) continue;
-      const center = {
-        x: segment.start.x + segment.dir.x * d,
-        z: segment.start.z + segment.dir.z * d,
-      };
       for (const side of [-1, 1]) {
-        instances.push({
-          x: center.x + normal.x * side * (roadWidth / 2 - 0.1),
-          y: 0.06,
-          z: center.z + normal.z * side * (roadWidth / 2 - 0.1),
-          yaw: angle,
-        });
+        this.addMarking(world, segment.start, segment.dir, normal, d, side * (roadWidth / 2 - 0.1), 0.18, edgeLength, worldColors.white);
       }
     }
-    this.addBoxInstances(0.18, 0.055, edgeLength, material, instances);
   }
 
-  private addLaneMarkings(
-    segment: RouteSegment,
-    segmentStartDistance: number,
-    angle: number,
-    normal: Vec2,
-    centerLineMat: any,
-    laneDividerMat: any,
-  ) {
-    if (!this.scene) return;
-
+  private addLaneMarkings(world: PixelWorldBuilder, segment: RouteSegment, segmentStartDistance: number, normal: Vec2) {
     const laneCount = this.getSegmentLaneCount(segment);
     if (laneCount <= 1) return;
 
     const laneWidth = this.getSegmentLaneWidth(segment);
     const dividerOffsets = this.getLaneDividerOffsets(segment);
-    const centerDashInstances: BoxInstanceSpec[] = [];
-    const centerSolidInstances: BoxInstanceSpec[] = [];
-    const laneDashInstances: BoxInstanceSpec[] = [];
-
-    const addStripeInstance = (instances: BoxInstanceSpec[], distance: number, offset: number, y = 0.062) => {
-      const center = {
-        x: segment.start.x + segment.dir.x * distance,
-        z: segment.start.z + segment.dir.z * distance,
-      };
-      instances.push({
-        x: center.x + normal.x * offset,
-        y,
-        z: center.z + normal.z * offset,
-        yaw: angle,
-      });
-    };
-
-    const createDoubleStripe = (
-      distance: number,
-      offset: number,
-      gap: number,
-      instances: BoxInstanceSpec[],
-    ) => {
-      addStripeInstance(instances, distance, offset - gap);
-      addStripeInstance(instances, distance, offset + gap);
-    };
-
     const solidStep = 6.5;
     for (let d = 5; d < segment.length - 3; d += solidStep) {
       if (this.isNearIntersection(segmentStartDistance + d, this.roadMarkingIntersectionClearance)) continue;
@@ -2394,109 +1742,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         if (isCenterDivider) {
           if (laneCount <= 2) {
             if (Math.floor(d / 13) % 2 === 0) {
-              addStripeInstance(centerDashInstances, d, offset);
+              this.addMarking(world, segment.start, segment.dir, normal, d, offset, 0.14, 5.8, worldColors.yellow);
             }
             continue;
           }
-          createDoubleStripe(d, offset, 0.18, centerSolidInstances);
+          for (const gap of [-0.18, 0.18]) {
+            this.addMarking(world, segment.start, segment.dir, normal, d, offset + gap, 0.13, solidStep + 0.25, worldColors.yellow);
+          }
           continue;
         }
 
         if (Math.floor(d / 13) % 2 === 0) {
-          addStripeInstance(laneDashInstances, d, offset, 0.06);
+          this.addMarking(world, segment.start, segment.dir, normal, d, offset, 0.12, 5.6, worldColors.white);
         }
       }
     }
-
-    this.addBoxInstances(0.14, 0.054, 5.8, centerLineMat, centerDashInstances);
-    this.addBoxInstances(0.13, 0.054, solidStep + 0.25, centerLineMat, centerSolidInstances);
-    this.addBoxInstances(0.12, 0.054, 5.6, laneDividerMat, laneDashInstances);
   }
 
-  private addBoxInstances(width: number, height: number, length: number, material: any, instances: BoxInstanceSpec[]) {
-    if (!this.scene || instances.length === 0) return;
-    const three = this.requireThree();
-    const geometry = new three.BoxGeometry(width, height, length);
-    const mesh = new three.InstancedMesh(geometry, material, instances.length);
-    const transform = new three.Object3D();
-
-    instances.forEach((instance, index) => {
-      transform.position.set(instance.x, instance.y, instance.z);
-      transform.rotation.set(0, instance.yaw, 0);
-      transform.updateMatrix();
-      mesh.setMatrixAt(index, transform.matrix);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
-    mesh.receiveShadow = false;
-    this.scene.add(mesh);
-  }
-
-  private createAsphaltRoadMaterial(length: number) {
-    const three = this.requireThree();
-    const repeatBucket = Math.max(1, Math.round(length / 20));
-    const cached = this.asphaltMaterials.get(repeatBucket);
-    if (cached) return cached;
-
-    const map = this.createLowResolutionRoadTexture(repeatBucket);
-    const material = new three.MeshStandardMaterial({
-      map,
-      color: 0x686868,
-      roughness: 0.92,
-      metalness: 0.02,
-    });
-    this.asphaltMaterials.set(repeatBucket, material);
-    return material;
-  }
-
-  private createLowResolutionRoadTexture(repeatY: number) {
-    const three = this.requireThree();
-    if (this.asphaltTexture) {
-      const texture = this.asphaltTexture.clone();
-      texture.repeat.set(1.15, repeatY);
-      texture.needsUpdate = true;
-      return texture;
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = this.renderQuality.roadTextureSize;
-    canvas.height = this.renderQuality.roadTextureSize;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#5b5e5f';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      for (let i = 0; i < this.renderQuality.roadNoiseSamples; i += 1) {
-        const shade = 58 + Math.floor(Math.random() * 52);
-        ctx.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${0.08 + Math.random() * 0.12})`;
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        ctx.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
-      }
-      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
-      ctx.lineWidth = 1;
-      for (let y = 0; y < canvas.height; y += 42) {
-        ctx.beginPath();
-        ctx.moveTo(0, y + Math.random() * 8);
-        ctx.lineTo(canvas.width, y + Math.random() * 8);
-        ctx.stroke();
-      }
-    }
-
-    const texture = new three.CanvasTexture(canvas);
-    texture.wrapS = three.RepeatWrapping;
-    texture.wrapT = three.RepeatWrapping;
-    texture.repeat.set(1.15, repeatY);
-    texture.colorSpace = three.SRGBColorSpace;
-    texture.needsUpdate = true;
-    this.asphaltTexture = texture;
-    return texture;
-  }
-
-  private addBuildings() {
-    if (!this.scene) return;
-    const colors = [0xb9c7d3, 0xd6c2a6, 0xa9bfac, 0xcaa4a4, 0xa9a7c8, 0xc7d2c6];
-    const accents = [0x0f766e, 0x1d4ed8, 0xdc2626, 0x9333ea, 0xf59e0b];
+  private addBuildings(world: PixelWorldBuilder) {
     const buildingStep = this.renderQuality.level === 'low' ? 34 : 20;
 
     for (let d = 15; d < this.routeLength - 10; d += buildingStep) {
@@ -2521,71 +1784,32 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         };
         if (!this.isBuildingFootprintClear(collisionBox)) continue;
 
-        const color = colors[Math.floor((d + side * 7) % colors.length)];
-        const accent = accents[Math.floor((d * 3 + side * 11) % accents.length)];
-        const building = this.createUrbanBuilding(width, height, depth, color, accent, d + side * 19);
-        building.position.set(centerX, 0, centerZ);
-        building.rotation.y = angle;
-        this.scene.add(building);
+        const facade = this.pickFacade(width, height, d + side * 7);
+        world.addBuilding(collisionBox, facade.height, facade.id, { x: point.x, z: point.z });
         this.buildingCollisionBoxes.push(collisionBox);
       }
     }
   }
 
-  private createUrbanBuilding(width: number, height: number, depth: number, color: number, accent: number, seed: number) {
-    const three = this.requireThree();
-    const group = new three.Group();
-    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.03 });
-    const roofMat = new three.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.78, metalness: 0.08 });
-    const windowMat = new three.MeshBasicMaterial({ color: 0xc7e7ff, transparent: true, opacity: 0.62 });
-    const signMat = new three.MeshBasicMaterial({ color: accent });
-    const awningMat = new three.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7, metalness: 0.02 });
+  // Picks one of the three facades whose proportions best fit the planned
+  // height, and returns the height that shows that facade unstretched.
+  private pickFacade(width: number, targetHeight: number, seed: number): { id: string; height: number } {
+    const frames = (spriteSheet as { frames: Record<string, { w: number; h: number }> }).frames;
+    const ranked = facadeIds
+      .map((id) => {
+        const frame = frames[`facade/${id}/front`];
+        return { id, height: frame ? (frame.h / frame.w) * width : targetHeight };
+      })
+      .sort((left, right) => Math.abs(left.height - targetHeight) - Math.abs(right.height - targetHeight));
+    return ranked[Math.abs(Math.floor(seed)) % Math.min(3, ranked.length)];
+  }
 
-    const body = new three.Mesh(new three.BoxGeometry(width, height, depth), bodyMat);
-    body.position.y = height / 2;
-    group.add(body);
-
-    const roof = new three.Mesh(new three.BoxGeometry(width + 0.35, 0.32, depth + 0.35), roofMat);
-    roof.position.y = height + 0.16;
-    group.add(roof);
-
-    if (this.renderQuality.level !== 'low') {
-      const frontZ = depth / 2 + 0.035;
-      const rowCount = this.clamp(Math.floor((height - 3) / 2.2), 2, 8);
-      const columnCount = this.clamp(Math.floor(width / 1.55), 3, 7);
-      const startX = -((columnCount - 1) * 1.18) / 2;
-      for (let row = 0; row < rowCount; row += 1) {
-        for (let column = 0; column < columnCount; column += 1) {
-          if ((row + column + Math.floor(seed)) % 5 === 0) continue;
-          const window = new three.Mesh(new three.BoxGeometry(0.62, 0.72, 0.045), windowMat);
-          window.position.set(startX + column * 1.18, 3.25 + row * 2.0, frontZ);
-          group.add(window);
-        }
-      }
-
-      const storefront = new three.Mesh(new three.BoxGeometry(width * 0.72, 0.62, 0.055), signMat);
-      storefront.position.set(0, 2.25, frontZ + 0.02);
-      group.add(storefront);
-
-      const awning = new three.Mesh(new three.BoxGeometry(width * 0.82, 0.18, 1.05), awningMat);
-      awning.position.set(0, 2.95, frontZ + 0.42);
-      group.add(awning);
-
-      if (height > 13) {
-        const balconyMat = new three.MeshBasicMaterial({ color: 0x263238 });
-        for (let floor = 0; floor < Math.min(4, rowCount - 1); floor += 1) {
-          const rail = new three.Mesh(new three.BoxGeometry(width * 0.62, 0.08, 0.12), balconyMat);
-          rail.position.set(0, 4.05 + floor * 2.0, frontZ + 0.22);
-          group.add(rail);
-        }
-      }
-    }
-
-    group.traverse?.((child: any) => {
-      child.castShadow = false;
-      child.receiveShadow = false;
+  private isNearIntersectionPlaza(distance: number, margin: number): boolean {
+    return this.intersections.some((inter) => {
+      const approachWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex]);
+      const nextWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex + 1] ?? this.route[inter.segmentIndex]);
+      return Math.abs(distance - inter.distance) < (Math.max(approachWidth, nextWidth) + 18) / 2 + margin;
     });
-    return group;
   }
 
   private isNearIntersection(distance: number, clearance: number): boolean {
@@ -2606,521 +1830,74 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     };
   }
 
-  /** Add physical road signs at intersections */
-  private addTurnSignage() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
+  /** Add road signs before turns, on the right for left-hand-drive traffic. */
+  private addTurnSignage(world: PixelWorldBuilder) {
     for (const inter of this.intersections) {
       if (!inter.turnDir) continue;
 
-      const signDist = Math.max(5, inter.distance - 20);
-      const point = this.getRoutePoint(signDist);
-      const group = new three.Group();
-
-      // Post
-      const postMat = new three.MeshBasicMaterial({ color: 0x888888 });
-      const post = new three.Mesh(new three.BoxGeometry(0.2, 4, 0.2), postMat);
-      post.position.y = 2;
-      group.add(post);
-
-      // Sign board
-      const signMat = new three.MeshBasicMaterial({ color: 0x2563eb });
-      const sign = new three.Mesh(new three.BoxGeometry(2.8, 1.8, 0.12), signMat);
-      sign.position.y = 4.2;
-      group.add(sign);
-
-      // Arrow on sign
-      const arrowLabel = this.getNavigationArrow(inter.turnDir);
-      const texture = this.createSignTexture(arrowLabel);
-      const arrowMat = new three.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-      const arrowPlane = new three.Mesh(new three.PlaneGeometry(2.2, 1.4), arrowMat);
-      arrowPlane.position.set(0, 4.2, 0.07);
-      group.add(arrowPlane);
-
-      // Place on the right side of the road for left-hand-drive traffic.
-      group.position.set(
-        point.x + point.normal.x * (point.roadWidth / 2 + 1),
-        0,
-        point.z + point.normal.z * (point.roadWidth / 2 + 1),
-      );
-      group.rotation.y = this.getSceneYawForDirection(point.dir);
-      this.scene.add(group);
+      const point = this.getRoutePoint(Math.max(5, inter.distance - 20));
+      const canvas = this.createTurnSignCanvas(inter.turnDir);
+      if (!canvas) continue;
+      world.addProp({ ...this.getRouteLateralPoint(point, point.roadWidth / 2 + 1), canvas, canvasPpm: 10 });
     }
   }
 
-  private createSignTexture(label: string) {
-    const cached = this.signTextureCache.get(label);
-    if (cached) return cached;
-
-    const three = this.requireThree();
+  // Blue direction sign (2.8 x 1.8 m board on a 4 m post) drawn at 10 px per metre.
+  private createTurnSignCanvas(turnDir: 'left' | 'right'): HTMLCanvasElement | null {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
+    canvas.width = 28;
+    canvas.height = 51;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, 256, 128);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold 92px ${typography.fontFamily}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, 128, 64);
-    }
-    const texture = new three.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    this.signTextureCache.set(label, texture);
-    return texture;
+    if (!ctx) return null;
+    ctx.fillStyle = '#8a9096';
+    ctx.fillRect(13, 18, 2, 33);
+    ctx.fillStyle = '#f4f6f8';
+    ctx.fillRect(0, 0, 28, 18);
+    ctx.fillStyle = '#1f5fd6';
+    ctx.fillRect(1, 1, 26, 16);
+    ctx.fillStyle = '#f4f6f8';
+    const arrow = turnDir === 'right'
+      ? [[6, 7], [15, 7], [15, 4], [22, 9], [15, 14], [15, 11], [6, 11]]
+      : [[22, 7], [13, 7], [13, 4], [6, 9], [13, 14], [13, 11], [22, 11]];
+    ctx.beginPath();
+    arrow.forEach(([x, y], index) => (index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    ctx.closePath();
+    ctx.fill();
+    return canvas;
   }
 
-  private addDestinationMarker() {
-    const three = this.requireThree();
-    if (!this.scene) return;
+  private addDestinationMarker(world: PixelWorldBuilder) {
     const point = this.getRoutePoint(this.routeLength - 5);
-    const group = new three.Group();
-    const postMat = new three.MeshBasicMaterial({ color: 0xffffff });
-    const flagMat = new three.MeshBasicMaterial({ color: 0x38bdf8 });
-    const post = new three.Mesh(new three.BoxGeometry(0.35, 5, 0.35), postMat);
-    post.position.y = 2.5;
-    const flag = new three.Mesh(new three.BoxGeometry(4, 2.2, 0.18), flagMat);
-    flag.position.set(2, 4.2, 0);
-    group.add(post, flag);
-    group.position.set(point.x + point.normal.x * (point.roadWidth / 2 + 4), 0, point.z + point.normal.z * (point.roadWidth / 2 + 4));
-    this.scene.add(group);
+    const canvas = this.createDestinationCanvas();
+    if (!canvas) return;
+    world.addProp({ ...this.getRouteLateralPoint(point, point.roadWidth / 2 + 4), canvas, canvasPpm: 10 });
   }
 
-  private async loadTaipeiOsmCity() {
-    if (this.renderQuality.useOsmCity && this.scene) this.addTaipeiOsmCity(taipeiOsm.elements);
-  }
-
-  private addTaipeiOsmCity(elements: any[]) {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const nodeMap = new Map<number, { lat: number; lon: number }>();
-    for (const element of elements) {
-      if (element?.type === 'node' && Number.isFinite(element.lat) && Number.isFinite(element.lon)) {
-        nodeMap.set(element.id, { lat: element.lat, lon: element.lon });
-      }
-    }
-
-    const group = new three.Group();
-    group.name = 'taipei-xinyi-osm-city';
-    const roadMat = new three.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.88, metalness: 0.03 });
-    const buildingMats = [
-      new three.MeshStandardMaterial({ color: 0xbec7cf, roughness: 0.82, metalness: 0.02 }),
-      new three.MeshStandardMaterial({ color: 0xc8beb1, roughness: 0.84, metalness: 0.02 }),
-      new three.MeshStandardMaterial({ color: 0xaeb8bd, roughness: 0.8, metalness: 0.03 }),
-      new three.MeshStandardMaterial({ color: 0xd3d0c8, roughness: 0.86, metalness: 0.01 }),
-    ];
-    const arcadeShadowMat = new three.MeshStandardMaterial({ color: 0x30343a, roughness: 0.88, metalness: 0.02 });
-    let buildingCount = 0;
-    let roadSegmentCount = 0;
-    const roadLimit = this.renderQuality.osmRoadSegmentLimit;
-    const buildingLimit = this.renderQuality.osmBuildingLimit;
-    const routeBounds = this.getRouteBounds();
-    const routePadding = 180;
-    const isInRouteWindow = (point: Vec2) => (
-      point.x >= routeBounds.minX - routePadding
-      && point.x <= routeBounds.maxX + routePadding
-      && point.z >= routeBounds.minZ - routePadding
-      && point.z <= routeBounds.maxZ + routePadding
-    );
-
-    for (const element of elements) {
-      if (element?.type !== 'way' || !Array.isArray(element.nodes) || !element.tags) continue;
-      const points = element.nodes
-        .map((id: number) => nodeMap.get(id))
-        .filter(Boolean)
-        .map((node: { lat: number; lon: number }) => this.projectTaipeiLonLat(node.lon, node.lat));
-      if (points.length < 2) continue;
-
-      if (element.tags.highway && roadSegmentCount < roadLimit) {
-        const width = this.getOsmRoadWidth(element.tags);
-        for (let i = 1; i < points.length; i += 1) {
-          const a = points[i - 1];
-          const b = points[i];
-          if (!isInRouteWindow(a) && !isInRouteWindow(b)) continue;
-          const dx = b.x - a.x;
-          const dz = b.z - a.z;
-          const length = Math.hypot(dx, dz);
-          if (length < 2 || roadSegmentCount >= roadLimit) continue;
-          const centerX = (a.x + b.x) / 2;
-          const centerZ = (a.z + b.z) / 2;
-          if (this.getDistanceToRoute(centerX, centerZ) > 130) continue;
-          const road = new three.Mesh(new three.BoxGeometry(width, 0.024, length), roadMat);
-          road.position.set(centerX, -0.455, centerZ);
-          road.rotation.y = this.getSceneYawForDirection({ x: dx / length, z: dz / length });
-          group.add(road);
-          roadSegmentCount += 1;
-        }
-      }
-
-      if (element.tags.building && buildingCount < buildingLimit) {
-        const bbox = this.getPointBounds(points);
-        const width = bbox.maxX - bbox.minX;
-        const depth = bbox.maxZ - bbox.minZ;
-        if (width < 1.4 || depth < 1.4 || width > 140 || depth > 140) continue;
-        const height = this.getOsmBuildingHeight(element.tags, buildingCount);
-        const mat = buildingMats[buildingCount % buildingMats.length];
-        const collisionBox: CollisionBox2D = {
-          centerX: (bbox.minX + bbox.maxX) / 2,
-          centerZ: (bbox.minZ + bbox.maxZ) / 2,
-          angle: 0,
-          halfWidth: width / 2,
-          halfLength: depth / 2,
-        };
-        if (!this.isBuildingFootprintClear(this.expandCollisionBox(collisionBox, 2.2))) continue;
-        if (!this.isBoxNearRoute(collisionBox, 95)) continue;
-        const building = new three.Mesh(new three.BoxGeometry(width, height, depth), mat);
-        building.position.set(collisionBox.centerX, height / 2 - 0.45, collisionBox.centerZ);
-        group.add(building);
-        this.buildingCollisionBoxes.push(collisionBox);
-
-        if (height > 7 && Math.min(width, depth) > 4) {
-          const arcade = new three.Mesh(new three.BoxGeometry(width * 0.78, 2.25, 1.1), arcadeShadowMat);
-          arcade.position.set(building.position.x, 0.72, bbox.minZ + 0.55);
-          group.add(arcade);
-        }
-        buildingCount += 1;
-      }
-    }
-
-    this.scene.add(group);
-  }
-
-  private projectTaipeiLonLat(lon: number, lat: number): Vec2 {
-    return ProjectTaipeiLonLat(lon, lat);
-  }
-
-  private getPointBounds(points: Vec2[]) {
-    return points.reduce(
-      (bounds, point) => ({
-        minX: Math.min(bounds.minX, point.x),
-        maxX: Math.max(bounds.maxX, point.x),
-        minZ: Math.min(bounds.minZ, point.z),
-        maxZ: Math.max(bounds.maxZ, point.z),
-      }),
-      { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
-    );
-  }
-
-  private getOsmRoadWidth(tags: Record<string, string>): number {
-    const explicitWidth = Number.parseFloat(String(tags.width ?? '').replace(/[^\d.]/g, ''));
-    if (Number.isFinite(explicitWidth) && explicitWidth > 1) return this.clamp(explicitWidth, 2.4, 48);
-
-    const forwardLanes = Number.parseFloat(String(tags['lanes:forward'] ?? ''));
-    const backwardLanes = Number.parseFloat(String(tags['lanes:backward'] ?? ''));
-    const lanes = Number.parseFloat(String(tags.lanes ?? ''));
-    const laneCount = Number.isFinite(forwardLanes) && Number.isFinite(backwardLanes)
-      ? forwardLanes + backwardLanes
-      : Number.isFinite(lanes)
-        ? lanes
-        : 0;
-    if (laneCount > 0) return this.clamp(laneCount * this.defaultLaneWidth + 1.2, 3.4, 42);
-
-    const highway = tags.highway;
-    if (highway === 'primary' || highway === 'secondary') return 8.4;
-    if (highway === 'tertiary' || highway === 'residential') return 5.8;
-    if (highway === 'service') return 3.4;
-    if (highway === 'footway' || highway === 'path' || highway === 'steps') return 1.4;
-    return 4.6;
-  }
-
-  private getOsmBuildingHeight(tags: Record<string, string>, index: number): number {
-    const explicitHeight = Number.parseFloat(String(tags.height ?? '').replace(/[^\d.]/g, ''));
-    if (Number.isFinite(explicitHeight) && explicitHeight > 2) return this.clamp(explicitHeight, 3.4, 520);
-    const levels = Number.parseFloat(String(tags['building:levels'] ?? ''));
-    if (Number.isFinite(levels) && levels > 0) return this.clamp(levels * 3.25, 3.4, 360);
-    return 8 + (index % 7) * 4.2;
-  }
-
-  private createVehicleVisual() {
-    const three = this.requireThree();
-    if (!this.scene) return;
-
-    const root = new three.Group();
-    root.name = 'driving-reference-vehicle-root';
-    this.vehicleRoot = root;
-    this.scene.add(root);
-
-    const fallback = this.createFallbackVehicle();
-    this.fallbackVehicle = fallback.group;
-    this.wheelBindings = fallback.wheels;
-    root.add(fallback.group);
-    this.vehicleBlobShadow = this.createBlobShadowMesh(2.75, 5.35, 0.42);
-    this.scene.add(this.vehicleBlobShadow);
-    this.updateVehicleVisual(0);
-  }
-
-  private createBlobShadowMesh(width: number, length: number, opacity: number) {
-    const three = this.requireThree();
-    const material = new three.MeshBasicMaterial({
-      map: this.getBlobShadowTexture(),
-      transparent: true,
-      opacity,
-      depthWrite: false,
-    });
-    const shadow = new three.Mesh(new three.PlaneGeometry(width, length), material);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.118;
-    shadow.renderOrder = 1;
-    return shadow;
-  }
-
-  private getBlobShadowTexture() {
-    if (this.blobShadowTexture) return this.blobShadowTexture;
-
-    const three = this.requireThree();
+  // Chequered finish flag on a 5 m post, at 10 px per metre. The post sits in
+  // the middle of the canvas, which is the sprite's anchor.
+  private createDestinationCanvas(): HTMLCanvasElement | null {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
+    canvas.width = 86;
+    canvas.height = 53;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-      const gradient = ctx.createRadialGradient(128, 64, 8, 128, 64, 68);
-      gradient.addColorStop(0, 'rgba(0,0,0,0.55)');
-      gradient.addColorStop(0.58, 'rgba(0,0,0,0.22)');
-      gradient.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    this.blobShadowTexture = new three.CanvasTexture(canvas);
-    this.blobShadowTexture.needsUpdate = true;
-    return this.blobShadowTexture;
-  }
-
-  private createFallbackVehicle(bodyColor = 0x1d4ed8): { group: any; wheels: VehicleWheelBinding[] } {
-    const three = this.requireThree();
-    const group = new three.Group();
-    group.name = 'driving-reference-fallback-car';
-
-    const bodyMat = new three.MeshStandardMaterial({ color: bodyColor, roughness: 0.42, metalness: 0.26 });
-    const glassMat = new three.MeshStandardMaterial({ color: 0x172554, roughness: 0.18, metalness: 0.12 });
-    const tireMat = new three.MeshStandardMaterial({ color: 0x111111, roughness: 0.72, metalness: 0.12 });
-    const rimMat = new three.MeshStandardMaterial({ color: 0xb9c2cc, roughness: 0.42, metalness: 0.55 });
-
-    const body = new three.Mesh(new three.BoxGeometry(1.95, 0.88, 4.5), bodyMat);
-    body.position.y = 0.82;
-    body.castShadow = false;
-    body.receiveShadow = false;
-    const cabin = new three.Mesh(new three.BoxGeometry(1.38, 0.82, 1.7), glassMat);
-    cabin.position.set(0, 1.44, -0.28);
-    cabin.castShadow = false;
-    group.add(body, cabin);
-
-    const wheels: VehicleWheelBinding[] = [];
-    for (const [x, z, front] of [
-      [-0.98, -1.46, true],
-      [0.98, -1.46, true],
-      [-0.98, 1.38, false],
-      [0.98, 1.38, false],
-    ] as const) {
-      const wheel = new three.Group();
-      const tire = new three.Mesh(new three.TorusGeometry(0.38, 0.12, 8, 18), tireMat);
-      tire.rotation.y = Math.PI / 2;
-      const rim = new three.Mesh(new three.CylinderGeometry(0.22, 0.22, 0.15, 16), rimMat);
-      rim.rotation.z = Math.PI / 2;
-      wheel.add(tire, rim);
-      wheel.position.set(x, 0.42, z);
-      wheel.castShadow = false;
-      group.add(wheel);
-      wheels.push({
-        node: wheel,
-        initialY: wheel.position.y,
-        baseRotationX: wheel.rotation.x,
-        baseRotationY: wheel.rotation.y,
-        baseRotationZ: wheel.rotation.z,
-        front,
-      });
-    }
-
-    return { group, wheels };
-  }
-
-  private loadReferenceVehicleModel(): Promise<boolean> {
-    if (!this.renderQuality.useReferenceVehicleModel) return Promise.resolve(false);
-    const root = this.vehicleRoot;
-    if (!root) return Promise.resolve(false);
-
-    const loader = new GLTFLoader();
-    loader.register(parser => {
-      // ImageBitmapLoader fetches blob URLs; image elements keep embedded textures within img-src.
-      parser.textureLoader = new TextureLoader(parser.options.manager);
-      return { name: 'driving-embedded-textures' };
-    });
-    return new Promise((resolve) => {
-      loader.parse(
-        Uint8Array.from(atob(window.DrivingRehabVehicleData), character => character.charCodeAt(0)).buffer, '',
-        (gltf) => {
-          if (this.finished || !this.vehicleRoot) {
-            this.disposeObject(gltf.scene);
-            resolve(false);
-            return;
-          }
-
-          const three = this.requireThree();
-          const model = gltf.scene;
-          model.name = 'driving-reference-car-glb';
-          model.traverse?.((child: any) => {
-            child.castShadow = false;
-            child.receiveShadow = false;
-            const material = child.material;
-            if (material) {
-              const materials = Array.isArray(material) ? material : [material];
-              for (const item of materials) {
-                this.applyVehicleMaterialQuality(item);
-              }
-            }
-          });
-
-          model.updateMatrixWorld(true);
-          let box = new three.Box3().setFromObject(model);
-          const size = new three.Vector3();
-          box.getSize(size);
-          const modelLength = Math.max(size.z, size.x, 1);
-          const scale = 4.55 / modelLength;
-          model.scale.setScalar(scale);
-          model.updateMatrixWorld(true);
-
-          box = new three.Box3().setFromObject(model);
-          const center = new three.Vector3();
-          box.getCenter(center);
-          model.position.set(-center.x, -box.min.y, -center.z);
-          model.rotation.y = this.referenceVehicleModelYawOffset;
-
-          this.vehicleRoot.remove(this.fallbackVehicle);
-          this.vehicleRoot.add(model);
-          this.vehicleModel = model;
-          this.fallbackVehicle = null;
-          this.bindReferenceWheels(model);
-          this.updateVehicleVisual(0);
-          resolve(true);
-        },
-        (error) => {
-          console.warn('Unable to load reference driving vehicle model.', error);
-          resolve(false);
-        },
-      );
-    });
-  }
-
-  private applyVehicleMaterialQuality(material: any) {
-    material.roughness = Math.min(0.78, material.roughness ?? 0.58);
-    material.metalness = Math.max(0.08, material.metalness ?? 0.08);
-
-    for (const key of ['map', 'emissiveMap', 'aoMap']) {
-      if (material[key]) {
-        const previous = material[key];
-        const next = this.capTextureResolution(previous, this.renderQuality.vehicleTextureSize);
-        material[key] = next;
-        if (next !== previous) previous.dispose?.();
-      }
-    }
-
-    if (this.renderQuality.level === 'high') {
-      for (const key of ['normalMap', 'roughnessMap', 'metalnessMap']) {
-        if (material[key]) {
-          const previous = material[key];
-          const next = this.capTextureResolution(previous, this.renderQuality.vehicleTextureSize);
-          material[key] = next;
-          if (next !== previous) previous.dispose?.();
+    if (!ctx) return null;
+    ctx.fillStyle = '#f4f6f8';
+    ctx.fillRect(41, 3, 4, 50);
+    ctx.fillStyle = '#16191d';
+    ctx.fillRect(45, 3, 40, 22);
+    for (let row = 0; row < 4; row += 1) {
+      for (let column = 0; column < 8; column += 1) {
+        if ((row + column) % 2 === 0) {
+          ctx.fillStyle = '#f4f6f8';
+          ctx.fillRect(46 + column * 5, 4 + row * 5, 5, 5);
         }
       }
-    } else {
-      material.normalMap?.dispose?.();
-      material.roughnessMap?.dispose?.();
-      material.metalnessMap?.dispose?.();
-      material.normalMap = null;
-      material.roughnessMap = null;
-      material.metalnessMap = null;
     }
-
-    material.needsUpdate = true;
-  }
-
-  private capTextureResolution(texture: any, maxSize: number) {
-    const image = texture?.image as CanvasImageSource & { width?: number; height?: number } | undefined;
-    const sourceWidth = Number(image?.width ?? 0);
-    const sourceHeight = Number(image?.height ?? 0);
-    const sourceMax = Math.max(sourceWidth, sourceHeight);
-    if (!image || sourceMax <= maxSize || sourceWidth <= 0 || sourceHeight <= 0) return texture;
-
-    const three = this.requireThree();
-    const scale = maxSize / sourceMax;
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return texture;
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    const capped = new three.CanvasTexture(canvas);
-    capped.wrapS = texture.wrapS;
-    capped.wrapT = texture.wrapT;
-    capped.flipY = texture.flipY;
-    capped.colorSpace = texture.colorSpace ?? three.SRGBColorSpace;
-    if (texture.offset && capped.offset) capped.offset.copy(texture.offset);
-    if (texture.repeat && capped.repeat) capped.repeat.copy(texture.repeat);
-    if (texture.center && capped.center) capped.center.copy(texture.center);
-    capped.rotation = texture.rotation ?? 0;
-    capped.needsUpdate = true;
-    return capped;
-  }
-
-  private bindReferenceWheels(model: any) {
-    const bindings: VehicleWheelBinding[] = [];
-    model.traverse?.((child: any) => {
-      const name = String(child.name ?? '').toLowerCase();
-      if (!name.includes('wheel')) return;
-      const front = name.includes('fl') || name.includes('fr') || name.includes('front');
-      bindings.push({
-        node: child,
-        initialY: child.position.y,
-        baseRotationX: child.rotation.x,
-        baseRotationY: child.rotation.y,
-        baseRotationZ: child.rotation.z,
-        front,
-      });
-    });
-    this.wheelBindings = bindings;
-  }
-
-  private updateVehicleVisual(dt: number) {
-    if (!this.vehicleRoot) return;
-
-    const vehicleBox = this.getVehicleCollisionBox();
-    const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
-    this.wheelSpin += this.vehicleSpeed * dt * 2.7;
-    const pitch = this.lastBrakePressed
-      ? this.lerp(-0.012, -0.026, speedRatio)
-      : this.lerp(0.004, -0.004, speedRatio);
-    const roll = this.clamp(-this.steeringInput * 0.022 - this.lastYawRate * 0.018, -0.035, 0.035);
-
-    const sceneYaw = this.getSceneYawFromHeading(this.vehicleHeading);
-    this.vehicleRoot.position.set(vehicleBox.centerX, 0.018, vehicleBox.centerZ);
-    this.vehicleRoot.rotation.set(
-      pitch,
-      sceneYaw,
-      roll,
-    );
-    if (this.vehicleBlobShadow) {
-      this.vehicleBlobShadow.position.set(vehicleBox.centerX, 0.118, vehicleBox.centerZ);
-      this.vehicleBlobShadow.rotation.y = sceneYaw;
-    }
-
-    for (const wheel of this.wheelBindings) {
-      wheel.node.position.y = wheel.initialY;
-      wheel.node.rotation.x = wheel.baseRotationX + this.wheelSpin;
-      wheel.node.rotation.y = wheel.baseRotationY - (wheel.front ? this.frontWheelAngle * 0.72 : 0);
-      wheel.node.rotation.z = wheel.baseRotationZ;
-    }
-
-    if (this.vehicleModel) {
-      this.vehicleModel.rotation.x = 0;
-    }
+    return canvas;
   }
 
   private loop(time: number, trial: TrialType<Info>, displayElement: HTMLElement) {
-    if (this.finished || !this.renderer || !this.scene || !this.camera) return;
+    if (this.finished || !this.renderer) return;
     if (!displayElement.isConnected) {
       this.finishTrial(displayElement, 'aborted');
       return;
@@ -3175,20 +1952,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.updateAmbientTraffic(fixedDt);
       }
     }
-    const simulatedDt = fixedSteps.simulatedMs / 1000;
-    this.updateVehicleVisual(simulatedDt);
-    this.updateCameraFree();
-    if (this.needsFirstFrameCameraSnap) {
-      this.needsFirstFrameCameraSnap = false;
-      this.snapCameraToVehicle();
-    }
     this.updateHud();
     this.updateCockpitHud();
     this.updateMiniMap();
-    this.updateRearviewMirrors(time);
-
-    this.viewportController?.prepareMainRender();
-    this.renderer.render(this.scene, this.camera);
+    this.renderFrame(time);
     this.markHazardsPresented(CalculateEstimatedPresentationTime(
       time,
       performance.now(),
@@ -3210,20 +1977,68 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private renderFirstFrameBeforeReveal(time: number) {
-    if (!this.renderer || !this.scene || !this.camera) return;
-    this.snapCameraToVehicle();
-    this.needsFirstFrameCameraSnap = false;
+    if (!this.renderer) return;
     this.updateHud();
     this.updateCockpitHud();
     this.updateMiniMap();
-    this.updateRearviewMirrors(time);
-    this.viewportController?.prepareMainRender();
-    this.renderer.render(this.scene, this.camera);
+    this.renderFrame(time, true);
     this.markHazardsPresented(CalculateEstimatedPresentationTime(
       time,
       performance.now(),
       this.refreshMeasured ? this.displayRefreshMs : Number.NaN,
     ));
+  }
+
+  // Draws one frame from the driver's eye (shifted left of the car's
+  // centreline, as in a left-hand-drive car) or from behind the car. Mirrors
+  // refresh at 30 Hz.
+  private renderFrame(time: number, refreshMirrors = false) {
+    const renderer = this.renderer;
+    if (!renderer || !this.pixelWorld) return;
+    this.viewportController?.prepareMainRender();
+    const firstPerson = this.cameraMode === 'first-person';
+    const cameraPose = CalculateDrivingCameraPose({
+      vehicleX: this.vehicleX,
+      vehicleZ: this.vehicleZ,
+      vehicleHeading: this.vehicleHeading,
+      mode: this.cameraMode,
+    });
+    const pose = firstPerson ? CalculateDriverEyePose(cameraPose, this.vehicleHeading) : cameraPose;
+    const updateMirrors = firstPerson
+      && (refreshMirrors || time - this.rearviewLastUpdateTime >= this.getRearviewUpdateIntervalMs());
+    if (updateMirrors) this.rearviewLastUpdateTime = time;
+    const fog = this.getDifficultyFogRange();
+    renderer.render(this.buildPixelScene(firstPerson), {
+      pose,
+      vehicle: { x: this.vehicleX, z: this.vehicleZ, heading: this.vehicleHeading },
+      firstPerson,
+      drawDistance: Math.min(fog.far, this.getMainDrawDistance()),
+      fog,
+      cockpit: {
+        steeringAngleDeg: CalculateSteeringWheelAngle(this.frontWheelAngle),
+        speedKph: this.vehicleSpeed * 3.6,
+        maxKph: Math.round(this.maxVehicleSpeed * 3.6),
+        wheelImage: null,
+      },
+      updateMirrors,
+    });
+    if (updateMirrors && this.root) this.root.dataset.drivingMirrorVehicles = String(renderer.mirrorVehicleCount);
+  }
+
+  private buildPixelScene(firstPerson: boolean): PixelScene {
+    const vehicles: PixelVehicle[] = [];
+    for (const actor of this.ambientTrafficActors) {
+      if (!actor.waiting) vehicles.push(actor);
+    }
+    for (const hazard of this.activeHazards) {
+      if (hazard.visual.visible) vehicles.push(hazard.visual);
+    }
+    return {
+      world: this.pixelWorld as PixelWorld,
+      vehicles,
+      signals: this.intersections.map((inter) => inter.trafficSignalState),
+      player: firstPerson ? null : { x: this.vehicleX, z: this.vehicleZ, heading: this.vehicleHeading },
+    };
   }
 
   private isTrialTimedOut(time: number, trial: TrialType<Info>): boolean {
@@ -3440,7 +2255,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.previousProgress = projected.distance;
     this.progress = projected.distance;
     this.lateralOffset = projected.lateral;
-    this.snapCameraToVehicle();
   }
 
   /** Project a world point onto the route.
@@ -3512,13 +2326,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private updateTrafficLights(time: number) {
     const elapsedMs = Math.max(0, time - this.trialStartTime);
     for (const inter of this.intersections) {
-      const state = this.getTrafficLightState(elapsedMs + inter.trafficSignalOffsetMs);
-      const previousRenderedState = inter.trafficSignalRenderedState;
-      inter.trafficSignalState = state;
-      if (state !== previousRenderedState) {
-        this.updateTrafficLightVisual(inter, state);
-        inter.trafficSignalRenderedState = state;
-      }
+      inter.trafficSignalState = this.getTrafficLightState(elapsedMs + inter.trafficSignalOffsetMs);
     }
   }
 
@@ -3528,14 +2336,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (phase < this.trafficGreenMs) return 'green';
     if (phase < this.trafficGreenMs + this.trafficYellowMs) return 'yellow';
     return 'red';
-  }
-
-  private updateTrafficLightVisual(inter: IntersectionZone, state: TrafficLightState) {
-    const lamps = inter.trafficLightLamps;
-    if (!lamps) return;
-    lamps.red.material.color.setHex(state === 'red' ? 0xff1f1f : 0x451414);
-    lamps.yellow.material.color.setHex(state === 'yellow' ? 0xffd84a : 0x4a3a16);
-    lamps.green.material.color.setHex(state === 'green' ? 0x16d463 : 0x123d24);
   }
 
   private getIntersectionStopLineDistance(inter: IntersectionZone): number {
@@ -3574,22 +2374,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private preloadHazardEvents() {
-    if (!this.scene) return;
-
     const scheduledEvents = this.createHazardSchedule();
     this.activeHazards = scheduledEvents.map(({ template, triggerDistance }) => {
       const hazardDistance = this.getHazardSpawnDistance(template.id, triggerDistance);
       const point = this.getRoutePoint(hazardDistance);
-      const group = this.createHazardMesh(template.id);
-      group.visible = false;
-      group.position.set(point.x, 0, point.z);
-      group.rotation.y = this.getSceneYawForDirection(point.dir);
-      this.scene?.add(group);
+      const visual = this.createHazardVisual(template.id);
+      visual.x = point.x;
+      visual.z = point.z;
+      visual.heading = this.getHeadingFromDirection(point.dir);
 
       return {
         active: false,
         template,
-        group,
+        visual,
         triggerDistance,
         hazardDistance,
         startTime: 0,
@@ -3637,43 +2434,148 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createAmbientTraffic() {
-    if (!this.scene) return;
-
-    const palette = [0xeeeeee, 0x2563eb, 0xef4444, 0xf59e0b, 0x22c55e, 0x0f172a];
+    const palette = ['white', 'blue', 'red', 'amber', 'green', 'navy'] as const;
     for (let i = 0; i < this.renderQuality.ambientTrafficCount; i += 1) {
       const isScooter = i % 3 !== 0;
       const direction: 1 | -1 = i % 3 === 0 ? -1 : 1;
       const distance = (i * 71 + 42) % Math.max(1, this.routeLength - 12);
-      const group = isScooter
-        ? this.createScooterMesh(palette[i % palette.length])
-        : this.createFallbackVehicle(palette[i % palette.length]).group;
-      group.scale.setScalar(isScooter ? 1.0 : 1.02);
-      const shadow = this.createBlobShadowMesh(isScooter ? 1.25 : 2.75, isScooter ? 2.0 : 5.25, isScooter ? 0.28 : 0.36);
-      this.scene.add(group);
-      this.scene.add(shadow);
-      const actor: AmbientTrafficActor = {
-        group,
-        shadow,
+      const color = palette[i % palette.length];
+      const kind = isScooter ? 'scooter' : 'car';
+      const sprite = isScooter
+        ? `scooter/${color}`
+        : i % 9 === 0
+          ? 'car/taxi/taxi'
+          : `car/${carModels[Math.floor(i / 3) % carModels.length]}/${color}`;
+      const actor = this.createTrafficActor(kind, sprite, {
         distance,
         lateral: this.getTrafficLaneOffset(distance, direction, isScooter, i),
         direction,
-        speed: 0,
-        targetSpeed: 0,
         cruiseSpeed: isScooter ? 6.8 + (i % 5) * 0.95 : 7.4 + (i % 4) * 1.05,
-      };
+        rearSlot: null,
+        waiting: false,
+      });
       this.ambientTrafficActors.push(actor);
       this.positionTrafficActor(actor);
     }
   }
 
-  private updateAmbientTraffic(dt: number) {
+  private createTrafficActor(
+    kind: 'car' | 'scooter',
+    sprite: string,
+    placement: Pick<AmbientTrafficActor, 'distance' | 'lateral' | 'direction' | 'cruiseSpeed' | 'rearSlot' | 'waiting'>,
+  ): AmbientTrafficActor {
+    const footprint = this.getTrafficActorCollisionBox({ kind, x: 0, z: 0, heading: 0 });
+    return {
+      kind,
+      sprite,
+      x: 0,
+      z: 0,
+      heading: 0,
+      speed: 0,
+      halfWidth: footprint.halfWidth,
+      halfLength: footprint.halfLength,
+      ...placement,
+    };
+  }
+
+  // Same-direction traffic that starts behind the player, so the mirrors show
+  // cars following, waiting behind at red lights and overtaking.
+  private createRearTraffic() {
+    const palette = ['white', 'navy', 'red', 'blue'] as const;
+    const count = this.renderQuality.level === 'low' ? 2 : this.renderQuality.level === 'medium' ? 3 : 4;
+    for (const slot of PlanRearTraffic(count, this.progress)) {
+      const kind = slot.slot === 2 ? 'scooter' : 'car';
+      const color = palette[slot.slot % palette.length];
+      const actor = this.createTrafficActor(
+        kind,
+        kind === 'scooter' ? `scooter/${color}` : `car/${carModels[(slot.slot + 1) % carModels.length]}/${color}`,
+        {
+          distance: slot.distance,
+          lateral: this.getRearTrafficLaneOffset(slot.distance, slot.slot),
+          direction: 1,
+          cruiseSpeed: slot.cruiseSpeed,
+          rearSlot: slot.slot,
+          waiting: slot.waiting,
+        },
+      );
+      this.ambientTrafficActors.push(actor);
+      this.positionTrafficActor(actor);
+    }
+  }
+
+  // Even slots follow in the player's lane; odd slots use the other lanes and overtake.
+  private getRearTrafficLaneOffset(distance: number, slot: number): number {
+    const point = this.getRoutePoint(distance);
+    const own = this.getDrivingLaneOffset(distance);
+    const others = this.getTravelLaneOffsets(this.route[point.segmentIndex], 1)
+      .filter((offset) => Math.abs(offset - own) > 0.5)
+      .sort((left, right) => Math.abs(left - own) - Math.abs(right - own));
+    if (slot % 2 === 0 || others.length === 0) return own;
+    return others[Math.floor(slot / 2) % others.length];
+  }
+
+  private updateRearTrafficSpawns() {
     for (const actor of this.ambientTrafficActors) {
+      if (actor.rearSlot === null) continue;
+      if (!actor.waiting && !ShouldRespawnRearTraffic(actor.distance, this.progress)) continue;
+      const distance = CalculateRearSpawnDistance(this.progress, actor.rearSlot);
+      if (distance === null) {
+        actor.waiting = true;
+        continue;
+      }
+      const lateral = this.getRearTrafficLaneOffset(distance, actor.rearSlot);
+      const blocked = this.ambientTrafficActors.some((other) => other !== actor
+        && !other.waiting
+        && other.direction === 1
+        && Math.abs(other.lateral - lateral) < other.halfWidth + actor.halfWidth + 0.3
+        && Math.abs(other.distance - distance) < other.halfLength + actor.halfLength + 8);
+      if (blocked) {
+        actor.waiting = true;
+        continue;
+      }
+      actor.waiting = false;
+      actor.distance = distance;
+      actor.lateral = lateral;
+      actor.speed = actor.cruiseSpeed;
+      this.positionTrafficActor(actor);
+    }
+  }
+
+  private updateAmbientTraffic(dt: number) {
+    this.updateRearTrafficSpawns();
+    const bodies: TrafficBody[] = [{
+      distance: this.progress,
+      lateral: this.lateralOffset,
+      direction: 1,
+      speed: this.vehicleSpeed,
+      halfLength: this.vehicleHalfLength,
+      halfWidth: this.vehicleHalfWidth,
+    }];
+    for (const actor of this.ambientTrafficActors) {
+      if (!actor.waiting) bodies.push(actor);
+    }
+    for (const actor of this.ambientTrafficActors) {
+      if (actor.waiting) continue;
+      const leader = FindTrafficLeaderGap(actor, bodies);
+      let gap = leader?.gap ?? Infinity;
+      let leaderSpeed = leader?.leader.speed ?? 0;
       const stopDistance = this.getTrafficActorStopDistance(actor);
-      actor.targetSpeed = stopDistance !== null ? 0 : actor.cruiseSpeed;
-      actor.speed = this.expSmoothing(actor.speed, actor.targetSpeed, actor.targetSpeed > actor.speed ? 2.2 : 5.8, dt);
+      if (stopDistance !== null) {
+        // A red or yellow stop line acts as a stopped car just past the line.
+        const stopGap = (stopDistance - actor.distance) * actor.direction - actor.halfLength + minimumFollowingGap;
+        if (stopGap < gap) {
+          gap = stopGap;
+          leaderSpeed = 0;
+        }
+      }
+      actor.speed = CalculateFollowingSpeed(actor.cruiseSpeed, gap, leaderSpeed, actor.speed, dt);
       actor.distance += actor.direction * actor.speed * dt;
-      if (actor.distance > this.routeLength - 4) actor.distance = 6;
-      if (actor.distance < 4) actor.distance = this.routeLength - 6;
+      if (actor.rearSlot === null) {
+        if (actor.distance > this.routeLength - 4) actor.distance = 6;
+        if (actor.distance < 4) actor.distance = this.routeLength - 6;
+      } else if (actor.distance > this.routeLength - 4) {
+        actor.waiting = true;
+      }
       this.positionTrafficActor(actor);
     }
   }
@@ -3739,17 +2641,23 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private positionTrafficActor(actor: AmbientTrafficActor) {
     const point = this.getRoutePoint(actor.distance);
-    actor.group.position.set(
-      point.x + point.normal.x * actor.lateral,
-      0.05,
-      point.z + point.normal.z * actor.lateral,
-    );
-    actor.group.rotation.y = this.getSceneYawForDirection({
+    actor.x = point.x + point.normal.x * actor.lateral;
+    actor.z = point.z + point.normal.z * actor.lateral;
+    actor.heading = this.getHeadingFromDirection({
       x: point.dir.x * actor.direction,
       z: point.dir.z * actor.direction,
     });
-    actor.shadow.position.set(actor.group.position.x, 0.116, actor.group.position.z);
-    actor.shadow.rotation.y = actor.group.rotation.y;
+  }
+
+  private getTrafficActorCollisionBox(actor: Pick<AmbientTrafficActor, 'kind' | 'x' | 'z' | 'heading'>): CollisionBox2D {
+    const scooter = actor.kind === 'scooter';
+    return {
+      centerX: actor.x,
+      centerZ: actor.z,
+      angle: actor.heading,
+      halfWidth: scooter ? 0.55 : 1.0,
+      halfLength: scooter ? 0.95 : 2.25,
+    };
   }
 
   private activateScheduledHazards(time: number) {
@@ -3798,9 +2706,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.result.collision = false;
     hazard.result.brake_preheld = preheldBrake;
     hazard.result.response = preheldBrake ? 'invalid-preheld-brake' : 'pending';
-    hazard.group.visible = true;
-    hazard.group.position.set(point.x + point.normal.x * initialLateral, 0, point.z + point.normal.z * initialLateral);
-    hazard.group.rotation.y = this.getSceneYawForDirection(
+    hazard.visual.visible = true;
+    hazard.visual.x = point.x + point.normal.x * initialLateral;
+    hazard.visual.y = 0;
+    hazard.visual.z = point.z + point.normal.z * initialLateral;
+    hazard.visual.heading = this.getHeadingFromDirection(
       hazard.template.id === 'wrong-way-driver' ? { x: -point.dir.x, z: -point.dir.z } : point.dir,
     );
 
@@ -3903,7 +2813,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private markHazardsPresented(time: number) {
     for (const hazard of this.activeHazards) {
-      if (hazard.active && !hazard.resolved && hazard.group.visible && hazard.crossingStarted && hazard.presentedAt === null) {
+      if (hazard.active && !hazard.resolved && hazard.visual.visible && hazard.crossingStarted && hazard.presentedAt === null) {
         hazard.presentedAt = time;
         hazard.preheldBrake = this.readInput().brake > 0.35;
         hazard.brakeTime = null;
@@ -3952,7 +2862,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     for (const hazard of this.activeHazards) {
       if (hazard.resolved) {
         if (hazard.removeAt !== null && time >= hazard.removeAt) {
-          hazard.group.visible = false;
+          hazard.visual.visible = false;
           hazard.removeAt = null;
         }
         continue;
@@ -3976,27 +2886,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         const swerve = this.clamp((54 - routeGap) / 24, 0, 1) ** 2;
         if (swerve > 0) hazard.crossingStarted = true;
         lateral = this.lerp(hazard.crossingStartLateral, hazard.targetLateral, swerve);
-        hazard.group.position.set(
-          movingPoint.x + movingPoint.normal.x * lateral,
-          0,
-          movingPoint.z + movingPoint.normal.z * lateral,
-        );
+        hazard.visual.x = movingPoint.x + movingPoint.normal.x * lateral;
+        hazard.visual.y = 0;
+        hazard.visual.z = movingPoint.z + movingPoint.normal.z * lateral;
         hazard.currentLateral = lateral;
-        hazard.group.rotation.y = this.getSceneYawForDirection({ x: -movingPoint.dir.x, z: -movingPoint.dir.z });
+        hazard.visual.heading = this.getHeadingFromDirection({ x: -movingPoint.dir.x, z: -movingPoint.dir.z });
       }
 
       if (hazard.template.id !== 'wrong-way-driver') {
         hazard.currentLateral = lateral;
-        hazard.group.position.set(
-          point.x + point.normal.x * lateral,
-          baseY,
-          point.z + point.normal.z * lateral,
-        );
-        hazard.group.rotation.y = this.getSceneYawForDirection(point.dir) + (hazard.template.id === 'drunk-driver' ? Math.sin(age / 300) * 0.5 : 0);
-      }
-
-      if (hazard.template.id === 'plane-crash') {
-        hazard.group.rotation.z = Math.min(1.15, age / 900);
+        hazard.visual.x = point.x + point.normal.x * lateral;
+        hazard.visual.y = baseY;
+        hazard.visual.z = point.z + point.normal.z * lateral;
+        hazard.visual.heading = this.getHeadingFromDirection(point.dir) - (hazard.template.id === 'drunk-driver' ? Math.sin(age / 300) * 0.5 : 0);
       }
 
       const distanceToHazard = hazard.currentDistance - this.progress;
@@ -4077,17 +2979,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private isVehicleCollidingWithTraffic(): boolean {
     if (this.ambientTrafficActors.length === 0) return false;
     const vehicleBox = this.getVehicleCollisionBox();
-    return this.ambientTrafficActors.some((actor) => {
-      const isScooter = Math.max(actor.group.scale.x, actor.group.scale.z) <= 0.95;
-      const trafficBox: CollisionBox2D = {
-        centerX: actor.group.position.x,
-        centerZ: actor.group.position.z,
-        angle: this.getHeadingFromSceneYaw(actor.group.rotation.y || 0),
-        halfWidth: isScooter ? 0.55 : 1.0,
-        halfLength: isScooter ? 0.95 : 2.25,
-      };
-      return this.boxesOverlap(vehicleBox, trafficBox);
-    });
+    return this.ambientTrafficActors.some((actor) => (
+      !actor.waiting && this.boxesOverlap(vehicleBox, this.getTrafficActorCollisionBox(actor))
+    ));
   }
 
   private recordCollisionEvent(time: number) {
@@ -4107,7 +3001,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private isHazardColliding(hazard: ActiveHazard): boolean {
-    if (hazard.template.id === 'plane-crash' && hazard.group.position.y > 1.6) return false;
+    if (hazard.template.id === 'plane-crash' && hazard.visual.y > 1.6) return false;
     return this.boxesOverlap(this.getVehicleCollisionBox(), this.getHazardCollisionBox(hazard));
   }
 
@@ -4174,15 +3068,41 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getHazardCollisionBox(hazard: ActiveHazard): CollisionBox2D {
-    const footprint = hazard.group.userData.vehicleKind === 'scooter'
+    const footprint = hazard.visual.vehicleKind === 'scooter'
       ? { halfWidth: 0.45, halfLength: 1.2 }
       : this.getHazardFootprint(hazard.template.id);
     return {
-      centerX: hazard.group.position.x,
-      centerZ: hazard.group.position.z,
-      angle: this.getHeadingFromSceneYaw(hazard.group.rotation.y || 0),
+      centerX: hazard.visual.x,
+      centerZ: hazard.visual.z,
+      angle: hazard.visual.heading,
       ...footprint,
     };
+  }
+
+  // Sprite and placement for a hazard. Only wrong-way drivers are scheduled;
+  // the other hazard types keep a plain car look.
+  private createHazardVisual(id: HazardId): HazardVisual {
+    const palette = ['white', 'blue', 'red', 'amber', 'green', 'navy'] as const;
+    const models = ['sedan', 'hatchback', 'suv', 'van'] as const;
+    const create = (vehicleKind: 'car' | 'scooter', color: VehicleColor, model: CarModel): HazardVisual => ({
+      visible: false,
+      x: 0,
+      y: 0,
+      z: 0,
+      heading: 0,
+      vehicleKind,
+      color,
+      model,
+      sprite: vehicleKind === 'scooter' ? `scooter/${color}` : `car/${model}/${color}`,
+    });
+    if (id === 'wrong-way-driver') {
+      const color = palette[Math.floor(Math.random() * palette.length)];
+      const isScooter = Math.random() < 0.5;
+      const model = models[Math.floor(Math.random() * models.length)];
+      return create(isScooter ? 'scooter' : 'car', color, model);
+    }
+    if (id === 'drunk-driver') return create('car', 'amber', 'sedan');
+    return create('car', 'red', 'hatchback');
   }
 
   private getHazardFootprint(id: HazardId): CollisionFootprint {
@@ -4256,194 +3176,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  private createHazardMesh(id: HazardId) {
-    switch (id) {
-      case 'child-crossing':
-        return this.createPersonMesh(0xffd166, 0.55, { backpack: true });
-      case 'elder-stopped':
-        return this.createPersonMesh(0xd9d9d9, 0.68, { cane: true });
-      case 'plane-crash':
-        return this.createPlaneMesh();
-      case 'drunk-driver':
-        return this.createCarMesh(0xf97316);
-      case 'wrong-way-driver': {
-        const palette = [0xeeeeee, 0x2563eb, 0xef4444, 0xf59e0b, 0x22c55e, 0x0f172a];
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        const isScooter = Math.random() < 0.5;
-        const group = isScooter ? this.createScooterMesh(color) : this.createFallbackVehicle(color).group;
-        group.userData.vehicleKind = isScooter ? 'scooter' : 'car';
-        return group;
-      }
-      default:
-        return this.createCarMesh(0xef4444);
-    }
-  }
-
-  private createScooterMesh(color: number) {
-    const three = this.requireThree();
-    const group = new three.Group();
-    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.18 });
-    const darkMat = new three.MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.08 });
-    const metalMat = new three.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.36, metalness: 0.48 });
-
-    const body = new three.Mesh(new three.BoxGeometry(0.7, 0.36, 1.55), bodyMat);
-    body.position.y = 0.58;
-    const seat = new three.Mesh(new three.BoxGeometry(0.48, 0.14, 0.72), darkMat);
-    seat.position.set(0, 0.86, -0.08);
-    const handle = new three.Mesh(new three.BoxGeometry(1.0, 0.08, 0.08), metalMat);
-    handle.position.set(0, 1.02, -0.62);
-    const front = new three.Mesh(new three.BoxGeometry(0.42, 0.72, 0.28), bodyMat);
-    front.position.set(0, 0.76, -0.54);
-    group.add(body, seat, handle, front);
-
-    for (const z of [-0.62, 0.58]) {
-      const wheel = new three.Mesh(new three.TorusGeometry(0.22, 0.065, 8, 16), darkMat);
-      wheel.rotation.y = Math.PI / 2;
-      wheel.position.set(0, 0.28, z);
-      group.add(wheel);
-    }
-
-    group.traverse?.((child: any) => {
-      child.castShadow = false;
-      child.receiveShadow = false;
-    });
-    return group;
-  }
-
-  private createPersonMesh(color: number, scale: number, options: { backpack?: boolean; cane?: boolean } = {}) {
-    const three = this.requireThree();
-    const group = new three.Group();
-    const skin = new three.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.78, metalness: 0.02 });
-    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.02 });
-    const dark = new three.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.04 });
-    const head = new three.Mesh(new three.SphereGeometry(0.45 * scale, 8, 6), skin);
-    head.position.y = 2.1 * scale;
-    const body = new three.Mesh(new three.BoxGeometry(0.8 * scale, 1.15 * scale, 0.45 * scale), bodyMat);
-    body.position.y = 1.25 * scale;
-    const leftArm = new three.Mesh(new three.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
-    leftArm.position.set(-0.52 * scale, 1.3 * scale, 0);
-    leftArm.rotation.z = options.cane ? -0.25 : 0.38;
-    const rightArm = new three.Mesh(new three.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
-    rightArm.position.set(0.52 * scale, 1.3 * scale, 0);
-    rightArm.rotation.z = options.backpack ? -0.42 : 0.25;
-    const leftLeg = new three.Mesh(new three.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
-    leftLeg.position.set(-0.22 * scale, 0.45 * scale, 0);
-    leftLeg.rotation.z = options.backpack ? 0.18 : 0;
-    const rightLeg = new three.Mesh(new three.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
-    rightLeg.position.set(0.22 * scale, 0.45 * scale, 0);
-    rightLeg.rotation.z = options.backpack ? -0.18 : 0;
-    group.add(head, body, leftArm, rightArm, leftLeg, rightLeg);
-    if (options.backpack) {
-      const packMat = new three.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.62, metalness: 0.05 });
-      const pack = new three.Mesh(new three.BoxGeometry(0.52 * scale, 0.68 * scale, 0.22 * scale), packMat);
-      pack.position.set(0, 1.35 * scale, -0.34 * scale);
-      group.add(pack);
-    }
-    if (options.cane) {
-      const caneMat = new three.MeshStandardMaterial({ color: 0x7c4a2d, roughness: 0.66, metalness: 0.08 });
-      const cane = new three.Mesh(new three.CylinderGeometry(0.035 * scale, 0.035 * scale, 1.35 * scale, 8), caneMat);
-      cane.position.set(-0.68 * scale, 0.72 * scale, 0.18 * scale);
-      cane.rotation.z = -0.16;
-      group.add(cane);
-    }
-    return group;
-  }
-
-  private createCarMesh(color: number) {
-    const group = new three.Group();
-    const referenceCar = this.vehicleModel?.clone?.(true);
-    if (referenceCar) {
-      referenceCar.rotation.x = 0;
-      referenceCar.traverse?.((child: any) => {
-        child.castShadow = false;
-        child.receiveShadow = false;
-      });
-      group.add(referenceCar);
-      return group;
-    }
-
-    const fallback = this.createFallbackVehicle(color);
-    group.add(fallback.group);
-    return group;
-  }
-
-  private createPlaneMesh() {
-    const three = this.requireThree();
-    const group = new three.Group();
-    const bodyMat = new three.MeshBasicMaterial({ color: 0xd6dde4 });
-    const wingMat = new three.MeshBasicMaterial({ color: 0x94a3b8 });
-    const smokeMat = new three.MeshBasicMaterial({ color: 0x4b5563, transparent: true, opacity: 0.42 });
-    const debrisMat = new three.MeshBasicMaterial({ color: 0x1f2937 });
-    const body = new three.Mesh(new three.BoxGeometry(1.4, 1.2, 7), bodyMat);
-    const wing = new three.Mesh(new three.BoxGeometry(8, 0.18, 1.4), wingMat);
-    const tail = new three.Mesh(new three.BoxGeometry(4, 0.16, 1.1), wingMat);
-    tail.position.z = -2.8;
-    tail.position.y = 0.75;
-    group.add(body, wing, tail);
-    for (const [x, y, z, radius] of [
-      [-1.7, 0.9, -3.3, 0.7],
-      [1.6, 1.15, -3.9, 0.55],
-      [0.2, 1.35, -4.6, 0.82],
-    ] as const) {
-      const smoke = new three.Mesh(new three.SphereGeometry(radius, 10, 8), smokeMat);
-      smoke.position.set(x, y, z);
-      group.add(smoke);
-    }
-    for (const [x, z, w] of [
-      [-3.1, 2.8, 1.1],
-      [2.8, 1.9, 0.8],
-      [0.8, -3.8, 0.9],
-    ] as const) {
-      const debris = new three.Mesh(new three.BoxGeometry(w, 0.16, 0.42), debrisMat);
-      debris.position.set(x, 0.12, z);
-      debris.rotation.y = x * 0.7;
-      group.add(debris);
-    }
-    group.scale.set(1.2, 1.2, 1.2);
-    return group;
-  }
-
-  // Camera: a deterministic vehicle-relative rig with view switching.
-  private updateCameraFree() {
-    this.applyCameraPose();
-  }
-
-  /**
-   * Teleport the camera instantly to the correct follow position without lerp.
-   * Use this after initScene() and lane resets so the next rendered frame already
-   * shows the correct perspective instead of lerping from a stale camera pose.
-   */
-  private snapCameraToVehicle() {
-    this.applyCameraPose();
-  }
-
-  private applyCameraPose() {
-    if (!this.camera) return;
-    const pose = CalculateDrivingCameraPose({
-      vehicleX: this.vehicleX,
-      vehicleZ: this.vehicleZ,
-      vehicleHeading: this.vehicleHeading,
-      mode: this.cameraMode,
-    });
-    this.camera.position.set(pose.position.x, pose.position.y, pose.position.z);
-    this.camera.up.set(pose.up.x, pose.up.y, pose.up.z);
-    this.camera.lookAt(pose.lookAt.x, pose.lookAt.y, pose.lookAt.z);
-    if (Math.abs(this.camera.fov - pose.fov) > 0.0001) {
-      this.camera.fov = pose.fov;
-      this.camera.updateProjectionMatrix();
-    }
-  }
-
   private cycleCameraMode() {
     const modes: DrivingCameraMode[] = ['third-person', 'first-person'];
     const next = modes[(modes.indexOf(this.cameraMode) + 1) % modes.length];
     this.cameraMode = next;
     this.updateCameraModeHud();
-    this.snapCameraToVehicle();
     if (this.hud?.event) {
       this.hud.event.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
-        : `\u8996\u89d2\uff1a${this.getCameraModeText()}`;
+        : `視角：${this.getCameraModeText()}`;
     }
   }
 
@@ -4458,32 +3199,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.hud?.view) {
       this.hud.view.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
-        : `\u8996\u89d2\uff1a${this.getCameraModeText()}`;
+        : `視角：${this.getCameraModeText()}`;
     }
-    if (this.hud?.cockpit) {
-      this.hud.cockpit.style.display = this.cameraMode === 'first-person' ? 'block' : 'none';
-    }
-    if (this.vehicleRoot) {
-      this.vehicleRoot.visible = this.cameraMode === 'third-person';
-    }
-    if (this.vehicleBlobShadow) {
-      this.vehicleBlobShadow.visible = this.cameraMode === 'third-person';
-    }
+    if (this.root) this.root.dataset.drivingCamera = this.cameraMode;
+    this.updateCockpitHud();
   }
 
+  // The cockpit itself is drawn on the canvas; these attributes let tests and
+  // assistive tools read the speedometer.
   private updateCockpitHud() {
-    if (this.cockpitSteeringWheel) {
-      const steeringDeg = this.clamp(this.frontWheelAngle * 34, -24, 24);
-      this.cockpitSteeringWheel.style.transform = `translateX(-50%) rotate(${steeringDeg}deg)`;
-    }
-    const speedKph = Math.round(this.vehicleSpeed * 3.6);
-    if (this.cockpitSpeedText) {
-      this.cockpitSpeedText.textContent = String(speedKph);
-    }
-    if (this.cockpitSpeedNeedle) {
-      const speedRatio = this.clamp(speedKph / Math.round(this.maxVehicleSpeed * 3.6), 0, 1);
-      this.cockpitSpeedNeedle.style.transform = `rotate(${-115 + speedRatio * 230}deg)`;
-    }
+    if (!this.root) return;
+    this.root.dataset.drivingSpeedometer = String(Math.round(this.vehicleSpeed * 3.6));
+    this.root.dataset.drivingCockpit = this.cameraMode === 'first-person' ? 'left-hand-drive' : 'hidden';
   }
 
   private updateHud() {
@@ -4745,41 +3472,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return Math.max(this.minLaneDeviationLimit, this.getRoadWidthAtDistance(distance) / 2 - 0.35);
   }
 
-  private getRouteBounds() {
-    return this.route.reduce(
-      (bounds, segment) => {
-        const endX = segment.start.x + segment.dir.x * segment.length;
-        const endZ = segment.start.z + segment.dir.z * segment.length;
-        return {
-          minX: Math.min(bounds.minX, segment.start.x, endX),
-          maxX: Math.max(bounds.maxX, segment.start.x, endX),
-          minZ: Math.min(bounds.minZ, segment.start.z, endZ),
-          maxZ: Math.max(bounds.maxZ, segment.start.z, endZ),
-        };
-      },
-      { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
-    );
-  }
-
-  private getDistanceToRoute(wx: number, wz: number): number {
-    let bestDistSq = Infinity;
-    for (const segment of this.route) {
-      const dx = wx - segment.start.x;
-      const dz = wz - segment.start.z;
-      const dot = dx * segment.dir.x + dz * segment.dir.z;
-      const clampedT = this.clamp(dot, 0, segment.length);
-      const closestX = segment.start.x + segment.dir.x * clampedT;
-      const closestZ = segment.start.z + segment.dir.z * clampedT;
-      bestDistSq = Math.min(bestDistSq, (wx - closestX) ** 2 + (wz - closestZ) ** 2);
-    }
-    return Math.sqrt(bestDistSq);
-  }
-
-  private isBoxNearRoute(box: CollisionBox2D, margin: number): boolean {
-    const reach = Math.hypot(box.halfWidth, box.halfLength) + margin;
-    return this.getDistanceToRoute(box.centerX, box.centerZ) <= reach;
-  }
-
   // Route helpers, also used for hazard placement and the minimap.
   private ensureRoute(route: RouteSegment[]): RouteSegment[] {
     const clean = route.filter((segment) => (
@@ -5015,6 +3707,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private detachResizeSync() {
     this.viewportController?.stop();
     this.viewportController = null;
+    this.hudPanelObserver?.disconnect();
+    this.hudPanelObserver = null;
   }
 
   private clearLaneResetTimers() {
@@ -5034,78 +3728,27 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     cancelAnimationFrame(this.raf);
     this.clearLaneResetTimers();
     this.detachResizeSync();
-    for (const target of Object.values(this.rearviewRenderTargets)) {
-      target?.dispose?.();
-    }
-    this.rearviewRenderTargets = {};
-    this.rearviewPixelBuffers = {};
-    this.rearviewImageData = new WeakMap<HTMLCanvasElement, ImageData>();
-    this.asphaltMaterials.clear();
-    this.signTextureCache.clear();
-    this.asphaltTexture = null;
     this.miniMapLastUpdateTime = 0;
     this.miniMapLastDirectionText = '';
     this.miniMapRouteSamples = [];
-    this.sideRearviewMirrorsEnabled = true;
-    this.rearviewQualityLevel = 'high';
-    this.needsFirstFrameCameraSnap = false;
-    if (this.scene) {
-      this.disposeObject(this.scene);
-      this.scene.clear?.();
-      this.scene = null;
-    }
+    this.rearviewLastUpdateTime = 0;
     if (this.renderer) {
-      this.renderer.dispose?.();
-      this.renderer.forceContextLoss?.();
-      this.renderer.domElement?.remove?.();
+      this.renderer.dispose();
       this.renderer = null;
     }
+    this.pixelWorld = null;
+    this.root = null;
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
     this.inputPauseOverlay?.remove();
     this.inputPauseOverlay = null;
     this.inputPausedAt = 0;
     this.visibilityPausedAt = null;
-    this.camera = null;
-    this.rearviewCamera = null;
-    this.rearviewLookAt = null;
-    this.vehicleRoot = null;
-    this.vehicleModel = null;
-    this.fallbackVehicle = null;
-    this.vehicleBlobShadow = null;
-    this.blobShadowTexture = null;
-    this.wheelBindings = [];
     this.ambientTrafficActors = [];
     this.hud = null;
     this.miniMapCanvas = null;
     this.miniMapCtx = null;
     this.miniMapDirectionLabel = null;
-    this.rearviewMirrorCanvases = {};
-    this.cockpitSteeringWheel = null;
-    this.cockpitSpeedNeedle = null;
-    this.cockpitSpeedText = null;
-  }
-
-  private disposeObject(object: any) {
-    object?.traverse?.((child: any) => {
-      child.geometry?.dispose?.();
-      this.disposeMaterial(child.material);
-    });
-  }
-
-  private disposeMaterial(material: any) {
-    if (!material) return;
-    const materials = Array.isArray(material) ? material : [material];
-    for (const item of materials) {
-      for (const key of ['map', 'alphaMap', 'aoMap', 'bumpMap', 'emissiveMap', 'metalnessMap', 'normalMap', 'roughnessMap']) {
-        item[key]?.dispose?.();
-      }
-      item.dispose?.();
-    }
-  }
-
-  private requireThree(): ThreeModule {
-    return three;
   }
 }
 

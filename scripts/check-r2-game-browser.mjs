@@ -219,7 +219,7 @@ try {
 }`;
   const drivingProbe = `
     window.drivingNativeGamepadCheck = (() => { try { navigator.getGamepads(); return 'allowed'; } catch(error) { return error.name; } })();
-    ${rendererFailure ? "const context = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function(type,...args) { if(type === 'webgl2' && !window.allowRendererRetry) throw new Error('Simulated WebGL failure'); return context.call(this,type,...args); };" : ''}
+    ${rendererFailure ? "const context = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function(type,...args) { if(type === '2d' && this.dataset?.drivingView === 'main' && !window.allowRendererRetry) throw new Error('Simulated canvas failure'); return context.call(this,type,...args); };" : ''}
   `;
   const pixiProbe = gameId === 'driving-rehab' ? drivingProbe : `window.__PIXI_APP_INIT__ = app => {
     window.${gameId === 'reading-training' ? 'reading' : gameId === 'gabor-patching' ? 'gabor' : gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
@@ -241,7 +241,7 @@ try {
     if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
     if (gameId === 'driving-rehab' && message.method === 'Runtime.consoleAPICalled') {
       const text = message.params.args.map(argument => argument.value ?? argument.description ?? '').join(' ');
-      if (/Couldn't load texture|Unable to load reference driving vehicle model/.test(text)) errors.push(text);
+      if (/Couldn't load texture|Unable to load driving sprites/.test(text)) errors.push(text);
     }
     if (message.method === 'Network.requestWillBeSent') requests.push(message.params.request.url);
     if (message.method === 'Fetch.requestPaused') {

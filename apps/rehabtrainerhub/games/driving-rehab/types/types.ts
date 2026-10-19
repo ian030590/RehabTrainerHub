@@ -1,4 +1,6 @@
 // Types local to the Hub-owned driving runtime.
+import type { CarModel, VehicleColor } from '../pixel/spriteNames';
+
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel' | 'touch';
 export type DrivingLanguage = 'zh' | 'en';
 
@@ -66,10 +68,24 @@ export interface DrivingEventResult {
   response: string;
 }
 
+// Where and how a hazard is drawn; its collision box follows x, z and heading.
+export interface HazardVisual {
+  visible: boolean;
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  vehicleKind: 'car' | 'scooter';
+  color: VehicleColor;
+  model: CarModel;
+  // Sprite name without the view, such as car/suv/red or scooter/blue.
+  sprite: string;
+}
+
 export interface ActiveHazard {
   active: boolean;
   template: HazardTemplate;
-  group: any;
+  visual: HazardVisual;
   triggerDistance: number;
   hazardDistance: number;
   startTime: number;
@@ -115,15 +131,8 @@ export interface IntersectionZone {
   entered: boolean;
   announced: boolean;
   trafficSignalState: TrafficLightState;
-  trafficSignalRenderedState?: TrafficLightState;
   trafficSignalOffsetMs: number;
   redLightChecked: boolean;
-  trafficLightGroup?: any;
-  trafficLightLamps?: {
-    red: any;
-    yellow: any;
-    green: any;
-  };
 }
 
 export interface DifficultyPreset {

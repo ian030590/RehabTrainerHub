@@ -86,3 +86,23 @@ Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 
 必要時只還原駕駛的舊 registry／依賴／遊戲及 JSON 流程，再部署相容 Hub；保留其他八款 current 和已發布不可變 native 版本。不可用 `--activate-version 1.0.0` 當 native 回退，或回退整站而覆蓋其他遊戲。
 
 手機／平板為 Brave 觸控模擬，方向盤為虛擬 G29；實體方向盤、觸控及音訊輸出、Safari／iOS、長時間完整離線訓練仍未驗收。
+
+## 2.1.0 候選：像素駕駛室（未發布）
+
+2026-10-19，依擁有者要求把場景改成 [javascript-racer](https://github.com/jakesgordon/javascript-racer) 式的 2D 像素投影，不再使用 three.js。正式 current 仍為 2.0.2；發布前須由擁有者核准下列精確候選。
+
+| 項目 | 值 |
+| --- | --- |
+| gameId／版本 | `driving-rehab@2.1.0` |
+| contentSha256 | `af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548` |
+| 套件 | 8 檔、1,281,420 bytes（主程式約 728 KB、精靈圖 318 KB）；不再有 `vehicle-data.js` 或 GLB |
+
+- 畫面：Canvas 2D 以低解析度繪製，再用 `image-rendering: pixelated` 放大。道路沿既有路線逐段投影，延伸到真實 90 度轉彎與路口；建築、樹、路燈、號誌、車輛與機車是預先算好的多角度像素圖。
+- 駕駛室：臺灣左駕第一人稱，視點在左座。方向盤、儀表板與速度表（指針與數字跟隨實際車速）、左右 A 柱、左右車外後視鏡與車內後視鏡；三面鏡子各自往後投影，會看到後方來車。手機狀態列會蓋住車內後視鏡時，後視鏡改掛在狀態列下方；桌機導航地圖移到右上，避開三面鏡子。
+- 後方車流：依畫質 2／3／4 台，在玩家後方出生、跟車減速、從鄰車道超車，遠離後重新回到後方。前後車流都會在紅燈停止線前停下。
+- 保留：路線、80 秒時限、固定步進、從起點到終點的計分、四項設定與預設值、聚光燈教學、逆向來車事件與反應時間判定，以及原 10 個 summary 欄位與每回合欄位。Space 與煞車鍵相同。
+- 素材：全部 CC0，來源與版本見 `games/driving-rehab/sprites/SOURCES.md`；精靈圖由 `scripts/driving-pixel-sprites/build.mjs` 從 Kenney 套件產生，套件本身不進倉庫。
+- 修正：機車改用自己的小碰撞框（舊版以縮放判斷，機車縮放為 1.0 而誤用汽車框）；圖片網址改在模組載入時解析，修正觸控方向盤與踏板圖在 IIFE 建置中缺少 `assets/` 路徑；觸控方向盤 SVG 加上 viewBox 並改用已定義的 `--primary` 色，CAM 按鈕移到踏板上方，不再蓋住速度表。
+- `models/car.glb` 與 `scenes/taipei-xinyi-osm.json` 原檔保留（legacy fixture 雜湊固定），2.1.0 套件不載入。
+
+驗證：七項 gate 通過（game-architecture 312／312）；本機 Brave 大廳桌機、手機、平板、英文、寬螢幕低畫質方向盤與停止、設定保存、繪圖失敗後重試，以及獨立 PWA 手機共八項流程通過，截圖在 `.tmp/driving-rehab-validation/`。同上，這些不代表實體觸控、方向盤或效能驗收。

@@ -75,7 +75,7 @@ const { MeasureDisplayRefreshRate } = displayTiming;
 const drivingSource = await readFile(new URL('../apps/rehabtrainerhub/games/driving-rehab/three-driving-rehab.ts', import.meta.url), 'utf8');
 const drivingAst = ts.createSourceFile('driving.ts', drivingSource, ts.ScriptTarget.Latest, true);
 const runtimeClass = drivingAst.statements.find(node => ts.isClassDeclaration(node));
-const testedMethods = new Set(['markHazardsPresented', 'handleBrakePressed', 'handleHazardResponse', 'createHazardMesh', 'createHazardSchedule', 'getHazardCollisionBox', 'recordAvoidanceTrafficCollision', 'resolveHazard', 'hasPassedHazard', 'captureSteeringInputTimestamp']);
+const testedMethods = new Set(['markHazardsPresented', 'handleBrakePressed', 'handleHazardResponse', 'createHazardVisual', 'createHazardSchedule', 'getHazardCollisionBox', 'recordAvoidanceTrafficCollision', 'resolveHazard', 'hasPassedHazard', 'captureSteeringInputTimestamp']);
 const methodSource = runtimeClass.members.filter(node => testedMethods.has(node.name?.getText(drivingAst))).map(node => node.getText(drivingAst)).join('\n');
 const harnessCode = ts.transpileModule(`export default class RuntimeHarness { ${methodSource} }`, { compilerOptions }).outputText;
 const hazardDefinitions = await ImportTypeScriptModule('../apps/rehabtrainerhub/games/driving-rehab/hazards/driving-hazards.ts');
@@ -90,7 +90,7 @@ const runtimeHarness = harnessModule.default;
 function CreateResponseHarness() {
   const runtime = new runtimeHarness();
   const event = { distance_m: 0, rt_ms: null, valid: false, collision: false };
-  const hazard = { active: true, resolved: false, group: { visible: true }, crossingStarted: false, presentedAt: null, rt: null, result: event };
+  const hazard = { active: true, resolved: false, visual: { visible: true }, crossingStarted: false, presentedAt: null, rt: null, result: event };
   Object.assign(runtime, { activeHazards: [hazard], eventResults: [], progress: 123, readInput: () => ({ brake: 0 }), flashRed: () => {}, refreshMeasured: false });
   return { runtime, hazard, event };
 }
@@ -127,17 +127,18 @@ test('brake and either steering direction record only the first post-crossing re
 
 test('wrong-way appearance randomization supports cars and scooters with different colors', () => {
   const runtime = new runtimeHarness();
-  runtime.createScooterMesh = color => ({ userData: {}, color });
-  runtime.createFallbackVehicle = color => ({ group: { userData: {}, color } });
   const originalRandom = Math.random;
   try {
     Math.random = () => 0;
-    const scooter = runtime.createHazardMesh('wrong-way-driver');
+    const scooter = runtime.createHazardVisual('wrong-way-driver');
     Math.random = () => 0.99;
-    const car = runtime.createHazardMesh('wrong-way-driver');
-    assert.equal(scooter.userData.vehicleKind, 'scooter');
-    assert.equal(car.userData.vehicleKind, 'car');
+    const car = runtime.createHazardVisual('wrong-way-driver');
+    assert.equal(scooter.vehicleKind, 'scooter');
+    assert.equal(car.vehicleKind, 'car');
     assert.notEqual(scooter.color, car.color);
+    assert.ok(scooter.sprite.startsWith('scooter/'));
+    assert.ok(car.sprite.startsWith('car/'));
+    assert.equal(scooter.visible, false, 'Hazards stay hidden until their round starts.');
   } finally {
     Math.random = originalRandom;
   }
