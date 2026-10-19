@@ -109,14 +109,14 @@ Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 
 
 正式驗收：發布工具逐檔上傳並回讀雜湊後才切換 current。正式 runner 八檔公開 bytes 與收據一致，穩定入口以 no-store 302 導向 2.1.0，正式 session 回覆 201 並固定 2.1.0／上列摘要。正式 Hub 桌機、正式 Hub 手機與獨立 PWA 手機三項 Brave 流程通過，Hub `/api/*` 只攔截到本機 SQLite，未建立正式帳號或紀錄。capabilities 與 2.0.2 相同，因此沒有另外部署 Hub 或 runner。遊戲手把模式由擁有者暫緩。
 
-## 2.1.1：車流卡住與終點冒車修正（候選，待核准）
+## 2.1.1：車流卡住與終點冒車修正（已發布）
 
-2026-10-19 擁有者試玩 2.1.0 回報兩個問題：閃避逆向車時和一台順向車卡在一起動不了；開到終點附近突然冒出一堆對向車。
+2026-10-19 擁有者試玩 2.1.0 回報兩個問題：閃避逆向車時和一台順向車卡在一起動不了；開到終點附近突然冒出一堆對向車。擁有者回覆「核准發佈」後發布下列精確版本並切換 current；回退版為 2.1.0。見[正式收據](releases/driving-rehab-2.1.1.json)。
 
 | 項目 | 值 |
 | --- | --- |
 | gameId／版本 | `driving-rehab@2.1.1` |
-| contentSha256 | `1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec`（`--dry-run`） |
+| contentSha256 | `1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec` |
 | 套件 | 8 檔、1,282,872 bytes；只有主程式與引用它的 `index.html` 改變，其他六檔與 2.1.0 相同 |
 
 原因：
@@ -135,3 +135,5 @@ Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 
 TDD：`scripts/check-driving-pixel-view.test.mjs` 新增 4 項，直接載入遊戲 runtime 類別模擬。先在 2.1.0 程式碼上失敗：切車道擦撞後玩家 0 m 移動、和後車重疊後停在原地、拉回點仍壓在車上、1283 m 路線上對向車在距終點 298 m 與 5 m 處出現；修正後通過。另以 288 種切入組合（前車停止或行進、在前或在後、不同油門與方向盤回正）模擬，0 次卡住，兩車最深短暫重疊 0.37 m。
 
 驗證：七項 gate 通過（game-architecture 316／316）；本機 Brave 大廳桌機、大廳手機與獨立 PWA 手機三項流程通過，只寫本機 SQLite。發布前同步程式又把產物 `index.html` 改名為 conflicted 檔，刪除後重建，`--dry-run` 摘要與上表相同。
+
+正式驗收：自動模式的安全檢查不讓代理執行正式發布，改由擁有者親自執行發布指令；第一次因 Wrangler 登入過期在讀取帳號時失敗（未上傳任何檔案），`npx wrangler whoami` 刷新後重跑成功。發布工具逐檔上傳並回讀雜湊後才切換 current。正式 runner 八檔公開 bytes 與收據一致，穩定入口以 no-store 302 導向 2.1.1，版本入口 200，正式 session 回覆 201 並固定 2.1.1／上列摘要。正式 Hub 桌機、正式 Hub 手機與獨立 PWA 手機三項 Brave 流程通過，Hub `/api/*` 只攔截到本機 SQLite，未建立正式帳號或紀錄。capabilities 與 2.1.0 相同，不需部署 Hub 或 runner；回退用 `node scripts/publish-official-game.mjs driving-rehab --activate-version 2.1.0`，未實際回退。

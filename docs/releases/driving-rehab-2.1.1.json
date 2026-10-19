@@ -1,0 +1,249 @@
+{
+  "gameId": "driving-rehab",
+  "version": "2.1.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/2.1.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/2.1.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/",
+  "publishedAt": "2026-10-19T13:11:02.553Z",
+  "verifiedAt": "2026-10-19T13:11:02.553Z",
+  "fileCount": 8,
+  "totalBytes": 1282872,
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/driving-sprites-BiQdvI-R.png",
+      "size": 318396,
+      "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-DlzmaV0G.js",
+      "size": 729494,
+      "sha256": "7ceba45ddf940ed39525440fb82992dbbac828c52aab38d7e0e5c026c1719aee",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-CU-EYMyz.svg",
+      "size": 3334,
+      "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-R6ztmDRb.css",
+      "size": 18569,
+      "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "46fea89a5edb49603b2bb287dc2cc3a0f424f87cc3703d569f4833b8ea0286e0",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13202,
+      "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    },
+    "2.0.1": {
+      "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+    },
+    "2.0.2": {
+      "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+    },
+    "2.1.0": {
+      "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548"
+    },
+    "2.1.1": {
+      "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "核准發佈",
+    "scope": "Publish and activate driving-rehab@2.1.1 with the contentSha256 reported for commit 9e8c7413. The owner ran the publish command after the auto-mode classifier blocked it for the agent.",
+    "games": [
+      {
+        "gameId": "driving-rehab",
+        "version": "2.1.1",
+        "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.1.0",
+    "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548",
+    "command": "node scripts/publish-official-game.mjs driving-rehab --activate-version 2.1.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Same capabilities as 2.1.1, so no Hub or runner deploy is needed to roll back."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/driving-rehab/2.1.1/",
+  "changes": [
+    "A car the player bumps while changing lanes, or one left overlapping the player, no longer traps it: cars waiting for the player let it drive off, overlapping vehicles may move apart, and the bump still counts as one collision",
+    "Same-direction cars stop at the player body instead of driving into it, also when the player is angled across two lanes",
+    "A lane reset clears cars off the reset point while the screen is dark; they return out of sight",
+    "Ambient cars that leave the route or drop 150 m behind return past the visible road ahead, or stay away near the finish, instead of appearing 6 m before the destination",
+    "Scoring, the 10 summary fields, per-round fields, the wrong-way event and its reaction-time rules are unchanged"
+  ],
+  "sourceCommit": "9e8c7413",
+  "platformDeploy": {
+    "commit": "9e8c7413",
+    "deployed": false,
+    "note": "Game content and version only; deployment_scope skips the Hub and runner deploy."
+  },
+  "tdd": {
+    "evidence": "The four new tests failed on 2.1.0: 0 m moved after a lane-change bump, the player stayed inside an overlapping car, a car stayed on the reset point, and oncoming cars appeared 298 m and 5 m before the finish on the 1283 m route",
+    "tests": [
+      "scripts/check-driving-pixel-view.test.mjs",
+      "scripts/check-driving-rehab-migration.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs",
+      "scripts/check-r2-settings-memory.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push"
+      }
+    ],
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game driving-rehab with --lobby, --lobby --mobile and --standalone --mobile passed before publishing; saves only to local SQLite",
+    "simulation": "288 lane-change bump cases in a runtime harness: 0 stuck, deepest brief overlap 0.37 m"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-19T13:17:20.383Z",
+    "files": [
+      {
+        "path": "assets/car-pedals-BXQENW7T.svg",
+        "status": 200,
+        "size": 198908,
+        "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/driving-sprites-BiQdvI-R.png",
+        "status": 200,
+        "size": 318396,
+        "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-DlzmaV0G.js",
+        "status": 200,
+        "size": 729494,
+        "sha256": "7ceba45ddf940ed39525440fb82992dbbac828c52aab38d7e0e5c026c1719aee",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/steering-wheel-CU-EYMyz.svg",
+        "status": 200,
+        "size": 3334,
+        "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/style-R6ztmDRb.css",
+        "status": 200,
+        "size": 18569,
+        "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 552,
+        "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "46fea89a5edb49603b2bb287dc2cc3a0f424f87cc3703d569f4833b8ea0286e0",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 13202,
+        "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/driving-rehab/2.1.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.1.1",
+      "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game driving-rehab with --production-hub --lobby --wide --windowed, --production-hub --lobby --mobile and --remote --standalone --mobile passed against 2.1.1; /api/* intercepted into local SQLite only. No production account or training record was created."
+  }
+}
