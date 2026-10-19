@@ -1,5 +1,5 @@
 import { useT } from './i18n/useT';
-import { defaultSettings, ValidateSettings, ChartScale, type HartSettings } from './settings';
+import { defaultSettings, ValidateSettings, ChartScale, type HartCharacterSet, type HartSettings } from './settings';
 import { BuildGameScore, type HartResult } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
@@ -13,6 +13,7 @@ import QRCode from 'qrcode';
 import type {
 CSSProperties,
 ChangeEvent,
+CompositionEvent as ReactCompositionEvent,
 KeyboardEvent as ReactKeyboardEvent,
 PointerEvent as ReactPointerEvent,
 } from 'react';
@@ -25,6 +26,8 @@ CreateHartDecoder,
 CreateHartSeed,
 ParseHartSeed
 } from './logic/hartChart';
+import { CreateHartChineseChart, CreateHartChineseDecoder, LastHanCharacter } from './logic/hartChineseChart';
+import { DecoderLayoutStyle, SplitDecoderWords } from './logic/decoderLayout';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import './styles/hart-chart.css';
 
@@ -44,10 +47,14 @@ function IsDecoderDock(value: string | null): value is DecoderDock {
   return value !== null && decoderDocks.includes(value as DecoderDock);
 }
 
+function CreateChart(characterSet: HartCharacterSet, seed: number): HartCell[] {
+  return characterSet === 'chinese' ? CreateHartChineseChart(seed) : CreateHartChart(seed);
+}
 
 interface HartChartGridProps {
   cells: HartCell[];
   scale: number;
+  characterSet: HartCharacterSet;
   hintedToken?: HartDecoderToken;
   hintsEnabled?: boolean;
   chartOnly?: boolean;
@@ -56,6 +63,7 @@ interface HartChartGridProps {
 function HartChartGrid({
   cells,
   scale,
+  characterSet,
   hintedToken,
   hintsEnabled = false,
   chartOnly = false,
@@ -75,8 +83,9 @@ function HartChartGrid({
 
   return (
     <div
-      className={`hart-chart-grid ${chartOnly ? 'hart-chart-grid-only' : ''}`}
+      className={`hart-chart-grid ${chartOnly ? 'hart-chart-grid-only' : ''} ${characterSet === 'chinese' ? 'hart-chart-grid-chinese' : ''}`}
       style={style}
+      lang={characterSet === 'chinese' ? 'zh-Hant' : undefined}
       aria-label="Hart chart"
     >
       {cells.map((cell) => {
@@ -105,9 +114,10 @@ export function HartChartPage() {
 function HartChartDisplay() {
   const params = new URLSearchParams(window.location.hash.split('?')[1]);
   const [seed] = useState(() => ParseHartSeed(params.get('seed')));
-  const chart = useMemo(() => CreateHartChart(seed), [seed]);
+  const characterSet: HartCharacterSet = params.get('characters') === 'chinese' ? 'chinese' : 'english';
+  const chart = useMemo(() => CreateChart(characterSet, seed), [characterSet, seed]);
   const scale = ClampHartScale(Number(params.get('scale') ?? 1));
-  return <main className="hart-display"><HartChartGrid cells={chart} scale={scale} chartOnly /></main>;
+  return <main className="hart-display"><HartChartGrid cells={chart} scale={scale} characterSet={characterSet} chartOnly /></main>;
 }
 
 function HartChartRuntime() {
@@ -132,6 +142,7 @@ function HartChartRuntime() {
   const [seed, setSeed] = useState(CreateHartSeed);
   const [scale, setScale] = useState(1);
   const rounds = settings.rounds;
+  const characterSet = settings.characterSet;
   const [decoderOpen, setDecoderOpen] = useState(true);
   const [decoderDock, setDecoderDock] = useState<DecoderDock>(() => window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right');
   const [decoderDragging, setDecoderDragging] = useState(false);
@@ -147,6 +158,10 @@ function HartChartRuntime() {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [qrError, setQrError] = useState(false);
   const [displayPreview, setDisplayPreview] = useState(false);
+  // Text an input method is still composing in a Chinese field; it is not an answer yet.
+  const [draft, setDraft] = useState<{ index: number; text: string } | null>(null);
+  const composingRef = useRef(false);
+  const committedRef = useRef<string[]>([]);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
@@ -155,8 +170,12 @@ function HartChartRuntime() {
   const decoderDragActiveRef = useRef(false);
   const decoderDragTargetRef = useRef<DecoderDock>(decoderDock);
 
-  const chart = useMemo(() => CreateHartChart(seed), [seed]);
-  const decoder = useMemo(() => CreateHartDecoder(chart, seed, rounds), [chart, seed, rounds]);
+  const chart = useMemo(() => CreateChart(characterSet, seed), [characterSet, seed]);
+  const decoder = useMemo(() => characterSet === 'chinese'
+    ? CreateHartChineseDecoder(chart, seed, rounds)
+    : CreateHartDecoder(chart, seed, rounds), [characterSet, chart, seed, rounds]);
+  const decoderWords = useMemo(() => SplitDecoderWords(decoder.tokens), [decoder.tokens]);
+  const decoderLayout = useMemo(() => DecoderLayoutStyle(decoderWords) as CSSProperties, [decoderWords]);
   const shareUrl = useMemo(() => {
     const baseUrl = window.location.href.split('#')[0].split('?')[0];
     const params = new URLSearchParams({
@@ -164,8 +183,9 @@ function HartChartRuntime() {
       scale: String(scale),
       lang,
     });
+    if (characterSet === 'chinese') params.set('characters', 'chinese');
     return `${baseUrl}#/hart-chart/display?${params.toString()}`;
-  }, [lang, scale, seed]);
+  }, [characterSet, lang, scale, seed]);
 
   const decodableIndexes = useMemo(
     () => decoder.tokens
@@ -208,13 +228,15 @@ function HartChartRuntime() {
   useEffect(() => {
     setTourFinished(false);
     if (phase !== 'rules') return;
-    return StartTour(GetHartTutorialSteps(lang), { lang, onEvent: () => setTourFinished(true), onBack: backToSettings });
-  }, [phase, lang, backToSettings]);
+    return StartTour(GetHartTutorialSteps(lang, characterSet), { lang, onEvent: () => setTourFinished(true), onBack: backToSettings });
+  }, [phase, lang, characterSet, backToSettings]);
   useEffect(() => { if (tourFinished) confirmationRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, [tourFinished]);
 
   useEffect(() => {
     setAnswers(Array(decoder.tokens.length).fill(''));
     setActiveTokenIndex(null);
+    setDraft(null);
+    committedRef.current = [];
     inputRefs.current = [];
   }, [decoder]);
 
@@ -379,9 +401,12 @@ function HartChartRuntime() {
     setDock(dock);
   };
 
-  const handleAnswer = (index: number, event: ChangeEvent<HTMLInputElement>) => {
-    if (phaseRef.current !== 'playing') return;
-    const value = event.target.value.replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
+  const commitAnswer = (index: number, value: string, field: HTMLInputElement) => {
+    setDraft(null);
+    // Safari reports a composition again in one more input event, and a cancelled composition
+    // ends with the old character; neither is a new entry.
+    if (committedRef.current[index] === value) return;
+    committedRef.current[index] = value;
     const nextAnswers = [...answers];
     nextAnswers[index] = value;
     setAnswers(nextAnswers);
@@ -396,8 +421,28 @@ function HartChartRuntime() {
     if (nextIndex !== undefined) {
       window.requestAnimationFrame(() => inputRefs.current[nextIndex]?.focus());
     } else {
-      event.target.blur();
+      field.blur();
     }
+  };
+
+  const handleAnswer = (index: number, event: ChangeEvent<HTMLInputElement>) => {
+    if (phaseRef.current !== 'playing') return;
+    if (characterSet === 'english') {
+      commitAnswer(index, event.target.value.replace(/[^a-z]/gi, '').slice(-1).toUpperCase(), event.target);
+      return;
+    }
+    const composing = composingRef.current || (event.nativeEvent as InputEvent | undefined)?.isComposing === true;
+    if (composing) {
+      setDraft({ index, text: event.target.value });
+      return;
+    }
+    commitAnswer(index, LastHanCharacter(event.target.value), event.target);
+  };
+
+  const handleCompositionEnd = (index: number, event: ReactCompositionEvent<HTMLInputElement>) => {
+    composingRef.current = false;
+    if (phaseRef.current !== 'playing') return;
+    commitAnswer(index, LastHanCharacter(event.currentTarget.value), event.currentTarget);
   };
 
   const finishTraining = () => {
@@ -433,6 +478,10 @@ function HartChartRuntime() {
   const isZh = lang !== 'en';
   const en = !isZh;
   const sizeLabel = (size: HartSettings['chartSize']) => ({ small: en ? 'Small' : '小', medium: en ? 'Medium' : '中', large: en ? 'Large' : '大' })[size];
+  const chinese = characterSet === 'chinese';
+  const characterSetLabel = (value: HartCharacterSet) => value === 'chinese' ? (en ? 'Chinese characters' : '中文字') : (en ? 'English letters' : '英文字母');
+  const characterSetTitle = en ? 'Decoder text' : '解碼文字';
+  const roundsLabel = chinese ? (en ? 'Requested decoder characters' : '要求解碼字數') : (en ? 'Requested decoder letters' : '要求解碼字母數');
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
     SaveGameSettings({ ...settings, decoderDock });
@@ -473,7 +522,8 @@ function HartChartRuntime() {
           <div ref={confirmationRef} className="training-config training-confirmation">
             <header className="training-config-header"><h2>{t('hart.title')}</h2></header>
             <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3>
-              <div className="training-config-summary"><p className="training-config-summary-item">{en ? 'Requested decoder letters' : '要求解碼字母數'}：{rounds}</p>
+              <div className="training-config-summary"><p className="training-config-summary-item">{characterSetTitle}：{characterSetLabel(characterSet)}</p>
+                <p className="training-config-summary-item">{roundsLabel}：{rounds}</p>
                 <p className="training-config-summary-item">{en ? 'Chart size' : '視標大小'}：{sizeLabel(settings.chartSize)}</p></div>
             </section></div>
             <footer className="config-actions"><div className="training-config-navigation-buttons">
@@ -488,7 +538,11 @@ function HartChartRuntime() {
           onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
           <header className="training-config-header"><h2 id="hart-settings-title">{en ? 'Hart Chart Training' : '哈特圖訓練'}</h2></header>
           <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Chart settings' : '視標設定'}</h3>
-            <label>{en ? 'Requested decoder letters' : '要求解碼字母數'}：<output>{settings.rounds}</output>
+            <label>{characterSetTitle}<select name="characterSet" value={settings.characterSet}
+              onChange={event => setSettings({ ...settings, characterSet: event.target.value as HartCharacterSet })}>
+              {(['english', 'chinese'] as const).map(value => <option value={value} key={value}>{characterSetLabel(value)}</option>)}
+            </select></label>
+            <label>{roundsLabel}：<output>{settings.rounds}</output>
               <input name="rounds" type="range" min={5} max={30} step={5} value={settings.rounds}
                 onChange={event => setSettings({ ...settings, rounds: Number(event.target.value) })} /></label>
             <label>{en ? 'Chart size' : '視標大小'}<select name="chartSize" value={settings.chartSize}
@@ -513,7 +567,8 @@ function HartChartRuntime() {
               <div className="score-key-metric"><p>{t('hart.results.attempts')}</p><strong>{result.attempts}</strong></div>
             </div></section>
             <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
-              <div className="score-context-item"><dt>{en ? 'Requested letters' : '要求字母數'}</dt><dd>{settings.rounds}</dd></div>
+              <div className="score-context-item"><dt>{characterSetTitle}</dt><dd>{characterSetLabel(characterSet)}</dd></div>
+              <div className="score-context-item"><dt>{chinese ? (en ? 'Requested characters' : '要求字數') : (en ? 'Requested letters' : '要求字母數')}</dt><dd>{settings.rounds}</dd></div>
               <div className="score-context-item"><dt>{en ? 'Chart size' : '視標大小'}</dt><dd>{sizeLabel(settings.chartSize)}</dd></div>
               <div className="score-context-item"><dt>{t('hart.results.targets')}</dt><dd>{result.targetCount}</dd></div>
               <div className="score-context-item"><dt>{en ? 'Hints enabled at finish (1/0)' : '結束時提示開啟（1／0）'}</dt><dd>{Number(result.hintsUsed)}</dd></div>
@@ -532,7 +587,7 @@ function HartChartRuntime() {
       )}
 
       {phase !== 'results' && (
-        <main inert={phase !== 'playing'} className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
+        <main inert={phase !== 'playing'} className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`} style={decoderLayout}>
           <header className="hart-topbar">
         <div className="hart-topbar-leading">
           <button className="btn btn-ghost hart-back-button" type="button" aria-label={en ? 'Stop training' : '停止訓練'} onClick={exitTraining}>
@@ -576,7 +631,7 @@ function HartChartRuntime() {
             {t('hart.openQr')}
           </button>
           <button className="btn btn-primary hart-tool-button" type="button" onClick={resetChart}>
-            {t('hart.reset')}
+            {t(chinese ? 'hart.resetChinese' : 'hart.reset')}
           </button>
         </div>
       </header>
@@ -589,6 +644,7 @@ function HartChartRuntime() {
           <HartChartGrid
             cells={chart}
             scale={scale}
+            characterSet={characterSet}
             hintsEnabled={showHints}
             hintedToken={activeTokenIndex === null ? undefined : decoder.tokens[activeTokenIndex]}
           />
@@ -639,47 +695,53 @@ function HartChartRuntime() {
               <div
                 className={`hart-code-output ${complete ? 'hart-code-output-complete' : ''}`}
                 aria-label={t('hart.decoder')}
+                lang={chinese ? 'zh-Hant' : undefined}
               >
-                {decoder.tokens.map((token, index) => {
-                  if (!token.coordinate) {
-                    return (
-                      <span className="hart-code-static" key={`${index}-${token.char}`}>
-                        {token.char === ' ' ? '\u00A0' : token.char}
-                      </span>
-                    );
-                  }
+                {decoderWords.map((word) => (
+                  <span className="hart-code-word" key={word[0].index}>
+                    {word.map(({ token, index }) => {
+                      if (!token.coordinate) {
+                        return <span className="hart-code-static" key={`${index}-${token.char}`}>{token.char}</span>;
+                      }
 
-                  const isCorrect = answers[index] === token.char;
-                  return (
-                    <input
-                      key={`${index}-${token.char}`}
-                      ref={(element) => {
-                        inputRefs.current[index] = element;
-                      }}
-                      className={`hart-code-input ${isCorrect ? 'is-correct' : ''}`}
-                      value={answers[index] ?? ''}
-                      placeholder={`[${token.coordinate.row},${token.coordinate.col}]`}
-                      aria-label={`${t('hart.coordinate')} ${token.coordinate.row}, ${token.coordinate.col}`}
-                      maxLength={1}
-                      autoComplete="off"
-                      spellCheck={false}
-                      onChange={(event) => handleAnswer(index, event)}
-                      onFocus={() => setActiveTokenIndex(index)}
-                      onBlur={() => setActiveTokenIndex((current) => current === index ? null : current)}
-                      onMouseEnter={() => setActiveTokenIndex(index)}
-                      onMouseLeave={() => {
-                        if (document.activeElement !== inputRefs.current[index]) {
-                          setActiveTokenIndex(null);
-                        }
-                      }}
-                    />
-                  );
-                })}
+                      // Shown as [column,row]: the first number counts across, the second down.
+                      const { row, col } = token.coordinate;
+                      const isCorrect = answers[index] === token.char;
+                      return (
+                        <input
+                          key={`${index}-${token.char}`}
+                          ref={(element) => {
+                            inputRefs.current[index] = element;
+                          }}
+                          className={`hart-code-input ${isCorrect ? 'is-correct' : ''}`}
+                          value={draft?.index === index ? draft.text : answers[index] ?? ''}
+                          placeholder={`[${col},${row}]`}
+                          aria-label={en ? `Column ${col}, row ${row}` : `\u7B2C ${col} \u6B04\uFF0C\u7B2C ${row} \u5217`}
+                          maxLength={chinese ? undefined : 1}
+                          lang={chinese ? 'zh-Hant' : undefined}
+                          autoComplete="off"
+                          spellCheck={false}
+                          onChange={(event) => handleAnswer(index, event)}
+                          onCompositionStart={() => { composingRef.current = true; }}
+                          onCompositionEnd={(event) => handleCompositionEnd(index, event)}
+                          onFocus={() => setActiveTokenIndex(index)}
+                          onBlur={() => setActiveTokenIndex((current) => current === index ? null : current)}
+                          onMouseEnter={() => setActiveTokenIndex(index)}
+                          onMouseLeave={() => {
+                            if (document.activeElement !== inputRefs.current[index]) {
+                              setActiveTokenIndex(null);
+                            }
+                          }}
+                        />
+                      );
+                    })}
+                  </span>
+                ))}
               </div>
             </div>
 
             <p className="hart-decoder-status" aria-live="polite">
-              {complete ? `${t('hart.decoderComplete')} ${decoder.phrase}` : t('hart.decoderPrompt')}
+              {complete ? `${t('hart.decoderComplete')} ${decoder.phrase}` : t(chinese ? 'hart.decoderPromptChinese' : 'hart.decoderPrompt')}
             </p>
             {complete && (
               <button className="btn btn-primary hart-finish-button" type="button" onClick={finishTraining}>
@@ -710,11 +772,11 @@ function HartChartRuntime() {
             onCancel={event => { event.preventDefault(); setQrOpen(false); }}
           >
             <h2 id="hart-qr-title">{t('hart.qrTitle')}</h2>
-            <p>{t('hart.qrDescription')}</p>
+            <p>{t(chinese ? 'hart.qrDescriptionChinese' : 'hart.qrDescription')}</p>
             {qrError ? <p role="alert">{en ? 'QR code unavailable. Close and retry.' : 'QR 碼無法產生，請關閉後重試。'}</p> : qrDataUrl ? <img src={qrDataUrl} alt={t('hart.qrAlt')} /> : <p role="status">{en ? 'Loading QR code…' : '正在產生 QR 碼…'}</p>}
             <p className="hart-share-url">{shareUrl}</p>
-            <button type="button" onClick={() => setDisplayPreview(open => !open)}>{en ? 'Preview chart' : '預覽字母表'}</button>
-            {displayPreview && <HartChartGrid cells={chart} scale={scale} chartOnly />}
+            <button type="button" onClick={() => setDisplayPreview(open => !open)}>{en ? 'Preview chart' : chinese ? '預覽字表' : '預覽字母表'}</button>
+            {displayPreview && <HartChartGrid cells={chart} scale={scale} characterSet={characterSet} chartOnly />}
             <button className="btn btn-primary" type="button" onClick={() => setQrOpen(false)}>
               {t('hart.close')}
             </button>

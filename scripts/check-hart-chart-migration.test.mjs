@@ -18,15 +18,49 @@ async function Load(path) {
 
 test('Hart settings preserve both original defaults, every size and the decoder count boundaries', async () => {
   const { defaultSettings, ValidateSettings, ChartScale } = await Load('settings.ts');
-  assert.deepEqual(defaultSettings, { rounds: 10, chartSize: 'medium' });
+  // The decoder text choice was added in 2.0.4; English letters stay the default.
+  assert.deepEqual(defaultSettings, { rounds: 10, chartSize: 'medium', characterSet: 'english' });
   const original = JSON.parse(await readFile(resolve(root, 'scripts/fixtures/hart-chart/settings.json'), 'utf8'));
-  assert.deepEqual(defaultSettings, Object.fromEntries(original.sections.flatMap(section => section.fields).map(field => [field.key, field.default])));
-  for (const chartSize of ['small', 'medium', 'large']) for (const rounds of [5, 10, 15, 20, 25, 30]) {
-    assert.equal(ValidateSettings({ chartSize, rounds }), true);
+  for (const field of original.sections.flatMap(section => section.fields)) assert.equal(defaultSettings[field.key], field.default, field.key);
+  for (const characterSet of ['english', 'chinese']) for (const chartSize of ['small', 'medium', 'large']) for (const rounds of [5, 10, 15, 20, 25, 30]) {
+    assert.equal(ValidateSettings({ chartSize, rounds, characterSet }), true);
     assert.equal(ChartScale(chartSize), { small: .75, medium: 1, large: 1.25 }[chartSize]);
   }
-  for (const settings of [{ rounds: 0 }, { rounds: 31 }, { rounds: 6 }, { rounds: '10' }, { rounds: NaN }, { chartSize: 'huge' }]) {
+  for (const settings of [{ rounds: 0 }, { rounds: 31 }, { rounds: 6 }, { rounds: '10' }, { rounds: NaN }, { chartSize: 'huge' },
+    { characterSet: 'klingon' }, { characterSet: undefined }, { characterSet: 1 }]) {
     assert.equal(ValidateSettings({ ...defaultSettings, ...settings }), false);
+  }
+});
+
+test('Chinese charts are seeded, hold every phrase character, and decode the exact requested count', async () => {
+  const { CreateHartChineseChart, CreateHartChineseDecoder, chinesePhrases } = await Load('logic/hartChineseChart.ts');
+  const han = /^\p{Script=Han}$/u;
+  assert.ok(chinesePhrases.length >= 10);
+  for (const words of chinesePhrases) {
+    assert.ok(words.every(word => [...word].every(char => han.test(char))), words.join('/'));
+    assert.doesNotMatch(words.join(''), /治療|診斷|療效|改善|復健|病/, 'Phrases stay within everyday practice wording.');
+  }
+  for (const seed of [0, 1, 42, 12345678]) {
+    const chart = CreateHartChineseChart(seed);
+    assert.equal(chart.length, 100);
+    assert.deepEqual(CreateHartChineseChart(seed), chart);
+    assert.deepEqual(chart.map(cell => [cell.row, cell.col]), Array.from({ length: 100 }, (_, index) => [Math.floor(index / 10) + 1, index % 10 + 1]));
+    assert.ok(chart.every(cell => han.test(cell.char)), 'Every cell holds one Chinese character.');
+    for (let index = 1; index < 100; index++) {
+      if (index % 10) assert.notEqual(chart[index].char, chart[index - 1].char, `seed ${seed}: identical neighbours in a row`);
+    }
+    for (const count of [5, 10, 30]) {
+      const decoder = CreateHartChineseDecoder(chart, seed, count);
+      const fields = decoder.tokens.filter(token => token.coordinate);
+      assert.equal(fields.length, count);
+      for (const token of fields) assert.equal(chart.find(cell => cell.row === token.coordinate.row && cell.col === token.coordinate.col).char, token.char);
+      const words = chinesePhrases.find(phrase => decoder.phrase.startsWith(phrase.join('')));
+      assert.ok(words, decoder.phrase);
+      for (const char of words.join('')) assert.ok(chart.some(cell => cell.char === char), `${char} is on the chart`);
+      // Spaces mark word boundaries so the decoder can keep each word on one line.
+      const text = decoder.tokens.map(token => token.char).join('');
+      assert.equal(text.split(' ').slice(0, words.length).join(' '), words.join(' '));
+    }
   }
 });
 
@@ -58,7 +92,7 @@ test('Hart numeric results preserve all five original summary and round values w
   assert.deepEqual(Object.keys(score.summary).sort(), original.summary.map(field => field.key).sort());
   assert.deepEqual(Object.keys(score.rounds[0]).sort(), original.columns.map(field => field.key).sort());
   const state = { gameId: 'hart-chart', version: '2.0.0', sessionNonce: 'a'.repeat(64), sequence: -1, complete: false };
-  const message = { schema: 'trainerhub.game/v1', ...state, sequence: 0, type: 'result', payload: { config: { rounds: 10, chartSize: 'medium' }, score } };
+  const message = { schema: 'trainerhub.game/v1', ...state, sequence: 0, type: 'result', payload: { config: { rounds: 10, chartSize: 'medium', characterSet: 'chinese' }, score } };
   delete message.complete;
   assert.equal(AcceptGameMessage(message, state), true);
   assert.equal(AcceptGameMessage(message, state), false);
@@ -69,7 +103,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.3');
+  assert.equal(pkg.version, '2.0.4');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {

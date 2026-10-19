@@ -10,6 +10,19 @@
   overflow: hidden;
   padding: 12px;
   background: var(--bg);
+  /* Decoder sizes. --hart-cell-width and --hart-word-need come from the longest word (decoderLayout.ts). */
+  --hart-cell-max: 49px;
+  --hart-cell-min: 28px;
+  --hart-cell-gap: 3px;
+  --hart-code-font: 17px;
+  --hart-static-width: var(--hart-code-font);
+  --hart-decoder-padding: clamp(14px, 2vw, 22px);
+  --hart-output-padding: 12px;
+  /* Panel and output padding, the output border and room for a scrollbar. */
+  --hart-decoder-chrome: calc(2 * var(--hart-decoder-padding) + 2 * var(--hart-output-padding) + 4px + 16px);
+  --hart-side-decoder-base: clamp(340px, 33vw, 480px);
+  /* A side dock grows when the longest word needs it, up to just over half the workspace. */
+  --hart-side-decoder: min(55%, max(var(--hart-side-decoder-base), calc(var(--hart-word-need, 0px) + var(--hart-decoder-chrome))));
 }
 
 .hart-topbar {
@@ -120,13 +133,13 @@
 }
 
 .hart-decoder-dock-left .hart-workspace {
-  grid-template-columns: clamp(340px, 33vw, 480px) minmax(0, 1fr);
+  grid-template-columns: var(--hart-side-decoder) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "decoder chart";
 }
 
 .hart-decoder-dock-right .hart-workspace {
-  grid-template-columns: minmax(0, 1fr) clamp(340px, 33vw, 480px);
+  grid-template-columns: minmax(0, 1fr) var(--hart-side-decoder);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "chart decoder";
 }
@@ -198,6 +211,11 @@
   transition: color 120ms ease, background 120ms ease, transform 120ms ease;
 }
 
+/* A Chinese character fills its whole em box, wider than a Latin capital, so it is drawn smaller to stay inside its cell. */
+.hart-chart-grid-chinese .hart-chart-cell {
+  font-size: calc(clamp(var(--hart-font-min), var(--hart-font-fluid), var(--hart-font-max)) * 0.82);
+}
+
 .hart-chart-cell-axis {
   color: #005eb8;
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -219,7 +237,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  padding: clamp(14px, 2vw, 22px);
+  padding: var(--hart-decoder-padding);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   background: var(--bg-card);
@@ -335,18 +353,30 @@
   overscroll-behavior: contain;
 }
 
+/* Words wrap as whole groups; the column gap is the space between words. */
 .hart-code-output {
+  container-type: inline-size;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   align-items: center;
-  gap: 6px 3px;
+  column-gap: 14px;
+  row-gap: 8px;
   min-height: 100%;
-  padding: 12px;
+  padding: var(--hart-output-padding);
   border: 2px solid var(--border);
   border-radius: var(--radius-l);
   background: var(--bg-panel);
   transition: border-color 180ms ease, background 180ms ease;
+}
+
+.hart-code-word {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--hart-cell-gap);
+  white-space: nowrap;
 }
 
 .hart-code-output-complete {
@@ -355,13 +385,14 @@
 }
 
 .hart-code-input {
-  width: 49px;
+  width: var(--hart-cell-max);
   height: 38px;
+  padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: 7px;
   background: #fff;
   color: var(--text-primary);
-  font: 700 17px/1 var(--font-family);
+  font: 700 var(--hart-code-font)/1 var(--font-family);
   text-align: center;
   text-transform: uppercase;
 }
@@ -370,6 +401,17 @@
   color: var(--text-muted);
   font-size: 10px;
   font-weight: var(--fw-bold);
+}
+
+/* Narrower cells keep the longest word on one line; the coordinate text shrinks with them so "[10,10]" still fits. */
+@supports (width: 1cqi) {
+  .hart-code-input {
+    width: var(--hart-cell-width);
+  }
+
+  .hart-code-input::placeholder {
+    font-size: min(10px, calc((var(--hart-cell-width) - 4px) / 3.2));
+  }
 }
 
 .hart-code-input:focus {
@@ -389,8 +431,10 @@
 }
 
 .hart-code-static {
-  min-width: 7px;
+  min-width: 0.6em;
+  font-size: var(--hart-code-font);
   font-weight: 700;
+  text-align: center;
 }
 
 .hart-decoder-status {
@@ -627,6 +671,11 @@
 @media (max-width: 920px), (orientation: portrait) and (max-width: 1180px) {
   .hart-page {
     padding: 8px;
+    --hart-cell-max: 45px;
+    --hart-code-font: 16px;
+    --hart-decoder-padding: 12px;
+    --hart-output-padding: 9px;
+    --hart-side-decoder-base: clamp(260px, 42vw, 340px);
   }
 
   .hart-topbar {
@@ -667,18 +716,6 @@
     padding-top: 8px;
   }
 
-  .hart-decoder-dock-left .hart-workspace {
-    grid-template-columns: clamp(260px, 42vw, 340px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    grid-template-areas: "decoder chart";
-  }
-
-  .hart-decoder-dock-right .hart-workspace {
-    grid-template-columns: minmax(0, 1fr) clamp(260px, 42vw, 340px);
-    grid-template-rows: minmax(0, 1fr);
-    grid-template-areas: "chart decoder";
-  }
-
   .hart-decoder-dock-top .hart-workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: clamp(190px, 40%, 260px) minmax(0, 1fr);
@@ -706,10 +743,6 @@
     max-height: 100%;
   }
 
-  .hart-decoder-panel {
-    padding: 12px;
-  }
-
   .hart-decoder-header {
     align-items: center;
     padding-bottom: 8px;
@@ -725,13 +758,10 @@
 
   .hart-code-output {
     min-height: 0;
-    padding: 9px;
   }
 
   .hart-code-input {
-    width: 45px;
     height: 34px;
-    font-size: 16px;
   }
 
   .hart-decoder-status {
@@ -742,6 +772,8 @@
 @media (max-width: 640px) {
   .hart-page {
     padding: 5px;
+    --hart-cell-max: 42px;
+    --hart-cell-gap: 2px;
   }
 
   .hart-topbar {
@@ -802,8 +834,11 @@
     font-size: 12px;
   }
 
+  .hart-code-output {
+    column-gap: 10px;
+  }
+
   .hart-code-input {
-    width: 42px;
     height: 32px;
   }
 
@@ -848,6 +883,8 @@
 @media (max-height: 650px) and (min-width: 921px) {
   .hart-page {
     padding: 6px;
+    --hart-cell-max: 44px;
+    --hart-decoder-padding: 10px;
   }
 
   .hart-topbar {
@@ -874,10 +911,6 @@
     height: 100%;
   }
 
-  .hart-decoder-panel {
-    padding: 10px;
-  }
-
   .hart-decoder-header {
     padding-bottom: 7px;
   }
@@ -887,7 +920,6 @@
   }
 
   .hart-code-input {
-    width: 44px;
     height: 32px;
   }
 }
