@@ -33,6 +33,14 @@ test('unmigrated games, previews and APIs keep their existing routing', () => {
   }
 });
 
+test('the Hub no longer answers for the retired trainer sites', () => {
+  for (const name of ['motor', 'vision', 'brain', 'mouth']) {
+    for (const host of [`${name}.trainerhub.cc`, `${name}trainer.pages.dev`]) {
+      assert.equal(canonicalRedirectHosts.has(host), false, host);
+    }
+  }
+});
+
 test('retired hosts keep canonical redirects before any asset routing', () => {
   for (const host of canonicalRedirectHosts) {
     const response = onRequest({ request: new Request(`https://${host}/games/asteroid-shield/settings.json`),

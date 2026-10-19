@@ -36,8 +36,6 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
       }
 
       const siteUrl = NormalizeSiteUrl(pkg.homepage, packagePath);
-      const redirectHostnames = ReadHostnameList(pkg.rehabTrainer?.redirectDomains, packagePath, 'redirectDomains');
-      const retiredProjectNames = ReadProjectNameList(pkg.rehabTrainer?.retiredProjects, packagePath);
       const appPath = ToPosixPath(relative(repoRoot, appDir));
       const deploymentUrl = `https://${projectName}.pages.dev`;
       return {
@@ -50,8 +48,6 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
         projectName,
         deploymentUrl,
         role,
-        redirectHostnames,
-        retiredProjectNames,
         siteUrl,
         hostname: new URL(siteUrl).hostname,
         usesBuiltInPagesDomain: siteUrl === deploymentUrl,
@@ -80,28 +76,6 @@ function NormalizeSiteUrl(value, packagePath) {
     throw new Error(`${packagePath} homepage must be an HTTPS origin without a path, query, or hash.`);
   }
   return url.origin;
-}
-
-function ReadHostnameList(values, packagePath, field) {
-  if (values === undefined) return [];
-  if (!Array.isArray(values)) throw new Error(`${packagePath} rehabTrainer.${field} must be an array.`);
-  return values.map((value) => {
-    const hostname = String(value).trim().toLowerCase();
-    if (!/^[a-z0-9.-]+$/.test(hostname) || hostname.includes('..')) {
-      throw new Error(`${packagePath} contains an invalid ${field} hostname: ${value}`);
-    }
-    return hostname;
-  });
-}
-
-function ReadProjectNameList(values, packagePath) {
-  if (values === undefined) return [];
-  if (!Array.isArray(values)) throw new Error(`${packagePath} rehabTrainer.retiredProjects must be an array.`);
-  return values.map((value) => {
-    const name = String(value).trim();
-    if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`${packagePath} contains an invalid retired project name: ${value}`);
-    return name;
-  });
 }
 
 function ToEnvironmentName(value) {

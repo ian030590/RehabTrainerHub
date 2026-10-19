@@ -129,6 +129,16 @@ test('Worker code, configs and Pages-only files never become public assets', (co
   ]);
 });
 
+test('no Worker routes the retired trainer subdomains', () => {
+  const retiredHosts = ['motor', 'vision', 'brain', 'mouth'].map((name) => `${name}.trainerhub.cc`);
+  for (const app of DiscoverWorkerApps()) {
+    const patterns = (app.config.routes ?? []).map((route) => route.pattern);
+    for (const host of retiredHosts) {
+      assert.equal(patterns.some((pattern) => pattern.startsWith(host)), false, `${app.workerName} still routes ${host}`);
+    }
+  }
+});
+
 test('production entry points match the owner-approved C02 origins', () => {
   const { apps, hub, runner } = LoadApps();
   assert.deepEqual(FindProductionEntryProblems(apps, registry), []);
@@ -138,7 +148,6 @@ test('production entry points match the owner-approved C02 origins', () => {
   // wrangler replaces every route and custom domain of the Worker with this list on deploy.
   assert.deepEqual(hub.config.routes, [
     { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
-    ...hub.redirectHostnames.map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })),
   ]);
   // pages-apps.mjs still names the deleted Pages runner for an explicit CLOUDFLARE_DEPLOY_TARGET=pages deploy.
   assert.equal(runner.pagesApp.deploymentUrl, 'https://trainerhub-user-games.pages.dev');
@@ -146,14 +155,13 @@ test('production entry points match the owner-approved C02 origins', () => {
   const unroutedHub = WithConfig(hub, (config) => { delete config.routes; });
   const unrouted = FindProductionEntryProblems([unroutedHub, runner], registry).join('\n');
   assert.match(unrouted, /trainerhub: no route serves trainerhub\.cc \(C02\)/);
-  for (const host of hub.redirectHostnames) assert.match(unrouted, new RegExp(`no route serves ${host.replaceAll('.', '\\.')}`));
   const pagesRunner = { ...runner, siteUrl: runner.pagesApp.deploymentUrl, hostname: new URL(runner.pagesApp.deploymentUrl).hostname };
   const pagesRegistry = Object.fromEntries(Object.entries(registry).map(([id, entry]) => [id, { ...entry, origin: pagesRunner.siteUrl }]));
   assert.match(FindProductionEntryProblems([hub, pagesRunner], pagesRegistry).join('\n'),
     /trainerhubgames: homepage https:\/\/trainerhub-user-games\.pages\.dev is a Pages origin/);
 
   const routedHub = WithConfig(hub, (config) => {
-    config.routes = [hub.hostname, ...hub.redirectHostnames].map((host) => ({ pattern: `${host}/*`, zone_name: 'trainerhub.cc' }));
+    config.routes = [{ pattern: `${hub.hostname}/*`, zone_name: 'trainerhub.cc' }];
   });
   const newOrigin = 'https://trainerhubgames.example.workers.dev';
   const workersDevRunner = { ...WithConfig(runner, (config) => { config.workers_dev = true; }), siteUrl: newOrigin, hostname: new URL(newOrigin).hostname };
@@ -408,7 +416,7 @@ function CreateDeployFixture(context) {
   const files = {
     'packages/ui/src/officialGameReleases.json': JSON.stringify({ 'fixture-game': { origin: runnerOrigin, name: 'Fixture' } }),
     'apps/rehabtrainerhub/package.json': JSON.stringify({ name: 'hub', homepage: 'https://trainerhub.cc',
-      scripts: { build: 'node -e ""' }, rehabTrainer: { role: 'hub', redirectDomains: ['motor.trainerhub.cc'] } }),
+      scripts: { build: 'node -e ""' }, rehabTrainer: { role: 'hub' } }),
     'apps/rehabtrainerhub/wrangler.toml': [
       'name = "rehabtrainerhub"', 'compatibility_date = "2026-07-02"', 'pages_build_output_dir = "out"', '',
       '[[d1_databases]]', 'binding = "REHAB_DB"', 'database_name = "rehab_db"', 'database_id = "db-id"', 'migrations_dir = "migrations"', '',
@@ -416,7 +424,7 @@ function CreateDeployFixture(context) {
     ].join('\n'),
     'apps/rehabtrainerhub/wrangler.workers.jsonc': `// fixture\n${JSON.stringify({
       name: 'trainerhub', main: 'worker/index.js', compatibility_date: '2026-07-02', workers_dev: false, preview_urls: false,
-      routes: [{ pattern: 'trainerhub.cc/*', zone_name: 'trainerhub.cc' }, { pattern: 'motor.trainerhub.cc/*', zone_name: 'trainerhub.cc' }],
+      routes: [{ pattern: 'trainerhub.cc/*', zone_name: 'trainerhub.cc' }],
       assets: { directory: 'out', binding: 'ASSETS', run_worker_first: true, not_found_handling: '404-page', html_handling: 'auto-trailing-slash' },
       d1_databases: [{ binding: 'REHAB_DB', database_name: 'rehab_db', database_id: 'db-id', migrations_dir: 'migrations' }],
       r2_buckets: [{ binding: 'GAME_RELEASE_BUCKET', bucket_name: 'rehab-game-releases' }],

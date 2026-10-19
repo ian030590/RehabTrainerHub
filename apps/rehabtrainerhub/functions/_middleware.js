@@ -3,14 +3,6 @@ import officialGameReleases from '../../../packages/ui/src/officialGameReleases.
 const canonicalOrigin = 'https://trainerhub.cc';
 const canonicalRedirectHosts = new Set([
   'rehabtrainerhub.pages.dev',
-  'motor.trainerhub.cc',
-  'vision.trainerhub.cc',
-  'brain.trainerhub.cc',
-  'mouth.trainerhub.cc',
-  'motortrainer.pages.dev',
-  'visiontrainer.pages.dev',
-  'braintrainer.pages.dev',
-  'mouthtrainer.pages.dev',
 ]);
 
 export function onRequest({ request, next }) {

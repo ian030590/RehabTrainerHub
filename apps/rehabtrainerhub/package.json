@@ -4,19 +4,7 @@
   "version": "1.0.0",
   "homepage": "https://trainerhub.cc",
   "rehabTrainer": {
-    "role": "hub",
-    "redirectDomains": [
-      "motor.trainerhub.cc",
-      "vision.trainerhub.cc",
-      "brain.trainerhub.cc",
-      "mouth.trainerhub.cc"
-    ],
-    "retiredProjects": [
-      "motortrainer",
-      "visiontrainer",
-      "braintrainer",
-      "mouthtrainer"
-    ]
+    "role": "hub"
   },
   "license": "AGPL-3.0-only",
   "type": "module",

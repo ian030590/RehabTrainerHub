@@ -47,12 +47,10 @@
 
 - `trainerhub.cc` 是 Worker `trainerhub` 的 custom domain，DNS 記錄由 Cloudflare 依 Worker 管理；wrangler deploy 會以 config 取代 Worker 的全部 routes 與 custom domains。回退方式見搬遷報告第 6 節。
 - Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
-- 四個退役 trainer 子網域保留為 Worker `trainerhub` 的 routes，目前沒有 DNS 記錄；若重新加上 proxied 記錄，由
-  `functions/_middleware.js` 對任何路徑回 301。
-- 只在 Pages 部署流程（`CLOUDFLARE_DEPLOY_TARGET=pages`）中，`scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先清除舊
-  `motortrainer`、`visiontrainer`、`braintrainer`、`mouthtrainer` Pages projects
-  的非現行 deployments，再解除 custom domains、刪除舊 projects，並將這些
-  domains 加到 Hub。此流程需要 Pages Write 權限。
+- 四個退役 trainer 子網域（`motor`、`vision`、`brain`、`mouth.trainerhub.cc`）與舊 `motortrainer`、`visiontrainer`、
+  `braintrainer`、`mouthtrainer` Pages projects 已完全移除，沒有 DNS 記錄、Worker route 或 301 設定。
+- 只在 Pages 部署流程（`CLOUDFLARE_DEPLOY_TARGET=pages`）中，`scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後
+  把 `trainerhub.cc` 加到 Hub 的 Pages project。此流程需要 Pages Write 權限。
 
 唯一 sitemap 是 `https://trainerhub.cc/sitemap.xml`；不得重新建立 trainer
 sitemap、canonical、manifest、相關網站頁或 auth origin。

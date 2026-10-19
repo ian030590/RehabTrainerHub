@@ -89,8 +89,8 @@ async function CheckHub(site) {
   Expect('hub /api/games reaches Functions with D1 and R2 bindings', catalog.status === 200
     && /application\/json/.test(catalog.headers['content-type'] ?? '')
     && catalog.headers['access-control-allow-origin'] === undefined, catalog);
-  const retired = await Get(site, `/games/${migratedGameId}/settings.json`, { host: 'motor.trainerhub.cc' });
-  Expect('hub retired hostname redirects to trainerhub.cc before assets', retired.status === 301
+  const retired = await Get(site, `/games/${migratedGameId}/settings.json`, { host: 'rehabtrainerhub.pages.dev' });
+  Expect('hub old Pages hostname redirects to trainerhub.cc before assets', retired.status === 301
     && retired.headers.location === 'https://trainerhub.cc/', retired);
   for (const path of ['/_headers', '/.assetsignore', '/worker/index.js', '/wrangler.workers.jsonc', '/functions/_middleware.js']) {
     const response = await Get(site, path);

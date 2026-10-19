@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import {
   CreateCloudflareDeploymentEnvironment,
   CreateGamehostBuildEnvironment,
@@ -16,14 +14,6 @@ import {
 
 const pagesApps = DiscoverPagesApps();
 const deployScript = resolve(defaultRepoRoot, 'scripts/deploy-cloudflare-pages.mjs');
-const retiredStandaloneProjects = [
-  'braintrainer',
-  'motortrainer',
-  'mouthtrainer',
-  'visiontrainer',
-];
-
-CheckRetiredProjectPreflight();
 
 const result = spawnSync(
   process.execPath,
@@ -109,33 +99,10 @@ for (const blockedOrigin of new Set([gamehost.siteUrl, gamehost.deploymentUrl]))
 }
 
 const hub = pagesApps.find((app) => app.role === 'hub');
-assert.deepEqual(hub.redirectHostnames.sort(), [
-  'brain.trainerhub.cc',
-  'motor.trainerhub.cc',
-  'mouth.trainerhub.cc',
-  'vision.trainerhub.cc',
-]);
-assert.deepEqual(hub.retiredProjectNames.sort(), [
-  ...retiredStandaloneProjects,
-]);
-for (const projectName of hub.retiredProjectNames) {
-  const pruneIndex = output.indexOf(`cloudflare pages project deployments prune ${projectName}`);
-  const clearIndex = output.indexOf(`cloudflare pages project domains clear ${projectName}`);
-  const retireIndex = output.indexOf(`cloudflare pages project retire ${projectName}`);
-  assert.ok(pruneIndex >= 0, `Retired project deployments must be pruned: ${projectName}`);
-  assert.ok(pruneIndex < clearIndex, `Deployments must be pruned before domains are cleared: ${projectName}`);
-  assert.ok(clearIndex < retireIndex, `Retired project domains must be cleared before deletion: ${projectName}`);
-}
-for (const hostname of hub.redirectHostnames) {
-  const ensureIndex = output.indexOf(`cloudflare pages domain ensure ${hub.projectName} ${hostname}`);
-  assert.ok(ensureIndex >= 0, `Redirect domain must be assigned to the Hub: ${hostname}`);
-  for (const projectName of hub.retiredProjectNames) {
-    assert.ok(
-      output.indexOf(`cloudflare pages project retire ${projectName}`) < ensureIndex,
-      `Retired projects must be deleted before assigning ${hostname} to the Hub.`,
-    );
-  }
-}
+// The retired trainer subdomains and their Pages projects are gone; the Pages fallback only binds trainerhub.cc.
+const ensuredDomains = [...output.matchAll(/cloudflare pages domain ensure (\S+) (\S+)/g)].map((match) => `${match[1]} ${match[2]}`);
+assert.deepEqual(ensuredDomains, [`${hub.projectName} trainerhub.cc`]);
+assert.doesNotMatch(output, /cloudflare pages project (?:deployments prune|domains clear|retire)/);
 const hubEnvironmentLine = output
   .split(/\r?\n/)
   .find((line) => (
@@ -234,14 +201,13 @@ assert.deepEqual(sanitizedDeploymentEnvironment, {
   CLOUDFLARE_API_TOKEN: 'deployment-token',
 });
 
-await CheckRetiredProjectCleanup();
+await CheckPagesDomainSync();
 
-async function CheckRetiredProjectCleanup() {
+async function CheckPagesDomainSync() {
   const originalFetch = globalThis.fetch;
   const originalAccountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const originalApiToken = process.env.CLOUDFLARE_API_TOKEN;
   const requests = [];
-  let deploymentLists = 0;
   process.env.CLOUDFLARE_ACCOUNT_ID = 'test-account';
   process.env.CLOUDFLARE_API_TOKEN = 'test-token';
   globalThis.fetch = async (input, init = {}) => {
@@ -249,28 +215,9 @@ async function CheckRetiredProjectCleanup() {
     const path = `${url.pathname.slice(url.pathname.indexOf('/pages/projects/'))}${url.search}`;
     const method = init.method ?? 'GET';
     requests.push(`${method} ${path}`);
-
-    if (method === 'GET' && path === '/pages/projects/visiontrainer') {
-      return JsonResponse({ canonical_deployment: { id: 'active-deployment' } });
+    if (method === 'GET' && path === `/pages/projects/${hub.projectName}/domains`) {
+      return JsonResponse([{ name: 'trainerhub.cc', status: 'active' }]);
     }
-    if (method === 'GET' && /^\/pages\/projects\/(?:motor|brain|mouth)trainer$/.test(path)) {
-      return new Response(null, { status: 404 });
-    }
-    if (method === 'GET' && path === '/pages/projects/visiontrainer/deployments') {
-      deploymentLists += 1;
-      return JsonResponse(deploymentLists === 1
-        ? [{ id: 'old-deployment-1' }, { id: 'active-deployment' }]
-        : deploymentLists === 2
-          ? [{ id: 'old-deployment-2' }, { id: 'active-deployment' }]
-          : [{ id: 'active-deployment' }]);
-    }
-    if (method === 'GET' && path === '/pages/projects/visiontrainer/domains') {
-      return JsonResponse([{ name: 'vision.trainerhub.cc' }]);
-    }
-    if (method === 'GET' && path === '/pages/projects/rehabtrainerhub/domains') {
-      return JsonResponse(['trainerhub.cc', ...hub.redirectHostnames].map((name) => ({ name, status: 'active' })));
-    }
-    if (method === 'DELETE') return JsonResponse({});
     throw new Error(`Unexpected mocked Cloudflare request: ${method} ${path}`);
   };
 
@@ -282,15 +229,7 @@ async function CheckRetiredProjectCleanup() {
     RestoreEnvironment('CLOUDFLARE_API_TOKEN', originalApiToken);
   }
 
-  const firstDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/deployments/old-deployment-1?force=true');
-  const secondDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/deployments/old-deployment-2?force=true');
-  const domainDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/domains/vision.trainerhub.cc');
-  const projectDelete = requests.indexOf('DELETE /pages/projects/visiontrainer');
-  const hubDomainCheck = requests.indexOf('GET /pages/projects/rehabtrainerhub/domains');
-  assert.equal(deploymentLists, 3, 'Deployment cleanup must relist until only production remains.');
-  assert.equal(requests.some((request) => request.includes('/deployments/active-deployment')), false);
-  for (const index of [firstDelete, secondDelete, domainDelete, projectDelete, hubDomainCheck]) assert.ok(index >= 0);
-  assert.ok(firstDelete < secondDelete && secondDelete < domainDelete && domainDelete < projectDelete && projectDelete < hubDomainCheck);
+  assert.deepEqual(requests, [`GET /pages/projects/${hub.projectName}/domains`]);
 }
 
 function JsonResponse(result) {
@@ -304,63 +243,6 @@ function RestoreEnvironment(name, value) {
 
 function EscapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function CheckRetiredProjectPreflight() {
-  for (const projectName of retiredStandaloneProjects) {
-    RunRetiredProjectFixture({ projectName });
-  }
-  RunRetiredProjectFixture({
-    projectName: 'repo-defined-retired-project',
-    retiredProjects: ['repo-defined-retired-project'],
-  });
-}
-
-function RunRetiredProjectFixture({ projectName, retiredProjects }) {
-  const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pages-retired-preflight-'));
-  const fixtureScripts = join(fixtureRoot, 'scripts');
-  const fixtureApp = join(fixtureRoot, 'apps', 'fixture');
-  mkdirSync(fixtureScripts, { recursive: true });
-  mkdirSync(fixtureApp, { recursive: true });
-  copyFileSync(deployScript, join(fixtureScripts, 'deploy-cloudflare-pages.mjs'));
-  copyFileSync(
-    resolve(defaultRepoRoot, 'scripts/gamehost-environment.mjs'),
-    join(fixtureScripts, 'gamehost-environment.mjs'),
-  );
-  writeFileSync(
-    join(fixtureApp, 'package.json'),
-    `${JSON.stringify({
-      name: 'retired-project-fixture',
-      private: true,
-      scripts: { build: 'node -e ""' },
-      ...(retiredProjects ? { rehabTrainer: { retiredProjects } } : {}),
-    }, null, 2)}\n`,
-  );
-  writeFileSync(
-    join(fixtureApp, 'wrangler.toml'),
-    `name = "${projectName}"\npages_build_output_dir = "out"\n`,
-  );
-
-  try {
-    const fixtureResult = spawnSync(
-      process.execPath,
-      [join(fixtureScripts, 'deploy-cloudflare-pages.mjs'), '--dry-run'],
-      { cwd: fixtureRoot, encoding: 'utf8', env: process.env },
-    );
-    if (fixtureResult.error) throw fixtureResult.error;
-    const fixtureOutput = `${fixtureResult.stdout ?? ''}\n${fixtureResult.stderr ?? ''}`;
-    assert.notEqual(fixtureResult.status, 0, `${projectName} must fail the deployment preflight.`);
-    assert.match(
-      fixtureOutput,
-      new RegExp(`Refusing to deploy retired Cloudflare Pages project\\(s\\): ${EscapeRegExp(projectName)}`),
-    );
-    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages project create/);
-    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages deploy/);
-    assert.doesNotMatch(fixtureOutput, /cloudflare pages domain ensure/);
-    assert.doesNotMatch(fixtureOutput, /sync-cloudflare-auth-env/);
-  } finally {
-    rmSync(fixtureRoot, { recursive: true, force: true });
-  }
 }
 
 console.log(`Cloudflare Pages provisioning check passed for ${pagesApps.length} discovered project(s).`);

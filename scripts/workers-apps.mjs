@@ -33,7 +33,6 @@ export function DiscoverWorkerApps(repoRoot = defaultRepoRoot) {
         mainPath: resolve(pagesApp.appDir, String(config.main ?? '')),
         siteUrl: pagesApp.siteUrl,
         hostname: pagesApp.hostname,
-        redirectHostnames: pagesApp.redirectHostnames,
         pagesApp,
       };
     });
@@ -106,9 +105,7 @@ export function FindProductionEntryProblems(apps, registry, roles = ['hub', 'gam
   const runner = apps.find((app) => app.role === 'gamehost');
 
   if (hub && roles.includes('hub')) {
-    for (const host of [hub.hostname, ...hub.redirectHostnames]) {
-      if (!RouteServesHost(hub.config.routes, host)) problems.push(`trainerhub: no route serves ${host} (C02).`);
-    }
+    if (!RouteServesHost(hub.config.routes, hub.hostname)) problems.push(`trainerhub: no route serves ${hub.hostname} (C02).`);
     for (const [gameId, entry] of Object.entries(registry)) {
       if (runner && entry.origin !== runner.siteUrl) {
         problems.push(`officialGameReleases.json origin for ${gameId} (${entry.origin}) must equal the runner homepage ${runner.siteUrl} (C02).`);

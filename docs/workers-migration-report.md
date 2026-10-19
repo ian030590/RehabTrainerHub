@@ -22,7 +22,7 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 
 | 檔案 | 內容 |
 | --- | --- |
-| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；`trainerhub.cc` 為 Worker custom domain，四個退役子網域為 routes（過程見第 5 節）；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
+| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；`trainerhub.cc` 為 Worker custom domain（過程見第 5 節）；四個退役子網域原本是 routes，已於同日移除（第 5 節最後一項）；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
 | `apps/usergamerunner/wrangler.workers.jsonc` | Worker `trainerhubgames`。只綁 `rehab-game-releases`；`workers_dev: true`；`run_worker_first` 對應 `public/_routes.json`；`single-page-application`。 |
 | `apps/usergamerunner/package.json`、`packages/ui/src/officialGameReleases.json`、`functions/api/games.js` | runner origin 改為 `https://trainerhubgames.rainbowh9490.workers.dev`（十款 R2 遊戲的可信 origin 與 Hub 預設值）。 |
 | `apps/*/worker/index.js`、`workers/shared/pagesAssetCompat.js` | Worker 入口載入 `wrangler pages functions build` 編譯的原 Functions；相容層只包住 `ASSETS`，補回 Pages 對靜態檔的預設標頭、308 轉址與 404 `no-store`。 |
@@ -74,6 +74,7 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 - 刪除 Pages 專案（擁有者指示）：先刪 `trainerhub-user-games`（清除 155 個舊部署），再確認 `rehabtrainerhub` 已沒有自訂網域、DNS 與正式站不受影響後刪除（清除 339 個舊部署）。`trainerhub-user-games.pages.dev` 回 522。
 - 清理（commit `eaa5af02`，run [39232322702](https://github.com/ian030590/RehabTrainerHub/actions/runs/39232322702)）：config 改為 custom domain、workflow 預設 Workers、移除 `*.rehabtrainerhub.pages.dev` 信任；三個測試先失敗再通過，七項 gate 通過。部署跳過 Pages 步驟，Hub `c71ec619-0685-41e2-9ec5-04620ead77c8`、runner `27b2a6a6-8627-42cd-933c-4456bc77eecb`；`trainerhub.cc` 只剩 custom domain，`trainerhub.cc/*` route 由部署移除，四個退役子網域 routes 保留。
 - 最終驗證（09:57 UTC 後，從擁有者電腦）：與 Pages 基準比對 47 個請求，狀態碼只有兩個 Builder API 不同；標頭差異只剩第 3 節已評估的快取、`vary`、`/sw.js` MIME 與多出的 `nosniff`，charset 已一致。`check-r2-game-browser.mjs --lobby --production-hub` 的 drawing-defense 與 hart-chart 通過。正式 `/api/official-game-sessions` 對 drawing-defense 2.0.8、hart-chart 2.0.2、driving-rehab 2.1.0 回 201，version／contentSha256 與發布收據一致（只簽發 token，不建立紀錄）。
+- 移除四個退役子網域（擁有者指示）：移除前 Cloudflare 權威 DNS 對四個子網域都回 NXDOMAIN；帳號的 Pages 專案只剩與本站無關的 `ian030590`、`ian030590bible`，`motortrainer` 等四個舊專案已不存在。刪除 Hub 的四條 routes、middleware 對這些 hostname 與 `*trainer.pages.dev` 的 301、`package.json` 的 `redirectDomains`／`retiredProjects`，以及 Pages 回退流程中清理舊專案、把子網域綁到 Hub 的步驟。擁有者的瀏覽器仍打得開舊站，原因是 Brave 保留了 2026-08 舊 PWA 的 service worker 快取（`brain`、`vision`、`motor`），與 Cloudflare 無關。
 
 ## 6. 回退
 

@@ -190,7 +190,7 @@ R2 自包含遊戲以 `public/game.json` 宣告版本化目錄文案、作者、
 - 結果頁依來源只顯示一個按鈕：Hub 顯示「返回大廳」並關閉 Hub overlay；單一遊戲 PWA 顯示返回入口。禁止同時顯示兩者。
 - 未遷移遊戲以 `embeddedTraining` 的 window message 同步 active／complete／exit，驗證同源 origin 與 window source；R2 遊戲依前述私有 MessageChannel 契約同步。
 
-只有 Hub 是主平台 PWA。未遷移遊戲在 Hub origin 的 `/games/{gameId}/` 提供獨立 manifest／Service Worker；R2 遊戲在 runner origin 的 `/games/{gameId}/{version}/` 提供版本化 PWA，Hub 的 `/games/{gameId}/` 只留下導向連結。四個舊 trainer app 已移除，不存在 `training-modules/`、`training-runtimes/` 或 `/runtimes/*`；四個退役 hostname 僅保留 Hub 的 301 相容設定。
+只有 Hub 是主平台 PWA。未遷移遊戲在 Hub origin 的 `/games/{gameId}/` 提供獨立 manifest／Service Worker；R2 遊戲在 runner origin 的 `/games/{gameId}/{version}/` 提供版本化 PWA，Hub 的 `/games/{gameId}/` 只留下導向連結。四個舊 trainer app 已移除，不存在 `training-modules/`、`training-runtimes/` 或 `/runtimes/*`；四個退役 hostname 已完全移除，沒有 Worker route 或 301 設定。
 
 Hub 使用 Next.js App Router（`apps/rehabtrainerhub/app/`）、`app/globals.css` 及 `packages/ui` 的共用 components／stylesheet；不再使用舊 trainer 的 `pages/settings/`、`pages/links/` 結構。`TrainerApp.css` 目前也仍供未遷移遊戲的 `OfficialGameShell` 使用，此依賴須在遷移時移除。R2 遊戲只引用自身樣式；renderer、教學與規則樣式均留在各遊戲，禁止引入平台共用 CSS。
 
@@ -267,7 +267,7 @@ UI、auth、routing、共用 package 變更：build Hub、執行 `npm run test:e
 - E-E-A-T 不是可直接保證排名的單一分數。內容先服務讀者並回答實際問題，不為搜尋流量大量產生相似頁面、重寫他站內容或虛構新鮮度；AI 協助內容需保留人工查核、發布責任與適當揭露。
 - 醫療、健康、科學與軟體效度敘述優先引用官方文件、原始研究或同儕審查論文。FrACT 相關內容引用[官方網站／手冊](https://michaelbach.de/fract/)、實際採用的版本與對應研究，並同時揭露校正需求及本站未經等效驗證。
 - `ProfilePage` 只用於主要內容確實聚焦單一作者的專頁，不得套在混合問答／文章列表頁；所有 structured data 皆須代表頁面可見內容並以 Rich Results Test 驗證。
-- 不得重新加入 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、`mouth.trainerhub.cc` 的公開連結、canonical、sitemap 或 auth origin；這些退役 hostname 只保留 301 設定。
+- 不得重新加入 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、`mouth.trainerhub.cc` 的公開連結、canonical、sitemap、auth origin、DNS 記錄或 Worker route；這些退役 hostname 已於 2026-10-19 完全移除。
 - SEO 或 E-E-A-T 變更至少執行 Hub build 與 `npm run test:seo`；修改 manifest 再執行 `npm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `npm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
 
 SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指南](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)、[Sitemap 指南](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)、[結構化資料指南](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)及[ProfilePage 指南](https://developers.google.com/search/docs/appearance/structured-data/profile-page)最新版本為準；規範變更時更新實作與檢查腳本，不以舊 SEO 慣例覆蓋官方說明。

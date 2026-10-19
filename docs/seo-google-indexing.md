@@ -8,7 +8,7 @@
 `/runtimes/*` 也不得重新發布或加入 sitemap。
 
 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、
-`mouth.trainerhub.cc` 已退役，任何 path 都應 301 到 `https://trainerhub.cc/`，
+`mouth.trainerhub.cc` 已於 2026-10-19 完全移除，沒有 DNS 記錄、Worker route 或 301 轉址；
 不得再提供 sitemap、canonical 或可索引 HTML。
 
 ## 驗證
@@ -23,7 +23,7 @@ npm run test:seo
 - Hub `/robots.txt` 與 `/sitemap.xml` 回 200，內容不是 HTML 錯誤頁。
 - sitemap 每個 URL 回 200，只有一個 self-canonical 且沒有 `noindex`。
 - 首頁原始 HTML 含繁體中文 title、H1、description、Open Graph 與可解析 JSON-LD。
-- 四個退役 hostname 的任意路徑回 301，`Location` 為 `https://trainerhub.cc/`。
+- 四個退役 hostname 的 DNS 查詢回 NXDOMAIN。
 - Search Console 的 `trainerhub.cc` Domain property 只提交 Hub sitemap；移除四個舊 sitemap。
 
 robots、sitemap 與 Live Test 成功只代表可抓取，不代表 Google 保證收錄。
