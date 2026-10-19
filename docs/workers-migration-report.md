@@ -67,7 +67,7 @@ Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑。
 - 正式網址與切換前的 Pages 基準比對 47 個請求：Builder API 由 401 變成 404／405（已移除），`/api/games` 指向新 runner；已遷移遊戲舊檔 410、未登入 API、CORS 預檢、空 POST 驗證與尾斜線 308 相同，轉址多了 `nosniff`。其餘差異是第 3 節已評估的快取、`vary` 與 `/sw.js` MIME，以及 HTML／文字檔少了 `charset=utf-8`。最後一項當時未列入第 3 節，已在相容層補上（run 39217237716 部署，`llms.txt` 回 `text/plain; charset=utf-8`）。
 - 瀏覽器：`check-r2-game-browser.mjs --lobby --production-hub` 的 drawing-defense 與 hart-chart 完整流程通過（正式 Hub 前端與正式 runner；API 由本機攔截，只寫本機 SQLite）。切換前同一檢查失敗，原因是舊 Pages Hub 只接受舊 runner 的啟動網址。
 - 擁有者已移除 `games.trainerhub.cc`（DNS 查詢回 NXDOMAIN）。
-- 事故：commit `5ea74d6b`（run [39217237716](https://github.com/ian030590/RehabTrainerHub/actions/runs/39217237716)）嘗試把 `trainerhub.cc` 改成 Worker custom domain。wrangler 4.151.1 以 PUT 取代 Worker 的全部 routes，移除了 `trainerhub.cc/*`；custom domain 則因 DNS 記錄仍屬 Pages 自訂網域而被拒（API 錯誤 100117，CI 已要求覆寫）。07:41:16 至約 07:44:45 UTC 流量回到最後一次 Pages 部署（舊 Hub 與舊 runner），網站維持可用。以擁有者的 wrangler 登入加回 route 後恢復，config 改回 route。之後不能假設 deploy 會保留設定外的 routes；改 custom domain 前必須先刪除 Pages 的 DNS 記錄。
+- 事故：commit `5ea74d6b`（run [39217237716](https://github.com/ian030590/RehabTrainerHub/actions/runs/39217237716)）嘗試把 `trainerhub.cc` 改成 Worker custom domain。wrangler 4.151.1 以 PUT 取代 Worker 的全部 routes，移除了 `trainerhub.cc/*`；custom domain 則因 DNS 記錄仍屬 Pages 自訂網域而被拒（API 錯誤 100117，CI 已要求覆寫）。07:41:16 至約 07:44:45 UTC 流量回到最後一次 Pages 部署（舊 Hub 與舊 runner），網站維持可用。以擁有者的 wrangler 登入加回 route 後恢復，config 改回 route（commit `65e0fd4d`，run 39223337916 成功：Hub `c11e5392-8549-4fa7-9f37-9bb459d66546`、runner `fdc38c92-3733-4f1d-b890-c22d80193b50`，五條 routes）。之後不能假設 deploy 會保留設定外的 routes；改 custom domain 前必須先刪除 Pages 的 DNS 記錄。
 
 ## 6. 回退
 
