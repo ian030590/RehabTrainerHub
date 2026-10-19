@@ -33,6 +33,64 @@ function PolygonArea(points) {
   }, 0)) / 2;
 }
 
+// Builds the whole runtime class, with its imports taken from the game
+// modules, so the player car and traffic can be stepped without a canvas.
+let drivingRuntimeLoad = null;
+async function LoadDrivingRuntime() {
+  const modules = await Promise.all([
+    'traffic/drivingTraffic.ts', 'route/driving-route.ts', 'hazards/driving-hazards.ts', 'rendering/driving-rendering.ts', 'text/driving-text.ts', 'pixel/spriteNames.ts',
+  ].map(ImportGameModule));
+  const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
+  const ast = ts.createSourceFile('driving.ts', source, ts.ScriptTarget.Latest, true);
+  const runtimeClass = ast.statements.find(ts.isClassDeclaration);
+  const compiled = ts.transpileModule(runtimeClass.getText(ast), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const globals = Object.assign({}, ...modules.map(module => ({ ...module })), { info: {}, soundManager: { playFailure() {}, playSuccess() {} } });
+  delete globals.default;
+  const runtimeType = new Function(...Object.keys(globals), `${compiled}; return ${runtimeClass.name.text};`)(...Object.values(globals));
+  return { runtimeType, route: modules[1] };
+}
+
+async function CreateDrivingWorld(variantIndex) {
+  drivingRuntimeLoad ??= LoadDrivingRuntime();
+  const { runtimeType, route } = await drivingRuntimeLoad;
+  const runtime = new runtimeType({});
+  runtime.route = runtime.ensureRoute(route.BuildDrivingRoute(route.drivingRouteVariants[variantIndex]));
+  runtime.updateRouteMetrics();
+  Object.assign(runtime, {
+    intersections: [], ambientTrafficActors: [], activeHazards: [], eventResults: [], buildingCollisionBoxes: [], lastCollisionEventTime: -Infinity,
+  });
+  // Lane rules and lane resets are driven by their own tests.
+  runtime.updateDrivingRuleViolations = () => {};
+  runtime.updateLaneDepartureState = () => {};
+  return runtime;
+}
+
+function PlaceDrivingPlayer(runtime, distance, lateral, speed = 0) {
+  const point = runtime.getRoutePoint(distance);
+  Object.assign(runtime, {
+    vehicleX: point.x + point.normal.x * lateral,
+    vehicleZ: point.z + point.normal.z * lateral,
+    vehicleHeading: runtime.getHeadingFromDirection(point.dir),
+    vehicleSpeed: speed,
+    progress: distance,
+    previousProgress: distance,
+    lateralOffset: lateral,
+  });
+}
+
+function AddDrivingCar(runtime, distance, lateral, speed = 0) {
+  const car = runtime.createTrafficActor('car', 'car/sedan/white', { distance, lateral, direction: 1, cruiseSpeed: speed, rearSlot: null, waiting: false });
+  car.speed = speed;
+  runtime.ambientTrafficActors.push(car);
+  runtime.positionTrafficActor(car);
+  return car;
+}
+
+function IsTouchingTraffic(runtime) {
+  const player = runtime.getVehicleCollisionBox();
+  return runtime.ambientTrafficActors.some(actor => !actor.waiting && runtime.boxesOverlap(player, runtime.getTrafficActorCollisionBox(actor)));
+}
+
 // A missing module fails only the tests that use it.
 async function OptionalGameModule(file) {
   try {
@@ -327,4 +385,85 @@ test('scooters collide with their own small footprint', async () => {
   const car = runtime.getTrafficActorCollisionBox({ kind: 'car', x: 1, z: 2, heading: 0.5 });
   assert.deepEqual(scooter, { centerX: 1, centerZ: 2, angle: 0.5, halfWidth: 0.55, halfLength: 0.95 });
   assert.deepEqual(car, { centerX: 1, centerZ: 2, angle: 0.5, halfWidth: 1.0, halfLength: 2.25 });
+});
+
+test('a car the player bumps while changing lanes never pins it in place', async () => {
+  const dt = 1 / 120;
+  let bumps = 0;
+  for (const ahead of [0.5, 1.5, 2.5, 3.5]) {
+    for (const steering of [-1, -0.5]) {
+      for (const carSpeed of [6, 9]) {
+        const runtime = await CreateDrivingWorld(0);
+        const [carLane, playerLane] = runtime.getTravelLaneOffsets(runtime.route[0], 1);
+        PlaceDrivingPlayer(runtime, 100 + ahead, playerLane, 8);
+        AddDrivingCar(runtime, 100, carLane, carSpeed);
+        let bumpedAt = null;
+        for (let step = 0; step < 120 * 6; step += 1) {
+          const time = step * dt * 1000;
+          runtime.updateVehicleFree({ throttle: 0.6, brake: 0, steering: time < 900 ? steering : 0 }, dt, time);
+          runtime.updateAmbientTraffic(dt);
+          if (bumpedAt === null && runtime.eventResults.some(event => event.event_id === 'vehicle-collision')) bumpedAt = runtime.progress;
+        }
+        if (bumpedAt === null) continue;
+        bumps += 1;
+        assert.ok(runtime.progress - bumpedAt > 10, `${ahead} m ahead, steering ${steering}, car at ${carSpeed} m/s: the player drove ${(runtime.progress - bumpedAt).toFixed(1)} m after the bump.`);
+      }
+    }
+  }
+  assert.ok(bumps >= 4, `The cut-ins reach the other car (${bumps} bumps).`);
+});
+
+test('a car left overlapping the player lets it drive away', async () => {
+  const dt = 1 / 120;
+  for (const [behind, sideways] of [[3, 0], [2, 0.8], [0, 1.6]]) {
+    const runtime = await CreateDrivingWorld(0);
+    const lane = runtime.getDrivingLaneOffset(120);
+    PlaceDrivingPlayer(runtime, 120, lane);
+    AddDrivingCar(runtime, 120 - behind, lane - sideways);
+    assert.equal(IsTouchingTraffic(runtime), true, 'The scene starts with the two cars overlapping.');
+    for (let step = 0; step < 120 * 3; step += 1) {
+      runtime.updateVehicleFree({ throttle: 1, brake: 0, steering: 0 }, dt, step * dt * 1000);
+      runtime.updateAmbientTraffic(dt);
+    }
+    assert.ok(runtime.progress > 130, `Car ${behind} m behind and ${sideways} m aside: the player reached ${runtime.progress.toFixed(1)} m.`);
+    assert.equal(IsTouchingTraffic(runtime), false);
+  }
+});
+
+test('a lane reset never puts the player inside another car', async () => {
+  const runtime = await CreateDrivingWorld(0);
+  const lane = runtime.getDrivingLaneOffset(120);
+  PlaceDrivingPlayer(runtime, 150, lane);
+  AddDrivingCar(runtime, 121, lane, 9);
+  runtime.applyLaneResetPose({ x: 0, z: 0, progress: 120, lateral: lane });
+  assert.ok(Math.abs(runtime.progress - 120) < 0.5, 'The player is back at the reset point.');
+  assert.equal(IsTouchingTraffic(runtime), false, 'No car is left on the reset point.');
+});
+
+test('ambient cars come back beyond the visible road, never in front of the player near the destination', async () => {
+  const dt = 1 / 30;
+  for (const variant of [0, 1, 2]) {
+    const runtime = await CreateDrivingWorld(variant);
+    const view = runtime.getMainDrawDistance();
+    let distance = runtime.getInitialRouteDistance();
+    PlaceDrivingPlayer(runtime, distance, runtime.getDrivingLaneOffset(distance), 12);
+    runtime.createAmbientTraffic();
+    const popIns = [];
+    let returnedOncoming = 0;
+    while (distance < runtime.routeLength - 2) {
+      distance += 12 * dt;
+      PlaceDrivingPlayer(runtime, distance, runtime.getDrivingLaneOffset(distance), 12);
+      const before = runtime.ambientTrafficActors.map(actor => ({ waiting: actor.waiting, distance: actor.distance }));
+      runtime.updateAmbientTraffic(dt);
+      runtime.ambientTrafficActors.forEach((actor, index) => {
+        const appeared = !actor.waiting && (before[index].waiting || Math.abs(actor.distance - before[index].distance) > 5);
+        if (!appeared) return;
+        const ahead = actor.distance - distance;
+        if (ahead < view && ahead > -150) popIns.push(`${actor.direction === -1 ? 'oncoming' : 'same-direction'} car ${ahead.toFixed(0)} m ahead, ${(runtime.routeLength - distance).toFixed(0)} m from the destination`);
+        if (actor.direction === -1) returnedOncoming += 1;
+      });
+    }
+    assert.deepEqual(popIns, [], `Route ${variant}: cars appear only outside the ${view} m view and the mirrors.`);
+    if (variant === 0) assert.ok(returnedOncoming > 0, 'Oncoming traffic keeps coming on a long route.');
+  }
 });

@@ -30,10 +30,14 @@ import { PixelWorldBuilder, groundLayer, type PixelWorld } from './pixel/pixelWo
 import { carModels, facadeIds, treeFrames, type CarModel, type VehicleColor } from './pixel/spriteNames';
 import spriteSheet from './sprites/driving-sprites.json';
 import {
+  CalculateAmbientSpawnDistance,
   CalculateFollowingSpeed,
   CalculateRearSpawnDistance,
+  CollisionBoxesOverlap,
   FindTrafficLeaderGap,
+  IsTrafficMoveBlocked,
   PlanRearTraffic,
+  ShouldRespawnAmbientTraffic,
   ShouldRespawnRearTraffic,
   minimumFollowingGap,
   type TrafficBody,
@@ -98,13 +102,17 @@ const carPedalsUrl = new URL('./textures/car-pedals.svg', import.meta.url).href;
 type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
 
 // Ambient vehicles move along the route; x, z and heading follow from
-// distance and lateral every step. Rear traffic (rearSlot set) stays hidden
-// while it waits for room behind the player.
+// distance and lateral every step. A waiting vehicle stays hidden until
+// there is room for it out of the player's sight: behind the player for rear
+// traffic (rearSlot set), ahead of the visible road for the rest.
 interface AmbientTrafficActor extends TrafficBody, PixelVehicle {
   kind: 'car' | 'scooter';
   cruiseSpeed: number;
   rearSlot: number | null;
+  laneIndex: number;
   waiting: boolean;
+  // Stopped for the player's car, so it never blocks the player driving off.
+  yieldingToPlayer: boolean;
 }
 
 interface MiniMapRouteSample {
@@ -2058,6 +2066,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const previousZ = this.vehicleZ;
     const previousHeading = this.vehicleHeading;
     const previousProgress = this.progress;
+    const previousBox = this.getVehicleCollisionBox();
 
     // Reference-style target speed smoothing: controls stay the same, but the car
     // eases into throttle/brake like the reference project instead of instantly
@@ -2101,10 +2110,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.vehicleX += forward.x * this.vehicleSpeed * dt;
     this.vehicleZ += forward.z * this.vehicleSpeed * dt;
 
-    const trafficCollision = this.isVehicleCollidingWithTraffic();
-    if (trafficCollision) this.recordAvoidanceTrafficCollision();
-    if (this.isVehicleCollidingWithBuilding() || trafficCollision) {
-      this.recordCollisionEvent(time);
+    const buildingCollision = this.isVehicleCollidingWithBuilding();
+    const traffic = this.checkVehicleTrafficContact(previousBox);
+    if (traffic.newContact) this.recordAvoidanceTrafficCollision();
+    if (buildingCollision || traffic.newContact) this.recordCollisionEvent(time);
+    if (buildingCollision || traffic.blocked) {
       this.vehicleX = previousX;
       this.vehicleZ = previousZ;
       this.vehicleHeading = previousHeading;
@@ -2255,6 +2265,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.previousProgress = projected.distance;
     this.progress = projected.distance;
     this.lateralOffset = projected.lateral;
+
+    // Traffic keeps moving while the screen is dark, so a car may now sit on
+    // the reset point. It leaves before the screen comes back and returns out
+    // of sight.
+    const clearance = {
+      ...vehicleBox,
+      halfWidth: vehicleBox.halfWidth + 0.3,
+      halfLength: vehicleBox.halfLength + 1.5,
+    };
+    for (const actor of this.ambientTrafficActors) {
+      if (!actor.waiting && CollisionBoxesOverlap(clearance, this.getTrafficActorCollisionBox(actor))) actor.waiting = true;
+    }
   }
 
   /** Project a world point onto the route.
@@ -2452,6 +2474,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         direction,
         cruiseSpeed: isScooter ? 6.8 + (i % 5) * 0.95 : 7.4 + (i % 4) * 1.05,
         rearSlot: null,
+        laneIndex: i,
         waiting: false,
       });
       this.ambientTrafficActors.push(actor);
@@ -2462,7 +2485,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private createTrafficActor(
     kind: 'car' | 'scooter',
     sprite: string,
-    placement: Pick<AmbientTrafficActor, 'distance' | 'lateral' | 'direction' | 'cruiseSpeed' | 'rearSlot' | 'waiting'>,
+    placement: Pick<AmbientTrafficActor, 'distance' | 'lateral' | 'direction' | 'cruiseSpeed' | 'rearSlot' | 'laneIndex' | 'waiting'>,
   ): AmbientTrafficActor {
     const footprint = this.getTrafficActorCollisionBox({ kind, x: 0, z: 0, heading: 0 });
     return {
@@ -2474,6 +2497,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       speed: 0,
       halfWidth: footprint.halfWidth,
       halfLength: footprint.halfLength,
+      yieldingToPlayer: false,
       ...placement,
     };
   }
@@ -2495,6 +2519,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           direction: 1,
           cruiseSpeed: slot.cruiseSpeed,
           rearSlot: slot.slot,
+          laneIndex: slot.slot,
           waiting: slot.waiting,
         },
       );
@@ -2524,33 +2549,66 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         continue;
       }
       const lateral = this.getRearTrafficLaneOffset(distance, actor.rearSlot);
-      const blocked = this.ambientTrafficActors.some((other) => other !== actor
-        && !other.waiting
-        && other.direction === 1
-        && Math.abs(other.lateral - lateral) < other.halfWidth + actor.halfWidth + 0.3
-        && Math.abs(other.distance - distance) < other.halfLength + actor.halfLength + 8);
-      if (blocked) {
+      if (this.isTrafficSpawnBlocked(actor, distance, lateral)) {
         actor.waiting = true;
         continue;
       }
-      actor.waiting = false;
-      actor.distance = distance;
-      actor.lateral = lateral;
-      actor.speed = actor.cruiseSpeed;
-      this.positionTrafficActor(actor);
+      this.spawnTrafficActor(actor, distance, lateral);
     }
+  }
+
+  // Ambient vehicles that leave the route or drop out of the mirrors return on
+  // the road beyond what the player can see. Near the destination that road
+  // runs out, so they stay away rather than appear in front of the player.
+  private updateAmbientTrafficSpawns() {
+    const hiddenAhead = this.getTrafficSpawnAhead();
+    for (const actor of this.ambientTrafficActors) {
+      if (actor.rearSlot !== null) continue;
+      if (!actor.waiting && !ShouldRespawnAmbientTraffic(actor.distance, this.progress, this.routeLength)) continue;
+      actor.waiting = true;
+      const distance = CalculateAmbientSpawnDistance(this.progress, this.routeLength, hiddenAhead);
+      if (distance === null) continue;
+      const lateral = this.getTrafficLaneOffset(distance, actor.direction, actor.kind === 'scooter', actor.laneIndex);
+      if (this.isTrafficSpawnBlocked(actor, distance, lateral)) continue;
+      this.spawnTrafficActor(actor, distance, lateral);
+    }
+  }
+
+  // The renderer draws nothing past this distance, plus a margin for fog.
+  private getTrafficSpawnAhead(): number {
+    return Math.min(this.getDifficultyFogRange().far, this.getMainDrawDistance()) + 40;
+  }
+
+  private isTrafficSpawnBlocked(actor: AmbientTrafficActor, distance: number, lateral: number): boolean {
+    return this.ambientTrafficActors.some((other) => other !== actor
+      && !other.waiting
+      && other.direction === actor.direction
+      && Math.abs(other.lateral - lateral) < other.halfWidth + actor.halfWidth + 0.3
+      && Math.abs(other.distance - distance) < other.halfLength + actor.halfLength + 8);
+  }
+
+  private spawnTrafficActor(actor: AmbientTrafficActor, distance: number, lateral: number) {
+    actor.waiting = false;
+    actor.yieldingToPlayer = false;
+    actor.distance = distance;
+    actor.lateral = lateral;
+    actor.speed = actor.cruiseSpeed;
+    this.positionTrafficActor(actor);
   }
 
   private updateAmbientTraffic(dt: number) {
     this.updateRearTrafficSpawns();
-    const bodies: TrafficBody[] = [{
+    this.updateAmbientTrafficSpawns();
+    const player: TrafficBody = {
       distance: this.progress,
       lateral: this.lateralOffset,
       direction: 1,
       speed: this.vehicleSpeed,
       halfLength: this.vehicleHalfLength,
       halfWidth: this.vehicleHalfWidth,
-    }];
+    };
+    const playerBox = this.getVehicleCollisionBox();
+    const bodies: TrafficBody[] = [player];
     for (const actor of this.ambientTrafficActors) {
       if (!actor.waiting) bodies.push(actor);
     }
@@ -2569,14 +2627,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         }
       }
       actor.speed = CalculateFollowingSpeed(actor.cruiseSpeed, gap, leaderSpeed, actor.speed, dt);
+      const from = this.getTrafficActorCollisionBox(actor);
+      const previousDistance = actor.distance;
       actor.distance += actor.direction * actor.speed * dt;
-      if (actor.rearSlot === null) {
-        if (actor.distance > this.routeLength - 4) actor.distance = 6;
-        if (actor.distance < 4) actor.distance = this.routeLength - 6;
-      } else if (actor.distance > this.routeLength - 4) {
+      if (actor.distance < 4 || actor.distance > this.routeLength - 4) {
         actor.waiting = true;
+        continue;
       }
       this.positionTrafficActor(actor);
+      // Same-direction traffic stops at the player's car instead of driving
+      // into it, for example when the player is angled across two lanes.
+      const blockedByPlayer = actor.direction === 1
+        && IsTrafficMoveBlocked(from, this.getTrafficActorCollisionBox(actor), playerBox);
+      if (blockedByPlayer) {
+        actor.distance = previousDistance;
+        actor.speed = 0;
+        this.positionTrafficActor(actor);
+      }
+      actor.yieldingToPlayer = blockedByPlayer || (leader?.leader === player && leader.gap < minimumFollowingGap);
     }
   }
 
@@ -2976,12 +3044,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return this.buildingCollisionBoxes.some((buildingBox) => this.boxesOverlap(vehicleBox, buildingBox));
   }
 
-  private isVehicleCollidingWithTraffic(): boolean {
-    if (this.ambientTrafficActors.length === 0) return false;
+  // newContact: the move touched a vehicle it was clear of before.
+  // blocked: the move has to be undone.
+  private checkVehicleTrafficContact(previousBox: CollisionBox2D): { newContact: boolean; blocked: boolean } {
     const vehicleBox = this.getVehicleCollisionBox();
-    return this.ambientTrafficActors.some((actor) => (
-      !actor.waiting && this.boxesOverlap(vehicleBox, this.getTrafficActorCollisionBox(actor))
-    ));
+    let newContact = false;
+    let blocked = false;
+    for (const actor of this.ambientTrafficActors) {
+      if (actor.waiting) continue;
+      const actorBox = this.getTrafficActorCollisionBox(actor);
+      if (!CollisionBoxesOverlap(vehicleBox, actorBox)) continue;
+      if (!CollisionBoxesOverlap(previousBox, actorBox)) newContact = true;
+      if (IsTrafficMoveBlocked(previousBox, vehicleBox, actorBox, actor.yieldingToPlayer)) blocked = true;
+    }
+    return { newContact, blocked };
   }
 
   private recordCollisionEvent(time: number) {
@@ -3122,30 +3198,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private boxesOverlap(a: CollisionBox2D, b: CollisionBox2D): boolean {
-    const axes = [
-      this.getBoxWidthAxis(a.angle),
-      this.getForwardVector(a.angle),
-      this.getBoxWidthAxis(b.angle),
-      this.getForwardVector(b.angle),
-    ];
-
-    for (const axis of axes) {
-      const centerDelta = Math.abs((a.centerX - b.centerX) * axis.x + (a.centerZ - b.centerZ) * axis.z);
-      const radiusA = this.getProjectedRadius(a, axis);
-      const radiusB = this.getProjectedRadius(b, axis);
-      if (centerDelta > radiusA + radiusB) return false;
-    }
-
-    return true;
-  }
-
-  private getProjectedRadius(box: CollisionBox2D, axis: Vec2): number {
-    const widthAxis = this.getBoxWidthAxis(box.angle);
-    const lengthAxis = this.getForwardVector(box.angle);
-    return (
-      box.halfWidth * Math.abs(widthAxis.x * axis.x + widthAxis.z * axis.z)
-      + box.halfLength * Math.abs(lengthAxis.x * axis.x + lengthAxis.z * axis.z)
-    );
+    return CollisionBoxesOverlap(a, b);
   }
 
   private handleBrakePressed(time: number) {
@@ -3367,10 +3420,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getDrivingLanePoint(distance: number): Vec2 {
     return this.getRouteLateralPoint(this.getSurfacePoint(distance), this.getDrivingLaneOffset(distance));
-  }
-
-  private getBoxWidthAxis(angle: number): Vec2 {
-    return this.getRightVector(angle);
   }
 
   private getSegmentRoadWidth(segment?: RouteSegment): number {
