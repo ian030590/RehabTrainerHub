@@ -47,7 +47,7 @@ Hub 的共用 UI、client auth、layout、storage、訊息協定位於 `packages
 第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；RehabBuilder 規劃負責視覺化遊戲製作與 Hub 套件匯出，本倉庫不提供開發者 SDK 套件。
 靜態資產：各 app `public/`，通常 `public/assets/`。
 D1 migrations：`apps/rehabtrainerhub/migrations/`。
-Cloudflare bindings 以各 app 的 `wrangler.toml` 為準：Hub 有 `REHAB_DB` D1、`ARTICLE_CACHE` KV 與下列四個 R2 bucket；runner 只有 `GAME_RELEASE_BUCKET`，沒有 D1／KV 或 auth bindings。
+Cloudflare bindings 以各 app 的 `wrangler.toml` 為準：Hub 有 `REHAB_DB` D1、`ARTICLE_CACHE` KV（已停用，僅保留舊文章快取資料）與下列四個 R2 bucket；runner 只有 `GAME_RELEASE_BUCKET`，沒有 D1／KV 或 auth bindings。
 R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼動逐筆 CSV，含新版 WebGazer 上傳與舊版歷史紀錄）、`rehab-game-quarantine`（待審上傳暫存）、`rehab-game-releases`（已核准不可變發布）。新版眼動練習另由瀏覽器下載原參考格式的 CSV。
 舊本機 `.dist-releases/` 已刪除並由 Git 忽略。發布讀取遊戲 workspace 的 `dist/`，暫存收據位於 `.tmp/official-game-releases/`，正式收據保留在 `docs/releases/`。
 
@@ -120,7 +120,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run test:cloudflare-deploy` 包含私人眼動 R2 bucket 建立流程的冪等性與失敗情境，以及 R2 遊戲變更／版本 metadata 的 Pages 部署判斷測試；兩份 workflow 維持相同的 `cloudflare-deploy` matrix 命令。`test:gamerunner` 包含官方 current 入口、歷史雜湊與撤回驗證，並保留第三方 bridge 測試。
 - 部署 job 先以 Cloudflare API 確認或建立私人 `oculomotor-data` R2 bucket，再部署含 `OCULOMOTOR_DATA` binding 的 Hub；bucket 不設定公開網域，也不綁定 usergamerunner。
 - 兩份 workflow 的驗證 matrix 均為 `naming`、`pwa`、`game-architecture`、`hub-functions`、`gamerunner`、`trainer-entrypoints`、`cloudflare-deploy`；`test:entrypoints` 的內含 gate 以 root `package.json` 為準。
-- `npm run test:seo` 同時驗證文章正文的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
+- `npm run test:seo` 同時驗證衛教文章連結的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 - 手部目標追蹤遷移將 `check-motor-cortex-migration.test.mjs`、`check-motor-cortex-tutorial.test.mjs` 與 `check-motor-cortex-bridge.test.mjs` 納入既有 `test:game-architecture`；保留原引擎／參數邊界、五目標聚光燈、私有輸入、數值成果與原預覽圖驗證。兩份 workflow 維持上述七項 matrix、同一 root 命令及 workflow 自身觸發範圍；不新增 Brave CI 項目。`test:gamerunner` 驗證相容的空 input-start 與可選 `{hand: any|left|right}`、明確同意、只輸出 21 點 xyz 及取消／斷線清理。
 - 移動卡片訓練 `2.0.0` 已核准、發布並完成正式驗收，正式六款／34 款舊流程；證據見遷移紀錄與正式收據。`check-moving-card-migration.test.mjs` 與 `check-moving-card-tutorial.test.mjs` 納入既有 `test:game-architecture`，驗證原設定／校正、三難度完整 40 選項、錯選重試／計時、取消／renderer 清理、三目標聚光燈及私有成果；既有結果／UI／全螢幕測試亦加入此遊戲。兩份 workflow 維持七項 matrix、相同 root 命令及 workflow 自身觸發範圍。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game moving-card --lobby`，另驗桌機 `--wide --windowed`、`--tablet`、`--mobile --session-failure`、`--signed-in --english --hard --renderer-failure`、`--revoke` 及三尺寸 `--standalone`；只寫本機 SQLite。`test:gamerunner` 新增原生自包含 PWA 的單一 `lang=zh|en`、package 語言與離線快取回歸，持續拒絕重複／未知／混合 embed 參數。已完成相容 runner 先部署、精確版本發布、Hub 切換與正式驗收；詳見 `docs/moving-card-r2-migration.md`。
@@ -258,6 +258,7 @@ UI、auth、routing、共用 package 變更：build Hub、執行 `npm run test:e
 - 可索引頁必須有正確 canonical、index/follow、自然且唯一的 title/H1 與實質內容。新增、刪除或改名 route 時同步更新 `app/sitemap.ts`、`app/robots.ts` 與 `scripts/check-seo-output.mjs`；管理、帳號、進度及訓練流程頁維持既有 noindex 規則。
 - 每個 domain 的 sitemap 只列該正式 origin 下可索引的絕對 canonical URL；`lastmod` 只在主要內容、結構化資料或連結確實有重大更新時填寫，不得為了看似新鮮而改日期。部署後檢查 sitemap 與 robots 為 200、XML／文字內容正確且不是 HTML 錯誤頁，再提交到相符的 Search Console property。
 - 不做關鍵字堆砌、隱藏文字、重複／薄內容頁或無法由可見內容支持的 schema。`meta keywords` 不是主要排名手段；目標詞應自然出現在 title、H1、首段與相關站內連結錨文字。
+- 衛教文章只在作者個人網站撰寫，Hub 不自建文章、不複製全文。`/qa` 由 `apps/rehabtrainerhub/app/qa/educationFeed.ts` 讀 `https://ian.trainerhub.cc/rss.xml`，只列中風／視覺／動作／認知復健分類的站外連結（https 且限個人網站 host），build 時預渲染、瀏覽器再更新；D1 `education_articles` 與 `ARTICLE_CACHE` 保留舊資料但不再讀寫。
 - E-E-A-T 只標示可驗證事實。文章顯示真實作者、發布日期、最近更新日期與可查核來源；作者名稱連至站內作者背景。Person、Organization、WebSite、WebApplication schema 的姓名、資格、學歷、creator／founder 關係必須與可見頁面一致，不填推測欄位或敏感個資。
 - E-E-A-T 不是可直接保證排名的單一分數。內容先服務讀者並回答實際問題，不為搜尋流量大量產生相似頁面、重寫他站內容或虛構新鮮度；AI 協助內容需保留人工查核、發布責任與適當揭露。
 - 醫療、健康、科學與軟體效度敘述優先引用官方文件、原始研究或同儕審查論文。FrACT 相關內容引用[官方網站／手冊](https://michaelbach.de/fract/)、實際採用的版本與對應研究，並同時揭露校正需求及本站未經等效驗證。

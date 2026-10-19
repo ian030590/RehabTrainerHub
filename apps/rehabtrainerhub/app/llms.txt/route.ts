@@ -16,7 +16,7 @@ ${hubFullName} provides general self-directed home-practice tools and educationa
 
 - [Training lobby](${hubUrl}): Browse built-in activities and reviewed developer games for movement, visual, cognitive, and oral practice.
 - [About the site and contact options](${hubUrl}about/): Read the site's scope, content responsibility, platform safeguards, public source repository, and issue-reporting channel.
-- [Educational information and author background](${hubUrl}qa/): Read the author background, professional-content boundaries, and published educational articles.
+- [Educational information and author background](${hubUrl}qa/): Read the author background, professional-content boundaries, and links to educational articles on the author's personal website.
 - [Install the app](${hubUrl}download/): Install the platform on desktop, iPhone, or Android devices.
 - [Privacy policy](${hubUrl}privacy/): Review account, activity-record, device-permission, and data-use practices.
 

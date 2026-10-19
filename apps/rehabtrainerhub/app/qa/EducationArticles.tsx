@@ -1,104 +1,46 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type SyntheticEvent,
-} from 'react';
-import { BuildApiUrl } from '@rehab-trainer/ui/auth/authClient';
-import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
-import type {
-  ArticleCard,
-  Article,
-  ArticleDetailResponse,
-  ArticleListResponse,
-} from '../articleTypes';
+import { useEffect, useState } from 'react';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
+import { FetchEducationLinks, type EducationLink } from './educationFeed';
 
-type LoadStatus = 'loading' | 'ready' | 'error';
-type ArticleContentStatus = 'idle' | LoadStatus;
+type LoadStatus = 'ready' | 'error';
 
-function FormatPublishedDate(value: string | null, locale: 'zh-TW' | 'en'): string {
-  if (!value) return '';
+function FormatPublishedDate(value: string, locale: 'zh-TW' | 'en'): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
+  // Feed dates are Taiwan local dates; a fixed zone keeps prerender and browser in step.
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Asia/Taipei',
   }).format(date);
 }
 
-export function EducationArticles({ initialArticles }: { initialArticles: Article[] }) {
+export function EducationArticles({ initialArticles }: { initialArticles: EducationLink[] }) {
   const { language, t } = useHubLanguage();
-  const [articles, setArticles] = useState<ArticleCard[]>(initialArticles);
+  const [articles, setArticles] = useState(initialArticles);
   const [status, setStatus] = useState<LoadStatus>('ready');
   const [requestKey, setRequestKey] = useState(0);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [loadMoreError, setLoadMoreError] = useState('');
   const copy = GetHubUiCopy(language).educationArticles;
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoadMoreError('');
-    void fetch(BuildApiUrl(undefined, '/api/articles'), {
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Unable to load articles. Status ${response.status}`);
-        }
-        return response.json() as Promise<ArticleListResponse>;
-      })
-      .then((payload) => {
+    void FetchEducationLinks(controller.signal)
+      .then((links) => {
         if (controller.signal.aborted) return;
-        setArticles(payload.articles.filter((article) => article.status === 'published'));
-        setNextCursor(payload.nextCursor);
+        setArticles(links);
         setStatus('ready');
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        console.warn('Unable to load education articles.', error);
+        console.warn('Unable to refresh education links.', error);
         if (initialArticles.length === 0) setStatus('error');
       });
     return () => controller.abort();
   }, [initialArticles.length, requestKey]);
-
-  const loadMore = async () => {
-    if (!nextCursor || isLoadingMore) return;
-    setIsLoadingMore(true);
-    setLoadMoreError('');
-    try {
-      const url = new URL(BuildApiUrl(undefined, '/api/articles'), window.location.origin);
-      url.searchParams.set('cursor', nextCursor);
-      const response = await fetch(url.toString(), {
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) {
-        throw new Error(`Unable to load more articles. Status ${response.status}`);
-      }
-      const payload = await response.json() as ArticleListResponse;
-      setArticles((current) => {
-        const existingIds = new Set(current.map((article) => article.id));
-        return [
-          ...current,
-          ...payload.articles.filter((article) => (
-            article.status === 'published' && !existingIds.has(article.id)
-          )),
-        ];
-      });
-      setNextCursor(payload.nextCursor);
-    } catch (error) {
-      console.warn('Unable to load more education articles.', error);
-      setLoadMoreError(copy.loadMoreError);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
 
   return (
     <section className="education-articles-section" aria-labelledby="education-articles-title">
@@ -109,12 +51,7 @@ export function EducationArticles({ initialArticles }: { initialArticles: Articl
         </div>
         {status === 'ready' && articles.length > 0 && <p>{t('educationArticles.count', { count: articles.length })}</p>}
       </header>
-
-      {status === 'loading' && (
-        <div aria-label={copy.loading} className="education-articles-state" role="status">
-          <span className="minimal-loading-spinner" aria-hidden="true" />
-        </div>
-      )}
+      <p className="education-articles-source">{copy.sourceNote}</p>
 
       {status === 'error' && (
         <div className="education-articles-state is-error" role="alert">
@@ -140,128 +77,57 @@ export function EducationArticles({ initialArticles }: { initialArticles: Articl
       )}
 
       {status === 'ready' && articles.length > 0 && (
-        <>
-          <div className="education-article-grid">
-            {articles.map((article) => (
-              <EducationArticleCard article={article} initialContent={initialArticles.find((item) => item.id === article.id && item.updatedAt === article.updatedAt)?.content} key={`${article.id}:${article.updatedAt}`} />
-            ))}
-          </div>
-          {(nextCursor || loadMoreError) && (
-            <div className="education-articles-load-more">
-              {loadMoreError && <p role="alert">{loadMoreError}</p>}
-              {nextCursor && (
-                <button
-                  disabled={isLoadingMore}
-                  onClick={() => void loadMore()}
-                  type="button"
-                >
-                  {isLoadingMore ? copy.loadingMore : copy.loadMore}
-                </button>
-              )}
-            </div>
-          )}
-        </>
+        <ul className="education-article-list">
+          {articles.map((article) => (
+            <EducationArticleItem article={article} key={article.url} />
+          ))}
+        </ul>
       )}
     </section>
   );
 }
 
-function EducationArticleCard({ article, initialContent }: { article: ArticleCard; initialContent?: string }) {
+function EducationArticleItem({ article }: { article: EducationLink }) {
   const { language, locale } = useHubLanguage();
-  const [content, setContent] = useState(initialContent ?? '');
-  const [contentStatus, setContentStatus] = useState<ArticleContentStatus>(initialContent === undefined ? 'idle' : 'ready');
-  const requestRef = useRef<AbortController | null>(null);
-  const copy = GetHubUiCopy(language).educationArticle;
-
-  useEffect(() => () => requestRef.current?.abort(), []);
-
-  const loadContent = () => {
-    if (contentStatus === 'loading' || contentStatus === 'ready') return;
-
-    requestRef.current?.abort();
-    const controller = new AbortController();
-    requestRef.current = controller;
-    setContentStatus('loading');
-    void fetch(
-      BuildApiUrl(undefined, `/api/articles/${encodeURIComponent(article.slug)}`),
-      {
-        headers: { Accept: 'application/json' },
-        signal: controller.signal,
-      },
-    )
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Unable to load article. Status ${response.status}`);
-        }
-        return response.json() as Promise<ArticleDetailResponse>;
-      })
-      .then((payload) => {
-        if (controller.signal.aborted) return;
-        setContent(payload.article.content);
-        setContentStatus('ready');
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        console.warn('Unable to load education article content.', error);
-        setContentStatus('error');
-      });
-  };
-
-  const handleToggle = (event: SyntheticEvent<HTMLDetailsElement>) => {
-    if (event.currentTarget.open) loadContent();
-  };
+  const { educationArticles, educationArticle: copy } = GetHubUiCopy(language);
+  const categoryLabels: Record<string, string> = educationArticles.categories;
 
   return (
-    <article className="education-article-card">
-      <div className="education-article-visual">
-        {article.coverImageUrl ? (
-          <img alt="" loading="lazy" src={article.coverImageUrl} />
-        ) : (
-          <CardImagePlaceholder />
-        )}
+    <li className="education-article-item">
+      <div className="education-article-meta">
+        {article.categories.map((category) => (
+          <span key={category}>{categoryLabels[category] ?? category}</span>
+        ))}
       </div>
-      <div className="education-article-content">
-        <div className="education-article-meta">
-          <span>{article.category || copy.general}</span>
-          {article.publishedAt && (
-            <time dateTime={article.publishedAt}>
-              {FormatPublishedDate(article.publishedAt, locale)}
-            </time>
-          )}
-        </div>
-        <h3>{article.title}</h3>
-        <p className="education-article-summary">{article.summary}</p>
+      <h3>
+        <a href={article.url} rel="noopener" target="_blank">
+          {article.title}
+          <span className="sr-only"> {copy.opensInNewTab}</span>
+          <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+        </a>
+      </h3>
+      {article.summary && <p className="education-article-summary">{article.summary}</p>}
+      {(article.authorName || article.publishedAt) && (
         <p className="education-article-author">
-          {copy.author}:{' '}
-          {article.authorName === '蔡泓恩' ? (
-            <a href="#professional-background">{article.authorName}</a>
-          ) : article.authorName}
-          {' · '}{copy.updated}:{' '}
-          <time dateTime={article.updatedAt}>
-            {FormatPublishedDate(article.updatedAt, locale)}
-          </time>
+          {article.authorName && (
+            <>
+              {copy.author}:{' '}
+              {article.authorName === '蔡泓恩' ? (
+                <a href="#professional-background">{article.authorName}</a>
+              ) : article.authorName}
+            </>
+          )}
+          {article.authorName && article.publishedAt && ' · '}
+          {article.publishedAt && (
+            <>
+              {copy.published}:{' '}
+              <time dateTime={article.publishedAt}>
+                {FormatPublishedDate(article.publishedAt, locale)}
+              </time>
+            </>
+          )}
         </p>
-        <details onToggle={handleToggle}>
-          <summary>
-            <span>{copy.read}</span>
-            <span className="material-symbols-outlined" aria-hidden="true">expand_more</span>
-          </summary>
-          <div className="education-article-body">
-            {contentStatus === 'loading' && (
-              <div aria-label={copy.loading} className="inline-loading-state" role="status">
-                <span className="minimal-loading-spinner" aria-hidden="true" />
-              </div>
-            )}
-            {contentStatus === 'error' && (
-              <div className="education-article-load-error" role="alert">
-                <p>{copy.error}</p>
-                <button onClick={loadContent} type="button">{copy.reload}</button>
-              </div>
-            )}
-            {contentStatus === 'ready' && <p>{content}</p>}
-          </div>
-        </details>
-      </div>
-    </article>
+      )}
+    </li>
   );
 }
