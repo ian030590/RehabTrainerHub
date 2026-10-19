@@ -10,7 +10,7 @@ import { ReadReleasedGameCatalog } from '../_lib/gameCatalog.js';
 import { ReadOfficialGameRelease } from '../../../usergamerunner/functions/_lib/officialCatalog.js';
 import { EncodePackagePath } from '../../../usergamerunner/functions/_lib/release.js';
 
-const defaultGameRunnerOrigin = 'https://trainerhub-user-games.pages.dev';
+const defaultGameRunnerOrigin = 'https://trainerhubgames.rainbowh9490.workers.dev';
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);

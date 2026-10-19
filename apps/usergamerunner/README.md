@@ -1,11 +1,11 @@
 # User game runner
 
-This Cloudflare Pages project is the untrusted-game execution boundary for
+This Cloudflare Worker (`trainerhubgames`) is the untrusted-game execution boundary for
 `https://trainerhub.cc`. It deliberately has no authentication, D1 database,
 session cookie, API token, or secret binding. Its only binding is the read path
 to the published `GAME_RELEASE_BUCKET` R2 bucket.
 
-The production default is `https://trainerhub-user-games.pages.dev`. A custom
+The production origin is `https://trainerhubgames.rainbowh9490.workers.dev`; the old Pages project `https://trainerhub-user-games.pages.dev` stays up for installed PWAs. A custom
 domain may be attached later, but it **must use a registrable domain different
 from `trainerhub.cc`**. Do not use a host such as `games.trainerhub.cc`, because
 that weakens the intended site/cookie boundary.

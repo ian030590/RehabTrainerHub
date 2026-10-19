@@ -50,7 +50,9 @@ for (const app of pagesApps) {
   const createMarker = `pages project create ${app.projectName} --production-branch=main`;
   const syncMarker = `pages secret bulk ${app.projectName}.pages-env.json --project-name=${app.projectName}`;
   const deployMarker = `--cwd=${app.appPath} pages deploy ${app.outputDir} --project-name=${app.projectName} --branch=deployment-test`;
-  const domainMarker = app.usesBuiltInPagesDomain
+  const domainMarker = app.usesWorkerOrigin
+    ? `Skipping Worker origin for ${app.projectName}: ${app.hostname}`
+    : app.usesBuiltInPagesDomain
     ? `Skipping built-in Pages domain for ${app.projectName}: ${app.hostname}`
     : `cloudflare pages domain ensure ${app.projectName} ${app.hostname}`;
   const environmentMarker = IsAuthPagesApp(app)

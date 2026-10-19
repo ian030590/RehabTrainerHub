@@ -78,7 +78,7 @@ test('Hart owns its runtime, catalogue, settings and full results and is exclude
   }
   for (const name of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, name)));
   const registry = JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
-  assert.equal(registry['hart-chart'].origin, 'https://trainerhub-user-games.pages.dev');
+  assert.equal(registry['hart-chart'].origin, 'https://trainerhubgames.rainbowh9490.workers.dev');
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));

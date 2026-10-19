@@ -1,42 +1,42 @@
 {
   "asteroid-shield": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "小行星護盾防衛"
   },
   "gesture-battler": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "手勢指令對戰"
   },
   "drawing-defense": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "畫畫塔防"
   },
   "motor-cortex-rehab": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "手部目標追蹤練習"
   },
   "oculomotor-training": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "眼動練習"
   },
   "moving-card": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "移動卡片訓練"
   },
   "gabor-patching": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "蓋伯斑塊練習"
   },
   "reading-training": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "閱讀訓練（RSVP）"
   },
   "hart-chart": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "哈特圖訓練"
   },
   "driving-rehab": {
-    "origin": "https://trainerhub-user-games.pages.dev",
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "駕駛注意力模擬練習"
   }
 }

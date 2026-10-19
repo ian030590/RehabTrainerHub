@@ -76,7 +76,7 @@ test('moving-card current replaces the historical shell with the original vision
   assert.equal(matches[0].release.presentation, 'game');
   assert.equal(matches[0].release.version, '2.0.0');
   assert.equal(matches[0].release.settingsUrl, undefined);
-  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/preview.webp');
+  assert.equal(matches[0].previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/moving-card/2.0.0/package/preview.webp');
   fixture.objects.set('releases/moving-card/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'moving-card'), false);
 });
@@ -92,7 +92,7 @@ test('public catalog reads preview and tags from the approved game bytes instead
   assert.equal(game.release.version, '2.0.3');
   assert.equal(game.release.presentation, 'game');
   assert.deepEqual(game.copy, fixture.metadata.copy);
-  assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/package/preview.webp');
+  assert.equal(game.previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/2.0.3/package/preview.webp');
   assert.equal(games.filter(value => value.slug === 'drawing-defense').length, 1);
   assert.ok(games.some(value => value.slug === 'another-game'));
 });
@@ -103,7 +103,7 @@ test('asteroid current metadata replaces its historical shell and rejects absent
   assert.equal(game.release.presentation, 'game');
   assert.equal(game.release.version, '2.0.0');
   assert.equal(game.category, 'upper-limb');
-  assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp');
+  assert.equal(game.previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/asteroid-shield/2.0.0/package/preview.webp');
   assert.equal(game.release.settingsUrl, undefined);
   assert.equal((await List(fixture)).filter(value => value.slug === 'asteroid-shield').length, 1);
   for (const missing of [false, true]) {
@@ -123,7 +123,7 @@ test('hand tracking current replaces the same-slug historical settings shell wit
   assert.equal(game.release.presentation, 'game');
   assert.equal(game.release.settingsUrl, undefined);
   assert.equal(game.category, 'upper-limb');
-  assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/package/preview.webp');
+  assert.equal(game.previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/motor-cortex-rehab/2.0.0/package/preview.webp');
   fixture.objects.set('releases/motor-cortex-rehab/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(value => value.slug === 'motor-cortex-rehab'), false);
 });
@@ -167,7 +167,7 @@ test('Gabor current replaces its same-slug old shell and fails closed for invali
   assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
   assert.equal(matches[0].release.presentation, 'game');
   assert.equal(matches[0].release.settingsUrl, undefined);
-  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp');
+  assert.equal(matches[0].previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/gabor-patching/2.0.0/package/preview.webp');
   fixture.objects.set('releases/gabor-patching/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'gabor-patching'), false);
 });
@@ -180,7 +180,7 @@ test('Hart current replaces its same-slug old shell and fails closed for invalid
   assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
   assert.equal(matches[0].release.presentation, 'game');
   assert.equal(matches[0].release.settingsUrl, undefined);
-  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/package/preview.webp');
+  assert.equal(matches[0].previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.0.0/package/preview.webp');
   fixture.objects.set('releases/hart-chart/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'hart-chart'), false);
 });
@@ -194,7 +194,7 @@ test('Reading current replaces its same-slug old shell and fails closed for inva
   assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
   assert.equal(matches[0].release.presentation, 'game');
   assert.equal(matches[0].release.settingsUrl, undefined);
-  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/reading-training/2.0.0/package/preview.webp');
+  assert.equal(matches[0].previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/reading-training/2.0.0/package/preview.webp');
   fixture.objects.set('releases/reading-training/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'reading-training'), false);
 });
@@ -208,7 +208,7 @@ test('Driving current replaces its same-slug old shell and fails closed for inva
   assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
   assert.equal(matches[0].release.presentation, 'game');
   assert.equal(matches[0].release.settingsUrl, undefined);
-  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/preview.webp');
+  assert.equal(matches[0].previewUrl, 'https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/2.0.0/package/preview.webp');
   fixture.objects.set('releases/driving-rehab/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'driving-rehab'), false);
 });

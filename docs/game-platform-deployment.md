@@ -5,10 +5,10 @@ environment:
 
 - `https://trainerhub.cc` owns accounts, the catalog, developer submissions,
   review decisions, and result persistence.
-- The game runner uses a different registrable domain (for example
-  `https://rehab-user-games.com`). The temporary Pages address
-  `https://trainerhub-user-games.pages.dev` is also a separate site, but a
-  dedicated production domain is preferred.
+- The game runner uses a different site. Production uses the Worker
+  `https://trainerhubgames.rainbowh9490.workers.dev`. The old Pages address
+  `https://trainerhub-user-games.pages.dev` keeps serving installed PWAs until
+  it is retired. Both are separate sites from `trainerhub.cc`.
 
 Never point the runner at `games.trainerhub.cc`, add it to
 `AUTH_ALLOWED_ORIGINS`, or give it an auth secret, D1 binding, or quarantine

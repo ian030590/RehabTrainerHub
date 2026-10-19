@@ -63,10 +63,11 @@ async function PruneDeployments(projectName, projectPath, canonicalDeploymentId)
 }
 
 for (const app of pagesApps) {
-  const hostnames = app.usesBuiltInPagesDomain
+  const hostnames = app.usesBuiltInPagesDomain || app.usesWorkerOrigin
     ? app.redirectHostnames
     : [app.hostname, ...app.redirectHostnames];
   if (app.usesBuiltInPagesDomain) console.log(`Skipping built-in Pages domain for ${app.projectName}: ${app.hostname}`);
+  if (app.usesWorkerOrigin) console.log(`Skipping Worker origin for ${app.projectName}: ${app.hostname}`);
   for (const hostname of hostnames) await EnsureDomain(app, hostname);
 }
 

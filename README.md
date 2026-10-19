@@ -32,7 +32,7 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 |   |-- rehabtrainerhub/   # 入口網站、遊戲平台與官方遊戲 / Hub, Game Platform, and official games
 |   |   `-- games/
 |   |       `-- <game-id>/ # 每款遊戲的獨立根目錄與 settings.json / Per-game root and settings.json
-|   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
+|   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhubgames.rainbowh9490.workers.dev)
 |-- packages/
 |   |-- ui/                # 共用介面、auth、gamePlatform 型別 / Shared UI, auth, gamePlatform types
 |   |-- game-settings/     # settings.json schema 與驗證器 / settings.json schema and validator
@@ -111,7 +111,7 @@ npm install
 
 居家訓練網提供 Steam 式的自主居家練習遊戲平台，開放開發者投稿 HTML 或包含資源的 ZIP 檔案，並實施五重安全防護：
 
-1. **物理隔離（Separate Domain）**：遊戲檔案完全部署在獨立網域（`trainerhub-user-games.pages.dev`），與主平台（`trainerhub.cc`）徹底分開，受同源政策（SOP）強制隔離，無法存取主平台的 Cookie 或登入憑證。
+1. **物理隔離（Separate Domain）**：遊戲檔案完全部署在獨立網域（`trainerhubgames.rainbowh9490.workers.dev`），與主平台（`trainerhub.cc`）徹底分開，受同源政策（SOP）強制隔離，無法存取主平台的 Cookie 或登入憑證。
 2. **沙盒機制（Strict Iframe Sandbox）**：主平台以 `<iframe sandbox="allow-scripts">` 嵌入遊戲，禁止 `allow-same-origin` 與 `allow-top-navigation`。
 3. **阻斷外連（Restrictive CSP）**：執行環境施加 `connect-src 'none'`、`worker-src 'none'`、`form-action 'none'`，禁止遊戲向外連線竊取資料。
 4. **安全通訊橋樑（postMessage & MessageChannel）**：遊戲透過隔離執行站提供的版本化通訊橋樑與外層通訊，使用 session nonce 與 sequence 防止重放攻擊，僅回傳非敏感的彙總指標。投稿仍須經掃描與人工審核。

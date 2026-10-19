@@ -7,7 +7,7 @@ import test from 'node:test';
 const repoRoot = resolve(import.meta.dirname, '..');
 const tempRoot = resolve(repoRoot, '.tmp');
 
-test('naming check ignores generated R2 release bundles', (context) => {
+test('naming check ignores generated R2 release and compiled Worker bundles', (context) => {
   const fixtureRoot = CreateFixture(context, {
     'apps/game/src/main.ts': 'export function StartGame(score) { const totalScore = score; return totalScore; }',
   });
@@ -36,7 +36,7 @@ test('naming check still rejects authored source violations', (context) => {
   assert.match(output, /named functions must use PascalCase \(invalidFunction\)/);
   assert.match(output, /parameters must use camelCase \(BadParameter\)/);
   assert.match(output, /variables must use camelCase \(BadVariable\)/);
-  assert.doesNotMatch(output, /\.dist-releases/);
+  assert.doesNotMatch(output, /\.dist-releases|\.worker|\.wrangler/);
 });
 
 function CreateFixture(context, sourceFiles) {
@@ -52,6 +52,8 @@ function CreateFixture(context, sourceFiles) {
   const files = {
     ...sourceFiles,
     '.dist-releases/antisaccade/1.0.0/files/assets/index-B5Mo4TSb.js': 'function f(S){const Tu=S;return Tu}',
+    'apps/hub/.worker/functions/index.js': 'function f(S){const Tu=S;return Tu}',
+    'apps/hub/.wrangler/tmp/bundle.js': 'function f(S){const Tu=S;return Tu}',
   };
   for (const [fileName, source] of Object.entries(files)) {
     const filePath = resolve(fixtureRoot, fileName);

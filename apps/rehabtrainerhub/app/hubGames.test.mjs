@@ -37,10 +37,10 @@ function CurrentGame() {
     trainer: 'motor', category: 'upper-limb', developerName: 'Studio', copy: {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Reviewed drawing', description: 'Upper-limb practice.' },
-    }, previewUrl: 'https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/package/preview.webp',
+    }, previewUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/2.0.3/package/preview.webp',
     release: { id: 'drawing-defense@2.0.3', version: '2.0.3', presentation: 'game', contentSha256: 'a'.repeat(64),
-      capabilities: ['pointer'], launchUrl: 'https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/',
-      installUrl: 'https://trainerhub-user-games.pages.dev/games/drawing-defense/' } };
+      capabilities: ['pointer'], launchUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/2.0.3/',
+      installUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/' } };
 }
 
 test('reviewed game metadata updates its card and filters while preserving the R2 session launch', async () => {
@@ -63,8 +63,8 @@ test('published catalog accepts game-owned metadata and rejects previews outside
   context.mock.method(globalThis, 'fetch', async () => Response.json({ games }));
   assert.equal((await FetchPublishedGames()).length, 1);
   for (const previewUrl of ['https://evil.example/preview.webp',
-    'https://trainerhub-user-games.pages.dev/games/drawing-defense/1.0.0/package/preview.webp',
-    'https://trainerhub-user-games.pages.dev/games/other-game/2.0.3/package/preview.webp']) {
+    'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/1.0.0/package/preview.webp',
+    'https://trainerhubgames.rainbowh9490.workers.dev/games/other-game/2.0.3/package/preview.webp']) {
     games = [{ ...CurrentGame(), previewUrl }];
     assert.equal((await FetchPublishedGames()).length, 0);
   }
@@ -105,7 +105,7 @@ test('an old drawing-defense publication cannot replace the R2 current session e
   const current = { id: 'drawing-defense', title: 'Drawing defense',
     installUrl: '/games/drawing-defense/', launch: { contract: 'catalog-v1', module: { runtimeId: 'drawing-defense' } } };
   const oldRelease = { id: 'drawing-defense', title: 'Obsolete settings shell', version: '1.0.0',
-    installUrl: 'https://trainerhub-user-games.pages.dev/games/drawing-defense/1.0.0/',
+    installUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/1.0.0/',
     launch: { contract: 'package-v1', game: { release: { version: '1.0.0' } } } };
   const [game] = MergeHubGames([current], [oldRelease]);
   assert.equal(game, current);
@@ -121,7 +121,7 @@ test(`${runtimeId} current metadata preserves its session entry despite a same-s
     imagePath: `/assets/game-previews/${runtimeId}/preview.webp`,
     copy: { en: { title: runtimeId, description: 'Upper-limb practice.' } } };
   const published = { ...CurrentGame(), id: runtimeId, slug: runtimeId, title: runtimeId, category: purpose, trainer: module.trainer,
-    previewUrl: `https://trainerhub-user-games.pages.dev/games/${runtimeId}/2.0.0/package/preview.webp`,
+    previewUrl: `https://trainerhubgames.rainbowh9490.workers.dev/games/${runtimeId}/2.0.0/package/preview.webp`,
     release: { ...CurrentGame().release, version: '2.0.0' } };
   const [game] = BuildHubGameCatalog([module], [published], 'en');
   assert.equal(game.launch.contract, 'catalog-v1');

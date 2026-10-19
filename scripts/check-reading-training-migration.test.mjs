@@ -161,7 +161,7 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
   const registry = JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
-  assert.deepEqual(registry['reading-training'], { origin: 'https://trainerhub-user-games.pages.dev', name: '閱讀訓練（RSVP）' });
+  assert.deepEqual(registry['reading-training'], { origin: 'https://trainerhubgames.rainbowh9490.workers.dev', name: '閱讀訓練（RSVP）' });
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.equal(metadata.gameId, 'reading-training');
   assert.equal(metadata.trainer, 'vision'); assert.equal(metadata.category, 'vision');

@@ -152,6 +152,7 @@ jobs:
           VITE_AI_ASSET_BASE_URL: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL || '' }}
 
       - name: Ensure and deploy Cloudflare Pages projects
+        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET != 'workers' }}
         timeout-minutes: 15
         run: node scripts/deploy-cloudflare-pages.mjs --branch=${{ github.ref_name }} --production-branch=main
         env:
@@ -167,6 +168,26 @@ jobs:
           CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
           AI_ASSET_BASE_URL: ${{ vars.AI_ASSET_BASE_URL }}
           ASSET_PUBLIC_BASE_URL: ${{ vars.ASSET_PUBLIC_BASE_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GAME_RELEASE_OWNER_USER_ID: ${{ vars.GAME_RELEASE_OWNER_USER_ID }}
+
+      # Repository variable CLOUDFLARE_DEPLOY_TARGET=workers switches production to Workers
+      # (docs/workers-migration-report.md). Only main deploys them; manual runs elsewhere skip.
+      - name: Deploy Cloudflare Workers
+        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET == 'workers' && github.ref == 'refs/heads/main' }}
+        timeout-minutes: 15
+        run: node scripts/deploy-cloudflare-workers.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
+          AUTH_STATE_SECRET: ${{ secrets.AUTH_STATE_SECRET }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          TURNSTILE_REQUIRED: ${{ vars.TURNSTILE_REQUIRED }}
+          TURNSTILE_RECORDS_REQUIRED: ${{ vars.TURNSTILE_RECORDS_REQUIRED }}
+          ANONYMOUS_RECORDS_ENABLED: ${{ vars.ANONYMOUS_RECORDS_ENABLED }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GAME_RELEASE_OWNER_USER_ID: ${{ vars.GAME_RELEASE_OWNER_USER_ID }}

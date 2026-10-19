@@ -55,6 +55,8 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
         siteUrl,
         hostname: new URL(siteUrl).hostname,
         usesBuiltInPagesDomain: siteUrl === deploymentUrl,
+        // A Worker serves this origin; Pages cannot bind a workers.dev hostname.
+        usesWorkerOrigin: new URL(siteUrl).hostname.endsWith('.workers.dev'),
         urlEnvName: `${ToEnvironmentName(projectName)}_URL`,
       };
     })

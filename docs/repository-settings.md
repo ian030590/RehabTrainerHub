@@ -11,6 +11,8 @@
 
 ## Cloudflare Pages
 
+正式部署已改為 Workers `trainerhub`／`trainerhubgames`（見 `docs/workers-migration-report.md`）；下表 Pages 專案保留為回退。
+
 | Project | Role | Output |
 | --- | --- | --- |
 | `rehabtrainerhub` | Hub、API、各自獨立的同源官方遊戲 | `apps/rehabtrainerhub/out` |
@@ -38,8 +40,8 @@
 
 ## Domains 與退役流程
 
-- `trainerhub.cc` 綁定 `rehabtrainerhub`。
-- `trainerhub-user-games.pages.dev` 保持獨立，禁止使用 `trainerhub.cc` 子網域。
+- `trainerhub.cc` 由 Worker `trainerhub` 的 routes 接手；Pages 專案 `rehabtrainerhub` 的自訂網域保留為回退。
+- Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，舊的 `trainerhub-user-games.pages.dev` 保留給已安裝的 PWA；兩者都與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
 - 四個退役 trainer custom domains 綁到 `rehabtrainerhub`，由
   `functions/_middleware.js` 對任何路徑回 301。
 - `scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先清除舊

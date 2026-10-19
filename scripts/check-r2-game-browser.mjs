@@ -34,6 +34,8 @@ assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
+// The Hub build embeds this origin from officialGameReleases.json; local runs swap it for the local runner.
+const productionRunnerOrigin = new URL(JSON.parse(await readFile(resolve(root, 'apps/usergamerunner/package.json'), 'utf8')).homepage).origin;
 const productionHub = process.argv.includes('--production-hub');
 const remote = process.argv.includes('--remote') || productionHub;
 const standalone = process.argv.includes('--standalone');
@@ -121,7 +123,7 @@ try {
     } })
       .then(result => Respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
   });
-  runnerOrigin = remote ? 'https://trainerhub-user-games.pages.dev' : await listen(runner);
+  runnerOrigin = remote ? productionRunnerOrigin : await listen(runner);
   environment.GAME_RUNNER_ORIGIN = runnerOrigin;
   hub = createServer(async (request, response) => {
     try {
@@ -173,7 +175,7 @@ try {
         actual = url.pathname.endsWith('/') ? resolve(path, 'index.html') : path + '.html';
         source = await readFile(actual);
       }
-      if (/\.(js|html)$/.test(actual)) source = Buffer.from(source.toString('utf8').replaceAll('https://trainerhub-user-games.pages.dev', runnerOrigin));
+      if (/\.(js|html)$/.test(actual)) source = Buffer.from(source.toString('utf8').replaceAll(productionRunnerOrigin, runnerOrigin));
       response.writeHead(200, { 'Content-Type': ContentTypeForPath(actual) }).end(source);
     } catch (error) { response.writeHead(404).end(String(error)); }
   });

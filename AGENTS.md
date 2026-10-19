@@ -69,6 +69,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run deploy:game-review-worker`：部署 `workers/game-review-issues` 的 GitHub Issue Cron Worker。先套用 `0014_game_review_issues.sql`、設定 GitHub App 的四項 server-only secrets；此命令不部署 Pages、不搬遊戲、不核准發布。Hub 另需 `GAME_RELEASE_OWNER_USER_ID`，未設定時審核操作回覆 503。詳見 `docs/hub-game-review-rollout.md`。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
+- Workers 部署（見 `docs/workers-migration-report.md`）：`npm run build:workers` 把兩個 app 的 `functions/` 編譯到 `apps/*/.worker/`，供 `wrangler.workers.jsonc`（Worker `trainerhub`／`trainerhubgames`）使用，需先建置 app。`node scripts/deploy-cloudflare-workers.mjs --dry-run` 只列出指令；缺少 Hub routes，或 runner origin 與 registry 不一致時拒絕部署。`npm run test:workers-local` 以本機 workerd 檢查 27 項與 Pages 相同的 HTTP 行為（可用 `HUB_OUTPUT_ROOT`／`RUNNER_OUTPUT_ROOT`），不進 Linux CI。Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑。
 - `npm run test:game-platform`：驗證遊戲套件掃描器與平台通訊橋樑。
 - `npm --prefix apps/rehabtrainerhub run preview`：預覽 Hub 的 `out/`；runner 與現有遊戲 workspace 未宣告 `preview` script。
 
@@ -120,6 +121,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run test:webgazer-browser` 以 R2 Brave 工具驗證 Hub 無眼動、Hub 眼動與手機獨立 PWA 眼動三流程。遊戲維持 opaque iframe、camera 禁止，可信輸入文件才有相機權限；實際原版模型使用已核對人像圖片串流，不代表真人／實體相機精度驗收。另以 `--activity vor|pursuit|saccade|fixation`、`--tablet`、`--signed-in --english`、`--camera-denied`、`--camera-disconnect`、`--stop`、`--revoke-playing` 驗證四模式、同意／斷線、CSV／摘要重試、身份隔離與清理；PWA 另驗固定模型／引擎實際離線讀取。只寫本機 SQLite，此項不加入 Linux CI matrix。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
 - `npm run test:cloudflare-deploy` 包含私人眼動 R2 bucket 建立流程的冪等性與失敗情境，以及 R2 遊戲變更／版本 metadata 的 Pages 部署判斷測試；兩份 workflow 維持相同的 `cloudflare-deploy` matrix 命令。`test:gamerunner` 包含官方 current 入口、歷史雜湊與撤回驗證，並保留第三方 bridge 測試。
+- `test:cloudflare-deploy` 另含 `scripts/check-cloudflare-workers.test.mjs`：Workers 設定的 D1／KV／R2 必須與 Pages `wrangler.toml` 相同、runner 只綁 release bucket 且沒有 vars／secrets、資產順序對應 Pages（Hub `run_worker_first: true`，runner 對應 `_routes.json`）、Hub secrets 為執行期 allowlist、部署順序為 migrations → runner → Hub，以及缺少 Hub routes 時拒絕部署。部署 workflow 預設仍執行 Pages 步驟；只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=workers` 時改跑 `scripts/deploy-cloudflare-workers.mjs`，兩者不會同時執行。沒有新增 matrix 項目。
 - 部署 job 先以 Cloudflare API 確認或建立私人 `oculomotor-data` R2 bucket，再部署含 `OCULOMOTOR_DATA` binding 的 Hub；bucket 不設定公開網域，也不綁定 usergamerunner。
 - 兩份 workflow 的驗證 matrix 均為 `naming`、`pwa`、`game-architecture`、`hub-functions`、`gamerunner`、`trainer-entrypoints`、`cloudflare-deploy`；`test:entrypoints` 的內含 gate 以 root `package.json` 為準。
 - `npm run test:seo` 同時驗證衛教文章連結的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
@@ -197,8 +199,8 @@ Hub 使用 Next.js App Router（`apps/rehabtrainerhub/app/`）、`app/globals.cs
 本平台提供開放開發者上傳 HTML/ZIP 居家練習遊戲的 Steam 式體驗，必須嚴格遵守以下六層安全防護架構。未遷移的同源官方遊戲與 R2／第三方隔離遊戲使用不同載入流程，不可套用錯誤的通訊或 sandbox 契約。
 
 1. **物理隔離（Separate Domain）**：
-   - 主平台（`trainerhub.cc`，處理登入、個人紀錄、資料庫）與遊戲執行器（`trainerhub-user-games.pages.dev`，提供 R2 資產、runtime 與 PWA launcher）必須完全分開。
-   - `usergamerunner` Cloudflare Pages 專案**嚴禁綁定 D1、KV 認證或任何使用者私密資料**。目前只綁定 `rehab-game-releases`，Functions 僅接受 GET／HEAD 並呼叫 bucket.get；唯讀由程式與部署規範維持，`wrangler.toml` 並無獨立唯讀 binding 宣告，禁止新增 bucket 寫入能力。
+   - 主平台（`trainerhub.cc`，處理登入、個人紀錄、資料庫）與遊戲執行器（`trainerhubgames.rainbowh9490.workers.dev`，提供 R2 資產、runtime 與 PWA launcher；舊 `trainerhub-user-games.pages.dev` 保留給已安裝的 PWA）必須完全分開。
+   - `usergamerunner` Cloudflare Pages 專案**嚴禁綁定 D1、KV 認證或任何使用者私密資料**。目前只綁定 `rehab-game-releases`，Functions 僅接受 GET／HEAD 並呼叫 bucket.get；唯讀由程式與部署規範維持，`wrangler.toml` 並無獨立唯讀 binding 宣告，禁止新增 bucket 寫入能力。Worker `trainerhubgames`（`apps/usergamerunner/wrangler.workers.jsonc`）適用同一限制，由 `test:cloudflare-deploy` 檢查。
 
 2. **沙盒機制（Strict Iframe Sandbox）**：
    - 主平台載入 R2 官方／第三方遊戲，以及 runner launcher 載入 package 時，一律使用 `<iframe sandbox="allow-scripts">`。
@@ -276,7 +278,7 @@ SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指�
 
 **分支政策（2026-10-18 起）：** 只在 `main` 上進行。commit 後直接 push 到 `main`，不再開新的功能分支或 PR；Dependabot 等自動 PR 由擁有者另外決定。以前的專用分支 `feat/driving-rehab-r2`、`feat/hart-chart-r2`、`feat/reading-training-r2`、`feat/redesign-lobby-guide-sections`、`fix/oculomotor-2.1.1` 已全部併入 `main`（`ec740bf2`），留作歷史紀錄，不刪除、不再推送。本文件與 `docs/releases/*.json` 中提到的專用分支、「避免 `main` 完整部署」等，都是當時的交付紀錄。
 
-`main` push 會依 `deploy-cloudflare-pages.yml` 驗證並部署 Pages（純文件變更不觸發）。只改已遷移 R2 遊戲內容／版本時，`deployment_scope` 會跳過部署，可以先 push 再依核准發布；把新遊戲登記進 `packages/ui/src/officialGameReleases.json` 時，Hub 會改走 R2 入口並移除舊 bundle，必須先取得精確 version／contentSha256 核准並完成 R2 發布、current 切換，再 push。需要相容 runner 先部署的變更，依序先 push 平台變更並確認部署，再發布遊戲。
+`main` push 會依 `deploy-cloudflare-pages.yml` 驗證並部署（repo variable `CLOUDFLARE_DEPLOY_TARGET=workers` 時部署 Workers，否則 Pages；純文件變更不觸發）。只改已遷移 R2 遊戲內容／版本時，`deployment_scope` 會跳過部署，可以先 push 再依核准發布；把新遊戲登記進 `packages/ui/src/officialGameReleases.json` 時，Hub 會改走 R2 入口並移除舊 bundle，必須先取得精確 version／contentSha256 核准並完成 R2 發布、current 切換，再 push。需要相容 runner 先部署的變更，依序先 push 平台變更並確認部署，再發布遊戲。
 
 ## 安全與設定提示
 

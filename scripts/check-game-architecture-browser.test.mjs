@@ -167,9 +167,9 @@ test('Brave presents reviewed releases and all existing games in one grid on des
   const game = { id: 'reviewed-game', slug: 'reviewed-game', title: 'Reviewed game', summary: 'A practice activity.',
     trainer: 'brain', category: 'attention', developerName: 'Sample studio', updatedAt: '2026-10-08',
     release: { id: 'reviewed-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['keyboard'],
-      approvedAt: '2026-10-08', launchUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/',
-      installUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/',
-      settingsUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/package/settings.json' } };
+      approvedAt: '2026-10-08', launchUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/reviewed-game/1.0.0/',
+      installUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/reviewed-game/1.0.0/',
+      settingsUrl: 'https://trainerhubgames.rainbowh9490.workers.dev/games/reviewed-game/1.0.0/package/settings.json' } };
   const server = createServer((request, response) => {
     if (request.url === '/api/games') {
       response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ games: [game,

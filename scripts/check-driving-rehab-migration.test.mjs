@@ -107,7 +107,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
   const registry = JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
-  assert.equal(registry['driving-rehab'].origin, 'https://trainerhub-user-games.pages.dev');
+  assert.equal(registry['driving-rehab'].origin, 'https://trainerhubgames.rainbowh9490.workers.dev');
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.equal(metadata.gameId, 'driving-rehab');
   assert.equal(metadata.trainer, 'vision');

@@ -91,7 +91,7 @@ Issue 的標籤、checkbox、文字、留言及關閉狀態不產生發布權。
 
 ### Runner
 
-沿用 `trainerhub-user-games.pages.dev`，只提供 GET／HEAD、版本化 launcher、PWA、平台協定與核准檔案；不取得 Hub session、D1、原始碼封存或 quarantine binding。
+使用 Worker `trainerhubgames.rainbowh9490.workers.dev`（舊 `trainerhub-user-games.pages.dev` 保留給已安裝的 PWA），只提供 GET／HEAD、版本化 launcher、PWA、平台協定與核准檔案；不取得 Hub session、D1、原始碼封存或 quarantine binding。
 
 遊戲 iframe 始終使用 `sandbox="allow-scripts"`。允許來源以平台設定為準，不能接受投稿者提供的任意 launch URL。
 

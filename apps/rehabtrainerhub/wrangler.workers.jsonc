@@ -1,0 +1,61 @@
+// Worker "trainerhub". wrangler.toml (Pages) stays the rollback deployment until C12
+// (docs/workers-migration-report.md).
+{
+  "name": "trainerhub",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-07-02",
+  // Only approved hostnames serve the Hub: no workers.dev or version preview URLs.
+  "workers_dev": false,
+  "preview_urls": false,
+  // Routes win over the Pages custom domains; deleting them sends traffic back to Pages.
+  "routes": [
+    { "pattern": "trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "motor.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "vision.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "brain.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "mouth.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" }
+  ],
+  "assets": {
+    "directory": "out",
+    // Not ASSET_BUCKET: this is the static assets binding behind next().
+    "binding": "ASSETS",
+    // Pages ran functions/_middleware.js before every asset (retired-host 301, migrated-game 410).
+    "run_worker_first": true,
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "d1_databases": [
+    {
+      "binding": "REHAB_DB",
+      "database_name": "rehab_db",
+      "database_id": "0f4e6bb2-cf41-4051-ad74-19bb501fe9dd",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "ARTICLE_CACHE",
+      "id": "9671f8f8995240a3a5fc6b870c66b561"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ASSET_BUCKET",
+      "bucket_name": "rehab-storage"
+    },
+    // Private per-sample eye tracking CSVs. Never bind this bucket to trainerhubgames.
+    {
+      "binding": "OCULOMOTOR_DATA",
+      "bucket_name": "oculomotor-data"
+    },
+    // Developer uploads stay private until scanning and an admin review approve the digest.
+    {
+      "binding": "GAME_QUARANTINE_BUCKET",
+      "bucket_name": "rehab-game-quarantine"
+    },
+    {
+      "binding": "GAME_RELEASE_BUCKET",
+      "bucket_name": "rehab-game-releases"
+    }
+  ]
+}

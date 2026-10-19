@@ -1,0 +1,28 @@
+// Worker "trainerhubgames": the isolated runner. Only the release bucket, read with GET/HEAD;
+// no D1, KV, private R2, auth or secrets. Public origin (C02): trainerhubgames.rainbowh9490.workers.dev.
+{
+  "name": "trainerhubgames",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-08-17",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS",
+    // Mirrors public/_routes.json, which the Pages deployment still uses.
+    "run_worker_first": [
+      "/games/*",
+      "/input/eye-tracking-1.0.0/*",
+      "/input/eye-tracking-1.1.0/*",
+      "!/runtime/*"
+    ],
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash"
+  },
+  "r2_buckets": [
+    {
+      "binding": "GAME_RELEASE_BUCKET",
+      "bucket_name": "rehab-game-releases"
+    }
+  ]
+}

@@ -9,6 +9,8 @@ packages/*/dist/
 apps/*/dist/
 apps/*/out/
 apps/*/.next/
+apps/*/.worker/
+.wrangler/
 apps/*/tsconfig.tsbuildinfo
 .turbo/
 apps/*/.turbo/
