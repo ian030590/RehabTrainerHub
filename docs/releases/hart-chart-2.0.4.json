@@ -1,0 +1,210 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.0.4",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.0.4/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.0.4/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/",
+  "publishedAt": "2026-10-19T14:58:54.985Z",
+  "verifiedAt": "2026-10-19T15:00:23.109Z",
+  "fileCount": 5,
+  "totalBytes": 659003,
+  "files": [
+    {
+      "path": "assets/index-uSmc-zsK.js",
+      "size": 611307,
+      "sha256": "abe47a16a447e9f265abb70a9a4608f7c22648263b45b8ba64a4dcfcc86d5d50",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DaPXwONC.css",
+      "size": 31081,
+      "sha256": "a81692bf2c892178696bf9d9431ed75c68be476fa397e55eae6aaee3bbbaeb32",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 458,
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "891ff48d13d59eed4576f8133cae15f0ba8e3803cd62f730dfdf9ea56a177e54",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15752,
+      "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.4",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+    },
+    "2.0.1": {
+      "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366"
+    },
+    "2.0.2": {
+      "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+    },
+    "2.0.3": {
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    },
+    "2.0.4": {
+      "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner ran `npm --prefix apps/rehabtrainerhub/games/hart-chart run build && node scripts/publish-official-game.mjs hart-chart` after the exact version and contentSha256 below were presented for approval",
+    "recordedAt": "2026-10-19T14:58:54.985Z",
+    "scope": "Publish and activate hart-chart@2.0.4 only",
+    "games": [
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.4",
+        "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command."
+  },
+  "rollback": {
+    "version": "2.0.3",
+    "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d",
+    "command": "node scripts/publish-official-game.mjs hart-chart --activate-version 2.0.3",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.3 shows coordinates as [row,col], lets words break across decoder lines and has no Chinese mode; saved settings that choose Chinese fall back to the defaults there."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hart-chart/2.0.4/",
+  "changes": [
+    "Decoder fields read [column,row] (first number across, second down); screen readers say the column first and the tutorial explains the new order. The chart and the coordinate data are unchanged, and logic/hartChart.ts keeps its pinned SHA-256",
+    "Each decoder word is one group that never breaks across lines, with a 14px space between words (10px on phones). Cells narrow to fit the longest word down to 28px, and a left or right dock widens, up to 55% of the workspace, when that minimum still does not fit",
+    "New setting 解碼文字 (characterSet): english (default) or chinese, independent of the interface language and saved in the result config",
+    "Chinese mode: 13 Traditional Chinese everyday phrases grouped by word, a seeded 100-cell chart (two copies of each phrase character, 78 common filler characters, no identical neighbours in a row), lang=zh-Hant glyphs and a 0.82 chart font factor; the QR screen URL carries characters=chinese",
+    "Chinese answers are typed with an input method and judged after composition ends; phonetic symbols while composing, Safari's repeated input event and a cancelled composition do not count as attempts",
+    "The tutorial's 「重設字母」 now matches the button label 「重置字母」",
+    "Scoring and the five summary values are unchanged"
+  ],
+  "sourceCommit": "fd835611397811c1fb402bb933cf6ce022b70199",
+  "platformDeploy": {
+    "commit": "fd835611",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39273146102",
+    "conclusion": "success",
+    "note": "The push redeployed the Hub and runner Workers because test scripts and the lockfile changed; their source did not change and no new capability is needed."
+  },
+  "tdd": {
+    "failingFirst": [
+      "scripts/check-hart-chart-migration.test.mjs: defaults lacked characterSet; logic/hartChineseChart.ts did not exist; version was 2.0.3",
+      "scripts/check-hart-chart-tutorial.test.mjs: the tutorial still read ［列,欄］ / [row, column]; rendering failed without the Chinese module, so the placeholder order, word groups, settings choice and input-method tests failed too",
+      "scripts/check-r2-settings-memory.test.mjs: version was 2.0.3"
+    ],
+    "browserFixture": "scripts/hart-chart-browser.mjs reads coordinates as [column,row], checks the screen-reader labels, adds --chinese (real composition events through CDP Input.imeSetComposition / Input.insertText: a wrong character, then the right one) and measures the decoder on every run: no word split across lines, no word outside the decoder, no sideways scrolling, cells >= 27.5px, coordinate text >= 7px, word gap wider than the cell gap. With --hard it presses Reset Letters until a word has 9+ fields."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "322/322 locally, including tsc for every game; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "naming, trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gates; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa, hub-functions, gamerunner, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Deploy workflow verify matrix (run 39273146102)"
+      }
+    ],
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game hart-chart passed 13 local flows on the 2.0.4 build: --lobby (752x485) with and without --hard and --chinese, --mobile --hard, --mobile --chinese --hard, --wide --windowed --hard, --wide --chinese --hard, --signed-in --english --chinese --hard, --signed-in --english --hard --small, --tablet --chinese --hard, --standalone --tablet --english --small --hard and --standalone --mobile --chinese. The 10-field word SANDCASTLE fit on one line at 752x485 (side dock 369px, cells 29.4px) and at 390x844 (cells 31.4px). Records saved only to local SQLite with config.characterSet.",
+    "dryRun": "node scripts/publish-official-game.mjs hart-chart --dry-run: 5 files, digest 751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09 (same bundle file names as the browser-tested build)"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-19T15:00:23.109Z",
+    "files": [
+      {
+        "path": "assets/index-uSmc-zsK.js",
+        "status": 200,
+        "size": 611307,
+        "sha256": "abe47a16a447e9f265abb70a9a4608f7c22648263b45b8ba64a4dcfcc86d5d50",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DaPXwONC.css",
+        "status": 200,
+        "size": 31081,
+        "sha256": "a81692bf2c892178696bf9d9431ed75c68be476fa397e55eae6aaee3bbbaeb32",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 458,
+        "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 405,
+        "sha256": "891ff48d13d59eed4576f8133cae15f0ba8e3803cd62f730dfdf9ea56a177e54",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 15752,
+        "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/hart-chart/2.0.4/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.4",
+      "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+    },
+    "catalog": {
+      "version": "2.0.4",
+      "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09",
+      "category": "vision"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game hart-chart passed 7 production flows against 2.0.4: --production-hub --lobby, --production-hub --lobby --mobile --hard (SANDCASTLE on one line, cells 31.4px), --production-hub --lobby --chinese --hard, --production-hub --lobby --wide --windowed --chinese, --production-hub --lobby --signed-in --english --chinese --hard, --remote --standalone --mobile --chinese and --remote --standalone --tablet --english --hard. Chinese runs typed through real composition events; every run measured the decoder with no split words and no sideways scrolling. /api/* was intercepted into local SQLite only; no production account or training record was created.",
+    "screenshots": [
+      "docs/migrations/hart-chart-decoder-text/production-desktop-chinese.png",
+      "docs/migrations/hart-chart-decoder-text/production-mobile-long-word.png",
+      "docs/migrations/hart-chart-decoder-text/desktop-long-word.png",
+      "docs/migrations/hart-chart-decoder-text/small-window-side-dock-en.png",
+      "docs/migrations/hart-chart-decoder-text/mobile-long-word.png",
+      "docs/migrations/hart-chart-decoder-text/desktop-chinese-ime.png",
+      "docs/migrations/hart-chart-decoder-text/mobile-chinese.png",
+      "docs/migrations/hart-chart-decoder-text/chinese-settings.png",
+      "docs/migrations/hart-chart-decoder-text/chinese-results.png",
+      "docs/migrations/hart-chart-decoder-text/tablet-chinese-qr.png"
+    ]
+  }
+}
