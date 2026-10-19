@@ -152,7 +152,7 @@ jobs:
           VITE_AI_ASSET_BASE_URL: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL || '' }}
 
       - name: Ensure and deploy Cloudflare Pages projects
-        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET != 'workers' }}
+        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET == 'pages' }}
         timeout-minutes: 15
         run: node scripts/deploy-cloudflare-pages.mjs --branch=${{ github.ref_name }} --production-branch=main
         env:
@@ -172,10 +172,10 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GAME_RELEASE_OWNER_USER_ID: ${{ vars.GAME_RELEASE_OWNER_USER_ID }}
 
-      # Repository variable CLOUDFLARE_DEPLOY_TARGET=workers switches production to Workers
-      # (docs/workers-migration-report.md). Only main deploys them; manual runs elsewhere skip.
+      # Production runs on Workers; the Pages projects were deleted (docs/workers-migration-report.md), so only
+      # CLOUDFLARE_DEPLOY_TARGET=pages selects Pages. Only main deploys Workers; manual runs elsewhere skip.
       - name: Deploy Cloudflare Workers
-        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET == 'workers' && github.ref == 'refs/heads/main' }}
+        if: ${{ vars.CLOUDFLARE_DEPLOY_TARGET != 'pages' && github.ref == 'refs/heads/main' }}
         timeout-minutes: 15
         run: node scripts/deploy-cloudflare-workers.mjs
         env:

@@ -5,7 +5,7 @@ This Cloudflare Worker (`trainerhubgames`) is the untrusted-game execution bound
 session cookie, API token, or secret binding. Its only binding is the read path
 to the published `GAME_RELEASE_BUCKET` R2 bucket.
 
-The production origin is `https://trainerhubgames.rainbowh9490.workers.dev`; the old Pages project `https://trainerhub-user-games.pages.dev` stays up for installed PWAs. A custom
+The production origin is `https://trainerhubgames.rainbowh9490.workers.dev`; the old Pages project `trainerhub-user-games` was deleted on 2026-10-19. A custom
 domain may be attached later, but it **must use a registrable domain different
 from `trainerhub.cc`**. Do not use a host such as `games.trainerhub.cc`, because
 that weakens the intended site/cookie boundary.

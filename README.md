@@ -134,8 +134,8 @@ This project provides general information and self-practice tools. It is not a m
 
 | 資源類別 | 名稱 / Binding | 用途 |
 | --- | --- | --- |
-| Pages | `rehabtrainerhub` (`trainerhub.cc`) | Hub 主平台與 API Functions |
-| Pages | `trainerhub-user-games` (`trainerhub-user-games.pages.dev`) | 隔離遊戲執行環境與靜態 Runtime |
+| Worker | `trainerhub` (`trainerhub.cc`) | Hub 主平台與 API |
+| Worker | `trainerhubgames` (`trainerhubgames.rainbowh9490.workers.dev`) | 隔離遊戲執行環境與靜態 Runtime |
 | D1 Database | `rehab_db` (`REHAB_DB`) | 使用者、紀錄、審核與遊戲發布資料庫 |
 | R2 Bucket | `rehab-storage` (`ASSET_BUCKET`) | 一般後台靜態資產 |
 | R2 Bucket | `rehab-game-quarantine` (`GAME_QUARANTINE_BUCKET`) | 開發者上傳待審遊戲隔離暫存區 |

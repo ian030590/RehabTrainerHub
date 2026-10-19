@@ -134,11 +134,13 @@ test('production entry points match the owner-approved C02 origins', () => {
   assert.deepEqual(FindProductionEntryProblems(apps, registry), []);
   assert.equal(runner.siteUrl, 'https://trainerhubgames.rainbowh9490.workers.dev');
   assert.equal(runner.config.workers_dev, true);
-  // zone_id avoids a Zone:Read lookup with the CI token. wrangler replaces every route of the Worker on deploy,
-  // so the trainerhub.cc route must stay listed until a custom domain is attached (it cannot replace the Pages record).
-  assert.deepEqual(hub.config.routes, [hub.hostname, ...hub.redirectHostnames]
-    .map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })));
-  // The old Pages runner keeps serving installed PWAs until C12.
+  // zone_id avoids a Zone:Read lookup with the CI token. trainerhub.cc is attached as a Worker custom domain;
+  // wrangler replaces every route and custom domain of the Worker with this list on deploy.
+  assert.deepEqual(hub.config.routes, [
+    { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
+    ...hub.redirectHostnames.map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })),
+  ]);
+  // pages-apps.mjs still names the deleted Pages runner for an explicit CLOUDFLARE_DEPLOY_TARGET=pages deploy.
   assert.equal(runner.pagesApp.deploymentUrl, 'https://trainerhub-user-games.pages.dev');
 
   const unroutedHub = WithConfig(hub, (config) => { delete config.routes; });
@@ -367,14 +369,15 @@ test('the real repository dry run deploys both Workers in order', () => {
   assert.ok(runner > 0 && hub > runner, output);
 });
 
-test('the deploy workflow keeps Pages by default and switches to Workers only by repository variable', () => {
+test('the deploy workflow deploys Workers by default and Pages only when the repository variable asks for it', () => {
   const deploy = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
   const ci = readFileSync(resolve(defaultRepoRoot, '.github/workflows/ci.yml'), 'utf8').replaceAll('\r\n', '\n');
   const pagesStep = StepBlock(deploy, 'Ensure and deploy Cloudflare Pages projects');
   const workersStep = StepBlock(deploy, 'Deploy Cloudflare Workers');
-  assert.match(pagesStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET != 'workers' \}\}/);
+  // The Pages projects were deleted; removing the variable must not recreate them.
+  assert.match(pagesStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET == 'pages' \}\}/);
   // workflow_dispatch can run on any branch; only main may replace the production Workers.
-  assert.match(workersStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET == 'workers' && github\.ref == 'refs\/heads\/main' \}\}/);
+  assert.match(workersStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET != 'pages' && github\.ref == 'refs\/heads\/main' \}\}/);
   assert.match(workersStep, /run: node scripts\/deploy-cloudflare-workers\.mjs\n/);
   for (const name of ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'AUTH_SESSION_SECRET', 'AUTH_STATE_SECRET',
     'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TURNSTILE_SECRET_KEY', 'GAME_RELEASE_OWNER_USER_ID']) {

@@ -77,11 +77,12 @@ test('all 40 score contracts accept bounded numeric rounds and reject unsafe dat
   }
 });
 
-test('only canonical Hub, previews, and local development are trusted Hub origins', () => {
+test('only the canonical Hub and local development are trusted Hub origins', () => {
   assert.equal(embeddedTraining.IsHubOrigin('https://trainerhub.cc/train/'), true);
+  // The Pages project was deleted, so anyone could claim rehabtrainerhub.pages.dev previews.
   assert.equal(
     embeddedTraining.IsHubOrigin('https://deployment-id.rehabtrainerhub.pages.dev/train/'),
-    true,
+    false,
   );
   assert.equal(embeddedTraining.IsHubOrigin('https://rehabtrainerhub.pages.dev/train/'), false);
   assert.equal(embeddedTraining.IsHubOrigin('https://visiontrainer.pages.dev/'), false);

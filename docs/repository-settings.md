@@ -11,7 +11,7 @@
 
 ## Cloudflare Pages
 
-正式部署已改為 Workers `trainerhub`／`trainerhubgames`（見 `docs/workers-migration-report.md`）；下表 Pages 專案保留為回退。
+正式部署為 Workers `trainerhub`／`trainerhubgames`（見 `docs/workers-migration-report.md`）。下表兩個 Pages 專案已於 2026-10-19 刪除；只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=pages` 時，部署流程才會重新建立並部署它們。
 
 | Project | Role | Output |
 | --- | --- | --- |
@@ -45,11 +45,11 @@
 
 ## Domains 與退役流程
 
-- `trainerhub.cc` 由 Worker `trainerhub` 的 route 接手，DNS 記錄仍是 Pages 專案 `rehabtrainerhub` 的 CNAME；wrangler deploy 會以 config 取代 Worker 的全部 routes。回退與退役步驟見搬遷報告第 6、7 節。
-- Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，舊的 `trainerhub-user-games.pages.dev` 保留給已安裝的 PWA；兩者都與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
-- 四個退役 trainer custom domains 綁到 `rehabtrainerhub`，由
+- `trainerhub.cc` 是 Worker `trainerhub` 的 custom domain，DNS 記錄由 Cloudflare 依 Worker 管理；wrangler deploy 會以 config 取代 Worker 的全部 routes 與 custom domains。回退方式見搬遷報告第 6 節。
+- Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
+- 四個退役 trainer 子網域保留為 Worker `trainerhub` 的 routes，目前沒有 DNS 記錄；若重新加上 proxied 記錄，由
   `functions/_middleware.js` 對任何路徑回 301。
-- `scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先清除舊
+- 只在 Pages 部署流程（`CLOUDFLARE_DEPLOY_TARGET=pages`）中，`scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先清除舊
   `motortrainer`、`visiontrainer`、`braintrainer`、`mouthtrainer` Pages projects
   的非現行 deployments，再解除 custom domains、刪除舊 projects，並將這些
   domains 加到 Hub。此流程需要 Pages Write 權限。

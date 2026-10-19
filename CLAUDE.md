@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **測試先行**：先寫能反映使用者行為的測試並確認它因需求未實作而失敗，再改產品碼；只寫讓測試通過的最小實作。不得刪除既有功能或放寬安全檢查來讓測試通過。
 - 發布 R2 遊戲（`publish:game`）會直接公開並切換 current，必須先取得擁有者對**精確 version／contentSha256** 的核准。未核准時只用 `--dry-run`。
 - **只在 `main` 進行**：commit 後直接 push 到 `main`，不開新的功能分支。舊 `feat/*`、`fix/*` 分支都已併入 `main`，留作歷史紀錄，不刪除也不再推送（見 `AGENTS.md`「分支政策」）。
-- `main` push 會觸發自動部署（純文件變更不會）：repo variable `CLOUDFLARE_DEPLOY_TARGET=workers` 時部署 Workers，否則部署 Pages。若變更把新遊戲登記進 `officialGameReleases.json`，須先完成該版核准與 R2 發布，再 push；不要從含未發布遊戲候選的工作樹手動部署。
+- `main` push 會觸發自動部署（純文件變更不會）：預設部署 Workers；只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=pages` 才部署 Pages（兩個 Pages 專案已刪除，會被重新建立）。若變更把新遊戲登記進 `officialGameReleases.json`，須先完成該版核准與 R2 發布，再 push；不要從含未發布遊戲候選的工作樹手動部署。
 - 對外文案遵守台灣醫療法規限制（用「練習／活動／當次紀錄」，不得宣稱治療、診斷、療效）；細節見 `AGENTS.md`。
 
 ## 常用指令
@@ -45,14 +45,14 @@ npm run test:cloudflare-deploy
 - `npm run test:seo`：SEO／文章預渲染（不在 CI matrix，SEO 變更須本機跑）。
 - 本機 Brave 整合（不進 Linux CI，只寫本機 SQLite）：`node scripts/check-r2-game-browser.mjs --game <gameId> --lobby`，常用旗標 `--mobile`、`--tablet`、`--signed-in --english`、`--session-failure`、`--revoke`、`--standalone`；`--remote`／`--production-hub` 才讀正式站。並行 build 時用 `HUB_OUTPUT_ROOT`／`RUNNER_OUTPUT_ROOT` 指向固定輸出副本。
 - 發布：`node scripts/publish-official-game.mjs <gameId> --dry-run`（直接呼叫腳本，避免 npm 吞掉旗標）；回退 `--activate-version <ver>`。同遊戲發布／回退不可平行。
-- Workers（Worker `trainerhub`／`trainerhubgames`，設定在 `apps/*/wrangler.workers.jsonc`）：CI 以 `scripts/deploy-cloudflare-workers.mjs` 部署（`--dry-run` 只列指令），`npm run build:workers` 編譯 Functions，本機 `npm run test:workers-local`。Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑，回退步驟見 `docs/workers-migration-report.md`。
+- Workers（Worker `trainerhub`／`trainerhubgames`，設定在 `apps/*/wrangler.workers.jsonc`）：CI 以 `scripts/deploy-cloudflare-workers.mjs` 部署（`--dry-run` 只列指令），`npm run build:workers` 編譯 Functions，本機 `npm run test:workers-local`。Pages 專案已於 2026-10-19 刪除，`wrangler.toml` 留作 binding 對照；回退方式（Worker 版本回退）見 `docs/workers-migration-report.md`。
 
 ## 架構總覽
 
-npm workspace + Turborepo，兩個 Cloudflare Workers app（舊 Pages 專案保留為回退）：
+npm workspace + Turborepo，兩個 Cloudflare Workers app（舊 Pages 專案已於 2026-10-19 刪除）：
 
 - **`apps/rehabtrainerhub`**（`trainerhub.cc`）：Next.js App Router Hub（`app/`）+ Pages Functions 格式的 `functions/`（由 `build:workers` 編譯進 Worker；auth/session、`/api/records`、`/api/official-game-sessions`、投稿與審核 API、`_middleware.js`）。綁定 D1 `REHAB_DB`、KV、四個 R2 bucket。D1 migrations 在 `migrations/`。
-- **`apps/usergamerunner`**（`trainerhubgames.rainbowh9490.workers.dev`；舊 `trainerhub-user-games.pages.dev` 保留給已安裝的 PWA）：隔離執行站，只綁 `rehab-game-releases`（唯讀 GET/HEAD），從 R2 提供遊戲資產、版本化 PWA（`/games/{gameId}/{version}/`）、第三方通訊 bridge（`runtime/`）與相機輸入代理（`/input/hand-tracking-*`、`/input/eye-tracking-*`）。**嚴禁**綁 D1／KV／使用者資料。package CSP 單一來源為 `functions/[[path]].js` 的 `packageContentSecurityPolicy`。
+- **`apps/usergamerunner`**（`trainerhubgames.rainbowh9490.workers.dev`）：隔離執行站，只綁 `rehab-game-releases`（唯讀 GET/HEAD），從 R2 提供遊戲資產、版本化 PWA（`/games/{gameId}/{version}/`）、第三方通訊 bridge（`runtime/`）與相機輸入代理（`/input/hand-tracking-*`、`/input/eye-tracking-*`）。**嚴禁**綁 D1／KV／使用者資料。package CSP 單一來源為 `functions/[[path]].js` 的 `packageContentSecurityPolicy`。
 - **`apps/rehabtrainerhub/games/<gameId>/`**：每款遊戲各自是 workspace（Vite entry、runtime、規則、i18n）。目錄登記在 `games/catalog.ts`。
 - **`packages/ui/src`**：Hub 共用 UI、auth、storage、訊息協定；`officialGameReleases.json` 登記已遷移 R2 遊戲（名稱、可信 origin，**不含** current 版本）。
 - **`packages/game-settings`**：Hub／runner 用的 settings JSON schema 驗證，不是遊戲 SDK。
