@@ -134,9 +134,12 @@ test('production entry points match the owner-approved C02 origins', () => {
   assert.deepEqual(FindProductionEntryProblems(apps, registry), []);
   assert.equal(runner.siteUrl, 'https://trainerhubgames.rainbowh9490.workers.dev');
   assert.equal(runner.config.workers_dev, true);
-  // zone_id avoids a Zone:Read lookup with the CI token.
-  assert.deepEqual(hub.config.routes, [hub.hostname, ...hub.redirectHostnames]
-    .map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })));
+  // zone_id avoids a Zone:Read lookup with the CI token. The Hub hostname is a Worker custom domain,
+  // so its DNS record belongs to the Worker instead of pointing at the retired Pages project.
+  assert.deepEqual(hub.config.routes, [
+    { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
+    ...hub.redirectHostnames.map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })),
+  ]);
   // The old Pages runner keeps serving installed PWAs until C12.
   assert.equal(runner.pagesApp.deploymentUrl, 'https://trainerhub-user-games.pages.dev');
 
@@ -267,6 +270,39 @@ test('asset responses keep Pages defaults while Function responses stay untouche
   assert.equal(generated.headers.get('access-control-allow-origin'), null);
   assert.equal(generated.headers.get('referrer-policy'), null);
   assert.deepEqual(assetCalls, ['/', '/about', '/missing/', '/games/x/']);
+});
+
+test('text assets declare UTF-8 like Pages so Chinese llms.txt is not misread', async () => {
+  const types = {
+    '/llms.txt': 'text/plain',
+    '/': 'text/html',
+    '/missing/': 'text/html',
+    '/legacy.css': 'text/css; charset=iso-8859-1',
+    '/settings.json': 'application/json',
+    '/logo.svg': 'image/svg+xml',
+  };
+  const assets = {
+    async fetch(request) {
+      const { pathname } = new URL(request.url);
+      return new Response('x', { status: pathname === '/missing/' ? 404 : 200, headers: { 'Content-Type': types[pathname] } });
+    },
+  };
+  const worker = CreatePagesCompatibleWorker({
+    async fetch(request, env) {
+      if (new URL(request.url).pathname === '/api/text') return new Response('fn', { headers: { 'Content-Type': 'text/plain' } });
+      return env.ASSETS.fetch(request);
+    },
+  });
+  const read = async (path) => (await worker.fetch(new Request(`https://trainerhub.cc${path}`), { ASSETS: assets }, { waitUntil() {} }))
+    .headers.get('content-type');
+
+  assert.equal(await read('/llms.txt'), 'text/plain; charset=utf-8');
+  assert.equal(await read('/'), 'text/html; charset=utf-8');
+  assert.equal(await read('/missing/'), 'text/html; charset=utf-8');
+  assert.equal(await read('/legacy.css'), 'text/css; charset=iso-8859-1', 'a declared charset is kept');
+  assert.equal(await read('/settings.json'), 'application/json');
+  assert.equal(await read('/logo.svg'), 'image/svg+xml');
+  assert.equal(await read('/api/text'), 'text/plain', 'Function responses keep their own headers');
 });
 
 test('deploy dry-run migrates D1, deploys the runner before the Hub, and hands secrets over only by file', (context) => {

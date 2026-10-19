@@ -21,7 +21,7 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 
 | 檔案 | 內容 |
 | --- | --- |
-| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；五條 routes；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
+| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；`trainerhub.cc` 起初用 route 接手，切換後改為 Worker custom domain（第 5 節），四個退役子網域維持 routes；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
 | `apps/usergamerunner/wrangler.workers.jsonc` | Worker `trainerhubgames`。只綁 `rehab-game-releases`；`workers_dev: true`；`run_worker_first` 對應 `public/_routes.json`；`single-page-application`。 |
 | `apps/usergamerunner/package.json`、`packages/ui/src/officialGameReleases.json`、`functions/api/games.js` | runner origin 改為 `https://trainerhubgames.rainbowh9490.workers.dev`（十款 R2 遊戲的可信 origin 與 Hub 預設值）。 |
 | `apps/*/worker/index.js`、`workers/shared/pagesAssetCompat.js` | Worker 入口載入 `wrangler pages functions build` 編譯的原 Functions；相容層只包住 `ASSETS`，補回 Pages 對靜態檔的預設標頭、308 轉址與 404 `no-store`。 |
@@ -46,6 +46,7 @@ Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑。
 | Hub 不存在的頁面 | `404.html`，`Cache-Control: no-store` | 空白 404 | `not_found_handling: 404-page`，相容層設 `no-store` |
 | Runner 不存在的路徑 | 回 `index.html`（200） | 404 | `single-page-application` |
 | `_routes.json` | Pages 自用，不公開 | 會變成可下載檔案 | `.assetsignore` |
+| 文字檔編碼 | `text/html`、`text/plain` 帶 `charset=utf-8` | 不帶 charset，含中文的 `llms.txt` 可能被瀏覽器誤判編碼 | 相容層對沒有 charset 的 `text/*` 補上 `charset=utf-8`（切換後比對發現） |
 
 評估後未處理的差異：非 HTML 靜態檔的瀏覽器快取由 `max-age=14400` 變成 `max-age=0, must-revalidate`，只增加重新驗證次數；runner 直接由 assets 提供的 `/`、`/robots.txt` 沒有 Pages 預設的 CORS 標頭，這些路徑沒有跨來源讀取需求。
 
@@ -66,8 +67,8 @@ Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑。
 
 ## 6. 回退
 
-1. Workers & Pages → `trainerhub` → Settings → Domains & Routes，刪除五條 routes（或 `npx wrangler delete trainerhub`）。Pages 的自訂網域與 DNS 沒有動，流量立即回到最後一次 Pages 部署；那一版 Hub 指向舊 runner `trainerhub-user-games.pages.dev`，兩者仍可一起運作。
-2. 刪除 repo variable `CLOUDFLARE_DEPLOY_TARGET`，之後的 push 改回部署 Pages。若要從新 commit 部署 Pages，先 revert C02 的 origin 變更，讓 Hub 指回舊 runner。
+1. 程式回退：Workers & Pages → `trainerhub`（或 `trainerhubgames`）→ Deployments 選前一版，或 `npx wrangler rollback --name trainerhub`。
+2. `trainerhub.cc` 改為 Worker custom domain 後，DNS 記錄由 Worker 管理，刪除 routes 不再讓流量回到 Pages。要回到 Pages，必須在 Pages 專案還存在時移除 Worker custom domain，重建指向 `rehabtrainerhub.pages.dev` 的 proxied CNAME，並在 Pages 重新驗證自訂網域，再刪除 repo variable `CLOUDFLARE_DEPLOY_TARGET`。最後一次 Pages 部署的 Hub 指向舊 runner `trainerhub-user-games.pages.dev`。兩個 Pages 專案刪除後，只剩第 1 步。
 3. D1／R2 沒有改變結構或內容，回退不需要還原資料。
 
 ## 7. 後續

@@ -1,5 +1,5 @@
-// Worker "trainerhub". wrangler.toml (Pages) stays the rollback deployment until C12
-// (docs/workers-migration-report.md).
+// Worker "trainerhub". Bindings mirror the old Pages config in wrangler.toml (scripts/workers-apps.mjs);
+// rollback steps are in docs/workers-migration-report.md.
 {
   "name": "trainerhub",
   "main": "worker/index.js",
@@ -7,9 +7,10 @@
   // Only approved hostnames serve the Hub: no workers.dev or version preview URLs.
   "workers_dev": false,
   "preview_urls": false,
-  // Routes win over the Pages custom domains; deleting them sends traffic back to Pages.
+  // trainerhub.cc is a Worker custom domain, so its DNS record belongs to the Worker (CI replaces the old Pages record).
+  // Retired trainer hostnames stay routes and only answer if they get DNS records again.
   "routes": [
-    { "pattern": "trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "trainerhub.cc", "custom_domain": true, "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "motor.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "vision.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "brain.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },

@@ -29,6 +29,9 @@ function WithPagesAssetDefaults(response) {
   for (const [name, value] of pagesAssetDefaults) {
     if (!headers.has(name)) headers.set(name, value);
   }
+  // Pages labelled text assets as UTF-8; Workers omit the charset, so browsers may misread Chinese text files.
+  const contentType = headers.get('Content-Type');
+  if (contentType?.startsWith('text/') && !/;\s*charset=/i.test(contentType)) headers.set('Content-Type', `${contentType}; charset=utf-8`);
   if (response.status === 404) headers.set('Cache-Control', 'no-store');
   // Workers answer html_handling redirects with 307; Pages used a permanent 308.
   const status = response.status === 307 ? 308 : response.status;
