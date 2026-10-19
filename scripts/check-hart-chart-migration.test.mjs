@@ -69,7 +69,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.2');
+  assert.equal(pkg.version, '2.0.3');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {

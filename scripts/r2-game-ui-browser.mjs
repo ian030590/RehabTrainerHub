@@ -59,4 +59,17 @@ export async function CheckConfirmationPresentation(game) {
   assert.ok(layout.left >= 15 && layout.right <= layout.width - 15 && layout.top >= 15 && layout.bottom <= layout.height - 15,
     JSON.stringify(layout));
   assert.ok(await game('document.documentElement.scrollWidth <= innerWidth'));
+  // Hit testing skips inert layers, so a tap can reach a button that is painted underneath one.
+  // Lift inertness for this synchronous probe to find what the player actually sees on top.
+  const hidden = await game(`(() => {
+    const inert = [...document.querySelectorAll('[inert]')];
+    inert.forEach(element => { element.inert = false; });
+    const hidden = [...document.querySelectorAll('.training-confirmation footer button')].filter(button => {
+      const rect = button.getBoundingClientRect();
+      return !button.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+    }).map(button => button.textContent);
+    inert.forEach(element => { element.inert = true; });
+    return hidden;
+  })()`);
+  assert.deepEqual(hidden, [], 'Confirmation buttons must be painted above the tutorial scene.');
 }

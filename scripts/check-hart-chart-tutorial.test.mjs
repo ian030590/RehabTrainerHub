@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { posix, resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
 
@@ -42,8 +43,75 @@ test('Hart tutorial renders the training chart, complete decoder and tools with 
   }
 });
 
-async function RenderHart(phase, settings, language) {
+test('the final confirmation is painted above the inert training scene', async () => {
+  const scene = await RenderHart('rules', { chartSize: 'medium', rounds: 10 }, 'zh', { tourFinished: true });
+  const confirmation = scene.find('training-panel');
+  assert.ok(confirmation, 'The finished tour shows the final confirmation.');
+  const sheets = await LoadBundledCss('main.tsx');
+  const confirmationLayer = Number(WinningDeclaration(sheets, confirmation.props.className.split(' '), 'z-index'));
+  const trainingLayer = Number(WinningDeclaration(sheets, scene.find('hart-page').props.className.split(' ').filter(Boolean), 'z-index'));
+  assert.ok(confirmationLayer > trainingLayer,
+    `Confirmation z-index ${confirmationLayer} must exceed the training scene ${trainingLayer}, or players only see an unusable training screen.`);
+});
+
+// Style sheets in the order Vite bundles them: depth-first through relative imports from the entry.
+async function LoadBundledCss(entry) {
+  const sheets = [];
+  const seen = new Set();
+  const visit = async path => {
+    if (seen.has(path)) return;
+    seen.add(path);
+    if (path.endsWith('.css')) { sheets.push(await readFile(resolve(gameRoot, path), 'utf8')); return; }
+    const source = await readFile(resolve(gameRoot, path), 'utf8');
+    for (const [, specifier] of source.matchAll(/^import\s+(?:[^'"]*?from\s+)?['"](\.[^'"]+)['"]/gm)) {
+      const target = posix.join(posix.dirname(path), specifier);
+      const file = [target, `${target}.tsx`, `${target}.ts`].find(candidate => /\.(css|tsx?)$/.test(candidate) && existsSync(resolve(gameRoot, candidate)));
+      if (file) await visit(file);
+    }
+  };
+  await visit(entry);
+  return sheets;
+}
+
+// Resolves a property for an element with these classes from top-level class-only rules: higher specificity wins, then the later rule.
+function WinningDeclaration(sheets, classes, property) {
+  let winner = null;
+  for (const sheet of sheets) for (const rule of TopLevelRules(sheet)) {
+    const value = rule.body.match(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+)`))?.[1].trim();
+    if (!value) continue;
+    for (const selector of rule.selector.split(',').map(part => part.trim())) {
+      if (!/^(\.[\w-]+)+$/.test(selector)) continue;
+      const required = selector.slice(1).split('.');
+      if (required.every(name => classes.includes(name)) && required.length >= (winner?.specificity ?? 0)) winner = { specificity: required.length, value };
+    }
+  }
+  return winner?.value;
+}
+
+function TopLevelRules(css) {
+  const rules = [];
+  const source = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let depth = 0;
+  let start = 0;
+  let selector = '';
+  for (let index = 0; index < source.length; index++) {
+    if (source[index] === '{') {
+      if (depth === 0) { selector = source.slice(start, index).trim(); start = index + 1; }
+      depth++;
+    } else if (source[index] === '}') {
+      depth--;
+      if (depth === 0) {
+        if (!selector.startsWith('@')) rules.push({ selector, body: source.slice(start, index) });
+        start = index + 1;
+      }
+    }
+  }
+  return rules;
+}
+
+async function RenderHart(phase, settings, language, { tourFinished = false } = {}) {
   const changes = [];
+  let finishTour = tourFinished;
   const { ChartScale } = await LoadModule('settings.ts');
   const dependencies = {
     './settings': await LoadModule('settings.ts'),
@@ -55,6 +123,8 @@ async function RenderHart(phase, settings, language) {
         if (value === 'menu') value = phase;
         if (value?.rounds) value = settings;
         if (initial === 1) value = ChartScale(settings.chartSize);
+        // tourFinished is the component's first false state.
+        if (initial === false && finishTour) { finishTour = false; value = true; }
         return [value, next => changes.push(next)];
       },
       useRef: current => ({ current }), useMemo: create => create(), useEffect() {}, useCallback: callback => callback,

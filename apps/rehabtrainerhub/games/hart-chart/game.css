@@ -19,7 +19,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
 .game-settings-dialog::backdrop, .hart-qr-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
 .game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
-.hart-tutorial-ready { z-index: 1200; }
+/* Two classes, so the later rules.css .training-panel z-index cannot drop it below .hart-page. */
+.training-panel.hart-tutorial-ready { z-index: 1200; }
 .hart-display { width: 100%; height: 100%; display: grid; place-items: center; padding: 8px; background: white; }
 .hart-share-url { overflow-wrap: anywhere; font-size: .85rem; }
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
