@@ -6,7 +6,7 @@ import { BuildGameScore, type DrivingTrial } from './score';
 import { DrivingResults } from './results/DrivingResults';
 import { DrivingTutorial } from './rules/DrivingTutorial';
 import { DrivingWheelSetup } from './input/DrivingWheelSetup';
-import { IsDrivingControlModeAvailable, IsDrivingWheelCalibrationUsable, useDrivingInputCapabilities, useDrivingWheelCalibration } from './input/drivingInputCapabilities';
+import { ChooseDrivingControlMode, GetDrivingControlHint, IsDrivingControlModeAvailable, IsDrivingWheelCalibrationUsable, useDrivingInputCapabilities, useDrivingLastInput, useDrivingWheelCalibration } from './input/drivingInputCapabilities';
 import { DisposeDrivingRehabRuntime } from './lifecycle/driving-runtime-lifecycle';
 import { PrepareAudioFeedback, DisposeAudioFeedback, PlayMidiMusic, StopMidiMusic } from './runtime/soundManager';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
@@ -24,11 +24,20 @@ export function DrivingRehabGame() {
     return StopMidiMusic;
   }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
-  const [settings, setSettings] = useState<DrivingSettings>({ ...defaultSettings });
+  const capabilities = useDrivingInputCapabilities();
+  const lastInput = useDrivingLastInput(phase === 'menu');
+  const [controlModeChosen, setControlModeChosen] = useState(false);
+  const [settings, setSettings] = useState<DrivingSettings>(() => ({
+    ...defaultSettings,
+    controlMode: ChooseDrivingControlMode({ capabilities, current: defaultSettings.controlMode, lastInput: null, playerChosen: false }),
+  }));
+  const nextControlMode = ChooseDrivingControlMode({ capabilities, current: settings.controlMode, lastInput, playerChosen: controlModeChosen });
+  useEffect(() => {
+    if (phase === 'menu' && nextControlMode !== settings.controlMode) setSettings(current => ({ ...current, controlMode: nextControlMode }));
+  }, [phase, nextControlMode, settings.controlMode]);
   const [results, setResults] = useState<DrivingTrial[]>([]);
   const [error, setError] = useState(false);
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
-  const capabilities = useDrivingInputCapabilities();
   const calibration = useDrivingWheelCalibration(capabilities.wheelDevice);
   const ready = IsDrivingControlModeAvailable(settings.controlMode, capabilities)
     && (settings.controlMode !== 'wheel' || calibration.calibrated);
@@ -42,7 +51,7 @@ export function DrivingRehabGame() {
   phaseRef.current = phase;
   useEffect(() => OnSavedSettings(saved => {
     const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
-    if (restored && phaseRef.current === 'menu') setSettings(restored);
+    if (restored && phaseRef.current === 'menu') { setSettings(restored); setControlModeChosen(true); }
   }), []);
   const stopRuntime = useCallback(() => {
     generationRef.current++;
@@ -130,6 +139,17 @@ export function DrivingRehabGame() {
   const difficultyLabels = { easy: en ? 'Easy' : '簡單', medium: en ? 'Medium' : '中等', hard: en ? 'Hard' : '困難' };
   const qualityLabels = { high: en ? 'High' : '高', medium: en ? 'Medium' : '中', low: en ? 'Low' : '低' };
   const controlLabels = { arrow: en ? 'Arrow keys' : '方向鍵', wasd: en ? 'WASD keys' : 'WASD 鍵', wheel: en ? 'Steering wheel' : '方向盤', touch: en ? 'Touch' : '觸控' };
+  const controlStatus = {
+    'press-key': en
+      ? `Press any key on your keyboard to turn on keyboard controls, then confirm settings.${capabilities.touchAvailable ? ' To use the touchscreen, choose Touch.' : ''}`
+      : `按一下鍵盤上的任一鍵，啟用鍵盤操作後即可確認設定。${capabilities.touchAvailable ? '使用觸控螢幕請改選「觸控」。' : ''}`,
+    'keyboard-ready': settings.controlMode === 'wasd'
+      ? (en ? 'Keyboard detected. Drive with the W, A, S and D keys.' : '已偵測到鍵盤，用 W、A、S、D 鍵操作。')
+      : (en ? 'Keyboard detected. Drive with the arrow keys.' : '已偵測到鍵盤，用方向鍵操作。'),
+    'touch-ready': en ? 'Touchscreen detected. Drive with the on-screen wheel and pedals.' : '已偵測到觸控螢幕，用畫面上的方向盤和踏板操作。',
+    'no-touch': en ? 'No touchscreen detected on this device. Choose another control method.' : '這台裝置沒有偵測到觸控螢幕，請改選其他操作裝置。',
+    wheel: en ? 'Follow the wheel calibration steps below to connect and calibrate the wheel.' : '請依下方「方向盤校正」的步驟連接並校正方向盤。',
+  }[GetDrivingControlHint(settings.controlMode, capabilities)];
   const summaryItems = [
     { label: en ? 'Difficulty' : '難度', value: difficultyLabels[settings.difficulty] },
     { label: en ? 'Rendering quality' : '畫面品質', value: qualityLabels[settings.renderQuality] },
@@ -161,18 +181,19 @@ export function DrivingRehabGame() {
               onChange={event => setSettings(current => ({ ...current, redFlashEnabled: event.target.checked }))} /> {en ? 'Hazard red-flash cue' : '危險紅光提示'}</label>
           </section>
           <section className="training-setting"><h3>{en ? 'Controls' : '控制方式'}</h3>
-            <p className="driving-input-status" role="status">{en ? 'Press any keyboard key to enable keyboard controls. Touch requires a touchscreen. Connect a supported steering wheel and press its button to detect it.' : '按下任一鍵以確認鍵盤。觸控需有觸控螢幕；方向盤需連接支援的裝置，並按下裝置按鈕以偵測。'}</p>
+            <p id="driving-control-status" className="driving-input-status" role="status">{controlStatus}</p>
             <label>{en ? 'Control method' : '操作裝置'}<select name="controlMode" value={settings.controlMode}
-              onChange={event => setSettings(current => ({ ...current, controlMode: event.target.value as DrivingSettings['controlMode'] }))}>
+              onChange={event => { setControlModeChosen(true); setSettings(current => ({ ...current, controlMode: event.target.value as DrivingSettings['controlMode'] })); }}>
               {Object.entries(controlLabels).map(([value, label]) => <option key={value} value={value}
                 disabled={!IsDrivingControlModeAvailable(value as DrivingSettings['controlMode'], capabilities)}>{label}</option>)}
             </select></label>
+            {settings.controlMode !== 'wheel' && <p>{en ? 'To use a steering wheel, connect a supported wheel and press any button on it.' : '使用方向盤：連接支援的方向盤後，按一下方向盤上的任一按鈕。'}</p>}
             <button type="button" className="btn btn-ghost driving-rescan-button" onClick={capabilities.rescan}>{en ? 'Rescan devices' : '重新偵測裝置'}</button>
           </section>
           {settings.controlMode === 'wheel' && <DrivingWheelSetup capabilities={capabilities} calibration={calibration} />}
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button type="button" className="btn btn-primary" disabled={!ready} onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+          <button type="button" className="btn btn-primary" disabled={!ready} aria-describedby="driving-control-status" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button type="button" className="btn btn-ghost" onClick={exit}>{en ? 'Back' : '返回'}</button>
         </div></footer>
       </form>

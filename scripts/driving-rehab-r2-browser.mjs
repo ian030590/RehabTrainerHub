@@ -21,10 +21,24 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   assert.equal(await game('window.drivingNativeGamepadCheck'), 'allowed', 'Reviewed gamepad permission reaches the opaque game.');
   assert.equal(await game(`document.querySelector('[name=controlMode] option[value=arrow]').disabled`), true);
   assert.equal(await game(`document.querySelector('[name=controlMode] option[value=wheel]').disabled`), true, 'No physical wheel is falsely reported.');
+  const confirmDisabled = () => game(`document.querySelector('form .btn-primary').disabled`);
+  const controlStatus = () => game(`document.querySelector('.driving-input-status').textContent`);
+  if (mobile) {
+    assert.equal(await game(`document.querySelector('[name=controlMode]').value`), 'touch', 'Touch devices open on touch controls.');
+    assert.equal(await confirmDisabled(), false, 'Touch players can confirm without changing the control method.');
+  } else {
+    assert.equal(await game(`document.querySelector('[name=controlMode]').value`), 'arrow', 'Computers open on the arrow keys.');
+    assert.equal(await confirmDisabled(), true);
+    assert.match(await controlStatus(), english ? /Press any key/ : /按一下鍵盤/, 'The controls card says a key press enables Confirm settings.');
+  }
   await capture('settings');
   await game(`document.querySelector('form .btn-ghost').focus()`);
   await press('KeyK','k'); await press('KeyK','k','keyUp');
   await until(() => game(`!document.querySelector('[name=controlMode] option[value=arrow]').disabled`), 'trusted keyboard input');
+  if (!mobile) {
+    await until(async () => !(await confirmDisabled()), 'a key press enables Confirm settings');
+    assert.match(await controlStatus(), english ? /Keyboard detected/ : /已偵測到鍵盤/);
+  }
   const wheel = process.argv.includes('--wheel');
   if (wheel) {
     await game(`window.drivingFixtureWheel={connected:true,id:'Logitech G29 Driving Force Racing Wheel USB',index:0,axes:[0,1,1],buttons:[],timestamp:performance.now()};Object.defineProperty(navigator,'getGamepads',{value:()=>window.drivingFixtureWheel.connected?[window.drivingFixtureWheel]:[]});document.querySelector('form .btn-ghost').click()`);

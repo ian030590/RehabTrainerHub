@@ -14,7 +14,7 @@ export function DrivingWheelSetup({ capabilities, calibration }: {
     right: zh ? '將方向盤轉到底右側，再按「下一步」。' : 'Turn the wheel fully right, then select Next.',
     throttle: zh ? '踩下並放開油門，再按「下一步」。' : 'Press and release the throttle, then select Next.',
     brake: zh ? '踩下並放開煞車，再按「下一步」。' : 'Press and release the brake, then select Next.',
-    error: zh ? '未能完成校正。確認装置連接，重新校正。' : 'Calibration failed. Check the connection and calibrate again.',
+    error: zh ? '未能完成校正。確認裝置連接，重新校正。' : 'Calibration failed. Check the connection and calibrate again.',
   };
   return (
     <section className="training-setting driving-wheel-setup"><h3>{zh ? '方向盤校正' : 'Wheel calibration'}</h3>

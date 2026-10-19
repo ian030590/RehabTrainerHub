@@ -9,6 +9,7 @@ import {
   type DrivingWheelCalibration,
   type DrivingWheelDevice,
 } from './driving-input';
+import type { DrivingControlDevice, DrivingLastInput } from './drivingControlChoice';
 let sessionCalibration: DrivingWheelCalibration | null = null;
 
 export {
@@ -16,6 +17,7 @@ export {
   type DrivingInputCapabilitiesSnapshot,
   type DrivingWheelDevice,
 } from './driving-input';
+export { ChooseDrivingControlMode, GetDrivingControlHint } from './drivingControlChoice';
 
 const modifierOnlyKeys = new Set([
   'Alt',
@@ -61,11 +63,12 @@ function GetWheelCapability(): Pick<DrivingInputCapabilitiesSnapshot, 'wheelApiS
 }
 
 function AreCapabilitiesEqual(
-  left: DrivingInputCapabilitiesSnapshot,
-  right: DrivingInputCapabilitiesSnapshot,
+  left: DrivingControlDevice,
+  right: DrivingControlDevice,
 ) {
   return left.keyboardConfirmed === right.keyboardConfirmed
     && left.touchAvailable === right.touchAvailable
+    && left.touchPreferred === right.touchPreferred
     && left.wheelApiSupported === right.wheelApiSupported
     && left.wheelDevice?.id === right.wheelDevice?.id
     && left.wheelDevice?.index === right.wheelDevice?.index;
@@ -77,11 +80,14 @@ function IsConfirmingKeyboardEvent(event: KeyboardEvent) {
     && !modifierOnlyKeys.has(event.key);
 }
 
-export function GetDrivingInputCapabilitiesSnapshot(): DrivingInputCapabilitiesSnapshot {
+export function GetDrivingInputCapabilitiesSnapshot(): DrivingControlDevice {
   const wheelCapability = GetWheelCapability();
   return {
     keyboardConfirmed: keyboardConfirmedInSession,
     touchAvailable: typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0,
+    touchPreferred: typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(pointer: coarse)').matches,
     ...wheelCapability,
   };
 }
@@ -101,7 +107,7 @@ export function IsDrivingWheelCalibrationUsable(
 }
 
 export function useDrivingInputCapabilities() {
-  const [capabilities, setCapabilities] = useState<DrivingInputCapabilitiesSnapshot>(
+  const [capabilities, setCapabilities] = useState<DrivingControlDevice>(
     GetDrivingInputCapabilitiesSnapshot,
   );
 
@@ -143,6 +149,30 @@ export function useDrivingInputCapabilities() {
   }, [rescan]);
 
   return { ...capabilities, rescan };
+}
+
+const wasdKeyCodes = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD']);
+
+export function useDrivingLastInput(active: boolean) {
+  const [lastInput, setLastInput] = useState<DrivingLastInput | null>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (IsConfirmingKeyboardEvent(event)) setLastInput(wasdKeyCodes.has(event.code) ? 'wasd' : 'arrow');
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.isTrusted && event.pointerType === 'touch') setLastInput('touch');
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('pointerdown', handlePointerDown, true);
+    };
+  }, [active]);
+
+  return lastInput;
 }
 
 export type DrivingWheelCalibrationPhase =

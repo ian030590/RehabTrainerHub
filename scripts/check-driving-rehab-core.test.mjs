@@ -1017,3 +1017,68 @@ test('wheel calibration discovers per-device axes and normalizes their endpoints
   });
   assert.deepEqual(incomplete, { calibration: null, error: 'steering' });
 });
+
+const controlChoiceRoot = '../apps/rehabtrainerhub/games/driving-rehab/input/';
+const drivingInputSource = await readFile(new URL(`${controlChoiceRoot}driving-input.ts`, import.meta.url), 'utf8');
+const drivingInputUrl = `data:text/javascript;base64,${Buffer.from(ts.transpileModule(drivingInputSource, { compilerOptions }).outputText).toString('base64')}`;
+const { ChooseDrivingControlMode, GetDrivingControlHint } = await ImportTypeScriptModule(
+  `${controlChoiceRoot}drivingControlChoice.ts`,
+  (source) => source.replace("from './driving-input'", `from '${drivingInputUrl}'`),
+);
+const firstOpenDevices = {
+  computer: {
+    keyboardConfirmed: false,
+    touchAvailable: false,
+    touchPreferred: false,
+    wheelApiSupported: true,
+    wheelDevice: null,
+  },
+  get phone() { return { ...this.computer, touchAvailable: true, touchPreferred: true }; },
+  get touchLaptop() { return { ...this.computer, touchAvailable: true }; },
+};
+
+function ChooseControlMode(capabilities, lastInput = null, current = 'arrow', playerChosen = false) {
+  return ChooseDrivingControlMode({ capabilities, lastInput, current, playerChosen });
+}
+
+test('first-time players start on the control method their device is using', () => {
+  const { computer, phone, touchLaptop } = firstOpenDevices;
+  assert.equal(ChooseControlMode(phone), 'touch', 'Phones and tablets open on touch.');
+  assert.equal(ChooseControlMode(computer), 'arrow', 'Computers open on the arrow keys.');
+  assert.equal(ChooseControlMode(touchLaptop), 'arrow', 'A touch laptop driven by a mouse opens on the arrow keys.');
+  assert.equal(ChooseControlMode(touchLaptop, 'touch'), 'touch', 'Tapping the screen switches to touch.');
+
+  const keyboardLaptop = { ...touchLaptop, keyboardConfirmed: true };
+  assert.equal(ChooseControlMode(keyboardLaptop, 'arrow'), 'arrow');
+  assert.equal(ChooseControlMode(keyboardLaptop, 'wasd'), 'wasd', 'Pressing W, A, S or D switches to WASD.');
+  assert.equal(ChooseControlMode({ ...phone, keyboardConfirmed: true }, 'arrow'), 'arrow',
+    'A key on a tablet keyboard switches to the arrow keys.');
+  assert.equal(ChooseControlMode(computer, 'touch'), 'arrow', 'A touch event without a touchscreen is ignored.');
+});
+
+test('a picked or saved control method stays unless this device cannot use it', () => {
+  const { computer, phone, touchLaptop } = firstOpenDevices;
+  const keyboardLaptop = { ...touchLaptop, keyboardConfirmed: true };
+  assert.equal(ChooseControlMode(keyboardLaptop, 'touch', 'wasd', true), 'wasd', 'A later tap does not undo the player choice.');
+  assert.equal(ChooseControlMode(keyboardLaptop, 'arrow', 'touch', true), 'touch', 'A later key does not undo the player choice.');
+  assert.equal(ChooseControlMode(phone, null, 'arrow', true), 'touch',
+    'Saved arrow keys on a tablet without its keyboard fall back to touch.');
+  assert.equal(ChooseControlMode(computer, null, 'wasd', true), 'wasd',
+    'Saved WASD waits for a key press instead of switching to arrow keys.');
+  assert.equal(ChooseControlMode({ ...computer, keyboardConfirmed: true }, 'arrow', 'touch', true), 'arrow',
+    'Saved touch on a computer without a touchscreen falls back to the keyboard.');
+  assert.equal(ChooseControlMode({ ...computer, keyboardConfirmed: true }, 'arrow', 'wheel', true), 'wheel',
+    'A saved wheel stays selected while the player connects it.');
+});
+
+test('the controls card names the next step for each control state', () => {
+  const { computer, phone } = firstOpenDevices;
+  const keyboard = { ...computer, keyboardConfirmed: true };
+  assert.equal(GetDrivingControlHint('arrow', computer), 'press-key');
+  assert.equal(GetDrivingControlHint('wasd', computer), 'press-key');
+  assert.equal(GetDrivingControlHint('arrow', keyboard), 'keyboard-ready');
+  assert.equal(GetDrivingControlHint('wasd', keyboard), 'keyboard-ready');
+  assert.equal(GetDrivingControlHint('touch', phone), 'touch-ready');
+  assert.equal(GetDrivingControlHint('touch', keyboard), 'no-touch');
+  assert.equal(GetDrivingControlHint('wheel', keyboard), 'wheel');
+});
