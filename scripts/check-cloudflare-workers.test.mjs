@@ -134,12 +134,10 @@ test('production entry points match the owner-approved C02 origins', () => {
   assert.deepEqual(FindProductionEntryProblems(apps, registry), []);
   assert.equal(runner.siteUrl, 'https://trainerhubgames.rainbowh9490.workers.dev');
   assert.equal(runner.config.workers_dev, true);
-  // zone_id avoids a Zone:Read lookup with the CI token. The Hub hostname is a Worker custom domain,
-  // so its DNS record belongs to the Worker instead of pointing at the retired Pages project.
-  assert.deepEqual(hub.config.routes, [
-    { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
-    ...hub.redirectHostnames.map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })),
-  ]);
+  // zone_id avoids a Zone:Read lookup with the CI token. wrangler replaces every route of the Worker on deploy,
+  // so the trainerhub.cc route must stay listed until a custom domain is attached (it cannot replace the Pages record).
+  assert.deepEqual(hub.config.routes, [hub.hostname, ...hub.redirectHostnames]
+    .map((host) => ({ pattern: `${host}/*`, zone_id: '5851e45310addcd4587d15f8356340e5' })));
   // The old Pages runner keeps serving installed PWAs until C12.
   assert.equal(runner.pagesApp.deploymentUrl, 'https://trainerhub-user-games.pages.dev');
 

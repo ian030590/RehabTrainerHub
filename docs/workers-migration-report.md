@@ -21,7 +21,7 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 
 | 檔案 | 內容 |
 | --- | --- |
-| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；`trainerhub.cc` 起初用 route 接手，切換後改為 Worker custom domain（第 5 節），四個退役子網域維持 routes；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
+| `apps/rehabtrainerhub/wrangler.workers.jsonc` | Worker `trainerhub`。D1／KV／四個 R2 binding 與 `wrangler.toml` 相同 ID；五條 routes（`trainerhub.cc` 與四個退役子網域；改 custom domain 的嘗試見第 5 節）；`run_worker_first: true`、`404-page`；`workers_dev`、`preview_urls` 關閉。 |
 | `apps/usergamerunner/wrangler.workers.jsonc` | Worker `trainerhubgames`。只綁 `rehab-game-releases`；`workers_dev: true`；`run_worker_first` 對應 `public/_routes.json`；`single-page-application`。 |
 | `apps/usergamerunner/package.json`、`packages/ui/src/officialGameReleases.json`、`functions/api/games.js` | runner origin 改為 `https://trainerhubgames.rainbowh9490.workers.dev`（十款 R2 遊戲的可信 origin 與 Hub 預設值）。 |
 | `apps/*/worker/index.js`、`workers/shared/pagesAssetCompat.js` | Worker 入口載入 `wrangler pages functions build` 編譯的原 Functions；相容層只包住 `ASSETS`，補回 Pages 對靜態檔的預設標頭、308 轉址與 404 `no-store`。 |
@@ -63,17 +63,21 @@ Pages 的 `wrangler.toml` 與部署腳本保留為回退路徑。
 - Runner：以擁有者的 wrangler 登入執行 `node scripts/deploy-cloudflare-workers.mjs --only=gamehost`，`trainerhubgames` 版本 `f6f8d944-a7db-4b5d-b68c-3281bf92b9e7`，binding 只有 `GAME_RELEASE_BUCKET` 與 `ASSETS`。與舊 Pages runner 比對 76 個請求：十款遊戲的 current 轉址相同（asteroid-shield 2.0.11、gesture-battler 2.0.6、drawing-defense 2.0.8、motor-cortex-rehab 2.0.4、oculomotor-training 2.1.3、moving-card 2.0.4、gabor-patching 2.0.3、reading-training 2.0.2、hart-chart 2.0.2、driving-rehab 2.1.0），manifest、service worker、package、`game.json`、404 與 POST 也相同。其餘差異是每次請求不同的 CSP nonce、第 3 節已評估的項目（`/` 與 `/robots.txt` 沒有 CORS 標頭、`/index.html` 轉址為 307、HTML 的 `Content-Type` 沒有 charset，頁面本身有 meta charset），以及 hand-tracking JS 的 MIME 由 `application/javascript` 變成 `text/javascript`，瀏覽器兩者都當 JavaScript 執行。
 - Workflow run [39208075790](https://github.com/ian030590/RehabTrainerHub/actions/runs/39208075790)（commit `25620d7c`）：七項 gate 與 build 通過，Pages 步驟依變數跳過，D1 沒有待套用的 migration。部署 runner 時 Cloudflare API 回 `No access to the specified service`，重試三次後停止，Hub 沒有部署。`trainerhub.cc` 仍由 Pages 提供（`POST /api/builder/exchange` 仍回 401，`/api/games` 仍指向舊 runner），Worker `trainerhub` 尚未建立。
 - 原因：CI token 對已存在的 `trainerhubgames` 沒有權限，可能是 Workers 權限只限定特定 Worker 或沒有 Workers 權限；wrangler 登入沒有讀取 API token 設定的權限，無法直接確認。另依 [Cloudflare Workers 權限說明](https://developers.cloudflare.com/workers/authorization/workers/)，建立新 Worker 需要產品層級的 `Admin`，Workers Scripts Edit 對應的 `Editor` 只能部署已存在的 Worker，所以第一次建立 `trainerhub` 也需要 `Admin`。
-- 擁有者調整 token 後重跑失敗的 job，再補 Hub 版本 ID、正式網址比對與瀏覽器流程結果。
+- 擁有者調整 token 並建立 Worker `trainerhub`（07:14 UTC）後，重跑同一個 run（attempt 2）成功：runner `962e6635-d0b5-4c29-922d-f5551ec4b82c`、Hub `1f1c8c2a-c514-4dd7-a561-e30006d1301f`，五條 routes 生效，Hub 的 workers.dev 與預覽網址關閉。
+- 正式網址與切換前的 Pages 基準比對 47 個請求：Builder API 由 401 變成 404／405（已移除），`/api/games` 指向新 runner；已遷移遊戲舊檔 410、未登入 API、CORS 預檢、空 POST 驗證與尾斜線 308 相同，轉址多了 `nosniff`。其餘差異是第 3 節已評估的快取、`vary` 與 `/sw.js` MIME，以及 HTML／文字檔少了 `charset=utf-8`。最後一項當時未列入第 3 節，已在相容層補上（run 39217237716 部署，`llms.txt` 回 `text/plain; charset=utf-8`）。
+- 瀏覽器：`check-r2-game-browser.mjs --lobby --production-hub` 的 drawing-defense 與 hart-chart 完整流程通過（正式 Hub 前端與正式 runner；API 由本機攔截，只寫本機 SQLite）。切換前同一檢查失敗，原因是舊 Pages Hub 只接受舊 runner 的啟動網址。
+- 擁有者已移除 `games.trainerhub.cc`（DNS 查詢回 NXDOMAIN）。
+- 事故：commit `5ea74d6b`（run [39217237716](https://github.com/ian030590/RehabTrainerHub/actions/runs/39217237716)）嘗試把 `trainerhub.cc` 改成 Worker custom domain。wrangler 4.151.1 以 PUT 取代 Worker 的全部 routes，移除了 `trainerhub.cc/*`；custom domain 則因 DNS 記錄仍屬 Pages 自訂網域而被拒（API 錯誤 100117，CI 已要求覆寫）。07:41:16 至約 07:44:45 UTC 流量回到最後一次 Pages 部署（舊 Hub 與舊 runner），網站維持可用。以擁有者的 wrangler 登入加回 route 後恢復，config 改回 route。之後不能假設 deploy 會保留設定外的 routes；改 custom domain 前必須先刪除 Pages 的 DNS 記錄。
 
 ## 6. 回退
 
 1. 程式回退：Workers & Pages → `trainerhub`（或 `trainerhubgames`）→ Deployments 選前一版，或 `npx wrangler rollback --name trainerhub`。
-2. `trainerhub.cc` 改為 Worker custom domain 後，DNS 記錄由 Worker 管理，刪除 routes 不再讓流量回到 Pages。要回到 Pages，必須在 Pages 專案還存在時移除 Worker custom domain，重建指向 `rehabtrainerhub.pages.dev` 的 proxied CNAME，並在 Pages 重新驗證自訂網域，再刪除 repo variable `CLOUDFLARE_DEPLOY_TARGET`。最後一次 Pages 部署的 Hub 指向舊 runner `trainerhub-user-games.pages.dev`。兩個 Pages 專案刪除後，只剩第 1 步。
+2. 回到 Pages（只在 Pages 專案 `rehabtrainerhub` 與指向它的 `trainerhub.cc` DNS 記錄都還在時有效）：刪除 `trainerhub` 的 `trainerhub.cc/*` route，流量立即回到最後一次 Pages 部署，那一版 Hub 指向舊 runner `trainerhub-user-games.pages.dev`（第 5 節的事故就是這個情況）。再刪除 repo variable `CLOUDFLARE_DEPLOY_TARGET`，否則下一次 push 會重新部署 Workers 並加回 route。Pages 專案刪除後，只剩第 1 步。
 3. D1／R2 沒有改變結構或內容，回退不需要還原資料。
 
 ## 7. 後續
 
 - Pages 專案的 `BUILDER_CLIENT_SECRET` 可以刪除；舊 Pages 部署的 Builder API 因為沒有對應服務，刪除後也沒有使用者受影響。
-- C12 前保留兩個 Pages 專案；之後若要移除 Pages 自訂網域，需先在 DNS 為 `trainerhub.cc` 留一筆 proxied 記錄，routes 才能繼續生效。
-- 舊 runner 的 Pages 專案 `trainerhub-user-games` 綁著自訂網域 `games.trainerhub.cc`，目前可以連線。這違反 runner 不得使用 `trainerhub.cc` 子網域的規範，Hub 也從未使用這個網址；建議擁有者在該 Pages 專案移除這個自訂網域與對應 DNS 記錄。
+- 退役 Pages（C12，擁有者 2026-10-19 詢問可否刪除）：`trainerhub-user-games` 已沒有任何入口引用，可直接刪除。`rehabtrainerhub` 要先處理 `trainerhub.cc` 的 DNS 記錄（目前是指向 `rehabtrainerhub.pages.dev` 的 CNAME）：刪除記錄後立刻在 Worker `trainerhub` 加上 custom domain `trainerhub.cc`，中間會有短暫無法解析；再把 config 改成 custom domain，最後刪除 Pages 專案。刪除後一併移除 `IsHubOrigin` 對 `*.rehabtrainerhub.pages.dev` 的信任，並讓 workflow 預設部署 Workers。
+- 舊 runner 的 Pages 專案 `trainerhub-user-games` 曾綁自訂網域 `games.trainerhub.cc`，違反 runner 不得使用 `trainerhub.cc` 子網域的規範；擁有者已於 2026-10-19 移除。
 - 兩個 Worker 都建立後，CI token 的 Workers 權限可以改成只對 `trainerhub`、`trainerhubgames` 的 `Editor`；之後若要新增 Worker，再暫時改回 `Admin`。

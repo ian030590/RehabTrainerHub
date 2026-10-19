@@ -7,10 +7,10 @@
   // Only approved hostnames serve the Hub: no workers.dev or version preview URLs.
   "workers_dev": false,
   "preview_urls": false,
-  // trainerhub.cc is a Worker custom domain, so its DNS record belongs to the Worker (CI replaces the old Pages record).
-  // Retired trainer hostnames stay routes and only answer if they get DNS records again.
+  // wrangler deploy replaces every route of this Worker with this list. trainerhub.cc can only become a custom
+  // domain after its Pages DNS record is deleted (API error 100117); see docs/workers-migration-report.md.
   "routes": [
-    { "pattern": "trainerhub.cc", "custom_domain": true, "zone_id": "5851e45310addcd4587d15f8356340e5" },
+    { "pattern": "trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "motor.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "vision.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
     { "pattern": "brain.trainerhub.cc/*", "zone_id": "5851e45310addcd4587d15f8356340e5" },
