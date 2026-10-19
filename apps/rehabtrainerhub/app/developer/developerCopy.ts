@@ -5,7 +5,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: '開發居家練習遊戲',
-      intro: '了解 RehabBuilder 原生套件與舊版 jsPsych 套件的投稿規格、安全檢查及人工審核流程。',
+      intro: '了解原生 HTML 套件與舊版 jsPsych 套件的投稿規格、安全檢查及人工審核流程。',
       version: '文件對應平台契約 v1',
       scope: '第三方投稿 + 內建遊戲貢獻',
     },
@@ -31,12 +31,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: '先選對開發路徑',
-      body: '第三方遊戲可使用 RehabBuilder 製作原生 HTML／ZIP，或沿用 jsPsych 8 與平台橋樑。原生投稿包含 settings.json 與 score.json；內建遊戲仍由倉庫貢獻者維護。',
+      body: '第三方遊戲以原生 HTML／ZIP 投稿，或沿用 jsPsych 8 與平台橋樑。原生投稿包含 settings.json 與 score.json；內建遊戲仍由倉庫貢獻者維護。',
       routes: [
         {
           number: '01',
           title: '第三方遊戲投稿',
-          body: 'RehabBuilder 匯出根目錄含 index.html、settings.json 與 score.json 的原生套件；遊戲自行計分，Hub 驗證並投影結果。舊版 jsPsych 投稿仍可沿用。',
+          body: '原生套件的根目錄含 index.html、settings.json 與 score.json；遊戲自行計分，Hub 驗證並投影結果。舊版 jsPsych 投稿仍可沿用。',
           detail: '適合獨立開發者與單一 HTML／ZIP 遊戲。',
         },
         {
@@ -51,12 +51,12 @@ const copy = {
     quickStart: {
       eyebrow: 'Quick start',
       title: '遊戲投稿流程',
-      intro: '原生遊戲可用 RehabBuilder 視覺化製作並匯出 Hub 相容套件。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
+      intro: '原生遊戲是一般的 HTML、CSS 與 JavaScript 套件，不需要安裝 SDK。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
       steps: [
         ['規劃活動', '定義任務需求、刺激參數、輸入方式、停止條件、彙總指標與用途限制。'],
-        ['使用 RehabBuilder', '在 Builder 製作與試玩活動，匯出含 settings.json 與 score.json 的套件；公開服務仍須部署。'],
+        ['製作套件', '以 HTML、CSS 與 JavaScript 製作活動，在根目錄放 settings.json 與 score.json；圖片、音訊與樣式都放在套件內。'],
         ['核對活動設計卡', '確認每個結果欄位的公式、單位、分母與可能混淆因素，並標明尚未驗證的用途。'],
-        ['產生並驗證', 'Hub 套件須含 index.html、settings.json 與可閱讀的原始碼；檢查正常完成、中止與結果數值。'],
+        ['打包並驗證', 'Hub 套件須含 index.html、settings.json 與可閱讀的原始碼；檢查正常完成、中止與結果數值。'],
         ['送審前複核', '確認雙語、鍵盤／觸控、無外連、無個資、未混淆、沒有自行打包平台 runtime，再建立新版本投稿。'],
       ],
       installTitle: '倉庫開發環境',
@@ -181,7 +181,7 @@ const copy = {
       ],
       lifecycleTitle: '實作重點',
       lifecycle: [
-        '私有通道在 iframe 載入後建立；匯出套件須等待通道與已驗證設定。',
+        '私有通道在 iframe 載入後建立；套件須等待通道與已驗證設定。',
         '自訂 canvas／renderer 應放在單一 jsPsych plugin 內，並在 finish 或 abort 路徑解除 listener 與釋放資源。',
         'timeline(settings) 只使用已驗證設定；summarize(jsPsych, settings) 只產生非識別彙總值。',
       ],
@@ -322,7 +322,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: 'Build a home-practice game',
-      intro: 'Review the native RehabBuilder and legacy jsPsych package contracts, security checks, and manual approval process.',
+      intro: 'Review the native HTML and legacy jsPsych package contracts, security checks, and manual approval process.',
       version: 'Platform contract v1',
       scope: 'Third-party submissions + built-in contributions',
     },
@@ -348,12 +348,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: 'Choose the correct development path',
-      body: 'Third-party games can use RehabBuilder to create native HTML/ZIP packages or keep the jsPsych 8 platform bridge contract. Native submissions include settings.json and score.json; repository contributors still maintain built-in games.',
+      body: 'Third-party games are submitted as native HTML/ZIP packages or keep the jsPsych 8 platform bridge contract. Native submissions include settings.json and score.json; repository contributors still maintain built-in games.',
       routes: [
         {
           number: '01',
           title: 'Third-party game submission',
-          body: 'RehabBuilder exports native packages with index.html, settings.json, and score.json at the root. The game calculates values; the Hub validates and projects results. Legacy jsPsych packages remain supported.',
+          body: 'Native packages put index.html, settings.json, and score.json at the root. The game calculates values; the Hub validates and projects results. Legacy jsPsych packages remain supported.',
           detail: 'For independent developers and portable HTML/ZIP games.',
         },
         {
@@ -368,12 +368,12 @@ const copy = {
     quickStart: {
       eyebrow: 'Quick start',
       title: 'Game submission flow',
-      intro: 'RehabBuilder provides visual game editing and Hub-compatible export for native games. Every submission still needs content, source, security, and result checks.',
+      intro: 'Native games are ordinary HTML, CSS, and JavaScript packages; no SDK is required. Every submission still needs content, source, security, and result checks.',
       steps: [
         ['Plan the activity', 'Define task demands, stimulus parameters, input methods, stopping conditions, aggregate metrics, and intended-use limits.'],
-        ['Use RehabBuilder', 'Build and preview the activity, then export a package with settings.json and score.json. The public Builder service still needs deployment.'],
+        ['Build the package', 'Write the activity in HTML, CSS, and JavaScript, with settings.json and score.json at the root. Keep images, audio, and styles inside the package.'],
         ['Review the activity design card', 'Check each result formula, unit, denominator, and likely confound, and mark any unvalidated intended use.'],
-        ['Export and verify', 'A Hub package needs index.html, settings.json, and readable source. Check completion, abort, and result values.'],
+        ['Package and verify', 'A Hub package needs index.html, settings.json, and readable source. Check completion, abort, and result values.'],
         ['Review before submission', 'Check both languages, keyboard and touch, network isolation, data minimization, readable source, and no bundled platform runtime before submitting a new version.'],
       ],
       installTitle: 'Repository development environment',
@@ -498,7 +498,7 @@ const copy = {
       ],
       lifecycleTitle: 'Implementation details',
       lifecycle: [
-        'The private channel arrives after iframe load; exported packages must wait for it and validated settings.',
+        'The private channel arrives after iframe load; packages must wait for it and validated settings.',
         'Keep a custom canvas or renderer inside one jsPsych plugin, and remove listeners and release resources in finish and abort paths.',
         'timeline(settings) consumes only validated settings; summarize(jsPsych, settings) produces only non-identifying aggregates.',
       ],

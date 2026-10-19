@@ -595,8 +595,8 @@ function BuildAgentPrompt(fields: PromptFields, language: HubLanguage): string {
       ? `Create an isolated module at apps/rehabtrainerhub/games/{gameId}/. It must own its runtime and include settings.json and score.json, import both in main.tsx, and register both with OfficialGameShell. Do not move renderer or game-loop state into shared packages.`
       : `在 apps/rehabtrainerhub/games/{gameId}/ 建立獨立模組。模組自行擁有 runtime，必須包含 settings.json 與 score.json，在 main.tsx 匯入兩者並向 OfficialGameShell 註冊。不得把 renderer 或 game-loop 長生命週期狀態移入共用 package。`)
     : (language === 'en'
-      ? `Prepare an activity specification for RehabBuilder. Its Hub export must contain readable index.html, settings.json, source, styles, and local assets, and use the runner's versioned jsPsych runtime and game bridge. Keep the existing upload scan and manual review. RehabBuilder is planned; do not claim that its export is available yet.`
-      : `為 RehabBuilder 準備活動規格。未來 Hub 匯出需包含可閱讀的 index.html、settings.json、原始碼、樣式與本地資產，並使用執行站版本化的 jsPsych runtime 與遊戲通訊橋樑。維持既有上傳掃描與人工審核。RehabBuilder 尚在規劃中，不要宣稱目前可匯出。`);
+      ? `Create a native HTML/ZIP package with index.html, settings.json, and score.json at the root, plus readable source, styles, and local assets. The game calculates its own result fields, and score.json declares their labels and mapping. Do not bundle jsPsych or the platform bridge. The package still goes through the upload scan and manual review.`
+      : `建立原生 HTML／ZIP 套件：根目錄放 index.html、settings.json 與 score.json，並附可閱讀的原始碼、樣式與本地資產。遊戲自行計算結果欄位，由 score.json 宣告欄位名稱與對應方式。不得自行打包 jsPsych 或平台通訊橋樑。套件仍須經過上傳掃描與人工審核。`);
 
   if (language === 'en') {
     return `# Role
@@ -630,7 +630,7 @@ Use semantic HTML, visible keyboard focus, 44×44 CSS-pixel targets, keyboard eq
 
 # Deliverables
 1. First report assumptions, missing decisions, inspected contracts, and an implementation plan.
-2. ${fields.route === 'built-in' ? 'Implement complete game files without placeholders.' : 'Write a complete activity specification for RehabBuilder; do not claim its Hub export is available yet.'}
+2. ${fields.route === 'built-in' ? 'Implement complete game files without placeholders.' : 'Implement the complete package files without placeholders.'}
 3. Explain the file structure, settings, scoring/results, lifecycle cleanup, and research limitations.
 4. Run the smallest relevant tests, then the required repository gates for the selected route. Report exact commands and results.
 5. Review the final diff for security, i18n, accessibility, sensitive fields, and unsupported medical claims.`;
@@ -667,7 +667,7 @@ ${routeContract}
 
 # 交付要求
 1. 先回報假設、缺少決策、已查核契約與實作計畫。
-2. ${fields.route === 'built-in' ? '完整實作所有檔案，不可留下 placeholder。' : '撰寫完整的 RehabBuilder 活動規格；不要宣稱 Hub 匯出功能已可使用。'}
+2. ${fields.route === 'built-in' ? '完整實作所有檔案，不可留下 placeholder。' : '完整實作套件所有檔案，不可留下 placeholder。'}
 3. 說明檔案結構、settings、分數／結果、生命週期清理與研究限制。
 4. 先跑最小相關測試，再跑此開發路徑要求的倉庫 gate；列出完整命令與結果。
 5. 最後審查 diff 的安全、i18n、可及性、敏感欄位與不當醫療宣稱。`;

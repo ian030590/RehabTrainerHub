@@ -46,7 +46,7 @@ npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位�
   **新增遊戲與 Workspace 同步：** 加入 `apps/rehabtrainerhub/games/catalog.ts` 後執行 `npm run sync:games`；有 workspace／依賴異動時更新 lockfile。sync 依 registry 將未遷移遊戲加入 Hub 依賴樹，將 R2 遊戲排除。其舊模板仍會為缺少設定檔的遊戲產生共用 UI 依賴及 alias，並不驗證遊戲是否獨立；新遊戲與 R2 遊戲須先提供自有 `package.json`、Vite entry 及依賴，不能靠 sync 取得符合新架構的套件。
 
 Hub 的共用 UI、client auth、layout、storage、訊息協定位於 `packages/ui/src`；登入／session、授權及資料庫寫入位於 `apps/rehabtrainerhub/functions/`。`packages/game-settings` 提供 Hub 與 runner 使用的 JSON schema／validation，不是遊戲開發 SDK。R2 遊戲不得依賴這些平台套件。
-第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；RehabBuilder 規劃負責視覺化遊戲製作與 Hub 套件匯出，本倉庫不提供開發者 SDK 套件。
+第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；本倉庫不提供開發者 SDK 套件。
 靜態資產：各 app `public/`，通常 `public/assets/`。
 D1 migrations：`apps/rehabtrainerhub/migrations/`。
 Cloudflare bindings 以各 app 的 `wrangler.toml` 為準：Hub 有 `REHAB_DB` D1、`ARTICLE_CACHE` KV（已停用，僅保留舊文章快取資料）與下列四個 R2 bucket；runner 只有 `GAME_RELEASE_BUCKET`，沒有 D1／KV 或 auth bindings。

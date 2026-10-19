@@ -1,9 +1,9 @@
 # Developer game package contract
 
 Developer games are ordinary HTML/CSS/JavaScript packages. There are two
-submission contracts. Select **Native HTML + score.json** for a new game or a
-RehabBuilder ZIP. The existing **jsPsych 8 + platform bridge** contract remains
-available for older submissions. Neither contract requires a downloadable SDK.
+submission contracts. Select **Native HTML + score.json** for a new game. The
+existing **jsPsych 8 + platform bridge** contract remains available for older
+submissions. Neither contract requires a downloadable SDK.
 
 Native ZIP packages put `index.html`, `settings.json`, and `score.json` at the
 root. The game calculates its own result fields; `score.json` declares their
@@ -34,20 +34,13 @@ and the boundary between this Hub stage and the later full R2 migration.
 Native games may use plain JavaScript or another self-contained implementation.
 They do not need jsPsych or the legacy bridge script. The platform still scans,
 isolates, reviews, and approves every submission before it can record results.
-See the native export in the separate RehabBuilder repository for a complete
-example.
 
-## RehabBuilder workflow
-
-The workflow is specification, visual editing, preview, then Hub submission or
-ZIP export. The exported ZIP enters the existing upload scanner and manual
-review queue. A standalone offline HTML export runs locally and is not itself
-a Hub submission.
+## Native package workflow
 
 1. Specify task demands, stimulus and response sequence, supported input,
    timing, exit behavior, aggregate metrics, and known limitations.
-2. Create and preview the activity in RehabBuilder. Export a Hub-compatible ZIP
-   containing readable source, `settings.json`, and `score.json`.
+2. Build the activity in plain HTML, CSS, and JavaScript. Put `index.html`,
+   `settings.json`, `score.json`, readable source, and local assets in a ZIP.
 3. Review every file, complete keyboard and pointer playthroughs, and verify
    aggregate results on completion and abort.
 4. Submit a semantic version through `/developer/`. Automated scanning and

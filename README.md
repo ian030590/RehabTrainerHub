@@ -114,7 +114,7 @@ npm install
 1. **物理隔離（Separate Domain）**：遊戲檔案完全部署在獨立網域（`trainerhub-user-games.pages.dev`），與主平台（`trainerhub.cc`）徹底分開，受同源政策（SOP）強制隔離，無法存取主平台的 Cookie 或登入憑證。
 2. **沙盒機制（Strict Iframe Sandbox）**：主平台以 `<iframe sandbox="allow-scripts">` 嵌入遊戲，禁止 `allow-same-origin` 與 `allow-top-navigation`。
 3. **阻斷外連（Restrictive CSP）**：執行環境施加 `connect-src 'none'`、`worker-src 'none'`、`form-action 'none'`，禁止遊戲向外連線竊取資料。
-4. **安全通訊橋樑（postMessage & MessageChannel）**：遊戲透過隔離執行站提供的版本化通訊橋樑與外層通訊，使用 session nonce 與 sequence 防止重放攻擊，僅回傳非敏感的彙總指標。RehabBuilder 規劃作為視覺化遊戲製作工具，投稿仍須經掃描與人工審核。
+4. **安全通訊橋樑（postMessage & MessageChannel）**：遊戲透過隔離執行站提供的版本化通訊橋樑與外層通訊，使用 session nonce 與 sequence 防止重放攻擊，僅回傳非敏感的彙總指標。投稿仍須經掃描與人工審核。
 5. **自動掃描與人工審核**：上傳時依 `blockedSourcePatterns` 自動阻擋危險 API 與 HTML／CSS 用法（fetch、XHR、WebSocket、cookie、location、外部網址等）及混淆程式碼；管理員於隔離環境試玩並查核原始碼，經 3 項查核勾選後始可核准上架。
 
 ## 注意事項 / Notice

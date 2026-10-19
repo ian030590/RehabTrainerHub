@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
 import {
   GetTrainingPurposeTrainerId,
   trainerCategoryTags,
@@ -49,41 +48,7 @@ export function DeveloperPortal() {
   const [version, setVersion] = useState('1.0.0');
   const [capabilities, setCapabilities] = useState<string[]>(['keyboard', 'pointer']);
   const [sourceConfirmed, setSourceConfirmed] = useState(false);
-  const [builderPackage, setBuilderPackage] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const ticket = new URLSearchParams(window.location.search).get('builder_ticket');
-    if (!ticket) return;
-    const controller = new AbortController();
-    const token = GetAuthToken();
-    void fetch('/api/builder/package', {
-      method: 'POST',
-      credentials: 'include',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ ticket }),
-    }).then(async (response) => {
-      if (!response.ok) throw new Error(language === 'en' ? 'Builder package could not be loaded.' : '無法接收 Builder 投稿套件。');
-      const gameId = response.headers.get('X-Builder-Game-Id') || '';
-      const submittedVersion = response.headers.get('X-Builder-Version') || '1.0.0';
-      const file = new File([await response.blob()], `${gameId}-${submittedVersion}.zip`, { type: 'application/zip' });
-      setPackageFile(file);
-      setBuilderPackage(true);
-      setSlug(gameId);
-      setTitle(gameId);
-      setDeveloperName(user.displayName || 'Hub user');
-      setVersion(submittedVersion);
-      setMessage(language === 'en'
-        ? 'Builder package received. Complete the submission details and confirm the source review.'
-        : '已接收 Builder 套件。請補齊投稿資訊並確認原始碼查核。');
-      window.history.replaceState(null, '', '/developer/');
-    }).catch((nextError: unknown) => {
-      if (controller.signal.aborted) return;
-      setError(nextError instanceof Error ? nextError.message : copy.submission.errors.file);
-    });
-    return () => controller.abort();
-  }, [user, language, copy.submission.errors.file]);
+  const [nativePackage, setNativePackage] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -152,7 +117,7 @@ export function DeveloperPortal() {
         trainer,
         category,
         version: version.trim(),
-        jsPsychVersion: builderPackage ? 'none' : platformJsPsychVersion,
+        jsPsychVersion: nativePackage ? 'none' : platformJsPsychVersion,
         capabilities,
         changeNotes: changeNotes.trim(),
       });
@@ -269,7 +234,7 @@ export function DeveloperPortal() {
                     </label>
                     <label className="admin-field">
                       <span>{language === 'en' ? 'Package contract' : '投稿套件契約'}</span>
-                      <select aria-describedby="platform-jspsych-help" onChange={(event) => setBuilderPackage(event.target.value === 'none')} value={builderPackage ? 'none' : platformJsPsychVersion}>
+                      <select aria-describedby="platform-jspsych-help" onChange={(event) => setNativePackage(event.target.value === 'none')} value={nativePackage ? 'none' : platformJsPsychVersion}>
                         <option value={platformJsPsychVersion}>{language === 'en' ? 'jsPsych 8 + platform bridge' : 'jsPsych 8 + 平台橋樑'}</option>
                         <option value="none">{language === 'en' ? 'Native HTML + settings.json + score.json' : '原生 HTML + settings.json + score.json'}</option>
                       </select>
