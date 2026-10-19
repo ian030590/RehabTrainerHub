@@ -7,8 +7,8 @@
   // Only approved hostnames serve the Hub: no workers.dev or version preview URLs.
   "workers_dev": false,
   "preview_urls": false,
-  // wrangler deploy replaces every route and custom domain of this Worker with this list. trainerhub.cc is a
-  // custom domain, so Cloudflare keeps its DNS record.
+  // trainerhub.cc is a custom domain, so Cloudflare keeps its DNS record. wrangler deploy replaces the Worker's
+  // routes only when this list has a plain route; with none, old routes stay and must be deleted through the API.
   "routes": [
     { "pattern": "trainerhub.cc", "custom_domain": true, "zone_id": "5851e45310addcd4587d15f8356340e5" }
   ],

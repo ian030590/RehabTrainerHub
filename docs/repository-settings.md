@@ -45,7 +45,7 @@
 
 ## Domains 與退役流程
 
-- `trainerhub.cc` 是 Worker `trainerhub` 的 custom domain，DNS 記錄由 Cloudflare 依 Worker 管理；wrangler deploy 會以 config 取代 Worker 的全部 routes 與 custom domains。回退方式見搬遷報告第 6 節。
+- `trainerhub.cc` 是 Worker `trainerhub` 的 custom domain，DNS 記錄由 Cloudflare 依 Worker 管理。config 有一般 route 時，wrangler deploy 會以 config 取代 Worker 的全部 routes；config 只有 custom domain 時不會動既有 routes，要刪除須另用 Cloudflare API。回退方式見搬遷報告第 6 節。
 - Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
 - 四個退役 trainer 子網域（`motor`、`vision`、`brain`、`mouth.trainerhub.cc`）與舊 `motortrainer`、`visiontrainer`、
   `braintrainer`、`mouthtrainer` Pages projects 已完全移除，沒有 DNS 記錄、Worker route 或 301 設定。

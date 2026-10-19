@@ -145,7 +145,7 @@ test('production entry points match the owner-approved C02 origins', () => {
   assert.equal(runner.siteUrl, 'https://trainerhubgames.rainbowh9490.workers.dev');
   assert.equal(runner.config.workers_dev, true);
   // zone_id avoids a Zone:Read lookup with the CI token. trainerhub.cc is attached as a Worker custom domain;
-  // wrangler replaces every route and custom domain of the Worker with this list on deploy.
+  // with no plain route in this list, wrangler deploy leaves existing zone routes untouched.
   assert.deepEqual(hub.config.routes, [
     { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
   ]);
