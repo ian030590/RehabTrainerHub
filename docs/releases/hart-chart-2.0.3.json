@@ -1,0 +1,195 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.0.3/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.0.3/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/",
+  "publishedAt": "2026-10-19T13:59:45.385Z",
+  "verifiedAt": "2026-10-19T14:00:24.642Z",
+  "fileCount": 5,
+  "totalBytes": 651974,
+  "files": [
+    {
+      "path": "assets/index-C3xqNnBK.js",
+      "size": 605180,
+      "sha256": "479054fbc3230373c58ed33eccb83b3838c4b98b0e9edfa8585bb80f61c47422",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CP3-uwfM.css",
+      "size": 30179,
+      "sha256": "1e893d0d7fbef2b3540dbf7f37ee12228101e73e54e4be7d6032f555359e0cea",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 458,
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "037945f104f8fe8791c84f15013c2fd269c298947206065d76513ac20db54523",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15752,
+      "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.3",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+    },
+    "2.0.1": {
+      "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366"
+    },
+    "2.0.2": {
+      "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+    },
+    "2.0.3": {
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner ran `npm --prefix apps/rehabtrainerhub/games/hart-chart run build && node scripts/publish-official-game.mjs hart-chart` after the exact version and contentSha256 below were presented for approval",
+    "recordedAt": "2026-10-19T14:00:24.642Z",
+    "scope": "Publish and activate hart-chart@2.0.3 only",
+    "games": [
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.3",
+        "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command."
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df",
+    "command": "node scripts/publish-official-game.mjs hart-chart --activate-version 2.0.2",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.2 has the hidden confirmation bug; 2.0.1 has it too (introduced with the tutorial parity change). 2.0.0 predates it."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hart-chart/2.0.3/",
+  "changes": [
+    "The final 確認設定/開始訓練 panel is painted above the training screen again. Since 2.0.1 the tutorial runs on the real, inert .hart-page (z-index 1000); game.css set the panel to z-index 1200 with .hart-tutorial-ready, but rules.css loads later and its .training-panel z-index 900 has the same specificity, so the panel sat under the training screen",
+    "Players saw an unusable training screen: clicks passed through the inert layer to the hidden panel, so training never started and never went fullscreen (reported in Brave on Windows; other games were unaffected)",
+    "The rule is now .training-panel.hart-tutorial-ready, so source order cannot override it",
+    "Gameplay, settings, scoring and the five summary values are unchanged"
+  ],
+  "sourceCommit": "bf91b96136d6dfea9833db78e8b8306ac7d75d35",
+  "platformDeploy": {
+    "commit": "bf91b961",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39263592500",
+    "conclusion": "success",
+    "note": "The push redeployed the Hub and runner Workers because test scripts changed; their source did not change and no new capability is needed."
+  },
+  "tdd": {
+    "failingFirst": [
+      "scripts/check-hart-chart-tutorial.test.mjs 'the final confirmation is painted above the inert training scene': failed with confirmation z-index 900 vs training scene 1000",
+      "scripts/r2-game-ui-browser.mjs CheckConfirmationPresentation: lifts inert for one synchronous probe and requires the confirmation buttons on top; failed against production 2.0.2 (node scripts/check-r2-game-browser.mjs --game hart-chart --lobby --production-hub) with ['開始訓練', '返回設定'] hidden"
+    ],
+    "whyMissedBefore": "The browser fixture tapped the start button by coordinates; hit testing skips inert elements, so the tap reached the hidden button and the flow passed while the player could not see it",
+    "noFalsePositive": "The shared check passed on production reading-training 2.0.2"
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "317/317 locally; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa, hub-functions, gamerunner, trainer-entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Deploy workflow verify matrix (run 39263592500)"
+      }
+    ],
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game hart-chart with --lobby, --lobby --mobile, --lobby --signed-in --english, --lobby --windowed, --standalone and --standalone --mobile passed on the 2.0.3 build (Hub and runner output copied to scratch folders); saves only to local SQLite",
+    "dryRun": "node scripts/publish-official-game.mjs hart-chart --dry-run: 5 files, digest 97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-19T14:01:14.243Z",
+    "files": [
+      {
+        "path": "assets/index-C3xqNnBK.js",
+        "status": 200,
+        "size": 605180,
+        "sha256": "479054fbc3230373c58ed33eccb83b3838c4b98b0e9edfa8585bb80f61c47422",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CP3-uwfM.css",
+        "status": 200,
+        "size": 30179,
+        "sha256": "1e893d0d7fbef2b3540dbf7f37ee12228101e73e54e4be7d6032f555359e0cea",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 458,
+        "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 405,
+        "sha256": "037945f104f8fe8791c84f15013c2fd269c298947206065d76513ac20db54523",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 15752,
+        "sha256": "34ac8108c3729823fa68e7af8c806a9f67fd0ec45ea40e7282140eeb3ae85ea6",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/hart-chart/2.0.3/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.3",
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    },
+    "catalog": {
+      "version": "2.0.3",
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game hart-chart with --production-hub --lobby, --production-hub --lobby --mobile, --production-hub --lobby --signed-in --english and --remote --standalone --mobile passed against 2.0.3, including the visible-confirmation check; /api/* intercepted into local SQLite only. No production account or training record was created.",
+    "screenshots": [
+      "docs/migrations/hart-chart-confirmation-layer/production-desktop-confirmation.png",
+      "docs/migrations/hart-chart-confirmation-layer/production-mobile-confirmation.png"
+    ]
+  }
+}

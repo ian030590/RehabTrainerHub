@@ -1,5 +1,24 @@
 # 哈特圖教學與練習畫面對齊
 
+## 2.0.3：確認面板被畫在訓練畫面下方
+
+2026-10-19 使用者在 Windows Brave 回報：哈特圖「按開始訓練後」的訓練畫面沒有任何按鈕、輸入框或滑桿點得到，也沒有進入全螢幕；其他遊戲正常。卡住畫面在遊戲 frame 的 console 讀到 `.hart-page` 仍為 inert、無全螢幕，而 `training-confirmation` 面板仍在 DOM 中。
+
+原因：本文件下方 2.0.1 的改動讓教學直接使用 inert 的 `.hart-page`（z-index 1000），並以 `game.css` 的 `.hart-tutorial-ready { z-index: 1200 }` 把確認面板放在上面。但 bundle 中 `rules.css` 較晚載入，同權重的 `.training-panel { z-index: 900 }` 覆蓋了它，面板其實在訓練畫面下方。玩家只看到點不動的訓練畫面；點擊穿過 inert 層落到看不見的面板，開始訓練從未執行，因此也沒有全螢幕。下方「確認面板位於遊戲畫面上方」的描述在 2.0.1／2.0.2 並不成立。
+
+先前驗收沒抓到，是因為 Brave fixture 以座標點擊開始鈕，而 hit test 會略過 inert 元素，點擊剛好落在隱藏的按鈕上，流程照樣通過。
+
+修正：規則改為 `.training-panel.hart-tutorial-ready`，不再受載入順序影響。
+
+TDD：
+
+- `check-hart-chart-tutorial.test.mjs` 新增「final confirmation is painted above the inert training scene」，依 Vite 的匯入順序解析 CSS cascade；修正前失敗（900 對 1000）。此項在 CI 的 `test:game-architecture` 執行。
+- 共用的 `CheckConfirmationPresentation`（`scripts/r2-game-ui-browser.mjs`）在一次同步檢查中暫時解除 inert，要求確認面板按鈕確實是畫面最上層；對正式 2.0.2 失敗（「開始訓練」「返回設定」皆被遮住），對正式閱讀訓練 2.0.2 通過，沒有誤判。
+
+發布：擁有者確認精確 version／摘要後親自執行發布，`hart-chart@2.0.3` 五檔、651,974 bytes、`contentSha256: 97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d`。正式五檔 bytes、穩定入口 302、session、catalog，以及正式 Hub 桌機／手機／英文登入與獨立 PWA 手機流程都通過；見[正式收據](releases/hart-chart-2.0.3.json)與[正式桌機](migrations/hart-chart-confirmation-layer/production-desktop-confirmation.png)／[手機](migrations/hart-chart-confirmation-layer/production-mobile-confirmation.png)確認畫面截圖。
+
+## 2.0.1：教學與練習畫面對齊
+
 2026-10-18 已依擁有者「核准發佈」將本修正發布為 `hart-chart@2.0.1`，完成五檔回讀、current 切換與九項正式 Hub／PWA 流程驗收。五檔共 651,767 bytes，`contentSha256: d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366`。沒有部署 Hub／runner，沒有正式帳號或成果寫入；[正式收據](releases/hart-chart-2.0.1.json)、[核准紀錄](migrations/hart-chart-tutorial-parity/approval.json)與[驗收摘要](migrations/hart-chart-tutorial-parity/production/acceptance-summary.json)。
 
 原本聚光燈照的是另一套縮小的教學版面：字體被 CSS 強制縮小、解碼器只有五個座標文字，工具列也只是一行說明，與實際訓練不同。
@@ -8,7 +27,7 @@
 
 確認設定時準備新的字母表；教學結束後開始訓練沿用該表與座標。計時仍由進入 playing 後的 jsPsych lifecycle 啟動。教學期間實際畫面設為 `inert`，輸入處理另檢查 playing 階段，避免教學操作被計入答案或嘗試次數。確認面板位於遊戲畫面上方。
 
-## TDD
+### TDD
 
 | RED：先執行測試的失敗原因 | GREEN：修正後結果 |
 | --- | --- |
@@ -18,7 +37,7 @@
 
 `node --test scripts/check-hart-chart-migration.test.mjs scripts/check-hart-chart-tutorial.test.mjs`：12 項通過。既有設定、演算法、原圖、五項數值成果、私有 bridge 與啟動取消檢查保留。
 
-## 回歸驗證
+### 回歸驗證
 
 - `npm run test:game-architecture`：296 項通過，包含所有遊戲 TypeScript。
 - `npm run test:entrypoints`、`npm run test:naming`：通過。
@@ -40,21 +59,21 @@ Brave 使用 `node scripts/check-r2-game-browser.mjs --game hart-chart` 加上�
 
 英文小視窗首次返回大廳捲動等待逾時；最後以相同旗標重跑，752×485 全流程及捲動復位通過。
 
-## 畫面
+### 畫面
 
 | 尺寸 | 教學 | 實際練習 |
 | --- | --- | --- |
 | 桌機 | [字母表聚光燈](migrations/hart-chart-tutorial-parity/desktop-tutorial.png) | [相同字母表與解碼器](migrations/hart-chart-tutorial-parity/desktop-gameplay.png) |
 | 手機 | [解碼器聚光燈](migrations/hart-chart-tutorial-parity/mobile-tutorial.png) | [相同完整解碼器](migrations/hart-chart-tutorial-parity/mobile-gameplay.png) |
 
-## 視覺交付檢查
+### 視覺交付檢查
 
 - Hard Gate PASS：桌機／手機／平板無頁面溢出，三個教學面板均留在畫面內且不遮住目標；沿用既有焦點與教學鍵盤測試。
 - Purpose Gate PASS：刪除教學專用版面與字體覆寫，使用遊戲原有視覺與操作元件。
 - Liveliness PASS：沿用既有安靜易讀方向（ENERGY 1／RHYTHM 1／MOTION 1）；每一步由聚光燈明確標出一個練習目標。
 - Craftsmanship PASS：保留設定、教學返回、全螢幕、提示、停靠、縮放、QR、完整數值成果與保存重試，五個上述瀏覽器流程通過。
 
-## 正式發布與驗收
+### 正式發布與驗收
 
 新版本五檔均在上傳後回讀 SHA-256，最後發布 approved manifest，再切換 current。正式 `/api/games` 只有一筆哈特圖 `2.0.1`、分類 `vision`；不指定版本的 session 綁定 `2.0.1` 與相同摘要。逐檔公開 bytes、Content-Type、CSP、穩定入口 `302 /games/hart-chart/2.0.1/`／no-store、嚴格 sandbox 及舊 JSON／JS／SW `410` 全部通過。[正式 API 與 bytes 證據](migrations/hart-chart-tutorial-parity/production/production-verification.json)。
 
