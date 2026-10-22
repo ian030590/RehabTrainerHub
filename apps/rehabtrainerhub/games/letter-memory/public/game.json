@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "letter-memory",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "字母記憶更新（Letter Memory）", "description": "字母一個一個出現，長度不一定；一直記住最新的 4 個，結束後依序輸入，練習隨時更新記住的內容。" },
+    "en": { "title": "Letter Memory", "description": "Letters appear one at a time, and you cannot tell when the sequence ends. Keep the latest four in mind and type them at the end. Practice updating what you hold in mind." }
+  }
+}

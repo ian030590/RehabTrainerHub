@@ -1,627 +1,330 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-// Canonical Hub-owned brain Minesweeper runtime.
-import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT,type TranslationKey } from '@rehab-trainer/ui/i18n/games';
-import { PlayFailureSound,PlayGameEndSound,PlaySuccessSound,PrepareAudioFeedback } from './runtime/soundManager';
-import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { Clamp,FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { initJsPsych } from 'jspsych';
-import { useCallback,useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent,type WheelEvent,} from 'react';
-import { BrainTrainingRulesPanel } from './runtime/components/rules/BrainTrainingRulesPanel';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useT } from './i18n/useT';
+import { boardSizeOptions, defaultSettings, difficulties, ValidateSettings, type BoardSize, type Difficulty, type MinesweeperSettings } from './settings';
+import { BuildGameScore } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
+import { MinesweeperTutorial } from './rules/MinesweeperTutorial';
+import { boardSizes, CalculateMineCount, ClampZoom, CreateRandom, mineDensity, MineField, zoomRange } from './logic/minesweeper';
+import { CellFace, CellLabel, CellState, FormatElapsed, MineBoard, MineCounter, MoveCellFocus, ZoomControls } from './MineBoard';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
-type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
-type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-type GameResult = 'Victory' | 'Defeat';
-interface MinesweeperGameProps {
-    onExit: () => void;
-}
-interface DifficultyConfig {
-    labelKey: TranslationKey;
-    density: number;
-    descriptionKey: TranslationKey;
-}
-interface Cell {
-    x: number;
-    y: number;
-    mine: boolean;
-    revealed: boolean;
-    flagged: boolean;
-    adjacentMines: number;
-}
-interface SessionRecord {
-    Game_Result: GameResult;
-    Total_Duration_Seconds: number;
-}
-const difficulties: Record<MinesweeperDifficulty, DifficultyConfig> = {
-    Beginner: { labelKey: 'minesweeper.diff.beginner', density: 0.1, descriptionKey: 'minesweeper.diff.beginnerDesc' },
-    Intermediate: { labelKey: 'minesweeper.diff.intermediate', density: 0.16, descriptionKey: 'minesweeper.diff.intermediateDesc' },
-    Advanced: { labelKey: 'minesweeper.diff.advanced', density: 0.24, descriptionKey: 'minesweeper.diff.advancedDesc' },
-};
-const boardPresets = {
-    small: { label: '6x6', rows: 6, cols: 6, descriptionKey: 'minesweeper.preset.smallDesc' },
-    medium: { label: '16x16', rows: 16, cols: 16, descriptionKey: 'minesweeper.preset.mediumDesc' },
-    large: { label: '20x20', rows: 20, cols: 20, descriptionKey: 'minesweeper.preset.largeDesc' },
-} as const satisfies Record<string, {
-    label: string;
-    rows: number;
-    cols: number;
-    descriptionKey: TranslationKey;
-}>;
-type BoardPresetId = keyof typeof boardPresets;
-const defaultDifficulty: MinesweeperDifficulty = 'Beginner';
-const defaultBoardPreset: BoardPresetId = 'small';
-const defaultBoardRows = boardPresets[defaultBoardPreset].rows;
-const defaultBoardCols = boardPresets[defaultBoardPreset].cols;
-const boardViewportWidthRatio = 0.75;
-const boardViewportHeightRatio = 0.85;
-const minBoardZoom = 0.5;
-const maxBoardZoom = 3;
-const boardZoomStep = 0.25;
-const minesweeperAccent = '#7A4A24';
-const directions = [
-    [-1, -1],
-    [0, -1],
-    [1, -1],
-    [-1, 0],
-    [1, 0],
-    [-1, 1],
-    [0, 1],
-    [1, 1],
-] as const;
-export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
-    const { t } = useT();
-    const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const activeTouchPointersRef = useRef(new Map<number, {
-        x: number;
-        y: number;
-    }>());
-    const pinchStartRef = useRef<{
-        distance: number;
-        zoom: number;
-    } | null>(null);
-    const pinchGestureRef = useRef(false);
-    const boardZoomRef = useRef(1);
-    const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
-    const elapsedMillisRef = useRef(0);
-    const playStartedAtRef = useRef<number>(Date.now());
-    const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-    const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
-    const [phase, setPhase] = useState<MinesweeperPhase>('rules');
-    const hostedSettings = useHostedGameSettings();
-    const hostedSettingsAppliedRef = useRef(false);
+import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, StopMidiMusic } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
+import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 
-    const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>(({ easy: 'Beginner', medium: 'Intermediate', hard: 'Advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')]);
-    const [boardPreset, setBoardPreset] = useState<BoardPresetId>(defaultBoardPreset);
-    const [boardZoom, setBoardZoom] = useState(1);
-    const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
-    const [board, setBoard] = useState<Cell[][]>(() => CreateEmptyBoard(defaultBoardRows, defaultBoardCols));
-    const [boardRows, setBoardRows] = useState<number>(defaultBoardRows);
-    const [boardCols, setBoardCols] = useState<number>(defaultBoardCols);
-    const [mineCount, setMineCount] = useState(CalculateMineCount(defaultBoardRows, defaultBoardCols, difficulties[defaultDifficulty].density));
-    const [minesGenerated, setMinesGenerated] = useState(false);
-    const [flagMode, setFlagMode] = useState(false);
-    const [result, setResult] = useState<SessionRecord | null>(null);
-    useEffect(() => {
-        if (!hostedSettings || hostedSettingsAppliedRef.current)
-            return;
-        hostedSettingsAppliedRef.current = true;
-        setDifficulty(hostedSettings.difficulty === 'hard'
-            ? 'Advanced'
-            : hostedSettings.difficulty === 'medium'
-                ? 'Intermediate'
-                : 'Beginner');
-        if (hostedSettings.boardSize === 'small'
-            || hostedSettings.boardSize === 'medium'
-            || hostedSettings.boardSize === 'large')
-            setBoardPreset(hostedSettings.boardSize);
-        setPhase('rules');
-    }, [hostedSettings]);
-    const activeConfig = difficulties[difficulty];
-    const activeDifficultyLabel = t(activeConfig.labelKey);
-    const activeDifficultyDescription = t(activeConfig.descriptionKey);
-    const selectedBoardConfig = useMemo(() => GetSelectedBoardConfig(boardPreset, activeConfig.density), [activeConfig.density, boardPreset]);
-    const selectedMineCount = selectedBoardConfig.mines;
-    const selectedDensityPercent = Math.round((selectedMineCount / Math.max(1, selectedBoardConfig.rows * selectedBoardConfig.cols)) * 100);
-    const boardMetrics = useMemo(() => GetBoardMetrics(boardRows, boardCols), [boardCols, boardRows]);
-    const gameTitle = t('training.minesweeper.title');
-    const canvasStyle = useMemo<CSSProperties>(() => {
-        const aspectRatio = boardMetrics.pixelWidth / Math.max(1, boardMetrics.pixelHeight);
-        const responsiveWidth = Math.min(viewportSize.width * boardViewportWidthRatio, viewportSize.height * boardViewportHeightRatio * aspectRatio);
-        return {
-            width: `${Math.max(1, responsiveWidth) * boardZoom}px`,
-            aspectRatio: `${boardMetrics.pixelWidth} / ${boardMetrics.pixelHeight}`,
-            height: 'auto',
-        };
-    }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth, boardZoom, viewportSize.height, viewportSize.width]);
-    boardZoomRef.current = boardZoom;
-    useEffect(() => {
-        const syncViewportSize = () => {
-            const viewport = window.visualViewport;
-            setViewportSize({
-                width: viewport?.width ?? window.innerWidth,
-                height: viewport?.height ?? window.innerHeight,
-            });
-        };
-        syncViewportSize();
-        window.addEventListener('resize', syncViewportSize);
-        window.visualViewport?.addEventListener('resize', syncViewportSize);
-        return () => {
-            window.removeEventListener('resize', syncViewportSize);
-            window.visualViewport?.removeEventListener('resize', syncViewportSize);
-        };
-    }, []);
-    useEffect(() => {
-        const host = jsPsychHostRef.current;
-        if (!host)
-            return;
-        const jsPsych = initJsPsych({ display_element: host });
-        const lifecycle = new JsPsychExternalLifecycle(jsPsych);
-        jsPsychRef.current = jsPsych;
-        jsPsychLifecycleRef.current = lifecycle;
-        return () => {
-            lifecycle.dispose();
-            if (jsPsychRef.current === jsPsych)
-                jsPsychRef.current = null;
-            if (jsPsychLifecycleRef.current === lifecycle)
-                jsPsychLifecycleRef.current = null;
-        };
-    }, []);
-    const finishGame = useCallback((nextBoard: Cell[][], gameResult: GameResult) => {
-        PlayGameEndSound(gameResult, jsPsychRef);
-        const duration = Math.max(0, (elapsedMillisRef.current + Date.now() - playStartedAtRef.current) / 1000);
-        elapsedMillisRef.current = duration * 1000;
-        const trainingDate = FormatTestDate(new Date());
-        const participantId = GetAuthUserNameFromToken() || 'Unknown';
-        const record: SessionRecord = {
-            Game_Result: gameResult,
-            Total_Duration_Seconds: Number(duration.toFixed(1)),
-        };
-        jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
-        setBoard(nextBoard);
-        setResult(record);
-        setPhase('results');
-        void SaveTrainingSessionRecord({
-            userName: participantId,
-            moduleId: 'thinking-training',
-            gameId: 'minesweeper',
-            gameTitle,
-            difficulty,
-            trainingDate,
-            details: {
-                Game_Result: record.Game_Result,
-                Total_Duration_Seconds: record.Total_Duration_Seconds,
-                Completed: record.Game_Result === 'Victory',
-                Board_Rows: nextBoard.length,
-                Board_Columns: nextBoard[0]?.length ?? 0,
-                Mine_Count: nextBoard.flat().filter(cell => cell.mine).length,
-                Safe_Cells: nextBoard.flat().filter(cell => !cell.mine).length,
-                Revealed_Safe_Cells: nextBoard.flat().filter(cell => !cell.mine && cell.revealed).length,
-                Correct_Flags: nextBoard.flat().filter(cell => cell.mine && cell.flagged).length,
-                Incorrect_Flags: nextBoard.flat().filter(cell => !cell.mine && cell.flagged).length,
-            },
-        });
-    }, [difficulty, gameTitle]);
-    const startGame = useCallback(async () => {
-        PrepareAudioFeedback(jsPsychRef);
-        await enterTrainingFullscreen();
-        await jsPsychLifecycleRef.current?.start({ moduleId: 'brain:minesweeper', onStart: () => {
-                const nextRows = selectedBoardConfig.rows;
-                const nextCols = selectedBoardConfig.cols;
-                const nextMineCount = selectedBoardConfig.mines;
-                setBoardRows(nextRows);
-                setBoardCols(nextCols);
-                setMineCount(nextMineCount);
-                setBoard(CreateEmptyBoard(nextRows, nextCols));
-                setMinesGenerated(false);
-                setFlagMode(false);
-                setBoardZoom(1);
-                boardZoomRef.current = 1;
-                activeTouchPointersRef.current.clear();
-                pinchStartRef.current = null;
-                pinchGestureRef.current = false;
-                setResult(null);
-                elapsedMillisRef.current = 0;
-                playStartedAtRef.current = Date.now();
-                setPhase('playing');
-            } });
-    }, [enterTrainingFullscreen, selectedBoardConfig]);
-    const returnToMenu = useCallback(() => {
-        jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
-        RequestHubTrainingConfiguration();
-        setResult(null);
-        setFlagMode(false);
-        activeTouchPointersRef.current.clear();
-        pinchStartRef.current = null;
-        pinchGestureRef.current = false;
-    }, []);
-    const toggleFlagAt = useCallback((x: number, y: number) => {
-        if (phase !== 'playing')
-            return;
-        setBoard((currentBoard) => {
-            const target = currentBoard[y]?.[x];
-            if (!target || target.revealed)
-                return currentBoard;
-            const nextBoard = [...currentBoard];
-            nextBoard[y] = currentBoard[y].map((cell) => (cell.x === x ? { ...cell, flagged: !cell.flagged } : cell));
-            return nextBoard;
-        });
-    }, [phase]);
-    const revealAt = useCallback((x: number, y: number) => {
-        if (phase !== 'playing')
-            return;
-        const target = board[y]?.[x];
-        if (!target || target.flagged || target.revealed)
-            return;
-        let nextBoard = CloneBoard(board);
-        if (!minesGenerated) {
-            nextBoard = GenerateMines(nextBoard, mineCount, x, y);
-            setMinesGenerated(true);
-        }
-        const clicked = nextBoard[y][x];
-        if (clicked.mine) {
-            PlayFailureSound(jsPsychRef);
-            finishGame(RevealAllMines(nextBoard), 'Defeat');
-            return;
-        }
-        const openedBoard = RevealSafeCells(nextBoard, x, y);
-        PlaySuccessSound(jsPsychRef);
-        if (HasWon(openedBoard)) {
-            finishGame(openedBoard, 'Victory');
-            return;
-        }
-        setBoard(openedBoard);
-    }, [board, finishGame, mineCount, minesGenerated, phase]);
-    const activateCanvasCell = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
-        if (phase !== 'playing')
-            return;
-        const position = GetCanvasCell(event, boardRows, boardCols);
-        if (!position)
-            return;
-        if (event.button === 2 || flagMode) {
-            toggleFlagAt(position.x, position.y);
-            return;
-        }
-        revealAt(position.x, position.y);
-    }, [boardCols, boardRows, flagMode, phase, revealAt, toggleFlagAt]);
-    const setClampedBoardZoom = useCallback((value: number) => {
-        const nextZoom = Math.round(Clamp(value, minBoardZoom, maxBoardZoom) * 100) / 100;
-        boardZoomRef.current = nextZoom;
-        setBoardZoom(nextZoom);
-    }, []);
-    const handleCanvasPointerDown = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
-        if (phase !== 'playing')
-            return;
-        event.preventDefault();
-        if (event.pointerType !== 'touch') {
-            activateCanvasCell(event);
-            return;
-        }
-        event.currentTarget.setPointerCapture(event.pointerId);
-        activeTouchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-        if (activeTouchPointersRef.current.size < 2)
-            return;
-        const [first, second] = [...activeTouchPointersRef.current.values()];
-        pinchStartRef.current = {
-            distance: GetPointerDistance(first, second),
-            zoom: boardZoomRef.current,
-        };
-        pinchGestureRef.current = true;
-    }, [activateCanvasCell, phase]);
-    const handleCanvasPointerMove = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
-        if (event.pointerType !== 'touch' || !activeTouchPointersRef.current.has(event.pointerId))
-            return;
-        event.preventDefault();
-        activeTouchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-        const pinchStart = pinchStartRef.current;
-        if (!pinchStart || activeTouchPointersRef.current.size < 2 || pinchStart.distance <= 0)
-            return;
-        const [first, second] = [...activeTouchPointersRef.current.values()];
-        setClampedBoardZoom(pinchStart.zoom * (GetPointerDistance(first, second) / pinchStart.distance));
-    }, [setClampedBoardZoom]);
-    const finishCanvasPointer = useCallback((event: PointerEvent<HTMLCanvasElement>, cancelled: boolean) => {
-        if (event.pointerType !== 'touch')
-            return;
-        event.preventDefault();
-        const wasTracked = activeTouchPointersRef.current.has(event.pointerId);
-        const wasPinchGesture = pinchGestureRef.current;
-        if (!cancelled && wasTracked && !wasPinchGesture && activeTouchPointersRef.current.size === 1) {
-            activateCanvasCell(event);
-        }
-        activeTouchPointersRef.current.delete(event.pointerId);
-        if (activeTouchPointersRef.current.size < 2)
-            pinchStartRef.current = null;
-        if (activeTouchPointersRef.current.size === 0)
-            pinchGestureRef.current = false;
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-        }
-    }, [activateCanvasCell]);
-    const handleCanvasWheel = useCallback((event: WheelEvent<HTMLCanvasElement>) => {
-        if (phase !== 'playing' || event.deltaY === 0)
-            return;
-        event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.1 : 0.9;
-        setClampedBoardZoom(boardZoomRef.current * factor);
-    }, [phase, setClampedBoardZoom]);
-    useTrainingAbort({
-        active: phase === 'playing',
-        onAbort: returnToMenu,
-    });
-    useEffect(() => {
-        DrawBoard(canvasRef.current, board, boardMetrics);
-    }, [board, boardMetrics]);
-    return (<div ref={fullscreenRootRef} className={`minesweeper-game minesweeper-phase-${phase}`}>
-      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
-      {null}
+type Phase = 'menu' | 'rules' | 'running' | 'results';
+const outcomeHoldMs = 1600;
+const wheelZoomFactor = 1.1;
 
-      {phase === 'rules' && (<div className="training-panel">
-          <BrainTrainingRulesPanel gameId="minesweeper" title={gameTitle} summaryTitle={gameTitle} summaryItems={[
-                { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
-                {
-                    label: t('minesweeper.config.boardSize'),
-                    value: `${selectedBoardConfig.label} (${selectedBoardConfig.rows}x${selectedBoardConfig.cols})`,
-                },
-                { label: t('minesweeper.config.mineDensity'), value: `${selectedDensityPercent}%` },
-                { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
-            ]} onStart={() => void startGame()} onBack={() => {
-                if (!RequestHubTrainingConfiguration())
-                    RequestHubTrainingConfiguration();
-            }}/>
-        </div>)}
+export function MinesweeperGame() {
+  const { lang, t } = useT();
+  const en = lang === 'en';
+  const title = t('game.title');
+  const [phase, setPhase] = useState<Phase>('menu');
+  useEffect(() => {
+    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
+  const [settings, setSettings] = useState<MinesweeperSettings>({ ...defaultSettings });
+  useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
+  const [score, setScore] = useState<ReturnType<typeof BuildGameScore> | null>(null);
+  const [flagMode, setFlagMode] = useState(false);
+  const [flaggedTap, setFlaggedTap] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [focusCell, setFocusCell] = useState(0);
+  const [, setVersion] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const clockRef = useRef<HTMLParagraphElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
+  const jsPsychHostRef = useRef<HTMLDivElement>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const fieldRef = useRef<MineField | null>(null);
+  const zoomRef = useRef(1);
+  const zoomAnchorRef = useRef<{ x: number; y: number } | null>(null);
+  const startedAtRef = useRef(0);
+  const endedAtRef = useRef<number | null>(null);
+  const timerRef = useRef(0);
+  const generationRef = useRef(0);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
 
-      {phase === 'playing' && (<div className="minesweeper-board-stage">
-          <canvas ref={canvasRef} className={`minesweeper-canvas ${flagMode ? 'flag-mode' : ''}`} style={canvasStyle} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={(event) => finishCanvasPointer(event, false)} onPointerCancel={(event) => finishCanvasPointer(event, true)} onWheel={handleCanvasWheel} onContextMenu={(event) => event.preventDefault()} aria-label={t('minesweeper.boardAria')}/>
-          <div className="minesweeper-board-controls">
-            <div className="minesweeper-zoom-controls" role="group" aria-label={t('minesweeper.zoom.group')}>
-              <button className="btn btn-sm btn-secondary minesweeper-zoom-button" type="button" onClick={() => setClampedBoardZoom(boardZoomRef.current - boardZoomStep)} disabled={boardZoom <= minBoardZoom} aria-label={t('minesweeper.zoom.out')}>
-                −
-              </button>
-              <button className="btn btn-sm btn-secondary minesweeper-zoom-reset" type="button" onClick={() => setClampedBoardZoom(1)} aria-label={t('minesweeper.zoom.reset')}>
-                {Math.round(boardZoom * 100)}%
-              </button>
-              <button className="btn btn-sm btn-secondary minesweeper-zoom-button" type="button" onClick={() => setClampedBoardZoom(boardZoomRef.current + boardZoomStep)} disabled={boardZoom >= maxBoardZoom} aria-label={t('minesweeper.zoom.in')}>
-                +
-              </button>
-            </div>
-            <button className={`btn btn-sm ${flagMode ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFlagMode((current) => !current)}>
-              {flagMode ? t('minesweeper.flagModeActive') : t('minesweeper.flagMode')}
-            </button>
-          </div>
-        </div>)}
-
-      {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable minesweeper-results-container">
-          <div className="experiment-results">
-            <h1>{result.Game_Result === 'Victory' ? t('minesweeper.results.victory') : t('minesweeper.results.defeat')}</h1>
-            <div className="training-result-summary">
-              <span>
-                <small>{t('cognitive.results.result')}</small>
-                <strong>{result.Game_Result === 'Victory' ? t('cognitive.results.victory') : t('cognitive.results.defeat')}</strong>
-              </span>
-              <span>
-                <small>{t('minesweeper.results.duration')}</small>
-                <strong>{FormatSeconds(result.Total_Duration_Seconds, t)}</strong>
-              </span>
-            </div>
-
-            <TrainingResultActions backLabel={t('training.returnHome')} onBackHome={onExit} hubLabel={t('training.returnLobby')}/>
-          </div>
-        </div>)}
-    </div>);
-}
-function CreateEmptyBoard(rows: number, cols: number): Cell[][] {
-    return Array.from({ length: rows }, (_, y) => (Array.from({ length: cols }, (_, x) => ({
-        x,
-        y,
-        mine: false,
-        revealed: false,
-        flagged: false,
-        adjacentMines: 0,
-    }))));
-}
-function CloneBoard(board: Cell[][]): Cell[][] {
-    return board.map((row) => row.map((cell) => ({ ...cell })));
-}
-function GetSelectedBoardConfig(presetId: BoardPresetId, density: number) {
-    const preset = boardPresets[presetId];
-    return {
-        label: preset.label,
-        rows: preset.rows,
-        cols: preset.cols,
-        mines: CalculateMineCount(preset.rows, preset.cols, density),
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored && phaseRef.current === 'menu') setSettings(restored);
+  }), []);
+  const stopRuntime = useCallback(() => {
+    generationRef.current++;
+    fieldRef.current = null;
+    window.clearTimeout(timerRef.current);
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+  }, []);
+  const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const backToSettings = useCallback(() => setPhase('menu'), []);
+  useEffect(() => {
+    const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+    const configure = () => { stopRuntime(); setScore(null); setPhase('menu'); };
+    const keys = (event: KeyboardEvent) => {
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
     };
-}
-function GetPointerDistance(first: {
-    x: number;
-    y: number;
-}, second: {
-    x: number;
-    y: number;
-}) {
-    return Math.hypot(second.x - first.x, second.y - first.y);
-}
-function CalculateMineCount(rows: number, cols: number, density: number): number {
-    const cells = rows * cols;
-    return Clamp(Math.round(cells * density), 1, Math.max(1, cells - 9));
-}
-function GenerateMines(board: Cell[][], mineCount: number, safeX: number, safeY: number): Cell[][] {
-    const candidates: Cell[] = [];
-    board.forEach((row) => {
-        row.forEach((cell) => {
-            if (Math.abs(cell.x - safeX) <= 1 && Math.abs(cell.y - safeY) <= 1)
-                return;
-            candidates.push(cell);
-        });
-    });
-    for (let i = candidates.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-    }
-    candidates.slice(0, Math.min(mineCount, candidates.length)).forEach((cell) => {
-        board[cell.y][cell.x].mine = true;
-    });
-    board.forEach((row) => {
-        row.forEach((cell) => {
-            if (cell.mine)
-                return;
-            cell.adjacentMines = GetNeighbors(board, cell.x, cell.y).filter((neighbor) => neighbor.mine).length;
-        });
-    });
-    return board;
-}
-function RevealSafeCells(board: Cell[][], x: number, y: number): Cell[][] {
-    const queue: Cell[] = [board[y][x]];
-    const visited = new Set<string>();
-    let queueIndex = 0;
-    while (queueIndex < queue.length) {
-        const cell = queue[queueIndex];
-        queueIndex += 1;
-        const key = `${cell.x},${cell.y}`;
-        if (visited.has(key) || cell.flagged || cell.mine)
-            continue;
-        visited.add(key);
-        cell.revealed = true;
-        if (cell.adjacentMines === 0) {
-            GetNeighbors(board, cell.x, cell.y).forEach((neighbor) => {
-                if (!neighbor.revealed && !neighbor.flagged && !neighbor.mine)
-                    queue.push(neighbor);
-            });
-        }
-    }
-    return board;
-}
-function RevealAllMines(board: Cell[][]): Cell[][] {
-    board.forEach((row) => {
-        row.forEach((cell) => {
-            if (cell.mine)
-                cell.revealed = true;
-        });
-    });
-    return board;
-}
-function HasWon(board: Cell[][]): boolean {
-    return board.every((row) => row.every((cell) => cell.mine || cell.revealed));
-}
-function GetNeighbors(board: Cell[][], x: number, y: number): Cell[] {
-    const rows = board.length;
-    const cols = board[0]?.length ?? 0;
-    return directions.flatMap(([dx, dy]) => {
-        const nextX = x + dx;
-        const nextY = y + dy;
-        if (nextX < 0 || nextX >= cols || nextY < 0 || nextY >= rows)
-            return [];
-        return [board[nextY][nextX]];
-    });
-}
-function GetBoardMetrics(rows: number, cols: number) {
-    const maxDimension = Math.max(rows, cols);
-    const cellSize = maxDimension <= 6 ? 72 : maxDimension <= 20 ? 34 : maxDimension <= 30 ? 22 : 12;
-    return {
-        cellSize,
-        pixelWidth: cellSize * cols,
-        pixelHeight: cellSize * rows,
+    const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
+    window.addEventListener('game:saved', saved);
+    window.addEventListener('game:configure', configure);
+    window.addEventListener('keydown', keys, true);
+    window.addEventListener('pagehide', pagehide);
+    return () => {
+      window.removeEventListener('game:saved', saved);
+      window.removeEventListener('game:configure', configure);
+      window.removeEventListener('keydown', keys, true);
+      window.removeEventListener('pagehide', pagehide);
+      pagehide();
     };
-}
-function DrawBoard(canvas: HTMLCanvasElement | null, board: Cell[][], metrics: ReturnType<typeof GetBoardMetrics>) {
-    if (!canvas)
-        return;
-    const dpr = window.devicePixelRatio || 1;
-    const ctx = canvas.getContext('2d');
-    if (!ctx)
-        return;
-    canvas.width = metrics.pixelWidth * dpr;
-    canvas.height = metrics.pixelHeight * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, metrics.pixelWidth, metrics.pixelHeight);
-    ctx.fillStyle = '#F8FAFC';
-    ctx.fillRect(0, 0, metrics.pixelWidth, metrics.pixelHeight);
-    board.forEach((row) => {
-        row.forEach((cell) => DrawCell(ctx, cell, metrics.cellSize));
-    });
-}
-function DrawCell(ctx: CanvasRenderingContext2D, cell: Cell, cellSize: number) {
-    const x = cell.x * cellSize;
-    const y = cell.y * cellSize;
-    const gap = Math.max(1, Math.floor(cellSize * 0.06));
-    const innerX = x + gap;
-    const innerY = y + gap;
-    const innerSize = cellSize - gap * 2;
-    ctx.fillStyle = cell.revealed ? '#FFFFFF' : minesweeperAccent;
-    if (cell.flagged && !cell.revealed)
-        ctx.fillStyle = minesweeperAccent;
-    if (cell.revealed && cell.mine)
-        ctx.fillStyle = minesweeperAccent;
-    ctx.fillRect(innerX, innerY, innerSize, innerSize);
-    ctx.strokeStyle = cell.revealed ? '#64748B' : '#FFFFFF';
-    ctx.lineWidth = Math.max(1, cellSize * 0.04);
-    ctx.strokeRect(innerX, innerY, innerSize, innerSize);
-    if (cell.flagged && !cell.revealed) {
-        DrawFlag(ctx, x, y, cellSize);
-        return;
+  }, [exit, stopRuntime]);
+  useEffect(() => {
+    if (phase !== 'menu') return;
+    dialogRef.current?.showModal();
+    return () => dialogRef.current?.close();
+  }, [phase]);
+
+  const finish = useCallback((field: MineField) => {
+    const result = BuildGameScore(field, (endedAtRef.current ?? performance.now()) - startedAtRef.current);
+    jsPsychLifecycleRef.current?.finish({ outcome: field.outcome, moves: result.summary.moves, revealedSafe: result.summary.revealedSafe });
+    fieldRef.current = null;
+    setScore(result);
+    setSaveState(IsHubGame() ? 'saving' : 'local');
+    SendGameResult({ ...settings }, result.summary, result.rounds);
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    setPhase('results');
+  }, [settings]);
+  // The final board stays on screen briefly so the player sees it before the results.
+  const end = useCallback((field: MineField) => {
+    endedAtRef.current = performance.now();
+    PlayGameEndSound(field.outcome === 'Victory' ? 'Victory' : 'Defeat');
+    setVersion(version => version + 1);
+    const generation = generationRef.current;
+    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) finish(field); }, outcomeHoldMs);
+  }, [finish]);
+  useEffect(() => {
+    const host = jsPsychHostRef.current;
+    if (phase !== 'running' || !host) return;
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychLifecycleRef.current = lifecycle;
+    void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:minesweeper', onStart: () => {
+      startedAtRef.current = performance.now();
+      endedAtRef.current = null;
+      const field = new MineField(settings.difficulty, settings.boardSize, CreateRandom(Date.now()), startedAtRef.current);
+      fieldRef.current = field;
+      setFlagMode(false);
+      setFlaggedTap(false);
+      zoomRef.current = 1;
+      setZoom(1);
+      setFocusCell(Math.floor(field.size / 2) * field.size + Math.floor(field.size / 2));
+      setVersion(version => version + 1);
+    } });
+    return () => {
+      fieldRef.current = null;
+      lifecycle.dispose();
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
+  }, [phase, settings.difficulty, settings.boardSize]);
+  // The visible clock reads the start time, so it never drifts from the recorded duration.
+  useEffect(() => {
+    if (phase !== 'running') return;
+    const timer = window.setInterval(() => {
+      if (!clockRef.current || !fieldRef.current || endedAtRef.current !== null) return;
+      clockRef.current.textContent = FormatElapsed(performance.now() - startedAtRef.current, en);
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [phase, en]);
+
+  // Zooming keeps the middle of the visible board in place.
+  const applyZoom = useCallback((value: number) => {
+    const next = ClampZoom(value);
+    if (next === zoomRef.current) return;
+    const area = areaRef.current;
+    if (area) zoomAnchorRef.current = { x: (area.scrollLeft + area.clientWidth / 2) / area.scrollWidth, y: (area.scrollTop + area.clientHeight / 2) / area.scrollHeight };
+    zoomRef.current = next;
+    setZoom(next);
+  }, []);
+  useLayoutEffect(() => {
+    const area = areaRef.current, anchor = zoomAnchorRef.current;
+    zoomAnchorRef.current = null;
+    if (!area || !anchor) return;
+    area.scrollLeft = anchor.x * area.scrollWidth - area.clientWidth / 2;
+    area.scrollTop = anchor.y * area.scrollHeight - area.clientHeight / 2;
+  }, [zoom]);
+  // The wheel and a two-finger pinch zoom the board, as in the original game; one finger still scrolls it.
+  useEffect(() => {
+    const area = areaRef.current;
+    if (phase !== 'running' || !area) return;
+    let pinch: { distance: number; zoom: number } | null = null;
+    const spread = (touches: TouchList) => Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    const wheel = (event: WheelEvent) => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      applyZoom(zoomRef.current * (event.deltaY < 0 ? wheelZoomFactor : 1 / wheelZoomFactor));
+    };
+    const touchStart = (event: TouchEvent) => { pinch = event.touches.length === 2 ? { distance: spread(event.touches), zoom: zoomRef.current } : null; };
+    const touchMove = (event: TouchEvent) => { if (pinch && pinch.distance > 0 && event.touches.length === 2) applyZoom(pinch.zoom * spread(event.touches) / pinch.distance); };
+    const touchEnd = (event: TouchEvent) => { if (event.touches.length < 2) pinch = null; };
+    area.addEventListener('wheel', wheel, { passive: false });
+    area.addEventListener('touchstart', touchStart, { passive: true });
+    area.addEventListener('touchmove', touchMove, { passive: true });
+    area.addEventListener('touchend', touchEnd);
+    area.addEventListener('touchcancel', touchEnd);
+    return () => {
+      area.removeEventListener('wheel', wheel);
+      area.removeEventListener('touchstart', touchStart);
+      area.removeEventListener('touchmove', touchMove);
+      area.removeEventListener('touchend', touchEnd);
+      area.removeEventListener('touchcancel', touchEnd);
+    };
+  }, [phase, applyZoom]);
+
+  // Taps, right clicks and keys all go through here.
+  const act = (index: number, flag: boolean) => {
+    const field = fieldRef.current;
+    if (phaseRef.current !== 'running' || !field || field.outcome) return;
+    const now = performance.now();
+    setFocusCell(index);
+    if (flag) {
+      if (field.toggleFlag(index, now).accepted) { setFlaggedTap(false); setVersion(version => version + 1); }
+      return;
     }
-    if (!cell.revealed)
-        return;
-    if (cell.mine) {
-        DrawMine(ctx, x, y, cellSize);
-        return;
+    if (field.cells[index].flagged) { setFlaggedTap(true); return; }
+    const result = field.open(index, now);
+    if (!result.accepted) return;
+    setFlaggedTap(false);
+    setVersion(version => version + 1);
+    if (result.result === 'safe' && !result.solved) PlaySuccessSound();
+    if (result.result === 'mine') PlayFailureSound();
+    if (field.outcome) end(field);
+  };
+  const boardKeys = (event: ReactKeyboardEvent<HTMLDivElement>, field: MineField) => {
+    if (MoveCellFocus(event, field.size) || event.key.toLowerCase() !== 'f') return;
+    const index = Number((event.target as HTMLElement).closest<HTMLElement>('.ms-cell')?.dataset.index);
+    if (Number.isNaN(index)) return;
+    event.preventDefault();
+    act(index, true);
+  };
+
+  const confirmSettings = () => {
+    if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
+    SaveGameSettings(settings);
+    setPhase('rules');
+  };
+  const startTraining = async () => {
+    if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    const generation = generationRef.current;
+    SetSoundEnabled(settings.soundEnabled);
+    PrepareAudioFeedback();
+    try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      return;
     }
-    if (cell.adjacentMines > 0) {
-        ctx.fillStyle = minesweeperAccent;
-        ctx.font = `800 ${Math.max(8, cellSize * 0.58)}px ${typography.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(String(cell.adjacentMines), x + cellSize / 2, y + cellSize / 2 + cellSize * 0.04);
-    }
-}
-function DrawFlag(ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) {
-    const poleX = x + cellSize * 0.38;
-    const topY = y + cellSize * 0.2;
-    const bottomY = y + cellSize * 0.78;
-    ctx.strokeStyle = '#111827';
-    ctx.lineWidth = Math.max(2, cellSize * 0.08);
-    ctx.beginPath();
-    ctx.moveTo(poleX, topY);
-    ctx.lineTo(poleX, bottomY);
-    ctx.stroke();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(poleX, topY);
-    ctx.lineTo(x + cellSize * 0.74, y + cellSize * 0.34);
-    ctx.lineTo(poleX, y + cellSize * 0.48);
-    ctx.closePath();
-    ctx.fill();
-}
-function DrawMine(ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) {
-    const cx = x + cellSize / 2;
-    const cy = y + cellSize / 2;
-    const radius = cellSize * 0.24;
-    ctx.strokeStyle = '#111827';
-    ctx.lineWidth = Math.max(1.5, cellSize * 0.05);
-    directions.forEach(([dx, dy]) => {
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + dx * radius * 1.45, cy + dy * radius * 1.45);
-        ctx.stroke();
-    });
-    ctx.fillStyle = '#111827';
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fill();
-}
-function GetCanvasCell(event: PointerEvent<HTMLCanvasElement>, rows: number, cols: number) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = Math.floor(((event.clientX - rect.left) / rect.width) * cols);
-    const y = Math.floor(((event.clientY - rect.top) / rect.height) * rows);
-    if (x < 0 || x >= cols || y < 0 || y >= rows)
-        return null;
-    return { x, y };
-}
-function FormatSeconds(value: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
-    return t('training.secondsShort', { value });
+    SendGameEvent('active');
+    setPhase('running');
+  };
+
+  const densityLabel = (difficulty: Difficulty) => `${Math.round(mineDensity[difficulty] * 100)}%`;
+  const sizeLabel = (boardSize: BoardSize, difficulty: Difficulty) => {
+    const size = boardSizes[boardSize], mines = CalculateMineCount(size, size, mineDensity[difficulty]);
+    return en ? `${size} × ${size} (${mines} mines)` : `${size} × ${size}（${mines} 顆地雷）`;
+  };
+  const onOff = (value: boolean) => value ? (en ? 'On' : '開啟') : (en ? 'Off' : '關閉');
+  const summaryItems = [
+    { label: en ? 'Mine density' : '地雷密度', value: densityLabel(settings.difficulty) },
+    { label: en ? 'Board size' : '盤面大小', value: sizeLabel(settings.boardSize, settings.difficulty) },
+    { label: en ? 'Sound feedback' : '聲音回饋', value: onOff(settings.soundEnabled) },
+  ];
+  const seconds = (value: number) => `${value.toFixed(1)} ${en ? 's' : '秒'}`;
+  const ms = (value: number | null) => value === null ? (en ? 'N/A' : '無') : `${(value / 1000).toFixed(1)} ${en ? 's' : '秒'}`;
+  const field = fieldRef.current;
+  const feedback = field?.outcome === 'Victory' ? (en ? 'All safe cells are open' : '安全格全部打開了')
+    : field?.outcome === 'Defeat' ? (en ? 'That cell was a mine' : '踩到地雷了')
+      : flaggedTap ? (en ? 'This cell has a flag. Remove the flag to open it.' : '這格插了旗，拔旗後才能打開。')
+        : flagMode ? (en ? 'Flag mode: a tap places or removes a flag.' : '標記模式：點格子插旗或拔旗。') : '';
+  const runningSize = boardSizes[settings.boardSize];
+  const summary = score?.summary;
+  return <div ref={rootRef} className="minesweeper-game-root">
+    <div ref={jsPsychHostRef} className="ms-jspsych-host" aria-hidden="true" />
+    {(phase === 'menu' || phase === 'rules') && <MinesweeperTutorial active={phase === 'rules'} ready title={title}
+      settings={settings} summaryItems={summaryItems} onStart={startTraining} onBack={backToSettings} />}
+    {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog minesweeper-phase-menu" aria-labelledby="ms-settings-title"
+      onCancel={event => { event.preventDefault(); exit(); }}>
+      <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
+        onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
+        <header className="training-config-header"><h2 id="ms-settings-title">{title}</h2></header>
+        <div className="training-config-body">
+          <section className="training-setting"><h3>{en ? 'Activity settings' : '活動設定'}</h3>
+            <label>{en ? 'Mine density' : '地雷密度'}<select name="difficulty" value={settings.difficulty}
+              onChange={event => setSettings({ ...settings, difficulty: event.target.value as Difficulty })}>
+              {difficulties.map(difficulty => <option key={difficulty} value={difficulty}>{densityLabel(difficulty)}</option>)}
+            </select>
+              <small className="training-setting-description">{en ? 'More mines leave fewer cells you can work out for sure.' : '地雷越多，能確定安全的格子越少。'}</small></label>
+            <label>{en ? 'Board size' : '盤面大小'}<select name="boardSize" value={settings.boardSize}
+              onChange={event => setSettings({ ...settings, boardSize: event.target.value as BoardSize })}>
+              {boardSizeOptions.map(boardSize => <option key={boardSize} value={boardSize}>{sizeLabel(boardSize, settings.difficulty)}</option>)}
+            </select>
+              <small className="training-setting-description">{en ? 'Zoom large boards with − and +, two fingers, or the mouse wheel.' : '大盤面可用 − ＋、雙指或滑鼠滾輪縮放。'}</small></label>
+            <label className="ms-checkbox"><input name="soundEnabled" type="checkbox" checked={settings.soundEnabled}
+              onChange={event => setSettings({ ...settings, soundEnabled: event.target.checked })} />{en ? 'Sound feedback' : '聲音回饋'}
+              <small className="training-setting-description">{en ? 'A short sound when a safe cell opens, when a mine opens, and at the end of the game.' : '打開安全格、打開地雷與結束時播放提示音。'}</small></label>
+          </section>
+        </div>
+        <footer className="config-actions"><div className="training-config-navigation-buttons">
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+          <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+        </div></footer>
+      </form>
+    </dialog>}
+    {phase === 'running' && <main className="ms-stage ms-running" aria-label={title}>
+      <header className="ms-hud">
+        <MineCounter flags={field?.flags ?? 0} mines={field?.mineCount ?? CalculateMineCount(runningSize, runningSize, mineDensity[settings.difficulty])} en={en} />
+        <p ref={clockRef} className="ms-clock">{FormatElapsed(0, en)}</p>
+        <button type="button" className="btn btn-ghost ms-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+      </header>
+      <p className={`ms-feedback${field?.outcome ? ' ms-outcome' : ''}`} role="status" data-outcome={field?.outcome ?? undefined}>{feedback}</p>
+      <div className="ms-board-slot">
+        <MineBoard size={field?.size ?? runningSize} zoom={zoom} areaRef={areaRef} state={field?.outcome ? 'over' : 'running'}
+          label={en ? 'Minesweeper board' : '踩地雷棋盤'} onKeyDown={event => { if (field) boardKeys(event, field); }}>
+          {field?.cells.map((cell, index) => <button type="button" key={index} className="ms-cell" data-index={index} data-state={CellState(cell)}
+            data-count={cell.open && !cell.mine ? cell.adjacent : undefined} data-exploded={index === field.explodedIndex ? 'true' : undefined}
+            tabIndex={index === focusCell ? 0 : -1} onFocus={() => setFocusCell(index)} aria-label={CellLabel(cell, index, field.size, en)}
+            onClick={() => act(index, flagMode)} onContextMenu={event => { event.preventDefault(); act(index, true); }}><CellFace cell={cell} /></button>)}
+        </MineBoard>
+      </div>
+      <footer className="ms-tools">
+        <ZoomControls zoom={zoom} en={en} onStep={direction => applyZoom(zoomRef.current + direction * zoomRange.step)} onReset={() => applyZoom(1)} />
+        <button type="button" className={`btn ms-flag-mode${flagMode ? ' btn-primary' : ''}`} aria-pressed={flagMode}
+          onClick={() => setFlagMode(mode => !mode)}>{flagMode ? (en ? 'Flag mode on' : '標記模式中') : (en ? 'Flag mode' : '標記模式')}</button>
+      </footer>
+    </main>}
+    {phase === 'results' && score && summary && <div className="experiment-container results-container"><section className="experiment-results">
+      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+        <div className="score-key-metric"><p>{en ? 'Result' : '結果'}</p><strong>{summary.completed ? (en ? 'Cleared' : '完成') : (en ? 'Hit a mine' : '踩到地雷')}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Safe cells opened' : '打開的安全格'}</p><strong>{summary.revealedSafe} / {summary.safeCells}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Total time' : '總用時'}</p><strong>{seconds(summary.duration)}</strong></div>
+      </div></section>
+      <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
+        {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+        <div className="score-context-item"><dt>{en ? 'Flags on mines' : '插在地雷上的旗'}</dt><dd>{summary.correctFlags}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Flags on safe cells' : '插在安全格上的旗'}</dt><dd>{summary.incorrectFlags}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Actions' : '操作次數'}</dt><dd>{summary.moves}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Mean time per action' : '平均每次操作時間'}</dt><dd>{ms(summary.meanThinkMs)}</dd></div>
+      </dl></section>
+      <ScoreAnalysis rounds={score.rounds} language={lang} />
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+    </section></div>}
+  </div>;
 }

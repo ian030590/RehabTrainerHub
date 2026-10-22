@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tic-tac-toe",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "圈圈叉叉", "description": "與電腦輪流下棋，規劃自己的連線，同時預想電腦的下一步。" },
+    "en": { "title": "Tic Tac Toe", "description": "Take turns with the computer, plan your own line and think ahead to its next move." }
+  }
+}

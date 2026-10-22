@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { migratedBrainGameSpecs } from './migrated-brain-r2-browser.mjs';
 
 // Per-game drivers for the R2 brain activities. Each one sets a short session, plays it with real
 // browser input and states what the saved record must contain.
@@ -1297,6 +1298,7 @@ export const brainGameSpecs = {
     },
     rows: 20,
   },
+  ...migratedBrainGameSpecs,
 };
 
 export async function CheckBrainGame(gameId, { game, evaluate, send, until, standalone, english, capture, checkSpotlight,
@@ -1331,7 +1333,11 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await game(`document.querySelector('form .btn-primary').click()`);
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted tutorial');
+  const buttonLook = selector => game(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); const style = getComputedStyle(element);
+    return [style.borderTopStyle, style.borderTopWidth, style.borderTopLeftRadius, Math.round(element.getBoundingClientRect().height)].join(' '); })()`);
+  let tutorialStop = null;
   for (const target of spec.tutorialTargets) {
+    if (target === spec.stopSelector) tutorialStop = await buttonLook(target);
     const spotlight = await checkSpotlight(target);
     const intersects = spotlight.target.left < spotlight.panel.right && spotlight.target.right > spotlight.panel.left
       && spotlight.target.top < spotlight.panel.bottom && spotlight.target.bottom > spotlight.panel.top;
@@ -1377,6 +1383,8 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   await until(() => game(`document.fullscreenElement === document.querySelector('.${gameId}-game-root')`), 'native fullscreen root');
   if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
   assert.ok(await game(`document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight`), 'Stage fits the viewport.');
+  // The board-game batch checks that the tutorial's copy of Stop looks like the button it points at.
+  if (gameId in migratedBrainGameSpecs && tutorialStop) assert.equal(await buttonLook(spec.stopSelector), tutorialStop, 'The tutorial Stop matches the real Stop button.');
   if (process.argv.includes('--stop')) {
     await tap(spec.stopSelector);
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving');

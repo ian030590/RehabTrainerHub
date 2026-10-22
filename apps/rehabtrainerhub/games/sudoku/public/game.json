@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "sudoku",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "數獨", "description": "依規則把數字填進空格：初級是拉丁方陣，中級是魔方陣，高級是 9 × 9 數獨。" },
+    "en": { "title": "Sudoku", "description": "Fill the blanks by the rule: a Latin square at the easy level, a magic square at medium and a 9 × 9 sudoku at hard." }
+  }
+}

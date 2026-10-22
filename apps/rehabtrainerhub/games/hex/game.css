@@ -1,0 +1,90 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --opponent: #9a3412; --opponent-soft: #fbeae5;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.hex-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.hx-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.hx-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.hx-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.hx-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.hx-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hx-goal { display: flex; align-items: center; gap: 8px; padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.hx-edge-icon { flex: none; width: 1.4em; height: 5px; border-radius: 3px; background: var(--primary); }
+.hx-turn { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; }
+.hx-turn[data-turn="computer"] { color: var(--opponent); }
+.hx-clock { min-width: 5ch; text-align: right; }
+.hx-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
+.hx-feedback.hx-outcome { color: var(--heading); font-size: 1.3rem; }
+.hx-board-slot { display: grid; min-height: 0; }
+.hx-board-area { container-type: size; position: relative; min-height: 0; }
+/* The board is sized in cell widths; on a portrait screen it turns a quarter so its long side runs down the screen. */
+.hx-board { --margin: .8; --w: min(100cqw / (var(--span-x) + var(--margin)), 100cqh / (var(--span-y) + var(--margin)));
+  position: absolute; left: 50%; top: 50%; width: calc(var(--w) * var(--span-x)); height: calc(var(--w) * var(--span-y)); transform: translate(-50%, -50%); }
+@container (aspect-ratio < 1) {
+  .hx-board { --w: min(100cqh / (var(--span-x) + var(--margin)), 100cqw / (var(--span-y) + var(--margin))); transform: translate(-50%, -50%) rotate(90deg); }
+}
+.hx-edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hx-edges line { stroke-width: .16; stroke-linecap: round; }
+.hx-edge-player { stroke: var(--primary); }
+.hx-edge-computer { stroke: var(--opponent); stroke-dasharray: .34 .22; }
+/* The outer hexagon is the border; the face sits inset inside it, so a thicker inset reads as a thicker border. */
+.hx-cell { position: absolute; left: calc((var(--c) + var(--r) / 2) * var(--w)); top: calc(var(--r) * .866 * var(--w));
+  width: var(--w); height: calc(var(--w) * 1.1547); min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0;
+  background: var(--border-strong); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); cursor: pointer; }
+.hx-face { position: absolute; inset: 1.5px; background: var(--surface); clip-path: inherit; }
+.hx-cell[data-mark="P"] .hx-face { background: var(--primary); }
+.hx-cell[data-mark="A"] .hx-face { background: var(--opponent); }
+/* The player's cells carry a light ring so the two sides differ by shape as well as by color. */
+.hx-cell[data-mark="P"] .hx-face::after { content: ''; position: absolute; inset: 27%; border: calc(var(--w) * .07) solid var(--surface); border-radius: 50%; }
+.hx-cell[data-path] { background: var(--heading); }
+.hx-cell[data-path] .hx-face { inset: 4px; }
+.hx-cell:focus-visible { background: var(--heading); outline: none; }
+.hx-cell:focus-visible .hx-face { inset: 5px; }
+.hx-board[data-turn="computer"] .hx-cell, .hx-board[data-turn="over"] .hx-cell { cursor: default; }
+@media (hover: hover) { .hx-board[data-turn="player"] .hx-cell:not([data-mark]):hover .hx-face { background: var(--primary-soft); } }
+.hx-cell[data-tutorial="move"] { background: var(--primary); }
+.hx-cell[data-tutorial="move"] .hx-face { inset: 4px; background: var(--primary-soft); }
+.hx-stone-icon { flex: none; position: relative; width: 1.2em; height: 1.2em; border-radius: 50%; }
+.hx-stone-icon[data-mark="P"] { background: var(--primary); box-shadow: inset 0 0 0 .17em var(--primary), inset 0 0 0 .26em var(--surface); }
+.hx-stone-icon[data-mark="A"] { background: var(--opponent); }
+@media (max-width: 480px) {
+  .hx-hud p { font-size: 1rem; }
+  .hx-goal { flex-basis: 100%; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

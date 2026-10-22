@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "antisaccade",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "反向眼跳抑制（Antisaccade）", "description": "方塊在一側閃現時改看另一側，趁花紋蓋住前看出箭頭指向左、上或右，練習不被突然出現的東西拉走視線。" },
+    "en": { "title": "Antisaccade", "description": "When a square flashes on one side, look to the other side and name the arrow's direction before a pattern covers it. Practice keeping your eyes from jumping to sudden movement." }
+  }
+}

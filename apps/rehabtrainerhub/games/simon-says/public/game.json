@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "simon-says",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "順序記憶", "description": "看四個按鈕依序亮起，再照同樣的順序點回來；每答對一次會多加一個。" },
+    "en": { "title": "Simon Says", "description": "Watch four pads light up in order, then tap them back in the same order. Each correct repeat adds one more pad." }
+  }
+}

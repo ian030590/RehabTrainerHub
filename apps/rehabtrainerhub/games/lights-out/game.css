@@ -1,0 +1,80 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --board: #1b2633; --light-off: #2c3a4a; --light-off-edge: #5d7186; --light-focus: #fff;
+  --light-on: #f5c518; --light-on-edge: #a87c00; --light-bulb: #fffdf2; --light-glow: rgba(255,253,242,.45);
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.lights-out-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.lo-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.lo-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.lo-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.lo-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.lo-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lo-left { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.lo-left strong { font-size: 1.3rem; }
+.lo-moves { flex: 1 1 auto; }
+.lo-clock { min-width: 5ch; text-align: right; }
+.lo-clock[data-warning] { color: var(--error); }
+.lo-feedback { min-height: 1.6em; margin: 0; text-align: center; font-weight: 700; }
+.lo-feedback.lo-outcome { color: var(--heading); font-size: 1.3rem; }
+.lo-board-slot { display: grid; min-height: 0; }
+.lo-board-area { container-type: size; position: relative; min-height: 0; }
+.lo-board { --side: min(100cqw, 100cqh); position: absolute; left: 50%; top: 50%; display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr)); grid-template-rows: repeat(var(--n), minmax(0, 1fr));
+  gap: max(6px, calc(var(--side) * .02)); width: var(--side); height: var(--side); padding: max(8px, calc(var(--side) * .03));
+  border-radius: var(--radius); background: var(--board); transform: translate(-50%, -50%); }
+.lo-cell { display: grid; place-items: center; min-width: 0; min-height: 0; margin: 0; padding: 0;
+  border: 3px solid var(--light-off-edge); border-radius: var(--radius); background: var(--light-off); }
+.lo-cell[data-on] { border-color: var(--light-on-edge); background: var(--light-on); }
+/* A lit cell carries a bright bulb and a dark one an empty ring, so on and off read by shape as well as by color. */
+.lo-bulb { width: 40%; height: 40%; border: 3px solid var(--light-off-edge); border-radius: 50%; }
+.lo-cell[data-on] .lo-bulb { border: 0; background: var(--light-bulb); box-shadow: 0 0 0 6px var(--light-glow); }
+.lo-cell:focus-visible { outline: 4px solid var(--light-focus); outline-offset: 2px; }
+.lo-cell[data-tutorial="move"] { outline: 4px solid var(--light-focus); outline-offset: 2px; }
+.lo-board[data-state="over"] .lo-cell { cursor: default; }
+@media (hover: hover) { .lo-board[data-state="running"] .lo-cell:hover { border-color: var(--light-focus); } }
+.lo-bulb-icon { flex: none; width: 1em; height: 1em; border: .15em solid var(--light-on-edge); border-radius: 50%; background: var(--light-on); }
+@media (prefers-reduced-motion: no-preference) { .lo-cell { transition: background-color .12s, border-color .12s; } }
+@media (max-width: 480px) {
+  .lo-hud p { font-size: 1rem; }
+  /* Lights left and Stop share the first row; moves and the clock share the second. */
+  .lo-stop { order: 2; margin-left: auto; }
+  .lo-moves { order: 3; flex: 1 1 60%; }
+  .lo-clock { order: 4; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

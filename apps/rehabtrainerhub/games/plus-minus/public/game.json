@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "plus-minus",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "心算加減切換（Plus-Minus）", "description": "二位數一個一個出現，依序做加 3、減 3 與加減輪流三段心算，用大數字鍵作答，練習在規則之間切換。" },
+    "en": { "title": "Plus-Minus Arithmetic", "description": "Two-digit numbers appear one at a time. Add 3, subtract 3, then do both in turn, answering on a large number pad. Practice switching between rules." }
+  }
+}

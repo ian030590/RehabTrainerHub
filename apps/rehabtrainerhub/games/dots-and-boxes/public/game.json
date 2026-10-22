@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "dots-and-boxes",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "點格成盒", "description": "與電腦輪流在點與點之間畫線，畫上第四條邊就得到方格，方格多的一方獲勝。" },
+    "en": { "title": "Dots and Boxes", "description": "Take turns with the computer drawing lines between dots. Close a box's fourth side to claim it; more boxes wins." }
+  }
+}

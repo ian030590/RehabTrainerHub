@@ -12,10 +12,6 @@ const outputRoot = resolve(process.env.HUB_OUTPUT_ROOT || resolve(repositoryRoot
 const browserSmokeScript = resolve(repositoryRoot, 'scripts/check-browser-route-smoke.mjs');
 const bravePath = FindBravePath();
 const expFactoryGameIds = [
-  'antisaccade',
-  'letter-memory',
-  'keep-track',
-  'plus-minus',
 ];
 
 test('Brave smoke rejects asynchronous assertion failures', async context => {
@@ -182,7 +178,7 @@ test('Brave presents reviewed releases and all existing games in one grid on des
         drawing?.scrollIntoView();
         const preview = drawing?.querySelector('img');
         return document.querySelectorAll('.module-grid').length === 1
-        && document.querySelectorAll('.module-grid .module-card').length === 41
+        && document.querySelectorAll('.module-grid .module-card').length === 51
         && !!document.querySelector('.module-card[data-runtime-id="asteroid-shield"]')
         && !document.querySelector('.module-card[data-runtime-id="moving-card"]').textContent.includes('Collision sample')
         && !document.querySelector('.module-card[data-runtime-id="drawing-defense"]').textContent.includes('Obsolete settings shell')
@@ -243,7 +239,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     '--timeoutMs', '10000',
   ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
   assert.equal(fullscreen.exitCode, 0, `Hub fullscreen: ${fullscreen.stdout}\n${fullscreen.stderr}`);
-  for (const gameId of ['plus-minus', 'keep-track']) {
+  for (const gameId of ['every-ball-response']) {
     const overlay = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/`,
@@ -271,7 +267,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
   }
 
-  for (const gameId of ['whack-a-mole', 'lights-out']) {
+  for (const gameId of ['ufov']) {
     const rulesSelector = '.training-rules';
     const backSelectors = '.training-rules .btn-ghost';
     const standalone = await Run(process.execPath, [

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "connect4",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "四子棋", "description": "與電腦輪流投入棋子，規劃四子連線，同時留意電腦的連線。" },
+    "en": { "title": "Connect 4", "description": "Take turns with the computer dropping discs, plan a line of four and watch for its lines." }
+  }
+}

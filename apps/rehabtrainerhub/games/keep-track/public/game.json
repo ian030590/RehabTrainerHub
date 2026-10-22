@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "keep-track",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "類別記憶追蹤（Keep Track）", "description": "詞語一個一個出現，記住指定類別各自最新出現的詞，最後點選作答，練習隨時更新記住的內容。" },
+    "en": { "title": "Keep Track", "description": "Words appear one at a time. Keep the latest word from each target category in mind, then pick them at the end. Practice updating what you hold in mind." }
+  }
+}

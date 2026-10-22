@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "lights-out",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "熄燈解題", "description": "點一格會切換它和上下左右格子的亮滅，想辦法讓所有燈都熄滅。" },
+    "en": { "title": "Lights Out", "description": "Each tap flips a cell and the cells above, below and beside it. Turn every light off." }
+  }
+}

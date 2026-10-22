@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "sliding-puzzle",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "滑塊拼圖", "description": "把空格旁的方塊滑進空格，一步步把數字排回順序。" },
+    "en": { "title": "Sliding Puzzle", "description": "Slide tiles beside the gap into it, one at a time, until the numbers are back in order." }
+  }
+}

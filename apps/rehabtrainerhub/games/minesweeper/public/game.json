@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "minesweeper",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "踩地雷", "description": "依數字線索打開安全格、插旗標出地雷，可選地雷密度與 6 × 6 到 20 × 20 的盤面。" },
+    "en": { "title": "Minesweeper", "description": "Use the number clues to open safe cells and flag the mines, with three mine densities and boards from 6 × 6 to 20 × 20." }
+  }
+}

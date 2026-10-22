@@ -1,0 +1,87 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.plus-minus-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.pm-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.pm-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+.pm-estimate { margin: 8px 0 0; font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.pm-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.pm-hud { display: flex; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.pm-progress-label { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pm-rule { flex: 0 0 auto; margin: 0; padding: 4px 12px; border: 1px solid var(--primary); border-radius: var(--radius); background: var(--primary-soft); color: var(--heading); font-size: 1.1rem; font-weight: 700; }
+.pm-rule:empty { display: none; }
+.pm-progress-track { flex: 1 1 auto; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.pm-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.pm-stop { flex: 0 0 auto; }
+.pm-display { display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; width: min(100%, 48rem); min-height: 0; margin: 0 auto; text-align: center; }
+.pm-number, .pm-message-group { grid-row: 1; grid-column: 1; }
+.pm-number { margin: 0; color: var(--heading); font-size: clamp(3.5rem, 18vmin, 8rem); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.pm-stage:not([data-state="item"]):not([data-state="feedback"]):not([data-state="tutorial"]) .pm-number { visibility: hidden; }
+.pm-message-group { display: grid; justify-items: center; gap: 12px; }
+.pm-message { max-width: 32rem; margin: 0; font-size: 1.3rem; font-weight: 700; line-height: 1.5; }
+.pm-message-note { margin: 0; color: var(--text-muted); font-size: 1.1rem; font-weight: 700; }
+.pm-begin { min-width: 10rem; }
+.pm-feedback { grid-row: 2; grid-column: 1; min-height: 1.6em; margin: 0; font-size: 1.5rem; font-weight: 700; }
+.pm-feedback[data-result="wrong"] { color: var(--error); }
+.pm-answer-area { display: grid; gap: 12px; width: min(100%, 22rem); margin: 0 auto; }
+.pm-entry { display: grid; place-items: center; min-height: 3.5rem; margin: 0; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background);
+  color: var(--heading); font-size: 2rem; font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.pm-entry[data-filled] { border-color: var(--primary); background: var(--primary-soft); }
+.pm-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pm-key { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: clamp(52px, 8dvh, 72px); padding: 4px; border: 2px solid var(--border-strong);
+  border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.6rem; font-weight: 700; }
+.pm-key:disabled { cursor: default; opacity: .7; }
+.pm-submit { border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); font-size: 1.2rem; }
+@media (max-width: 560px) {
+  .pm-hud { flex-wrap: wrap; }
+  .pm-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .pm-rule { font-size: 1rem; }
+  .pm-progress-track { order: 3; flex-basis: 100%; }
+  .pm-message { font-size: 1.15rem; }
+}
+/* Landscape phones put the number beside the keypad. */
+@media (max-height: 480px) and (min-width: 561px) {
+  .pm-stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 8px 16px; }
+  .pm-hud { grid-column: 1 / -1; }
+  .pm-answer-area { grid-column: 2; grid-row: 2; min-height: 0; overflow: auto; gap: 6px; }
+  .pm-entry { min-height: 2.75rem; font-size: 1.6rem; }
+  .pm-key { min-height: 44px; font-size: 1.3rem; }
+}
+
+/* A signed time like +0.25 s stays on one line beside its label on phones. */
+.plus-minus-game-root .score-key-grid strong { white-space: nowrap; }
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

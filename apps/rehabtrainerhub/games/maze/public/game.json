@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "maze",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "迷宮", "description": "每局產生新的迷宮，一格一格找路，從起點走到綠色終點。" },
+    "en": { "title": "Maze", "description": "Each game draws a new maze. Find your way one cell at a time from the start to the green goal." }
+  }
+}

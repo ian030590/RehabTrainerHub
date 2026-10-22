@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { Script } from 'node:vm';
 import test from 'node:test';
 import migratedGames from '../packages/ui/src/officialGameReleases.json' with { type: 'json' };
 import ts from 'typescript';
@@ -9,7 +8,7 @@ import { GetGameSettingsDefaults, NormalizeGameSettingsValues, ParseGameSettings
 const root = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
 const read = (id, file) => readFileSync(new URL(`${id}/${file}`, root), 'utf8');
 const scoreModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
-const { ParseGameScoreDefinition, BuildGameScore } = await import(`data:text/javascript;base64,${Buffer.from(scoreModule).toString('base64')}`);
+const { ParseGameScoreDefinition } = await import(`data:text/javascript;base64,${Buffer.from(scoreModule).toString('base64')}`);
 const runtimeSummaryModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/expFactoryRuntime.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
 const {
   GetExpFactoryRoundLimit,
@@ -17,14 +16,7 @@ const {
   SummarizeExpFactoryTrials,
 } = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
 // Games written directly as R2 packages: entry component validated by the game's own settings module.
-const nativeR2Games = { sart: 'SartGame.tsx', 'schulte-grid': 'SchulteGridGame.tsx', 'hex-schulte': 'HexSchulteGame.tsx', 'continuous-performance': 'ContinuousPerformanceGame.tsx', 'simon-task': 'SimonTaskGame.tsx', 'card-sorting': 'CardSortingGame.tsx', 'attentional-blink': 'AttentionalBlinkGame.tsx', 'time-perception': 'TimePerceptionGame.tsx', 'divided-attention': 'DividedAttentionGame.tsx', 'pattern-memory': 'PatternMemoryGame.tsx', stroop: 'StroopGame.tsx', flanker: 'FlankerGame.tsx', 'go-nogo': 'GoNoGoGame.tsx', 'stop-signal': 'StopSignalGame.tsx', 'attention-network-task': 'AttentionNetworkGame.tsx', 'n-back': 'NBackLetters.tsx', 'number-letter': 'NumberLetterSwitch.tsx', 'digit-span': 'DigitSpanRecall.tsx', 'spatial-span': 'SpatialSpanRecall.tsx', 'tower-of-london': 'TowerPlanning.tsx', 'reaction-time': 'ReactionSignal.tsx' };
-const expFactoryGames = ['antisaccade','keep-track','letter-memory','plus-minus'];
-
-function Adapter(id) {
-  const window = { setStims() {}, numbers: Array.from({ length: 90 }, (_, i) => String(10 + i)), practice_numbers: Array.from({ length: 15 }, (_, i) => String(20 + i)), post_task_block: {}, add_block: { questions: Array(30).fill('') }, minus_block: { questions: Array(30).fill('') }, alternate_block: { questions: Array(30).fill('') } };
-  new Script(read(id, 'public/runtime/research.js')).runInNewContext({ window });
-  return window;
-}
+const nativeR2Games = { sart: 'SartGame.tsx', 'schulte-grid': 'SchulteGridGame.tsx', 'hex-schulte': 'HexSchulteGame.tsx', 'continuous-performance': 'ContinuousPerformanceGame.tsx', 'simon-task': 'SimonTaskGame.tsx', 'card-sorting': 'CardSortingGame.tsx', 'attentional-blink': 'AttentionalBlinkGame.tsx', 'time-perception': 'TimePerceptionGame.tsx', 'divided-attention': 'DividedAttentionGame.tsx', 'pattern-memory': 'PatternMemoryGame.tsx', stroop: 'StroopGame.tsx', flanker: 'FlankerGame.tsx', 'go-nogo': 'GoNoGoGame.tsx', 'stop-signal': 'StopSignalGame.tsx', 'attention-network-task': 'AttentionNetworkGame.tsx', 'n-back': 'NBackLetters.tsx', 'number-letter': 'NumberLetterSwitch.tsx', 'digit-span': 'DigitSpanRecall.tsx', 'spatial-span': 'SpatialSpanRecall.tsx', 'tower-of-london': 'TowerPlanning.tsx', 'reaction-time': 'ReactionSignal.tsx', 'tic-tac-toe': 'TicTacToeGame.tsx', 'connect4': 'Connect4Game.tsx', hex: 'HexGame.tsx', 'dots-and-boxes': 'DotsAndBoxesGame.tsx', 'lights-out': 'LightsOutGame.tsx', 'sliding-puzzle': 'SlidingPuzzleGame.tsx', maze: 'MazeGame.tsx', sudoku: 'SudokuGame.tsx', 'memory-match': 'MemoryMatchGame.tsx', 'simon-says': 'SimonSaysGame.tsx', 'whack-a-mole': 'WhackAMoleGame.tsx', minesweeper: 'MinesweeperGame.tsx', antisaccade: 'AntisaccadeGame.tsx', 'keep-track': 'KeepTrackRecall.tsx', 'letter-memory': 'LetterMemoryRecall.tsx', 'plus-minus': 'PlusMinusSwitch.tsx' };
 const sample = (extra = {}) => ({ exp_stage: 'test', trial_id: 'stim', trial_index: 5, rt: 350, correct: true, correct_response: 90, key_press: 90, ...extra });
 
 test('every game exposes bounded grading settings and exact numeric score sources', () => {
@@ -118,43 +110,10 @@ test('every game exposes bounded grading settings and exact numeric score source
   }
 });
 
-test('ExpFactory grading applies its full allowed range and rejects malformed parameters', () => {
-  for (const id of expFactoryGames) {
-    const definition = JSON.parse(read(id, 'settings.json'));
-    const field = definition.sections[0].fields[0];
-    for (const value of [field.min, field.default, field.max]) {
-      const window = Adapter(id);
-      const target = { data: { trial_id: 'target' }, timing_stim: 150, timing_response: 150 };
-      const timed = { timing_stim: field.default, timing_response: field.default };
-      const numeric = { data: { trial_id: 'stim', stim_place: 'bottomleft', stim_id: '<p>G9</p>' } };
-      window.rehabConfigure({ [field.key]: value }, [target, timed, numeric]);
-      if (id === 'antisaccade') assert.equal(target.timing_stim, value);
-      else if (id === 'plus-minus') assert.equal(window.add_block.questions.length, value);
-      else if (id === 'letter-memory' || id === 'keep-track') assert.equal(timed.timing_stim, value);
-      else assert.equal(timed.timing_response, value);
-      for (const invalid of [NaN, Infinity, '1000', field.min - field.step, field.max + field.step]) assert.throws(() => window.rehabConfigure({ [field.key]: invalid }, []), id);
-    }
-  }
-});
-
-test('each legacy brain game removes its own post-task questionnaire', () => {
-  for (const id of expFactoryGames) {
-    const field = JSON.parse(read(id, 'settings.json')).sections[0].fields[0];
-    const window = Adapter(id);
-    const timeline = [{}, window.post_task_block, {}];
-    window.rehabConfigure({ [field.key]: field.default }, timeline);
-    assert.equal(timeline.includes(window.post_task_block), false, id);
-  }
-});
-
 test('fixed-length brain games expose bounded end settings and stop at the selected round', () => {
   const fixedLengthSettings = {
     ufov: 'trialCount',
     'every-ball-response': 'rounds',
-    'plus-minus': 'itemsPerList',
-    antisaccade: 'rounds',
-    'keep-track': 'rounds',
-    'letter-memory': 'rounds',
   };
   for (const [id, key] of Object.entries(fixedLengthSettings)) {
     const fields = JSON.parse(read(id, 'settings.json')).sections.flatMap(section => section.fields);
@@ -162,12 +121,6 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
     assert.ok(limit, `${id}: ${key} setting is missing`);
     assert.ok(limit.min > 0 && limit.default >= limit.min && limit.default <= limit.max, id);
   }
-
-  const whackFields = JSON.parse(read('whack-a-mole', 'settings.json')).sections.flatMap(section => section.fields);
-  assert.ok(whackFields.some(field => field.key === 'durationSec'), 'whack-a-mole: duration setting is missing');
-  const simonFields = JSON.parse(read('simon-says', 'settings.json')).sections.flatMap(section => section.fields);
-  assert.ok(simonFields.some(field => field.key === 'difficulty'), 'simon-says: success limit is missing');
-  assert.ok(simonFields.some(field => field.key === 'lives'), 'simon-says: error limit is missing');
 
   assert.equal(GetExpFactoryRoundLimit({ rounds: 48 }), 48);
   assert.equal(GetExpFactoryRoundLimit({}), null);
@@ -178,109 +131,12 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
   assert.equal(HasReachedExpFactoryRoundLimit(48, 48), true);
   assert.equal(HasReachedExpFactoryRoundLimit(48, 49), true);
   assert.equal(HasReachedExpFactoryRoundLimit(null, 999), false);
-
-  const antisaccade = Adapter('antisaccade');
-  const target = sample({ trial_id: 'target' });
-  assert.equal(antisaccade.rehabRoundCount([target]), 0);
-  assert.equal(antisaccade.rehabRoundCount([target, sample({ trial_id: 'mask' })]), 1);
-
-  const formalTrialIds = {
-        'keep-track': 'response', 'letter-memory': 'response',
-  };
-  for (const [id, trialId] of Object.entries(formalTrialIds)) {
-    const window = Adapter(id);
-    assert.equal(window.rehabRoundCount([sample({ exp_stage: 'practice', trial_id: trialId }), sample({ trial_id: trialId })]), 1, id);
-  }
-});
-
-test('ExpFactory projections retain analysis conditions and include real practice items', () => {
-  const cases = {
-  };
-  const practiceGames = new Set([]);
-  for (const [id, [row, key, expected]] of Object.entries(cases)) {
-    const window = Adapter(id);
-    const result = window.rehabResearchRows([sample({ exp_stage: 'practice' }), sample({ trial_id: 'instruction' }), row]);
-    const expectedLength = practiceGames.has(id) ? 2 : 1;
-    assert.equal(result.length, expectedLength, id);
-    assert.equal(result.at(-1)[key], expected, id);
-    if (practiceGames.has(id)) assert.equal(result[0].practice, true, id);
-    const score = BuildGameScore(ParseGameScoreDefinition(JSON.parse(read(id, 'score.json'))), { detailRows: result });
-    assert.equal(score.rounds.length, expectedLength, id);
-    assert.equal(SummarizeExpFactoryTrials(result).totalTrials, expectedLength, id);
-  }
-});
-
-test('antisaccade joins target and mask without counting two trials or measuring eye latency', () => {
-  const window = Adapter('antisaccade');
-  const target = sample({ trial_id: 'target', rt: -1, key_press: -1, correct_response: 37, arrow_placement: 'left' });
-  const mask = sample({ trial_id: 'mask', rt: 200, key_press: 37 });
-  const row = window.rehabResearchRows([target, mask])[0];
-  assert.equal(row.rt, 350);
-  assert.equal(row.correct, true);
-  assert.equal(window.rehabResearchRows([target])[0].rt, null);
-  assert.equal(window.rehabResearchRows([sample({ ...target, exp_stage: 'practice' }), sample({ ...mask, exp_stage: 'practice' })])[0].practice, true);
-});
-
-test('recall and arithmetic derive item results from actual responses', () => {
-  const letter = Adapter('letter-memory').rehabResearchRows(['A','B','C','D','E'].map(stimulus => sample({ stimulus })).concat(sample({ trial_id: 'response', responses: '{"Q0":"B C D E"}' })))[0];
-  assert.equal(letter.correctItems, 4);
-  assert.equal(letter.load, 5);
-  assert.equal(letter.correct, true);
-  const track = Adapter('keep-track').rehabResearchRows([sample({ category:'animals', stim:'cat' }), sample({ category:'animals', stim:'dog' }), sample({ trial_id:'response', targets:['animals'], load:1, responses:'{"Q0":"dog dog"}' })])[0];
-  assert.equal(track.correctItems, 1);
-  const practiceLetter = Adapter('letter-memory').rehabResearchRows(['A','B','C','D','E'].map(stimulus => sample({ exp_stage:'practice', stimulus })).concat(sample({ exp_stage:'practice', trial_id:'response', responses:'{"Q0":"B C D E"}' })))[0];
-  const practiceTrack = Adapter('keep-track').rehabResearchRows([sample({ exp_stage:'practice', category:'animals', stim:'dog' }), sample({ exp_stage:'practice', trial_id:'response', targets:['animals'], load:1, responses:'{"Q0":"dog"}' })])[0];
-  assert.equal(practiceLetter.practice, true);
-  assert.equal(practiceTrack.practice, true);
-  const arithmetic = Adapter('plus-minus');
-  arithmetic.rehabConfigure({ itemsPerList: 6 }, []);
-  const answers = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`Q${i}`, String(70 + i + (i % 2 ? -3 : 3))]));
-  const responseTimes = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`Q${i}`, 200 + i]));
-  const rows = arithmetic.rehabResearchRows([sample({ condition:'alternate', responses:JSON.stringify(answers), response_times:JSON.stringify(responseTimes) })]);
-  assert.equal(rows.length, 6);
-  assert.ok(rows.every(row => row.correct));
-  assert.equal(rows[5].question, 6);
-  assert.equal(rows[5].rt, 205);
-
-  const practiceAnswers = Object.fromEntries(arithmetic.practice_numbers.map((value, i) => [`Q${i}`, value]));
-  const practiceTimes = Object.fromEntries(arithmetic.practice_numbers.map((_, i) => [`Q${i}`, 100 + i]));
-  const practice = arithmetic.rehabResearchRows([sample({ exp_stage:'practice', responses:JSON.stringify(practiceAnswers), response_times:JSON.stringify(practiceTimes) })]);
-  assert.equal(practice.length, 15);
-  assert.ok(practice.every(row => row.practice && row.correct));
-  assert.equal(practice[0].condition, -1);
-  assert.equal(practice[14].rt, 114);
-
-  const score = BuildGameScore(ParseGameScoreDefinition(JSON.parse(read('plus-minus', 'score.json'))), { detailRows: practice.concat(rows) });
-  assert.equal(score.rounds.length, 21);
-  assert.deepEqual(score.rounds[0], { trial: 5, question: 1, practice: 1, setting: 6, condition: -1, correct: 1, responseMs: 100 });
-  assert.equal(score.rounds[20].responseMs, 205);
-
-  const summary = SummarizeExpFactoryTrials(practice.concat(rows));
-  assert.equal(summary.totalTrials, 21);
-  assert.equal(summary.correctTrials, 21);
-  assert.equal(summary.meanRtMs, 2820 / 21);
 });
 
 test('React runtime retains missing RT as null and full precision in summaries', () => {
-  for (const id of expFactoryGames) {
-    const rows = [sample({ trial_id:'response', correct:true, rt:100.25 }), sample({ trial_id:'response', correct:false, rt:null }), sample({ trial_id:'response', correct:true, rt:101.5 })];
-    const summary = SummarizeExpFactoryTrials(rows);
-    assert.equal(summary.meanRtMs, 100.875, id);
-    assert.ok(Math.abs(summary.accuracyPercent - (200 / 3)) < 1e-12, id);
-  }
+  const rows = [sample({ trial_id:'response', correct:true, rt:100.25 }), sample({ trial_id:'response', correct:false, rt:null }), sample({ trial_id:'response', correct:true, rt:101.5 })];
+  const summary = SummarizeExpFactoryTrials(rows);
+  assert.equal(summary.meanRtMs, 100.875);
+  assert.ok(Math.abs(summary.accuracyPercent - (200 / 3)) < 1e-12);
 });
 
-test('number-grid grading matches the actual rule, board and blank count', () => {
-  const compiled = ts.transpileModule(read('sudoku', 'runtime/cognitive/languageNeutralGames.ts'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-  }).outputText;
-  const exports = {};
-  new Script(compiled).runInNewContext({ exports, require: () => ({ Shuffle: values => values }) });
-  const cases = [['Beginner', 'latin-square', 4, 6], ['Intermediate', 'magic-square', 3, 6], ['Advanced', 'sudoku', 9, 50]];
-  for (const [difficulty, kind, size, blanks] of cases) {
-    const state = exports.CreateLanguageNeutralGameState('sudoku', difficulty);
-    assert.equal(state.kind, kind);
-    assert.equal(state.size, size);
-    assert.equal(state.givens.filter(given => !given).length, blanks);
-  }
-});

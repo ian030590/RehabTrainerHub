@@ -1,0 +1,73 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --board: #c9d0d6;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.sliding-puzzle-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.sp-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.sp-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.sp-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.sp-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.sp-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sp-goal { padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.sp-moves { flex: 1 1 auto; }
+.sp-clock { min-width: 5ch; text-align: right; }
+.sp-clock[data-warning] { color: var(--error); }
+.sp-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
+.sp-feedback.sp-outcome { color: var(--heading); font-size: 1.3rem; }
+.sp-board-slot { display: grid; min-height: 0; }
+.sp-board-area { container-type: size; position: relative; min-height: 0; }
+.sp-board { --side: min(100cqw, 100cqh); --pad: max(8px, calc(var(--side) * .03)); --gap: max(6px, calc(var(--side) * .02));
+  --cell: calc((var(--side) - 2 * var(--pad) - (var(--n) - 1) * var(--gap)) / var(--n));
+  position: absolute; left: 50%; top: 50%; width: var(--side); height: var(--side); border-radius: var(--radius); background: var(--board); transform: translate(-50%, -50%); }
+.sp-tile { position: absolute; left: calc(var(--pad) + var(--c) * (var(--cell) + var(--gap))); top: calc(var(--pad) + var(--r) * (var(--cell) + var(--gap)));
+  display: grid; place-items: center; width: var(--cell); height: var(--cell); min-height: 0; margin: 0; padding: 0;
+  border: 2px solid var(--primary-hover); border-radius: var(--radius); background: var(--primary); color: var(--text-on-accent);
+  font-size: calc(var(--cell) * .4); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.sp-tile:focus-visible, .sp-tile[data-tutorial="move"] { z-index: 1; outline: 4px solid var(--heading); outline-offset: 2px; }
+.sp-board[data-state="over"] .sp-tile { cursor: default; }
+@media (hover: hover) { .sp-board[data-state="running"] .sp-tile:hover { background: var(--primary-hover); } }
+@media (prefers-reduced-motion: no-preference) { .sp-tile { transition: left .14s ease-out, top .14s ease-out; } }
+@media (max-width: 480px) {
+  .sp-hud p { font-size: 1rem; }
+  /* The goal and Stop share the first row; moves and the clock share the second. */
+  .sp-stop { order: 2; margin-left: auto; }
+  .sp-moves { order: 3; flex: 1 1 60%; }
+  .sp-clock { order: 4; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

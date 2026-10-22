@@ -1,0 +1,90 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --card-back: #2f5d8a; --card-back-stripe: #3d6f9e; --card-back-edge: #1f4266; --card-face: #fff; --card-matched: #2e7d32; --card-matched-soft: #e3f1e4;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.memory-match-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.mm-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.mm-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.mm-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.mm-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.mm-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mm-pairs { padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.mm-pairs strong { font-size: 1.3rem; }
+.mm-moves { flex: 1 1 auto; }
+.mm-clock { min-width: 5ch; text-align: right; }
+.mm-clock[data-warning] { color: var(--error); }
+.mm-feedback { min-height: 1.6em; margin: 0; text-align: center; font-weight: 700; }
+.mm-feedback[data-kind="match"] { color: var(--card-matched); }
+.mm-feedback[data-kind="mismatch"] { color: var(--error); }
+.mm-feedback.mm-outcome { color: var(--heading); font-size: 1.3rem; }
+.mm-board-slot { display: grid; min-height: 0; }
+.mm-board-area { container-type: size; position: relative; min-height: 0; }
+/* Cards keep a 3:4 shape, so the board takes whichever of the width or the height runs out first. */
+.mm-board { --ratio: calc(var(--cols) * 3 / (var(--rows) * 4)); --w: min(100cqw, 100cqh * var(--ratio));
+  position: absolute; left: 50%; top: 50%; display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: max(6px, calc(var(--w) * .015)); width: var(--w); height: calc(var(--w) / var(--ratio)); transform: translate(-50%, -50%); }
+.mm-card { display: block; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: var(--radius);
+  background: transparent; perspective: 800px; cursor: pointer; }
+.mm-card-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; }
+.mm-card:not([data-state="down"]) .mm-card-inner { transform: rotateY(180deg); }
+.mm-back, .mm-front { position: absolute; inset: 0; display: grid; place-items: center; border: 3px solid; border-radius: var(--radius);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.mm-back { border-color: var(--card-back-edge); background: repeating-linear-gradient(45deg, var(--card-back) 0 10px, var(--card-back-stripe) 10px 20px); }
+.mm-front { transform: rotateY(180deg); border-color: var(--border-strong); background: var(--card-face); color: var(--heading);
+  font-size: calc(var(--w) / var(--cols) * .5); font-weight: 800; line-height: 1; }
+.mm-card[data-state="matched"] .mm-front { border-color: var(--card-matched); background: var(--card-matched-soft); }
+.mm-card[data-wrong] .mm-front { border-color: var(--error); border-width: 4px; }
+/* Found pairs carry a check badge, so they read apart from turned cards without relying on color. */
+.mm-check { display: none; position: absolute; top: 6%; right: 8%; width: 26%; aspect-ratio: 1; border-radius: 50%; background: var(--card-matched); }
+.mm-check::after { content: ''; position: absolute; left: 30%; top: 22%; width: 26%; height: 44%; border: solid var(--card-face); border-width: 0 .14em .14em 0;
+  font-size: calc(var(--w) / var(--cols) * .12); transform: rotate(45deg); }
+.mm-card[data-state="matched"] .mm-check { display: block; }
+.mm-card:focus-visible { outline: 4px solid var(--primary); outline-offset: 3px; }
+.mm-card[data-tutorial="move"] { outline: 4px solid var(--primary); outline-offset: 3px; }
+.mm-board[data-state="over"] .mm-card, .mm-card[data-state="matched"] { cursor: default; }
+@media (hover: hover) { .mm-board[data-state="running"] .mm-card[data-state="down"]:hover .mm-back { border-color: var(--primary); } }
+@media (prefers-reduced-motion: no-preference) { .mm-card-inner { transition: transform .25s ease; } }
+@media (max-width: 480px) {
+  .mm-hud p { font-size: 1rem; }
+  /* Pairs and Stop share the first row; moves and the clock share the second. */
+  .mm-stop { order: 2; margin-left: auto; }
+  .mm-moves { order: 3; flex: 1 1 60%; }
+  .mm-clock { order: 4; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "hex",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "Hex 連線棋", "description": "與電腦輪流下棋，連出一條路接通自己的兩條邊，同時擋住電腦的路。" },
+    "en": { "title": "Hex", "description": "Take turns with the computer, build a chain that joins your two edges and block the computer's chain." }
+  }
+}

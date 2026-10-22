@@ -45,6 +45,22 @@ const cases = [
   { id: 'spatial-span', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, practice: 0, reverse: 0, load: 3, entered: 3, correct: 1, responseMs: 2, setting: 1000, board: 5 } },
   { id: 'tower-of-london', defaultMetric: 'problemMs', alternate: 'correct', row: { trial: 1, practice: 0, problem: 0, correct: 1, problemMs: 2, moves: 2, minimumMoves: 2, firstMoveMs: 1500, setting: 20000 } },
   { id: 'reaction-time', defaultMetric: 'responseMs', alternate: 'falseStart', row: { trial: 1, falseStart: 0, responseMs: 2, earlyMs: null, waitMs: 3100 } },
+  { id: 'tic-tac-toe', defaultMetric: 'thinkMs', alternate: 'invalidTaps', row: { move: 1, row: 1, col: 2, thinkMs: 2, invalidTaps: 0 } },
+  { id: 'connect4', defaultMetric: 'thinkMs', alternate: 'invalidTaps', row: { move: 1, col: 4, height: 1, thinkMs: 2, invalidTaps: 0 } },
+  { id: 'hex', defaultMetric: 'thinkMs', alternate: 'invalidTaps', row: { move: 1, row: 2, col: 3, thinkMs: 2, invalidTaps: 0 } },
+  { id: 'dots-and-boxes', defaultMetric: 'thinkMs', alternate: 'invalidTaps', row: { move: 1, thinkMs: 2, invalidTaps: 0, boxes: 1 } },
+  { id: 'lights-out', defaultMetric: 'thinkMs', alternate: 'lightsOn', row: { move: 1, row: 2, col: 2, thinkMs: 2, lightsOn: 0 } },
+  { id: 'sliding-puzzle', defaultMetric: 'thinkMs', alternate: 'misplaced', row: { move: 1, tile: 7, thinkMs: 2, invalidTaps: 1, misplaced: 5 } },
+  { id: 'maze', defaultMetric: 'thinkMs', alternate: 'distanceLeft', row: { move: 1, row: 1, col: 2, thinkMs: 2, invalidTaps: 0, distanceLeft: 7 } },
+  { id: 'sudoku', defaultMetric: 'thinkMs', alternate: 'blanksLeft', row: { move: 1, row: 1, col: 2, value: 1, thinkMs: 2, blanksLeft: 5 } },
+  { id: 'memory-match', defaultMetric: 'thinkMs', alternate: 'matchedPairs', row: { move: 1, thinkMs: 2, matched: 1, matchedPairs: 1 } },
+  { id: 'simon-says', defaultMetric: 'length', alternate: 'correct', row: { trial: 1, length: 2, correct: 1, correctTaps: 2, recallMs: 900 } },
+  { id: 'whack-a-mole', defaultMetric: 'responseMs', alternate: 'outcome', row: { trial: 1, outcome: 1, responseMs: 2, targetIndex: 4, tappedIndex: 4 } },
+  { id: 'minesweeper', defaultMetric: 'thinkMs', alternate: 'opened', row: { move: 1, action: 1, row: 1, col: 1, thinkMs: 2, opened: 9, safeLeft: 23 } },
+  { id: 'antisaccade', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, practice: 0, location: 1, arrow: 1, response: 1, correct: 1, omission: 0, responseMs: 2, setting: 150 } },
+  { id: 'keep-track', defaultMetric: 'responseMs', alternate: 'correctItems', row: { trial: 1, practice: 0, correct: 1, responseMs: 2, setting: 1500, load: 3, correctItems: 3, requiredItems: 3 } },
+  { id: 'letter-memory', defaultMetric: 'responseMs', alternate: 'correctItems', row: { trial: 1, practice: 0, correct: 1, responseMs: 2, setting: 2000, load: 7, correctItems: 4, requiredItems: 4 } },
+  { id: 'plus-minus', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, question: 1, practice: 0, setting: 30, condition: 0, correct: 1, responseMs: 2, number: 27, response: 30 } },
 ];
 
 for (const fixture of cases) {

@@ -122,5 +122,69 @@
   "reaction-time": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "反應時間"
+  },
+  "tic-tac-toe": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "圈圈叉叉"
+  },
+  "connect4": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "四子棋"
+  },
+  "hex": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "Hex 連線棋"
+  },
+  "dots-and-boxes": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "點格成盒"
+  },
+  "lights-out": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "熄燈解題"
+  },
+  "sliding-puzzle": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "滑塊拼圖"
+  },
+  "maze": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "迷宮"
+  },
+  "sudoku": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "數獨"
+  },
+  "memory-match": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "記憶配對"
+  },
+  "simon-says": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "順序記憶"
+  },
+  "whack-a-mole": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "目標點擊"
+  },
+  "minesweeper": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "踩地雷"
+  },
+  "antisaccade": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "反向眼跳抑制（Antisaccade）"
+  },
+  "keep-track": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "類別記憶追蹤（Keep Track）"
+  },
+  "letter-memory": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "字母記憶更新（Letter Memory）"
+  },
+  "plus-minus": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "心算加減切換（Plus-Minus）"
   }
 }

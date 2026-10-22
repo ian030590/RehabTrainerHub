@@ -1,20 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   base: './',
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@rehab-trainer/ui': fileURLToPath(new URL('../../../../packages/ui/src', import.meta.url)),
-      '@rehab-trainer/games': fileURLToPath(new URL('..', import.meta.url)),
-      '@rehab-trainer/hub-modules': fileURLToPath(new URL('..', import.meta.url)),
-    },
-  },
+  plugins: [react(), { name: 'sandbox-classic-script', transformIndexHtml: {
+    order: 'post', handler: html => html.replace(/type="module" crossorigin/g, 'defer'),
+  } }],
   build: {
     assetsDir: 'assets',
     emptyOutDir: true,
     outDir: 'dist',
+    assetsInlineLimit: 0,
+    cssCodeSplit: false,
+    modulePreload: false,
+    rollupOptions: { output: { format: 'iife', inlineDynamicImports: true } },
   },
 });

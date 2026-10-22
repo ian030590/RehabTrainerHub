@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "whack-a-mole",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "目標點擊", "description": "地鼠會從洞裡一隻隻冒出來，趁牠躲回去前點牠。" },
+    "en": { "title": "Target Click", "description": "Moles pop up from the holes one at a time. Tap each one before it ducks back down." }
+  }
+}

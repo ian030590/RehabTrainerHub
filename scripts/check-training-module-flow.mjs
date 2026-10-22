@@ -24,15 +24,11 @@ const {
 } = await import(manifestUrl);
 
 const expFactoryGameFiles = Object.freeze({
-  'brain:antisaccade': 'antisaccade/AntisaccadeGame.tsx',
-  'brain:letter-memory': 'letter-memory/LetterMemoryGame.tsx',
-  'brain:keep-track': 'keep-track/KeepTrackGame.tsx',
-  'brain:plus-minus': 'plus-minus/PlusMinusGame.tsx',
 });
 const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
 
 const catalogIds = [...catalogSource.matchAll(
-  /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|[A-Za-z]+Catalog\.trainer)/g,
+  /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|[A-Za-z][A-Za-z0-9]*Catalog\.trainer)/g,
 )].map((match) => `${match[2] ?? JSON.parse(readFileSync(resolve(moduleRoot, match[1], 'public/game.json'), 'utf8')).trainer}:${match[1]}`);
 const manifestIds = Object.keys(trainingModuleFlowManifest);
 
@@ -189,45 +185,21 @@ for (const token of [
   assert.ok(authPanelSource.includes(token), `Auth panel stale-session guard is missing "${token}".`);
 }
 
-const minesweeperSource = readFileSync(
-  resolve(moduleRoot, 'minesweeper/MinesweeperGame.tsx'),
-  'utf8',
-);
-for (const size of ['6x6', '16x16', '20x20']) {
-  assert.ok(minesweeperSource.includes(`label: '${size}'`), `Minesweeper must retain the ${size} preset.`);
-}
-for (const retiredOption of ['customBoardSize', "label: '9x9'", "label: '16x30'", "label: '80x80'"]) {
-  assert.ok(!minesweeperSource.includes(retiredOption), `Minesweeper must remove ${retiredOption}.`);
-}
-for (const zoomToken of ['handleCanvasWheel', 'pinchStartRef', 'minBoardZoom', 'maxBoardZoom', 'minesweeper.zoom.reset']) {
-  assert.ok(minesweeperSource.includes(zoomToken), `Minesweeper responsive zoom is missing "${zoomToken}".`);
+// Board-game opponents wait one second; each R2 board game owns that delay in its own package.
+for (const [id, component] of [['tic-tac-toe', 'TicTacToeGame'], ['connect4', 'Connect4Game'], ['hex', 'HexGame'], ['dots-and-boxes', 'DotsAndBoxesGame']]) {
+  const source = readFileSync(resolve(moduleRoot, `${id}/${component}.tsx`), 'utf8');
+  assert.ok(source.includes('const computerDelayMs = 1000;'), `${id}: the computer must wait one second before moving.`);
+  assert.ok(source.includes('computerTurn('), `${id}: the computer move must run after the delay.`);
 }
 
-const cognitiveUtilsSource = readFileSync(
-  resolve(moduleRoot, 'maze/runtime/cognitive/utils.ts'),
-  'utf8',
-);
-assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
-assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
-
-const languageNeutralSource = ['tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex'].map((id) => readFileSync(
-  resolve(moduleRoot, `${id}/runtime/cognitive/languageNeutralGames.ts`), 'utf8',
-)).join('\n');
-assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
-for (const game of ['TicTacToe', 'Connect4', 'DotsAndBoxes', 'Hex']) {
-  assert.ok(languageNeutralSource.includes(`Take${game}AiTurn`), `${game} must defer its computer move through the timed update loop.`);
-}
-
-const referenceCognitiveSource = readFileSync(
-  resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx'),
-  'utf8',
-);
-const mobileControlsSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/components/MobileTouchControls.tsx'),
-  'utf8',
-);
-assert.ok(referenceCognitiveSource.includes('MobileTouchControls'), 'Maze must expose touch direction controls while playing.');
-assert.ok(!referenceCognitiveSource.includes("stateRef.current?.kind === 'sokoban'"), 'Retired Sokoban controls must not remain.');
+// The R2 maze owns its on-screen direction pad; arrows are drawn as SVG, never as glyphs or emoji.
+const mazeSource = readFileSync(resolve(moduleRoot, 'maze/MazeGame.tsx'), 'utf8');
+const mazePadSource = readFileSync(resolve(moduleRoot, 'maze/DirectionPad.tsx'), 'utf8');
+assert.ok(mazeSource.includes('<DirectionPad'), 'Maze must expose touch direction controls while playing.');
+assert.ok(mazePadSource.includes('<svg'), 'Maze direction controls must use SVG icons.');
+assert.ok(!/[↑↓←→⬆⬇⬅➡]/u.test(mazePadSource), 'Maze direction controls must not use arrow glyphs or emoji.');
+// Every Ball Response still uses the shared touch controls, so their arrows stay SVG as well.
+const mobileControlsSource = readFileSync(resolve(repoRoot, 'packages/ui/src/components/MobileTouchControls.tsx'), 'utf8');
 assert.ok(mobileControlsSource.includes('<svg'), 'Mobile direction controls must use SVG icons.');
 assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction controls must not use arrow glyphs or emoji.');
 
@@ -279,6 +251,22 @@ const nativeBrainGames = [
   ['spatial-span', 'SpatialSpanRecall', 'SpatialSpanTutorial'],
   ['tower-of-london', 'TowerPlanning', 'TowerTutorial'],
   ['reaction-time', 'ReactionSignal', 'ReactionTutorial'],
+  ['tic-tac-toe', 'TicTacToeGame', 'TicTacToeTutorial'],
+  ['connect4', 'Connect4Game', 'Connect4Tutorial'],
+  ['hex', 'HexGame', 'HexTutorial'],
+  ['dots-and-boxes', 'DotsAndBoxesGame', 'DotsTutorial'],
+  ['lights-out', 'LightsOutGame', 'LightsOutTutorial'],
+  ['sliding-puzzle', 'SlidingPuzzleGame', 'SlidingTutorial'],
+  ['maze', 'MazeGame', 'MazeTutorial'],
+  ['sudoku', 'SudokuGame', 'SudokuTutorial'],
+  ['memory-match', 'MemoryMatchGame', 'MemoryTutorial'],
+  ['simon-says', 'SimonSaysGame', 'SimonTutorial'],
+  ['whack-a-mole', 'WhackAMoleGame', 'WhackTutorial'],
+  ['minesweeper', 'MinesweeperGame', 'MinesweeperTutorial'],
+  ['antisaccade', 'AntisaccadeGame', 'AntisaccadeTutorial'],
+  ['keep-track', 'KeepTrackRecall', 'KeepTrackTutorial'],
+  ['letter-memory', 'LetterMemoryRecall', 'LetterMemoryTutorial'],
+  ['plus-minus', 'PlusMinusSwitch', 'PlusMinusTutorial'],
 ];
 
 const implementationGroups = [
@@ -381,30 +369,10 @@ const implementationGroups = [
       'TrainingResultActions',
     ],
   },
-  {
-    ids: ['brain:minesweeper'],
-    files: ['minesweeper/MinesweeperGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
     ids: [id],
     files: [file],
     tokens: ['ExpFactoryGame', 'sourceCommit:'],
-  })),
-  ...ReferenceCognitiveCatalogIds().map(id => ({
-    ids: [id],
-    files: [resolve(moduleRoot, id.split(':')[1], 'runtime/cognitive/ReferenceCognitiveGame.tsx')],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
   })),
   {
     ids: ['mouth:tongue-catch'],
@@ -506,20 +474,6 @@ const jsPsychLifecycleGroups = [
     tokens: externalRuntimeAdapterTokens,
     forbiddenTokens: ['WriteJsPsychData'],
   })),
-  {
-    status: 'external-runtime-adapter',
-    ids: ReferenceCognitiveCatalogIds(),
-    files: [resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx')],
-    tokens: [
-      'initJsPsych(',
-      'new JsPsychExternalLifecycle(',
-      'jsPsychLifecycleRef.current?.start({',
-      'jsPsychLifecycleRef.current?.finish(',
-      'jsPsychLifecycleRef.current?.abort({',
-      'lifecycle.dispose()',
-    ],
-    forbiddenTokens: ['WriteJsPsychData'],
-  },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
     status: 'native-timeline',
     ids: [id],
@@ -535,7 +489,6 @@ const jsPsychLifecycleGroups = [
     'motor:asteroid-shield': 'asteroid-shield/AsteroidShieldGame.tsx',
     'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
     'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
-    'brain:minesweeper': 'minesweeper/MinesweeperGame.tsx',
     'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
@@ -587,7 +540,7 @@ for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecy
 }
 
 const externalLifecycleAdapterSource = readFileSync(
-  resolve(moduleRoot, 'maze/runtime/jsPsychLifecycle.ts'),
+  resolve(moduleRoot, 'sart/runtime/jsPsychLifecycle.ts'),
   'utf8',
 );
 for (const token of [
@@ -704,22 +657,6 @@ console.log(
     ? `jsPsych lifecycle: ${catalogIds.length - pendingJsPsychIds.length} managed by native timelines/adapters; ${pendingJsPsychIds.length} still utility-only (${pendingJsPsychIds.join(', ')}).`
     : `jsPsych lifecycle: all ${catalogIds.length} modules are managed by native timelines or external-runtime adapters; none remain utility-only.`,
 );
-
-function ReferenceCognitiveCatalogIds() {
-  return [
-    'brain:whack-a-mole',
-    'brain:memory-match',
-    'brain:simon-says',
-    'brain:lights-out',
-    'brain:sliding-puzzle',
-    'brain:sudoku',
-    'brain:tic-tac-toe',
-    'brain:connect4',
-    'brain:dots-and-boxes',
-    'brain:hex',
-    'brain:maze',
-  ];
-}
 
 function ListTypeScriptFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

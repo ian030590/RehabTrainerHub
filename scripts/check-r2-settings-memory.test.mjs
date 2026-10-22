@@ -41,6 +41,22 @@ const games = {
   'spatial-span': { version: '2.0.0', file: 'SpatialSpanRecall.tsx', settings: 'settings.ts' },
   'tower-of-london': { version: '2.0.0', file: 'TowerPlanning.tsx', settings: 'settings.ts' },
   'reaction-time': { version: '2.0.0', file: 'ReactionSignal.tsx', settings: 'settings.ts' },
+  'tic-tac-toe': { version: '2.0.0', file: 'TicTacToeGame.tsx', settings: 'settings.ts' },
+  'connect4': { version: '2.0.0', file: 'Connect4Game.tsx', settings: 'settings.ts' },
+  hex: { version: '2.0.0', file: 'HexGame.tsx', settings: 'settings.ts' },
+  'dots-and-boxes': { version: '2.0.0', file: 'DotsAndBoxesGame.tsx', settings: 'settings.ts' },
+  'lights-out': { version: '2.0.0', file: 'LightsOutGame.tsx', settings: 'settings.ts' },
+  'sliding-puzzle': { version: '2.0.0', file: 'SlidingPuzzleGame.tsx', settings: 'settings.ts' },
+  maze: { version: '2.0.0', file: 'MazeGame.tsx', settings: 'settings.ts' },
+  sudoku: { version: '2.0.0', file: 'SudokuGame.tsx', settings: 'settings.ts' },
+  'memory-match': { version: '2.0.0', file: 'MemoryMatchGame.tsx', settings: 'settings.ts' },
+  'simon-says': { version: '2.0.0', file: 'SimonSaysGame.tsx', settings: 'settings.ts' },
+  'whack-a-mole': { version: '2.0.0', file: 'WhackAMoleGame.tsx', settings: 'settings.ts' },
+  minesweeper: { version: '2.0.0', file: 'MinesweeperGame.tsx', settings: 'settings.ts' },
+  antisaccade: { version: '2.0.0', file: 'AntisaccadeGame.tsx', settings: 'settings.ts' },
+  'keep-track': { version: '2.0.0', file: 'KeepTrackRecall.tsx', settings: 'settings.ts' },
+  'letter-memory': { version: '2.0.0', file: 'LetterMemoryRecall.tsx', settings: 'settings.ts' },
+  'plus-minus': { version: '2.0.0', file: 'PlusMinusSwitch.tsx', settings: 'settings.ts' },
 };
 const nonce = 'a'.repeat(64);
 
@@ -128,9 +144,13 @@ for (const [gameId, game] of Object.entries(games)) {
     const { IsGameSettings } = await import('../packages/ui/src/selfContainedGame.js');
     assert.equal(IsGameSettings(defaults), true, 'The full settings fit what the container may store.');
     assert.equal(RestoreSettings({ ...defaults, extra: 1 }, defaults, validate).extra, undefined, 'Unknown keys are dropped.');
-    const [key] = Object.keys(defaults).filter(item => typeof defaults[item] === 'number' || (gameId === 'driving-rehab' && item === 'difficulty'));
-    assert.equal(RestoreSettings({ [key]: gameId === 'driving-rehab' ? 'invalid' : -999999 }, defaults, validate), null, 'Out-of-range values are rejected.');
-    assert.equal(RestoreSettings({ [key]: gameId === 'driving-rehab' ? 123 : 'text' }, defaults, validate)?.[key], defaults[key], 'Wrong types keep the default.');
+    // Games whose only choices are named options are checked through their difficulty list instead of a number.
+    const numericKey = Object.keys(defaults).find(item => typeof defaults[item] === 'number');
+    const listKey = gameId === 'driving-rehab' || !numericKey;
+    const key = listKey ? 'difficulty' : numericKey;
+    assert.equal(typeof defaults[key], listKey ? 'string' : 'number');
+    assert.equal(RestoreSettings({ [key]: listKey ? 'invalid' : -999999 }, defaults, validate), null, 'Out-of-range values are rejected.');
+    assert.equal(RestoreSettings({ [key]: listKey ? 123 : 'text' }, defaults, validate)?.[key], defaults[key], 'Wrong types keep the default.');
     assert.deepEqual(RestoreSettings({}, defaults, validate), defaults, 'Missing values use the defaults.');
   });
 }

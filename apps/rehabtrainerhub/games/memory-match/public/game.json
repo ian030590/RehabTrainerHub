@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "memory-match",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "記憶配對", "description": "翻開卡片找出字母相同的兩張，記住每張卡片的位置。" },
+    "en": { "title": "Memory Match", "description": "Turn over cards to find pairs with the same letter. Remember where each card was." }
+  }
+}

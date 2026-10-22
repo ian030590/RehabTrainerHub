@@ -10,10 +10,6 @@ import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const gameRoot = resolve(repoRoot, 'apps/rehabtrainerhub/games');
 const sources = {
-  antisaccade: ['f1af8ef0f4b095c1d2b629297a3b589d0bc4234c', '52107c81ca769c83ccf13dbf4abebfdaba69d0237dba4f4d85c0a8bc14c83ac2'],
-  'letter-memory': ['4ad00df094fa370737be4d8cddfee682cd57f6b6', '846365b8fb414ac5cd38d0705945221fc6b6e088da6e6b2786ba83e066fbcfd7'],
-  'keep-track': ['202b7c7bb488240341ff26fcc9b808a13683eed6', '8404699aa2a37661fab983932fbbd8792d8d106cc4d94e8c7dae7b669fb28b2c'],
-  'plus-minus': ['02b36c0625d08432993b33ff214a9860b7811c78', '2aa9d088b98fb37e7dd8882c23e888801ca0d86750db46fd4b7c730161f230c8'],
 };
 const emojiPattern = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/u;
 const safePathPattern = /^[A-Za-z0-9_./-]+$/;

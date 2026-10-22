@@ -1,0 +1,80 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --opponent: #9a3412; --opponent-soft: #fbeae5;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.connect4-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.c4-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.c4-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.c4-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.c4-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.c4-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.c4-goal { padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.c4-goal strong { color: var(--primary); font-size: 1.3rem; }
+.c4-turn { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; }
+.c4-turn[data-turn="computer"] { color: var(--opponent); }
+.c4-clock { min-width: 5ch; text-align: right; }
+.c4-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
+.c4-feedback.c4-outcome { color: var(--heading); font-size: 1.3rem; }
+.c4-board-area { container-type: size; display: grid; place-items: center; min-height: 0; }
+/* Seven columns of six slots; the board keeps that ratio and the slots stay round at any size. */
+.c4-board { --board-width: min(100cqw, calc(100cqh * 7 / 6)); --slot: calc(var(--board-width) / 7 - 12px);
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; width: var(--board-width); height: calc(var(--board-width) * 6 / 7);
+  padding: 4px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.c4-column { display: grid; grid-template-rows: repeat(6, minmax(0, 1fr)); place-items: center; min-width: 0; min-height: 0; margin: 0; padding: 0;
+  border: 0; border-radius: var(--radius); background: transparent; cursor: pointer; }
+.c4-column:focus-visible { outline-offset: -3px; background: var(--primary-soft); }
+@media (hover: hover) { .c4-board[data-turn="player"] .c4-column:hover { background: var(--primary-soft); } }
+.c4-board[data-turn="computer"] .c4-column, .c4-board[data-turn="over"] .c4-column { cursor: default; }
+.c4-column[data-tutorial="move"] { outline: 3px dashed var(--primary); outline-offset: -3px; background: var(--primary-soft); }
+.c4-slot { --ring: var(--slot); position: relative; display: block; width: var(--slot); height: var(--slot); border: 2px solid var(--border-strong); border-radius: 50%; background: var(--surface); }
+.c4-disc-icon { --ring: 1.2em; display: inline-block; flex: none; width: 1.2em; height: 1.2em; border-radius: 50%; }
+.c4-slot[data-mark]::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; }
+/* The player's disc carries a light ring so the two sides differ by shape as well as by color. */
+.c4-slot[data-mark="P"]::after, .c4-disc-icon[data-mark="P"] { background: var(--primary);
+  box-shadow: inset 0 0 0 calc(var(--ring) * .14) var(--primary), inset 0 0 0 calc(var(--ring) * .22) var(--surface); }
+.c4-slot[data-mark="A"]::after, .c4-disc-icon[data-mark="A"] { background: var(--opponent); }
+.c4-slot[data-line] { outline: 4px solid var(--heading); outline-offset: 2px; }
+.c4-slot[data-drop]::after { animation: c4-drop 450ms cubic-bezier(.5, 0, 1, 1); }
+@keyframes c4-drop { from { transform: translateY(calc(var(--fall) * var(--board-width) / -7)); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .c4-slot[data-drop]::after { animation: none; } }
+@media (max-width: 480px) {
+  .c4-hud p { font-size: 1rem; }
+  .c4-turn { flex-basis: 100%; order: 3; }
+  .c4-board { --slot: calc(var(--board-width) / 7 - 8px); }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

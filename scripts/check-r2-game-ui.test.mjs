@@ -37,6 +37,22 @@ const cases = [
   { id: 'spatial-span', component: 'SpatialSpanRecall', tutorial: 'SpatialSpanTutorial' },
   { id: 'tower-of-london', component: 'TowerPlanning', tutorial: 'TowerTutorial', logic: { '../logic/towerOfLondon': 'logic/towerOfLondon.ts', '../TowerBoard': 'TowerBoard.tsx' } },
   { id: 'reaction-time', component: 'ReactionSignal', tutorial: 'ReactionTutorial' },
+  { id: 'tic-tac-toe', component: 'TicTacToeGame', tutorial: 'TicTacToeTutorial', logic: { '../logic/ticTacToe': 'logic/ticTacToe.ts' } },
+  { id: 'connect4', component: 'Connect4Game', tutorial: 'Connect4Tutorial', logic: { '../logic/connect4': 'logic/connect4.ts' } },
+  { id: 'hex', component: 'HexGame', tutorial: 'HexTutorial', logic: { '../logic/hex': 'logic/hex.ts', '../HexBoard': 'HexBoard.tsx' } },
+  { id: 'dots-and-boxes', component: 'DotsAndBoxesGame', tutorial: 'DotsTutorial', logic: { '../logic/dotsAndBoxes': 'logic/dotsAndBoxes.ts', '../DotsBoard': 'DotsBoard.tsx' } },
+  { id: 'lights-out', component: 'LightsOutGame', tutorial: 'LightsOutTutorial', logic: { '../logic/lightsOut': 'logic/lightsOut.ts', '../LightsBoard': 'LightsBoard.tsx' } },
+  { id: 'sliding-puzzle', component: 'SlidingPuzzleGame', tutorial: 'SlidingTutorial', logic: { '../logic/slidingPuzzle': 'logic/slidingPuzzle.ts', '../SlidingBoard': 'SlidingBoard.tsx' } },
+  { id: 'maze', component: 'MazeGame', tutorial: 'MazeTutorial', logic: { '../logic/maze': 'logic/maze.ts', '../MazeBoard': 'MazeBoard.tsx', '../DirectionPad': 'DirectionPad.tsx' } },
+  { id: 'sudoku', component: 'SudokuGame', tutorial: 'SudokuTutorial', logic: { '../logic/numberGrid': 'logic/numberGrid.ts', '../NumberBoard': 'NumberBoard.tsx' } },
+  { id: 'memory-match', component: 'MemoryMatchGame', tutorial: 'MemoryTutorial', logic: { '../logic/memoryMatch': 'logic/memoryMatch.ts', '../CardBoard': 'CardBoard.tsx' } },
+  { id: 'simon-says', component: 'SimonSaysGame', tutorial: 'SimonTutorial', logic: { '../logic/simonSays': 'logic/simonSays.ts', '../SimonPads': 'SimonPads.tsx' } },
+  { id: 'whack-a-mole', component: 'WhackAMoleGame', tutorial: 'WhackTutorial', logic: { '../logic/whackAMole': 'logic/whackAMole.ts', '../HoleBoard': 'HoleBoard.tsx' } },
+  { id: 'minesweeper', component: 'MinesweeperGame', tutorial: 'MinesweeperTutorial', logic: { '../logic/minesweeper': 'logic/minesweeper.ts', '../MineBoard': 'MineBoard.tsx' } },
+  { id: 'antisaccade', component: 'AntisaccadeGame', tutorial: 'AntisaccadeTutorial', logic: { '../Stimulus': 'Stimulus.tsx' } },
+  { id: 'keep-track', component: 'KeepTrackRecall', tutorial: 'KeepTrackTutorial', logic: { '../logic/keepTrack': 'logic/keepTrack.ts', '../AnswerRows': 'AnswerRows.tsx' } },
+  { id: 'letter-memory', component: 'LetterMemoryRecall', tutorial: 'LetterMemoryTutorial', logic: { '../logic/letterMemory': 'logic/letterMemory.ts', '../LetterPad': 'LetterPad.tsx' } },
+  { id: 'plus-minus', component: 'PlusMinusSwitch', tutorial: 'PlusMinusTutorial', logic: { '../NumberPad': 'NumberPad.tsx' } },
 ];
 
 for (const fixture of cases) {
