@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { posix, resolve } from 'node:path';
 import test from 'node:test';
 import * as React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -16,6 +16,27 @@ const cases = [
   { id: 'asteroid-shield', component: 'AsteroidShieldGame', tutorial: 'AsteroidShieldTutorial' },
   { id: 'gesture-battler', component: 'GestureBattlerGame', tutorial: 'GestureBattlerTutorial' },
   { id: 'moving-card', component: 'MovingCardGame', tutorial: 'MovingCardTutorial' },
+  { id: 'sart', component: 'SartGame', tutorial: 'SartTutorial' },
+  { id: 'schulte-grid', component: 'SchulteGridGame', tutorial: 'SchulteTutorial', logic: { '../logic/schulteGrid': 'logic/schulteGrid.ts' } },
+  { id: 'hex-schulte', component: 'HexSchulteGame', tutorial: 'HexTutorial', logic: { '../logic/hexBoard': 'logic/hexBoard.ts', '../HexBoard': 'HexBoard.tsx' } },
+  { id: 'continuous-performance', component: 'ContinuousPerformanceGame', tutorial: 'CptTutorial' },
+  { id: 'simon-task', component: 'SimonTaskGame', tutorial: 'SimonTutorial' },
+  { id: 'card-sorting', component: 'CardSortingGame', tutorial: 'SortingTutorial', logic: { '../logic/cardSorting': 'logic/cardSorting.ts', '../CardFace': 'CardFace.tsx' } },
+  { id: 'attentional-blink', component: 'AttentionalBlinkGame', tutorial: 'BlinkTutorial' },
+  { id: 'time-perception', component: 'TimePerceptionGame', tutorial: 'TimingTutorial' },
+  { id: 'divided-attention', component: 'DividedAttentionGame', tutorial: 'DividedTutorial' },
+  { id: 'pattern-memory', component: 'PatternMemoryGame', tutorial: 'PatternTutorial', logic: { '../PatternBoard': 'PatternBoard.tsx' } },
+  { id: 'stroop', component: 'StroopGame', tutorial: 'StroopTutorial' },
+  { id: 'flanker', component: 'FlankerGame', tutorial: 'FlankerTutorial' },
+  { id: 'go-nogo', component: 'GoNoGoGame', tutorial: 'GoNoGoTutorial' },
+  { id: 'stop-signal', component: 'StopSignalGame', tutorial: 'StopSignalTutorial', logic: { '../shapes': 'shapes.tsx' } },
+  { id: 'attention-network-task', component: 'AttentionNetworkGame', tutorial: 'AntTutorial', logic: { '../ArrowRow': 'ArrowRow.tsx' } },
+  { id: 'n-back', component: 'NBackLetters', tutorial: 'NBackTutorial' },
+  { id: 'number-letter', component: 'NumberLetterSwitch', tutorial: 'NumberLetterTutorial' },
+  { id: 'digit-span', component: 'DigitSpanRecall', tutorial: 'DigitSpanTutorial' },
+  { id: 'spatial-span', component: 'SpatialSpanRecall', tutorial: 'SpatialSpanTutorial' },
+  { id: 'tower-of-london', component: 'TowerPlanning', tutorial: 'TowerTutorial', logic: { '../logic/towerOfLondon': 'logic/towerOfLondon.ts', '../TowerBoard': 'TowerBoard.tsx' } },
+  { id: 'reaction-time', component: 'ReactionSignal', tutorial: 'ReactionTutorial' },
 ];
 
 for (const fixture of cases) {
@@ -33,6 +54,14 @@ for (const fixture of cases) {
         '../settings': { PixelFromMillimeter: value => value },
         '../gaborTexture': { gaborTextureSpecs: [{ freq: .05 }, { freq: .08 }, { freq: .03 }] },
       };
+      // Tutorials that draw their preview from the game's own pure logic modules; a module may import one listed before it.
+      for (const [name, file] of Object.entries(fixture.logic ?? {})) {
+        const logicModule = { exports: {} };
+        new Function('module', 'exports', 'require', ts.transpileModule(await readFile(resolve(gamesRoot, fixture.id, file), 'utf8'), {
+          compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX }, fileName: file,
+        }).outputText)(logicModule, logicModule.exports, name => name === 'react/jsx-runtime' ? jsxRuntime : dependencies[`../${posix.join(posix.dirname(file), name)}`] ?? {});
+        dependencies[name] = logicModule.exports;
+      }
       if (fixture.id === 'moving-card') {
         const mathModule = { exports: {} }, layoutModule = { exports: {} };
         new Function('module', 'exports', ts.transpileModule(await readFile(resolve(gamesRoot, fixture.id, 'gameUtils.ts'), 'utf8'), {

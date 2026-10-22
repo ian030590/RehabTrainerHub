@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "card-sorting",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "卡片規則分類", "description": "依顏色、形狀或數量配對卡片，靠對錯回饋找出規則，規則一換就跟著調整，練習彈性切換想法。" },
+    "en": { "title": "Card Rule Sorting", "description": "Match cards by colour, shape or number, find the rule from the feedback, and switch when it changes, practising flexible thinking." }
+  }
+}

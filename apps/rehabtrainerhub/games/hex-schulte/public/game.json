@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "hex-schulte",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "六角舒爾特方格", "description": "眼睛停在中央記號，用餘光在六角形格子裡依序找出數字，練習擴大注意的範圍。" },
+    "en": { "title": "Hexagon Schulte Grid", "description": "Keep your eyes on the centre mark and find the numbers in order with the edge of your vision, practising a wider field of attention." }
+  }
+}

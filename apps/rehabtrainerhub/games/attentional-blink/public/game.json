@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "attentional-blink",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "注意力眨眼", "description": "一串字母在中央快速閃過，從中抓出夾在裡面的兩個數字，練習在極短時間內連續捕捉目標。" },
+    "en": { "title": "Attentional Blink", "description": "Catch the two digits hidden in a fast stream of letters, practising picking up targets that arrive close together." }
+  }
+}

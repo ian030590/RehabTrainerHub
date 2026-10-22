@@ -1,0 +1,81 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  /* Okabe-Ito colours stay apart for the common colour-vision differences; the dark outline keeps yellow visible on white. */
+  --shape-red: #d55e00; --shape-green: #009e73; --shape-yellow: #f0e442; --shape-blue: #0072b2;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.pattern-memory-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.pattern-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.pattern-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.pattern-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.pattern-hud { display: flex; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.pattern-progress-label, .pattern-load { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pattern-load { color: var(--text-muted); }
+.pattern-progress-track { flex: 1 1 auto; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.pattern-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.pattern-stop { flex: 0 0 auto; }
+.pattern-board-area { display: grid; place-items: center; min-height: 0; container-type: size; }
+.pattern-board { display: grid; grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr)); gap: clamp(6px, 1.5cqmin, 12px); width: min(100cqw, 100cqh, 30rem); aspect-ratio: 1; }
+.pattern-cell { display: grid; place-items: center; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.pattern-cell svg { width: 72%; height: 72%; overflow: visible; }
+.pattern-shape { stroke: var(--heading); stroke-width: 2; stroke-linejoin: round; }
+.pattern-cell[data-color="red"] .pattern-shape { fill: var(--shape-red); }
+.pattern-cell[data-color="green"] .pattern-shape { fill: var(--shape-green); }
+.pattern-cell[data-color="yellow"] .pattern-shape { fill: var(--shape-yellow); }
+.pattern-cell[data-color="blue"] .pattern-shape { fill: var(--shape-blue); }
+.pattern-cell[data-changed] { border-width: 5px; border-color: var(--heading); }
+.pattern-fixation { font-size: 2rem; font-weight: 700; color: var(--text-muted); }
+.pattern-controls { display: grid; gap: 12px; width: min(100%, 40rem); margin: 0 auto; }
+.pattern-prompt { min-height: 1.6em; margin: 0; font-size: 1.25rem; font-weight: 700; text-align: center; }
+.pattern-answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pattern-answer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 72px; padding: 8px;
+  border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.35rem; font-weight: 700; }
+.pattern-answer small { color: var(--text-muted); font-size: 1rem; }
+button.pattern-answer:disabled { opacity: .5; cursor: default; }
+@media (max-width: 480px) {
+  .pattern-hud { flex-wrap: wrap; }
+  .pattern-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .pattern-load { font-size: 1rem; }
+  .pattern-progress-track { order: 3; flex-basis: 100%; }
+}
+/* Short landscape screens put the answers beside the board so the board keeps its size. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .pattern-stage { grid-template-columns: minmax(0, 1fr) min(16rem, 38vw); grid-template-rows: auto minmax(0, 1fr); gap: 8px 16px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .pattern-hud { grid-column: 1 / -1; width: 100%; }
+  .pattern-controls { align-content: center; width: 100%; }
+  .pattern-answers { grid-template-columns: 1fr; }
+  .pattern-answer { min-height: 56px; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

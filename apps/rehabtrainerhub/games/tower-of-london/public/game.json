@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tower-of-london",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "倫敦塔規劃（Tower of London）", "description": "依柱子容量限制移動彩球達成目標排列，練習前額葉執行功能、問題解決與心智預先規劃。" },
+    "en": { "title": "Tower of London Planning", "description": "Move colored balls across capacity-constrained pegs to match the target goal, training executive planning and problem solving." }
+  }
+}

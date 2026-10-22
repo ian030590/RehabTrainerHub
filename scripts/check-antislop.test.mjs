@@ -11,7 +11,7 @@ const ignoredDirectories = new Set(['.git', '.next', '.tmp', '.turbo', '.wrangle
 // Third-party sources keep their original bytes; reference digests pin them.
 const vendoredPaths = [/\/public\/runtime\//, /\/public\/reference\//, /WEBGAZER-SOURCE\.txt$/, /\.min\.js$/];
 const r2Games = ['asteroid-shield', 'drawing-defense', 'driving-rehab', 'gabor-patching', 'gesture-battler',
-  'hart-chart', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'reading-training'];
+  'hart-chart', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'reading-training', 'sart', 'schulte-grid', 'hex-schulte', 'continuous-performance', 'simon-task', 'card-sorting', 'attentional-blink', 'time-perception', 'divided-attention', 'pattern-memory', 'stroop', 'flanker', 'go-nogo', 'stop-signal', 'attention-network-task', 'n-back', 'number-letter', 'digit-span', 'spatial-span', 'tower-of-london', 'reaction-time'];
 
 function* SourceFiles(directory) {
   for (const entry of readdirSync(directory)) {

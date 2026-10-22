@@ -1,0 +1,81 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  /* The star outline is 5.6:1 on white and differs from the dark shapes in form, not only colour. */
+  --stop-star: #c62828;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.stop-signal-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.stop-signal-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.stop-signal-checkbox { display: block; margin-top: 12px; }
+.stop-signal-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+.stop-signal-estimate { margin: 8px 0 0; font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.stop-signal-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.stop-signal-hud { display: flex; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.stop-signal-progress-label { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stop-signal-progress-track { flex: 1 1 auto; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.stop-signal-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.stop-signal-stop { flex: 0 0 auto; }
+.stop-signal-stimulus-area { display: grid; grid-template-rows: minmax(0, 1fr) auto; align-items: center; justify-items: center; gap: 12px; width: min(100%, 48rem); min-height: 0; margin: 0 auto; }
+.stop-signal-fixation, .stop-signal-stimulus { grid-row: 1; grid-column: 1; }
+.stop-signal-fixation { margin: 0; color: var(--text-muted); font-size: 3rem; font-weight: 700; }
+.stop-signal-stimulus { position: relative; display: block; width: clamp(140px, 40vmin, 280px); aspect-ratio: 1; }
+.stop-signal-star { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--stop-star); stroke-width: 7; stroke-linejoin: round; }
+.stop-signal-shape { position: absolute; inset: 32%; width: 36%; height: 36%; display: none; fill: var(--heading); }
+.stop-signal-stimulus[data-shape="0"] .stop-signal-shape[data-shape="0"], .stop-signal-stimulus[data-shape="1"] .stop-signal-shape[data-shape="1"],
+.stop-signal-stimulus[data-shape="2"] .stop-signal-shape[data-shape="2"], .stop-signal-stimulus[data-shape="3"] .stop-signal-shape[data-shape="3"] { display: block; }
+.stop-signal-stimulus-area:not([data-state="fixation"]) .stop-signal-fixation,
+.stop-signal-stimulus-area:not([data-state="target"]) .stop-signal-shape,
+.stop-signal-stimulus-area:not([data-signal="on"]) .stop-signal-star { visibility: hidden; }
+.stop-signal-feedback { grid-row: 2; grid-column: 1; min-height: 1.6em; margin: 0; font-size: 1.25rem; font-weight: 700; text-align: center; }
+.stop-signal-feedback[data-result="wrong"] { color: var(--error); }
+.stop-signal-pads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: min(100%, 48rem); margin: 0 auto; }
+.stop-signal-pad { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: clamp(96px, 18dvh, 168px); padding: 12px 8px;
+  border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.4rem; font-weight: 700; touch-action: manipulation; }
+.stop-signal-pad small { color: var(--text-muted); font-size: 1rem; }
+.stop-signal-pad:active { background: var(--primary-soft); border-color: var(--primary); }
+.stop-signal-guide { display: inline-flex; gap: 12px; }
+.stop-signal-guide-shape { width: 32px; height: 32px; fill: var(--heading); }
+.stop-signal-rest .training-config-summary { margin-bottom: 8px; }
+.stop-signal-tip { color: var(--error); }
+.stop-signal-rest-keys { display: grid; gap: 8px; margin: 8px 0; padding-left: 1.5rem; }
+.stop-signal-rest-keys li { display: flex; align-items: center; gap: 12px; }
+@media (max-width: 480px) {
+  .stop-signal-hud { flex-wrap: wrap; }
+  .stop-signal-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .stop-signal-progress-track { order: 3; flex-basis: 100%; }
+}
+@media (max-height: 480px) { .stop-signal-pad { min-height: 72px; font-size: 1.2rem; } .stop-signal-stimulus { width: clamp(110px, 34vmin, 200px); } }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.score-key-metric strong { white-space: nowrap; }

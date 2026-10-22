@@ -1,0 +1,81 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.hex-schulte-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.hex-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.hex-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.hex-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.hex-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hex-round { flex: 1 1 auto; }
+.hex-next { display: flex; align-items: center; gap: 8px; padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.hex-next strong { min-width: 2ch; font-size: 1.6rem; line-height: 1.2; text-align: center; color: var(--primary); }
+.hex-clock { min-width: 5ch; text-align: right; }
+.hex-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
+.hex-feedback[data-tone="center"] { color: var(--primary); }
+.hex-board { container-type: size; display: grid; place-items: center; min-height: 0; }
+/* Pointy-top hexagons on axial coordinates; the field is sized so the widest row and all rows fit the stage. */
+.hex-field { --hex-size: min(100cqw / (1.732 * (2 * var(--rings) + 1)), 100cqh / (3 * var(--rings) + 2));
+  position: relative; width: calc(1.732 * var(--hex-size) * (2 * var(--rings) + 1)); height: calc(var(--hex-size) * (3 * var(--rings) + 2)); }
+.hex-cell, .hex-center { --q: 0; --r: 0; position: absolute; width: calc(1.732 * var(--hex-size)); height: calc(2 * var(--hex-size));
+  left: calc(50% + (var(--q) + var(--r) / 2) * 1.732 * var(--hex-size) - .866 * var(--hex-size)); top: calc(50% + var(--r) * 1.5 * var(--hex-size) - var(--hex-size));
+  min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--border-strong); color: var(--heading);
+  clip-path: polygon(50% 2%, 98% 26%, 98% 74%, 50% 98%, 2% 74%, 2% 26%); font-size: calc(var(--hex-size) * .72); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+button.hex-cell, button.hex-center { cursor: pointer; }
+/* The outer hexagon is the border; the face sits inset inside it, so a thicker inset reads as a thicker border. */
+.hex-face { position: absolute; inset: 3px; display: grid; place-items: center; background: var(--surface); clip-path: inherit; }
+.hex-cell[data-found] { background: var(--border); color: var(--text-muted); }
+.hex-cell[data-found] .hex-face { background: var(--background); }
+.hex-cell[data-wrong] { background: var(--error); }
+.hex-cell[data-wrong] .hex-face, .hex-cell:focus-visible .hex-face, .hex-center:focus-visible .hex-face { inset: 6px; }
+.hex-cell:focus-visible, .hex-center:focus-visible { background: var(--primary); outline: none; }
+.hex-center .hex-face { background: var(--background); }
+.hex-center .hex-face::before, .hex-center .hex-face::after { content: ''; position: absolute; left: 50%; top: 50%; background: var(--heading); transform: translate(-50%, -50%); }
+.hex-center .hex-face::before { width: 40%; height: 4px; }
+.hex-center .hex-face::after { width: 4px; height: 40%; }
+.hex-center[data-lit] { background: var(--primary); }
+.hex-center[data-lit] .hex-face { inset: 6px; background: var(--primary-soft); }
+.hex-center[data-lit] .hex-face::before, .hex-center[data-lit] .hex-face::after { background: var(--primary); }
+.hex-interlude { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.hex-interlude-panel { width: min(100%, 26rem); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); text-align: center; }
+.hex-interlude-panel h2 { margin: 0 0 8px; color: var(--heading); }
+.hex-interlude-panel p { margin: 0 0 12px; font-size: 1.15rem; font-weight: 700; }
+.hex-interlude-panel button { margin-top: 8px; }
+.hex-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+@media (max-width: 480px) {
+  .hex-hud p { font-size: 1rem; }
+  .hex-round { flex-basis: 100%; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

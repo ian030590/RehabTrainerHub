@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "flanker",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "側翼干擾選擇（Flanker）", "description": "辨識中央箭頭指向並忽略兩側干擾，練習視覺聚焦與干擾抑制。" },
+    "en": { "title": "Flanker Selective Attention", "description": "Identify center arrow direction while ignoring flanking distractors to practise focus and interference suppression." }
+  }
+}

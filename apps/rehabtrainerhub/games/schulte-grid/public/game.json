@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "schulte-grid",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "舒爾特方格", "description": "在打亂的數字方格中依序找出每個數字，練習視覺搜尋與專注。" },
+    "en": { "title": "Schulte Grid", "description": "Find the numbers of a shuffled grid in order, practising visual search and focus." }
+  }
+}

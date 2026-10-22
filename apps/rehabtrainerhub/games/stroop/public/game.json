@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "stroop",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "色彩干擾抑制（Stroop）", "description": "辨識文字印刷顏色並抑制字義干擾，練習選擇性注意力與衝動抑制。" },
+    "en": { "title": "Color Word Interference (Stroop)", "description": "Identify font color while suppressing word meaning to practise selective attention and response inhibition." }
+  }
+}

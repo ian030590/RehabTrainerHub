@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "time-perception",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "時間感知", "description": "看圓點亮多久，再重現、比較或估計那段時間，練習對時間長短的掌握。" },
+    "en": { "title": "Time Perception", "description": "Watch how long a dot stays lit, then reproduce, compare or estimate that time, practising your sense of duration." }
+  }
+}

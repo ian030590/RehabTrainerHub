@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "go-nogo",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "通行與抑制反應（Go/No-go）", "description": "看到通行訊號時反應，看到禁止訊號時抑制衝動，練習持續專注與抑制控制。" },
+    "en": { "title": "Go / No-Go Sustained Attention", "description": "Respond to Go signals and withhold responses to Stop signals to practise sustained attention and impulse control." }
+  }
+}

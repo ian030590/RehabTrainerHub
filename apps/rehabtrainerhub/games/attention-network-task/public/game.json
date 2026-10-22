@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "attention-network-task",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "注意力網絡練習（ANT）", "description": "判斷中央箭頭方向並忽略兩側干擾，搭配箭頭出現前的星號提示，練習警覺、定向與衝突控制。" },
+    "en": { "title": "Attention Network Task (ANT)", "description": "Judge the middle arrow while ignoring the ones beside it, with star cues before each row, to practise alerting, orienting and conflict control." }
+  }
+}

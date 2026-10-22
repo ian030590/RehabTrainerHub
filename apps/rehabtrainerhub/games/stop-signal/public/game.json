@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "stop-signal",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "煞車抑制反應（Stop-Signal）", "description": "依形狀快速按左或右，看到形狀周圍出現星形停止訊號時立即收手，練習動作衝動抑制與專注控制。" },
+    "en": { "title": "Stop-Signal Response Inhibition", "description": "Press left or right for each shape, and hold back as soon as a star stop signal appears around it, to practise inhibitory control." }
+  }
+}

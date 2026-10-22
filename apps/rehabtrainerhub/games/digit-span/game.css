@@ -1,0 +1,75 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.digit-span-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.digit-span-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.digit-span-checkbox { display: block; margin-top: 12px; }
+.digit-span-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+.digit-span-estimate { margin: 8px 0 0; font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.digit-span-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.digit-span-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.digit-span-progress-label { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.digit-span-direction { flex: 0 0 auto; margin: 0; padding: 4px 12px; border: 2px solid var(--primary); border-radius: var(--radius); color: var(--primary); font-size: 1.2rem; font-weight: 700; }
+.digit-span-progress-track { flex: 1 1 6rem; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.digit-span-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.digit-span-stop { flex: 0 0 auto; }
+.digit-span-display-area { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center; align-items: center; gap: 8px; width: min(100%, 48rem); min-height: 0; margin: 0 auto; }
+.digit-span-display { margin: 0; font-size: clamp(3.5rem, 20vmin, 9rem); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; visibility: hidden; }
+.digit-span-stage[data-state="count"] .digit-span-display { font-size: clamp(2rem, 8vmin, 3rem); }
+.digit-span-stage[data-state="count"] .digit-span-display, .digit-span-stage[data-state="digit"] .digit-span-display { visibility: visible; }
+.digit-span-feedback { min-height: 1.5em; margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.5; text-align: center; }
+.digit-span-feedback[data-result="wrong"] { color: var(--error); }
+.digit-span-entry { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 56px; visibility: hidden; }
+.digit-span-stage[data-state="answer"] .digit-span-entry, .digit-span-stage[data-state="feedback"] .digit-span-entry, .digit-span-tutorial .digit-span-entry { visibility: visible; }
+.digit-span-entry-digit { display: grid; place-items: center; width: 44px; height: 56px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--surface);
+  font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.digit-span-entry-hint { align-self: center; color: var(--text-muted); font-size: 1.1rem; font-weight: 700; }
+.digit-span-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(100%, 28rem); margin: 0 auto; }
+.digit-span-key { display: grid; place-items: center; min-height: clamp(48px, 8.5dvh, 72px); padding: 4px; border: 2px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--background); color: var(--heading); font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; touch-action: manipulation; }
+.digit-span-back, .digit-span-clear, .digit-span-submit { font-size: 1.15rem; }
+.digit-span-submit { border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); }
+.digit-span-key:not(:disabled):active { background: var(--primary-soft); border-color: var(--primary); }
+.digit-span-submit:not(:disabled):active { background: var(--primary-hover); }
+.digit-span-key:disabled { opacity: .45; cursor: default; }
+.digit-span-intro-rule { padding: 12px 16px; border: 2px solid var(--primary); border-radius: var(--radius); }
+@media (max-width: 480px) {
+  .digit-span-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .digit-span-progress-track { order: 3; flex-basis: 100%; }
+}
+@media (max-height: 480px) { .digit-span-key { min-height: 40px; font-size: 1.3rem; } .digit-span-display { font-size: clamp(2.5rem, 16vmin, 5rem); } }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.score-key-metric strong { white-space: nowrap; }

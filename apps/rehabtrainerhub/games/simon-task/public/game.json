@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "simon-task",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "Simon 作業", "description": "依圖形按左或右，不管圖形出現在哪一邊，練習排開位置帶來的干擾。" },
+    "en": { "title": "Simon Task", "description": "Press left or right by shape, whichever side it appears on, practising setting aside the pull of its position." }
+  }
+}

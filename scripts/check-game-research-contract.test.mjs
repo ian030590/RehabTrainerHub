@@ -16,7 +16,9 @@ const {
   HasReachedExpFactoryRoundLimit,
   SummarizeExpFactoryTrials,
 } = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
-const expFactoryGames = ['antisaccade','attention-network-task','digit-span','flanker','go-nogo','keep-track','letter-memory','n-back','number-letter','plus-minus','spatial-span','stop-signal','stroop','tower-of-london'];
+// Games written directly as R2 packages: entry component validated by the game's own settings module.
+const nativeR2Games = { sart: 'SartGame.tsx', 'schulte-grid': 'SchulteGridGame.tsx', 'hex-schulte': 'HexSchulteGame.tsx', 'continuous-performance': 'ContinuousPerformanceGame.tsx', 'simon-task': 'SimonTaskGame.tsx', 'card-sorting': 'CardSortingGame.tsx', 'attentional-blink': 'AttentionalBlinkGame.tsx', 'time-perception': 'TimePerceptionGame.tsx', 'divided-attention': 'DividedAttentionGame.tsx', 'pattern-memory': 'PatternMemoryGame.tsx', stroop: 'StroopGame.tsx', flanker: 'FlankerGame.tsx', 'go-nogo': 'GoNoGoGame.tsx', 'stop-signal': 'StopSignalGame.tsx', 'attention-network-task': 'AttentionNetworkGame.tsx', 'n-back': 'NBackLetters.tsx', 'number-letter': 'NumberLetterSwitch.tsx', 'digit-span': 'DigitSpanRecall.tsx', 'spatial-span': 'SpatialSpanRecall.tsx', 'tower-of-london': 'TowerPlanning.tsx', 'reaction-time': 'ReactionSignal.tsx' };
+const expFactoryGames = ['antisaccade','keep-track','letter-memory','plus-minus'];
 
 function Adapter(id) {
   const window = { setStims() {}, numbers: Array.from({ length: 90 }, (_, i) => String(10 + i)), practice_numbers: Array.from({ length: 15 }, (_, i) => String(20 + i)), post_task_block: {}, add_block: { questions: Array(30).fill('') }, minus_block: { questions: Array(30).fill('') }, alternate_block: { questions: Array(30).fill('') } };
@@ -27,14 +29,18 @@ const sample = (extra = {}) => ({ exp_stage: 'test', trial_id: 'stim', trial_ind
 
 test('every game exposes bounded grading settings and exact numeric score sources', () => {
   const ids = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name);
-  assert.equal(ids.length, 40);
+  assert.equal(ids.length, 50);
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
       const entry = { 'hart-chart': 'HartChartPage.tsx', 'driving-rehab': 'DrivingRehabGame.tsx', 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
-        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx', 'gabor-patching': 'GaborPatchingGame.tsx', 'reading-training': 'ReadingTrainingGame.tsx' }[id];
+        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx', 'gabor-patching': 'GaborPatchingGame.tsx', 'reading-training': 'ReadingTrainingGame.tsx', ...nativeR2Games }[id];
       assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
-      if (id === 'hart-chart') {
+      if (Object.hasOwn(nativeR2Games, id)) {
+        assert.match(source, /ValidateSettings\(settings\)/);
+        assert.match(read(id, 'settings.ts'), /export function ValidateSettings\(/);
+        assert.match(read(id, 'score.ts'), /export function BuildGameScore\(/);
+      } else if (id === 'hart-chart') {
         assert.match(source, /ValidateSettings\(settings\)/);
         assert.match(read(id, 'settings.ts'), /settings\.rounds >= 5 && settings\.rounds <= 30/);
         assert.match(read(id, 'score.ts'), /durationMs|targets|attempts|accuracy|hints/);
@@ -119,15 +125,12 @@ test('ExpFactory grading applies its full allowed range and rejects malformed pa
     for (const value of [field.min, field.default, field.max]) {
       const window = Adapter(id);
       const target = { data: { trial_id: 'target' }, timing_stim: 150, timing_response: 150 };
-      const timed = { timing_stim: field.default, timing_response: id === 'n-back' ? 2000 : field.default };
+      const timed = { timing_stim: field.default, timing_response: field.default };
       const numeric = { data: { trial_id: 'stim', stim_place: 'bottomleft', stim_id: '<p>G9</p>' } };
       window.rehabConfigure({ [field.key]: value }, [target, timed, numeric]);
       if (id === 'antisaccade') assert.equal(target.timing_stim, value);
-      else if (id.includes('span')) assert.equal(window.stim_time, value);
-      else if (id === 'tower-of-london') assert.equal(window.time_per_trial, value);
       else if (id === 'plus-minus') assert.equal(window.add_block.questions.length, value);
-      else if (id === 'number-letter') { assert.equal(numeric.timing_response, value || -1); assert.equal(numeric.stimulus, '<p>G9</p>'); assert.equal(numeric.data.correct_response, 90); }
-      else if (id === 'n-back' || id === 'go-nogo' || id === 'letter-memory' || id === 'keep-track') assert.equal(timed.timing_stim, value);
+      else if (id === 'letter-memory' || id === 'keep-track') assert.equal(timed.timing_stim, value);
       else assert.equal(timed.timing_response, value);
       for (const invalid of [NaN, Infinity, '1000', field.min - field.step, field.max + field.step]) assert.throws(() => window.rehabConfigure({ [field.key]: invalid }, []), id);
     }
@@ -148,20 +151,10 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
   const fixedLengthSettings = {
     ufov: 'trialCount',
     'every-ball-response': 'rounds',
-    'reaction-time': 'rounds',
     'plus-minus': 'itemsPerList',
     antisaccade: 'rounds',
-    'attention-network-task': 'rounds',
-    'digit-span': 'rounds',
-    flanker: 'rounds',
-    'go-nogo': 'rounds',
     'keep-track': 'rounds',
     'letter-memory': 'rounds',
-    'n-back': 'rounds',
-    'number-letter': 'rounds',
-    'spatial-span': 'rounds',
-    'stop-signal': 'rounds',
-    stroop: 'rounds',
   };
   for (const [id, key] of Object.entries(fixedLengthSettings)) {
     const fields = JSON.parse(read(id, 'settings.json')).sections.flatMap(section => section.fields);
@@ -192,8 +185,7 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
   assert.equal(antisaccade.rehabRoundCount([target, sample({ trial_id: 'mask' })]), 1);
 
   const formalTrialIds = {
-    'attention-network-task': 'stim', flanker: 'stim', 'go-nogo': 'stim', 'n-back': 'stim',
-    'stop-signal': 'stim', stroop: 'stim', 'keep-track': 'response', 'letter-memory': 'response',
+        'keep-track': 'response', 'letter-memory': 'response',
   };
   for (const [id, trialId] of Object.entries(formalTrialIds)) {
     const window = Adapter(id);
@@ -203,17 +195,8 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
 
 test('ExpFactory projections retain analysis conditions and include real practice items', () => {
   const cases = {
-    stroop: [sample({ condition: 'incongruent' }), 'condition', 1],
-    flanker: [sample({ condition: 'incompatible' }), 'condition', 1],
-    'attention-network-task': [sample({ flanker_type: 'incongruent', cue: 'spatial', flanker_location: 'up' }), 'cue', 3],
-    'go-nogo': [sample({ correct_response: -1, key_press: 32, correct: false }), 'commission', true],
-    'stop-signal': [sample({ SS_trial_type: 'stop', SS_delay: 250, key_press: -1, rt: -1, condition: 'low' }), 'stopDelayMs', 250],
-    'n-back': [sample({ load: 3, stim: 'B', target: 'b' }), 'match', true],
-    'digit-span': [sample({ trial_id: 'response', num_digits: 6, condition: 'reverse' }), 'load', 6],
-    'spatial-span': [sample({ trial_id: 'response', num_spaces: 4, condition: 'forward' }), 'reverse', false],
-    'number-letter': [sample({ condition: 'rotate_switch', stim_place: 'topleft' }), 'top', true],
   };
-  const practiceGames = new Set(['stroop', 'flanker', 'attention-network-task', 'go-nogo', 'stop-signal', 'n-back']);
+  const practiceGames = new Set([]);
   for (const [id, [row, key, expected]] of Object.entries(cases)) {
     const window = Adapter(id);
     const result = window.rehabResearchRows([sample({ exp_stage: 'practice' }), sample({ trial_id: 'instruction' }), row]);
@@ -224,11 +207,7 @@ test('ExpFactory projections retain analysis conditions and include real practic
     const score = BuildGameScore(ParseGameScoreDefinition(JSON.parse(read(id, 'score.json'))), { detailRows: result });
     assert.equal(score.rounds.length, expectedLength, id);
     assert.equal(SummarizeExpFactoryTrials(result).totalTrials, expectedLength, id);
-    if (id === 'stop-signal') { assert.equal(result.at(-1).correct, true); assert.equal(score.rounds.at(-1).responseMs, null); }
   }
-
-  const stopSignal = Adapter('stop-signal').rehabResearchRows([sample({ exp_stage: 'NoSS_practice' })])[0];
-  assert.equal(stopSignal.practice, true);
 });
 
 test('antisaccade joins target and mask without counting two trials or measuring eye latency', () => {
@@ -280,22 +259,6 @@ test('recall and arithmetic derive item results from actual responses', () => {
   assert.equal(summary.totalTrials, 21);
   assert.equal(summary.correctTrials, 21);
   assert.equal(summary.meanRtMs, 2820 / 21);
-});
-
-test('Tower of London emits one problem result, not accuracy per move', () => {
-  const rows = Adapter('tower-of-london').rehabResearchRows([
-    sample({ exp_stage:'practice', trial_id:'to_board', problem_id:'practice', num_moves_made:1, min_moves:1 }),
-    sample({ exp_stage:'practice', trial_id:'feedback', correct:true, problem_time:1200 }),
-    sample({ trial_id:'to_hand', problem_id:0, num_moves_made:1, min_moves:3 }),
-    sample({ trial_id:'to_board', problem_id:0, num_moves_made:4, min_moves:3 }),
-    sample({ trial_id:'feedback', correct:true, problem_time:4200 }),
-  ]);
-  assert.equal(rows.length, 2);
-  assert.equal(rows[0].practice, true);
-  assert.equal(rows[1].problemMs, 4200);
-  assert.equal(rows[1].moves, 4);
-  assert.equal(rows[1].rt, null);
-  assert.equal(SummarizeExpFactoryTrials(rows).totalTrials, 2);
 });
 
 test('React runtime retains missing RT as null and full precision in summaries', () => {

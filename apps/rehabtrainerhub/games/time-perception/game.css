@@ -1,0 +1,74 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.time-perception-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.time-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.time-estimate { margin: 8px 0 0; font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.time-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.time-hud { display: flex; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.time-progress-label { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.time-progress-track { flex: 1 1 auto; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.time-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.time-stop { flex: 0 0 auto; }
+.time-lamp-area { display: grid; place-items: center; min-height: 0; }
+/* The lamp is the only thing that changes while a duration plays; its edge stays visible when off. */
+.time-lamp { display: block; width: clamp(96px, 26vmin, 200px); aspect-ratio: 1; border: 4px solid var(--border-strong); border-radius: 50%; background: var(--background); }
+.time-lamp[data-on="true"] { border-color: var(--primary); background: var(--primary); }
+.time-controls { display: grid; gap: 12px; width: min(100%, 40rem); margin: 0 auto; }
+.time-prompt { min-height: 1.6em; margin: 0; font-size: 1.25rem; font-weight: 700; text-align: center; }
+.time-hold, .time-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px;
+  border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); color: var(--heading); font-weight: 700; touch-action: none; }
+.time-hold { min-height: clamp(96px, 18dvh, 160px); font-size: 1.5rem; -webkit-touch-callout: none; }
+.time-hold small, .time-choice small { color: var(--text-muted); font-size: 1rem; }
+.time-hold[data-holding] { border-color: var(--primary); background: var(--primary-soft); }
+.time-choices { display: grid; gap: 10px; }
+.time-choices[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.time-choices[data-count="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.time-choice { min-height: 72px; font-size: 1.25rem; }
+button.time-hold:disabled, button.time-choice:disabled { opacity: .5; cursor: default; }
+.time-intro { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.time-intro-panel { width: min(100%, 30rem); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.time-intro-panel h2 { margin: 0 0 8px; color: var(--heading); }
+.time-intro-panel p { margin: 0 0 20px; font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+@media (max-width: 480px) {
+  .time-choices[data-count="5"] { gap: 6px; }
+  .time-choice { font-size: 1.05rem; padding: 8px 4px; }
+  .time-hud { flex-wrap: wrap; }
+  .time-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .time-progress-track { order: 3; flex-basis: 100%; }
+}
+@media (max-height: 480px) { .time-hold { min-height: 72px; } .time-choice { min-height: 52px; } }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

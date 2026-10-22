@@ -38,5 +38,89 @@
   "driving-rehab": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "駕駛注意力模擬練習"
+  },
+  "sart": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "持續注意反應（SART）"
+  },
+  "schulte-grid": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "舒爾特方格"
+  },
+  "hex-schulte": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "六角舒爾特方格"
+  },
+  "continuous-performance": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "連續表現作業（CPT）"
+  },
+  "simon-task": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "Simon 作業"
+  },
+  "card-sorting": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "卡片規則分類"
+  },
+  "attentional-blink": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "注意力眨眼"
+  },
+  "time-perception": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "時間感知"
+  },
+  "divided-attention": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "分配注意力"
+  },
+  "pattern-memory": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "圖形記憶"
+  },
+  "stroop": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "色彩干擾抑制（Stroop）"
+  },
+  "flanker": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "側翼干擾選擇（Flanker）"
+  },
+  "go-nogo": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "通行與抑制反應（Go/No-go）"
+  },
+  "stop-signal": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "煞車抑制反應（Stop-Signal）"
+  },
+  "attention-network-task": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "注意力網絡練習（ANT）"
+  },
+  "n-back": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "工作記憶更新（N-back）"
+  },
+  "number-letter": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "數字字母切換（Number-Letter）"
+  },
+  "digit-span": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "數字廣度記憶（Digit Span）"
+  },
+  "spatial-span": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "空間廣度記憶（Spatial Span）"
+  },
+  "tower-of-london": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "倫敦塔規劃（Tower of London）"
+  },
+  "reaction-time": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "反應時間"
   }
 }

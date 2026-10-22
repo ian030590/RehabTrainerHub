@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "number-letter",
+  "trainer": "brain",
+  "category": "higher-cognition",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "數字字母切換（Number-Letter）", "description": "字母數字組合出現在畫面四格之一：上半部判斷數字奇偶，下半部判斷字母是子音或母音，練習在兩種規則間切換。" },
+    "en": { "title": "Number-Letter Task", "description": "A letter-number pair appears in one of four boxes: judge the number as odd or even in the top half and the letter as consonant or vowel in the bottom half, to practise switching between two rules." }
+  }
+}

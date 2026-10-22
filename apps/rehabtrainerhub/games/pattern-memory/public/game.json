@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "pattern-memory",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "圖形記憶", "description": "記住九宮格裡的彩色圖形，短暫空白後判斷畫面有沒有改變，練習短時間記住看到的畫面。" },
+    "en": { "title": "Pattern Memory", "description": "Remember the coloured shapes on a three-by-three board, then after a short blank say whether anything changed, practising holding a picture in mind." }
+  }
+}

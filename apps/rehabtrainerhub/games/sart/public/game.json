@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "sart",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "持續注意反應（SART）", "description": "數字依序快速出現，看到指定數字時忍住不按，其他數字都要按，練習長時間維持專注。" },
+    "en": { "title": "Sustained Attention to Response (SART)", "description": "Press for every digit in a steady stream and hold back on one chosen digit, practising focus over a long run." }
+  }
+}

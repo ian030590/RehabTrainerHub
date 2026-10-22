@@ -7,7 +7,6 @@ const gamesRoot = 'apps/rehabtrainerhub/games';
 const cognitiveRoot = `${gamesRoot}/simon-says/runtime/cognitive`;
 const trialRecordsPath = `${cognitiveRoot}/trialRecords.ts`;
 const referenceGamePath = `${cognitiveRoot}/ReferenceCognitiveGame.tsx`;
-const reactionPath = `${gamesRoot}/reaction-time/ReactionTimeGame.ts`;
 const targetPath = `${gamesRoot}/whack-a-mole/TargetClickGame.ts`;
 const languageNeutralPath = `${cognitiveRoot}/languageNeutralGames.ts`;
 
@@ -46,19 +45,13 @@ test('Hart Chart honors the configured alternation count', async () => {
 
 test('trial record helpers produce deterministic millisecond records', async () => {
   const {
-    CreateReactionTrialRecord,
     CreateSimonTrialRecord,
     CreateTargetTrialRecord,
     GetElapsedMilliseconds,
-  } = Object.assign({}, ...await Promise.all(['reaction-time', 'whack-a-mole', 'simon-says'].map((id) => ImportStandaloneTypeScriptModule(`${gamesRoot}/${id}/runtime/cognitive/trialRecords.ts`))));
+  } = Object.assign({}, ...await Promise.all(['whack-a-mole', 'simon-says'].map((id) => ImportStandaloneTypeScriptModule(`${gamesRoot}/${id}/runtime/cognitive/trialRecords.ts`))));
 
   assert.equal(GetElapsedMilliseconds(100.2, 248.7), 149);
   assert.equal(GetElapsedMilliseconds(250, 200), 0);
-  assert.deepEqual(CreateReactionTrialRecord(2, 'false-start', 1000, 1325.4), {
-    trialNumber: 2,
-    outcome: 'false-start',
-    reactionTimeMs: 325,
-  });
   assert.deepEqual(CreateTargetTrialRecord(4, 'wrong-tap', 2000, 2260, 5, 2), {
     trialNumber: 4,
     outcome: 'wrong-tap',
@@ -123,9 +116,8 @@ test('Simon life resolution only ends at zero and otherwise replays', async () =
 });
 
 test('reference cognitive games persist and render complete per-trial contracts', async () => {
-  const [reference, reaction, target, languageNeutral, trialLogic] = await Promise.all([
-    Promise.all(['reaction-time', 'whack-a-mole', 'simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
-    readFile(reactionPath, 'utf8'),
+  const [reference, target, languageNeutral, trialLogic] = await Promise.all([
+    Promise.all(['whack-a-mole', 'simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
     readFile(targetPath, 'utf8'),
     readFile(languageNeutralPath, 'utf8'),
     readFile(trialRecordsPath, 'utf8'),
@@ -136,7 +128,7 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(reference, /lifecycle\.start\(\{/);
   assert.match(reference, /lifecycle\.finish\(data\)/);
   assert.doesNotMatch(reference, /\.data\.write/);
-  for (const kind of ['reaction', 'target', 'simon']) {
+  for (const kind of ['target', 'simon']) {
     assert.match(reference, new RegExp(`StartCognitiveTrial\\('${kind}'\\)`));
     assert.match(reference, new RegExp(`FinishCognitiveTrial\\('${kind}'`));
   }
@@ -145,17 +137,12 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(reference, /durationMs:\s*trial\.durationMs/);
   assert.match(reference, /CognitiveTrialResultsTable/);
 
-  assert.match(reaction, /'false-start'/);
-  assert.match(reaction, /'success'/);
-  assert.match(reaction, /state\.trials\.push\(trial\)/);
   assert.match(target, /'hit'/);
   assert.match(target, /'expired'/);
   assert.match(target, /'wrong-tap'/);
   assert.match(target, /if \(state\.activeIndex === null\)\s*return null/);
   assert.match(target, /state\.trials\.push\(trial\)/);
 
-  const settings = JSON.parse(await readFile(`${gamesRoot}/reaction-time/settings.json`, 'utf8'));
-  assert.ok(settings.sections.some(section => section.fields.some(field => field.type === 'slider')));
   assert.match(languageNeutral, /CreateSimonState/);
   assert.match(languageNeutral, /HandleSimonTap/);
   assert.match(trialLogic, /ResolveSimonAttempt\(state\.lives, false\)/);

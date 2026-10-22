@@ -24,19 +24,9 @@ const {
 } = await import(manifestUrl);
 
 const expFactoryGameFiles = Object.freeze({
-  'brain:stroop': 'stroop/StroopGame.tsx',
-  'brain:flanker': 'flanker/FlankerGame.tsx',
-  'brain:go-nogo': 'go-nogo/GoNoGoGame.tsx',
-  'brain:stop-signal': 'stop-signal/StopSignalGame.tsx',
-  'brain:attention-network-task': 'attention-network-task/AttentionNetworkTaskGame.tsx',
   'brain:antisaccade': 'antisaccade/AntisaccadeGame.tsx',
-  'brain:n-back': 'n-back/NBackGame.tsx',
-  'brain:digit-span': 'digit-span/DigitSpanGame.tsx',
-  'brain:spatial-span': 'spatial-span/SpatialSpanGame.tsx',
   'brain:letter-memory': 'letter-memory/LetterMemoryGame.tsx',
   'brain:keep-track': 'keep-track/KeepTrackGame.tsx',
-  'brain:tower-of-london': 'tower-of-london/TowerOfLondonGame.tsx',
-  'brain:number-letter': 'number-letter/NumberLetterGame.tsx',
   'brain:plus-minus': 'plus-minus/PlusMinusGame.tsx',
 });
 const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
@@ -266,6 +256,31 @@ for (const catalogId of catalogIds) {
 assert.ok(!existsSync(resolve(repoRoot, 'apps/rehabtrainerhub/training-modules')), 'training-modules must be deleted.');
 assert.ok(!existsSync(resolve(repoRoot, 'apps/rehabtrainerhub/training-runtimes')), 'training-runtimes must be deleted.');
 
+// Brain activities written directly as R2 packages: [gameId, component, tutorial].
+const nativeBrainGames = [
+  ['sart', 'SartGame', 'SartTutorial'],
+  ['schulte-grid', 'SchulteGridGame', 'SchulteTutorial'],
+  ['hex-schulte', 'HexSchulteGame', 'HexTutorial'],
+  ['continuous-performance', 'ContinuousPerformanceGame', 'CptTutorial'],
+  ['simon-task', 'SimonTaskGame', 'SimonTutorial'],
+  ['card-sorting', 'CardSortingGame', 'SortingTutorial'],
+  ['attentional-blink', 'AttentionalBlinkGame', 'BlinkTutorial'],
+  ['time-perception', 'TimePerceptionGame', 'TimingTutorial'],
+  ['divided-attention', 'DividedAttentionGame', 'DividedTutorial'],
+  ['pattern-memory', 'PatternMemoryGame', 'PatternTutorial'],
+  ['stroop', 'StroopGame', 'StroopTutorial'],
+  ['flanker', 'FlankerGame', 'FlankerTutorial'],
+  ['go-nogo', 'GoNoGoGame', 'GoNoGoTutorial'],
+  ['stop-signal', 'StopSignalGame', 'StopSignalTutorial'],
+  ['attention-network-task', 'AttentionNetworkGame', 'AntTutorial'],
+  ['n-back', 'NBackLetters', 'NBackTutorial'],
+  ['number-letter', 'NumberLetterSwitch', 'NumberLetterTutorial'],
+  ['digit-span', 'DigitSpanRecall', 'DigitSpanTutorial'],
+  ['spatial-span', 'SpatialSpanRecall', 'SpatialSpanTutorial'],
+  ['tower-of-london', 'TowerPlanning', 'TowerTutorial'],
+  ['reaction-time', 'ReactionSignal', 'ReactionTutorial'],
+];
+
 const implementationGroups = [
   {
     ids: ['motor:drawing-defense'],
@@ -340,6 +355,11 @@ const implementationGroups = [
       'SendGameResult',
     ],
   },
+  ...nativeBrainGames.map(([id, component, tutorial]) => ({
+    ids: [`brain:${id}`],
+    files: [`${id}/${component}.tsx`],
+    tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', tutorial, 'ValidateSettings(settings)'],
+  })),
   {
     ids: ['brain:ufov'],
     files: [
@@ -479,6 +499,13 @@ const jsPsychLifecycleGroups = [
     ],
     forbiddenTokens: ['WriteJsPsychData'],
   },
+  ...nativeBrainGames.map(([id, component]) => ({
+    status: 'external-runtime-adapter',
+    ids: [`brain:${id}`],
+    files: [`${id}/${component}.tsx`],
+    tokens: externalRuntimeAdapterTokens,
+    forbiddenTokens: ['WriteJsPsychData'],
+  })),
   {
     status: 'external-runtime-adapter',
     ids: ReferenceCognitiveCatalogIds(),
@@ -680,7 +707,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:reaction-time',
     'brain:whack-a-mole',
     'brain:memory-match',
     'brain:simon-says',

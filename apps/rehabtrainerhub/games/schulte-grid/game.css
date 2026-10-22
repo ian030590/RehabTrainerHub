@@ -1,0 +1,63 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.schulte-grid-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.schulte-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.schulte-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.schulte-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.schulte-hud p { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.schulte-round { flex: 1 1 auto; }
+.schulte-next { display: flex; align-items: center; gap: 8px; padding: 4px 12px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.schulte-next strong { min-width: 2ch; font-size: 1.6rem; line-height: 1.2; text-align: center; color: var(--primary); }
+.schulte-clock { min-width: 5ch; text-align: right; }
+.schulte-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
+.schulte-board { container-type: size; display: grid; place-items: center; min-height: 0; }
+.schulte-grid { display: grid; grid-template-columns: repeat(var(--grid-size), minmax(0, 1fr)); gap: 4px; width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); }
+.schulte-cell { display: grid; place-items: center; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--heading); font-size: calc(min(100cqw, 100cqh) / var(--grid-size) * .42); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; cursor: pointer; }
+.schulte-cell[data-found] { border-color: var(--border); background: var(--background); color: var(--text-muted); }
+.schulte-cell[data-wrong] { border-color: var(--error); outline: 3px solid var(--error); outline-offset: -3px; }
+.schulte-interlude { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.schulte-interlude-panel { width: min(100%, 26rem); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); text-align: center; }
+.schulte-interlude-panel h2 { margin: 0 0 8px; color: var(--heading); }
+.schulte-interlude-panel p { margin: 0 0 20px; font-size: 1.15rem; font-weight: 700; }
+.schulte-checkbox input { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: -4px; accent-color: var(--primary); }
+@media (max-width: 480px) {
+  .schulte-hud p { font-size: 1rem; }
+  .schulte-round { flex-basis: 100%; }
+  .schulte-grid { gap: 3px; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

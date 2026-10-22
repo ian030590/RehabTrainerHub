@@ -12,19 +12,9 @@ const outputRoot = resolve(process.env.HUB_OUTPUT_ROOT || resolve(repositoryRoot
 const browserSmokeScript = resolve(repositoryRoot, 'scripts/check-browser-route-smoke.mjs');
 const bravePath = FindBravePath();
 const expFactoryGameIds = [
-  'stroop',
-  'flanker',
-  'go-nogo',
-  'stop-signal',
-  'attention-network-task',
   'antisaccade',
-  'n-back',
-  'digit-span',
-  'spatial-span',
   'letter-memory',
   'keep-track',
-  'tower-of-london',
-  'number-letter',
   'plus-minus',
 ];
 
@@ -253,7 +243,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     '--timeoutMs', '10000',
   ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
   assert.equal(fullscreen.exitCode, 0, `Hub fullscreen: ${fullscreen.stdout}\n${fullscreen.stderr}`);
-  for (const gameId of ['tower-of-london', 'number-letter']) {
+  for (const gameId of ['plus-minus', 'keep-track']) {
     const overlay = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/`,
@@ -281,7 +271,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
   }
 
-  for (const gameId of ['reaction-time', 'lights-out']) {
+  for (const gameId of ['whack-a-mole', 'lights-out']) {
     const rulesSelector = '.training-rules';
     const backSelectors = '.training-rules .btn-ghost';
     const standalone = await Run(process.execPath, [

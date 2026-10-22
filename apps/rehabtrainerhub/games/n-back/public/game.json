@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "n-back",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "工作記憶更新（N-back）", "description": "觀察依序出現的字母，判斷是否和前 N 個相同，練習工作記憶的動態更新與維持。" },
+    "en": { "title": "Working Memory Updating (N-back)", "description": "Watch letters one at a time and judge whether each matches the one N places back, to practise updating and holding information in working memory." }
+  }
+}

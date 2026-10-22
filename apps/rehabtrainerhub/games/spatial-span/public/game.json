@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "spatial-span",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "空間廣度記憶（Spatial Span）", "description": "記住方格依序亮起的位置，再照原本順序或倒過來點回去，練習視覺空間工作記憶與路徑維持。" },
+    "en": { "title": "Spatial Span Memory Capacity", "description": "Remember the order in which squares light up, then tap them in the same or reverse order, to practise visuospatial working memory." }
+  }
+}

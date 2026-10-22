@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "divided-attention",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "分配注意力", "description": "一邊用滑鼠或手指跟住移動的圓點，一邊回答下方不時出現的算式，練習同時顧到兩件事。" },
+    "en": { "title": "Divided Attention", "description": "Keep the mouse or a finger on a moving dot while answering the sums that appear below it, practising keeping track of two things at once." }
+  }
+}

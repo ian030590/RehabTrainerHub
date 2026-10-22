@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "digit-span",
+  "trainer": "brain",
+  "category": "memory",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "數字廣度記憶（Digit Span）", "description": "記住依序出現的數字，再照原本順序或倒過來輸入，練習短期記憶與心智操作廣度。" },
+    "en": { "title": "Digit Span Memory Capacity", "description": "Remember digits shown one at a time, then enter them in the same or reverse order, to practise short-term memory and working memory span." }
+  }
+}

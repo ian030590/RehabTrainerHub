@@ -1,0 +1,66 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.continuous-performance-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.cpt-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.cpt-estimate { margin: 8px 0 0; font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.cpt-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--game-background); color: var(--heading); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.cpt-hud { display: flex; align-items: center; gap: 12px 16px; width: min(100%, 48rem); margin: 0 auto; }
+.cpt-progress-label { flex: 0 0 auto; margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cpt-progress-track { flex: 1 1 auto; min-width: 4rem; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.cpt-progress-fill { width: 0; height: 100%; background: var(--primary); }
+.cpt-stop { flex: 0 0 auto; }
+.cpt-stimulus-area { position: relative; display: grid; place-items: center; min-height: 0; }
+.cpt-stimulus-area > * { grid-area: 1 / 1; }
+.cpt-stimulus { margin: 0; font-size: clamp(88px, 26vmin, 220px); font-weight: 700; line-height: 1; letter-spacing: 0; }
+.cpt-fixation { margin: 0; color: var(--text-muted); font-size: 3rem; font-weight: 700; }
+.cpt-stimulus-area .cpt-stimulus, .cpt-stimulus-area .cpt-fixation { visibility: hidden; }
+.cpt-stimulus-area[data-state="letter"] .cpt-stimulus,
+.cpt-stimulus-area[data-state="blank"] .cpt-fixation,
+.cpt-stimulus-area[data-state="ready"] .cpt-fixation { visibility: visible; }
+.cpt-rule-reminder { align-self: end; margin: 0; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--background); font-size: 1.15rem; font-weight: 700; }
+.cpt-response-pad { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; justify-self: center;
+  width: min(100%, 36rem); min-height: clamp(96px, 18dvh, 160px); padding: 12px 16px; border: 2px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--background); color: var(--heading); font-size: 1.6rem; font-weight: 700; touch-action: manipulation; }
+.cpt-response-pad small { color: var(--text-muted); font-size: 1rem; }
+.cpt-response-pad:active { background: var(--primary-soft); border-color: var(--primary); }
+@media (max-width: 480px) {
+  .cpt-hud { flex-wrap: wrap; }
+  .cpt-progress-label { flex: 1 1 auto; font-size: 1rem; }
+  .cpt-progress-track { order: 3; flex-basis: 100%; }
+}
+@media (max-height: 480px) { .cpt-response-pad { min-height: 72px; font-size: 1.3rem; } }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }

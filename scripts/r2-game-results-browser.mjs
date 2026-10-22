@@ -33,6 +33,7 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
     select.dispatchEvent(new Event('change', { bubbles: true }));
   })()`);
   assert.ok(await game('document.documentElement.scrollWidth <= innerWidth'), 'Results must fit the viewport; wide tables scroll within their own region.');
+  assert.ok(await game('(panel => panel.scrollWidth <= panel.clientWidth)(document.querySelector(".experiment-container"))'), 'The results panel must not scroll sideways.');
   assert.ok(await game('Array.from(document.querySelectorAll(".results-table th")).every(cell => cell.getBoundingClientRect().width >= 48)'), 'Round columns remain readable.');
   assert.equal(await game('document.querySelectorAll(".experiment-results > button").length >= 1'), true);
   if (capture) {

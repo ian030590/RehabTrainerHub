@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "continuous-performance",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "連續表現作業（CPT）", "description": "字母一個接一個快速出現，只有看到目標字母才按，練習在長時間等待中保持警覺。" },
+    "en": { "title": "Continuous Performance Task (CPT)", "description": "Letters flash one at a time and you press only for the rare target, practising staying alert through long waits." }
+  }
+}

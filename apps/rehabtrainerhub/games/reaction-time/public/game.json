@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "reaction-time",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "反應時間", "description": "等待訊號後快速點擊，練習注意力維持與反應控制。" },
+    "en": { "title": "Reaction Time", "description": "Wait for a signal and respond quickly to practise sustained attention and response control." }
+  }
+}
