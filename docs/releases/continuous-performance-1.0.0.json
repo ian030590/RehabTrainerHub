@@ -1,0 +1,169 @@
+{
+  "gameId": "continuous-performance",
+  "version": "1.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/continuous-performance/1.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/continuous-performance/1.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/continuous-performance/",
+  "publishedAt": "2026-10-22T08:08:49.011Z",
+  "verifiedAt": "2026-10-22T08:16:33.259Z",
+  "fileCount": 5,
+  "totalBytes": 590537,
+  "files": [
+    {
+      "path": "assets/index-DCsEywM0.js",
+      "size": 568148,
+      "sha256": "01cd5253d33ff936a1f9fed8a991186638cb0cc998c2c5123bf5eb5495e0ddea",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-LQO619m0.css",
+      "size": 18430,
+      "sha256": "28d8c57d92026b2780c8121ed1634a673860e0517a19ac38f22c269d9ca6a6fa",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 566,
+      "sha256": "b8c6849897c5a570d16f020579e70ad850c5a7e12a81934478dc9ec54b5454d3",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "97b7ae9d021850d8825c37388a77b2bb67db6f7eb0413ecdaf70a85d4fa27165",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2976,
+      "sha256": "3852cb629b8844391c92dcd1186d9052a91d29d4e0c67eca662bc9f630d6fb60",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:08:49.011Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "continuous-performance",
+        "version": "1.0.0",
+        "contentSha256": "12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First release of a new game; no earlier version exists. Reverting the registration removes it from the lobby while the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/continuous-performance/1.0.0/",
+  "changes": [
+    "New game: Letters flash one at a time and you press only for the rare target, practising staying alert through long waits.",
+    "Self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-continuous-performance-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs continuous-performance --dry-run: 5 files, digest 12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:33.259Z",
+    "files": [
+      {
+        "path": "assets/index-DCsEywM0.js",
+        "status": 200,
+        "size": 568148,
+        "sha256": "01cd5253d33ff936a1f9fed8a991186638cb0cc998c2c5123bf5eb5495e0ddea",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-LQO619m0.css",
+        "status": 200,
+        "size": 18430,
+        "sha256": "28d8c57d92026b2780c8121ed1634a673860e0517a19ac38f22c269d9ca6a6fa",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 566,
+        "sha256": "b8c6849897c5a570d16f020579e70ad850c5a7e12a81934478dc9ec54b5454d3",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "97b7ae9d021850d8825c37388a77b2bb67db6f7eb0413ecdaf70a85d4fa27165",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2976,
+        "sha256": "3852cb629b8844391c92dcd1186d9052a91d29d4e0c67eca662bc9f630d6fb60",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/continuous-performance/1.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.0",
+      "contentSha256": "12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.0",
+      "contentSha256": "12e06189161040a2312ecca489f2ec9cba933dfafde872c3897e9c6155dd6c98",
+      "category": "attention"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game continuous-performance passed --production-hub --lobby and --production-hub --lobby --mobile --english against 1.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

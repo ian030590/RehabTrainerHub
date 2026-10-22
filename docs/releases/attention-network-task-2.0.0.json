@@ -1,0 +1,171 @@
+{
+  "gameId": "attention-network-task",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/",
+  "publishedAt": "2026-10-22T08:13:36.439Z",
+  "verifiedAt": "2026-10-22T08:16:51.601Z",
+  "fileCount": 5,
+  "totalBytes": 598275,
+  "files": [
+    {
+      "path": "assets/index-DFm9oCsY.js",
+      "size": 573540,
+      "sha256": "3e75ba05a43e25385140d3c663cf2dfb0373220010ef7f4a81b68046258a4784",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DdFw1Eek.css",
+      "size": 19871,
+      "sha256": "eec2f48c1b9586676730740356ec84dd17e3eacf72dc5405fd4d99233014ffa3",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 610,
+      "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "a93a3402e293e6170d19fe985af25dbc5e0616e39a17416693a8bfb480178751",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3834,
+      "sha256": "225aaec455e211122a79bcab8d4597173b3fed739ec9f7ec2f2958f06d27606a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:13:36.439Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "attention-network-task",
+        "version": "2.0.0",
+        "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/attention-network-task/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version (ExpFactory jsPsych or Pixi reference game) into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "Name changed from 注意力網絡測驗 to 注意力網絡練習（ANT）",
+    "Practice can be turned off in settings"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-attention-network-task-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs attention-network-task --dry-run: 5 files, digest 563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:51.601Z",
+    "files": [
+      {
+        "path": "assets/index-DFm9oCsY.js",
+        "status": 200,
+        "size": 573540,
+        "sha256": "3e75ba05a43e25385140d3c663cf2dfb0373220010ef7f4a81b68046258a4784",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DdFw1Eek.css",
+        "status": 200,
+        "size": 19871,
+        "sha256": "eec2f48c1b9586676730740356ec84dd17e3eacf72dc5405fd4d99233014ffa3",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 610,
+        "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "a93a3402e293e6170d19fe985af25dbc5e0616e39a17416693a8bfb480178751",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3834,
+        "sha256": "225aaec455e211122a79bcab8d4597173b3fed739ec9f7ec2f2958f06d27606a",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/attention-network-task/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game attention-network-task passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

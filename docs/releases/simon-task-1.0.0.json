@@ -1,0 +1,169 @@
+{
+  "gameId": "simon-task",
+  "version": "1.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/",
+  "publishedAt": "2026-10-22T08:10:28.833Z",
+  "verifiedAt": "2026-10-22T08:16:39.455Z",
+  "fileCount": 5,
+  "totalBytes": 589901,
+  "files": [
+    {
+      "path": "assets/index-nKt1xYgw.js",
+      "size": 566208,
+      "sha256": "6511239f2d444cba06c1118e5b110e002e6ea07c46f866928f00ba709cb69972",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CJNz6Zz-.css",
+      "size": 19023,
+      "sha256": "4fe6285958217f4039d940d57399b7e38be330c21a24e6675a60b45ce0d21511",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 496,
+      "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "5e2e5ce0fdad83d54384c21c5997df04055d74b920b08ac0043215f1a75df821",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3772,
+      "sha256": "c775ecd01bc6018e2504ad41aeca1f2013f36dc8cfbc684f28ec45d730b18800",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:10:28.833Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "simon-task",
+        "version": "1.0.0",
+        "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First release of a new game; no earlier version exists. Reverting the registration removes it from the lobby while the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/simon-task/1.0.0/",
+  "changes": [
+    "New game: Press left or right by shape, whichever side it appears on, practising setting aside the pull of its position.",
+    "Self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-simon-task-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs simon-task --dry-run: 5 files, digest 9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:39.455Z",
+    "files": [
+      {
+        "path": "assets/index-nKt1xYgw.js",
+        "status": 200,
+        "size": 566208,
+        "sha256": "6511239f2d444cba06c1118e5b110e002e6ea07c46f866928f00ba709cb69972",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CJNz6Zz-.css",
+        "status": 200,
+        "size": 19023,
+        "sha256": "4fe6285958217f4039d940d57399b7e38be330c21a24e6675a60b45ce0d21511",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 496,
+        "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "5e2e5ce0fdad83d54384c21c5997df04055d74b920b08ac0043215f1a75df821",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3772,
+        "sha256": "c775ecd01bc6018e2504ad41aeca1f2013f36dc8cfbc684f28ec45d730b18800",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/simon-task/1.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.0",
+      "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.0",
+      "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e",
+      "category": "attention"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game simon-task passed --production-hub --lobby and --production-hub --lobby --mobile --english against 1.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "gameId": "n-back",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/n-back/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/n-back/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/n-back/",
+  "publishedAt": "2026-10-22T08:05:32.205Z",
+  "verifiedAt": "2026-10-22T08:16:20.833Z",
+  "fileCount": 5,
+  "totalBytes": 597058,
+  "files": [
+    {
+      "path": "assets/index-0zL8J1YK.js",
+      "size": 572198,
+      "sha256": "215d51bd09ce51b680f15e3d43a51bfbac1925486f5aeb2e95198266c6f7496d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-B0EgqtM_.css",
+      "size": 18725,
+      "sha256": "5cba0d3c2bf99ff60dd72bf03f587040cfea1d1ceba51cd3e436288e3d0f8e16",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 579,
+      "sha256": "9cfa69f3bc431d2a540d773080cbcade992cf2a89787afcca5866aae6964239f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "52d1ef005b97b48aaeb4227e422da91f85acf869a5dea5c34aedd291c12a05b7",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5136,
+      "sha256": "5e9384e1e26f8eaca1c995a3170154aef139148f09c46f247f0afba725c5af18",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:05:32.205Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "n-back",
+        "version": "2.0.0",
+        "contentSha256": "178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/n-back/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version (ExpFactory jsPsych or Pixi reference game) into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "20% matching letters, a 250 ms gap between letters, case-insensitive practice and the rule shown before each block",
+    "Practice can be turned off in settings"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-n-back-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs n-back --dry-run: 5 files, digest 178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:20.833Z",
+    "files": [
+      {
+        "path": "assets/index-0zL8J1YK.js",
+        "status": 200,
+        "size": 572198,
+        "sha256": "215d51bd09ce51b680f15e3d43a51bfbac1925486f5aeb2e95198266c6f7496d",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-B0EgqtM_.css",
+        "status": 200,
+        "size": 18725,
+        "sha256": "5cba0d3c2bf99ff60dd72bf03f587040cfea1d1ceba51cd3e436288e3d0f8e16",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 579,
+        "sha256": "9cfa69f3bc431d2a540d773080cbcade992cf2a89787afcca5866aae6964239f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "52d1ef005b97b48aaeb4227e422da91f85acf869a5dea5c34aedd291c12a05b7",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5136,
+        "sha256": "5e9384e1e26f8eaca1c995a3170154aef139148f09c46f247f0afba725c5af18",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/n-back/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "178fbb158365e95dc7fabeb0518e3666cff269c2c0a681b58f6a6650d48cdd3f",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game n-back passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

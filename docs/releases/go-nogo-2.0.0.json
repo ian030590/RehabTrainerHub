@@ -1,0 +1,171 @@
+{
+  "gameId": "go-nogo",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/",
+  "publishedAt": "2026-10-22T08:08:16.992Z",
+  "verifiedAt": "2026-10-22T08:16:31.181Z",
+  "fileCount": 5,
+  "totalBytes": 592548,
+  "files": [
+    {
+      "path": "assets/index-BZrplA58.js",
+      "size": 568563,
+      "sha256": "f22d42bf87441b040f2072fceaae0aff71e6ea2a3c40b11b2597d50ed3677e72",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D1g2eHOe.css",
+      "size": 19190,
+      "sha256": "284fc273d7bed48f6e42906a398d1a8cca8e6dbb343ebcd81ca078eae25cde98",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "a70978638c7155dd124a1057a0b8c3362cc562ea51810a15b95da178a2e89360",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3822,
+      "sha256": "2785a3b6a913fe98a34f39801a5025ddb0e8de3fd9377373820410ba5c099c30",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:08:16.992Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "go-nogo",
+        "version": "2.0.0",
+        "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/go-nogo/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version (ExpFactory jsPsych or Pixi reference game) into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "Original stimulus time and trial count kept",
+    "Practice can be turned off in settings"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-go-nogo-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs go-nogo --dry-run: 5 files, digest 5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:31.181Z",
+    "files": [
+      {
+        "path": "assets/index-BZrplA58.js",
+        "status": 200,
+        "size": 568563,
+        "sha256": "f22d42bf87441b040f2072fceaae0aff71e6ea2a3c40b11b2597d50ed3677e72",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-D1g2eHOe.css",
+        "status": 200,
+        "size": 19190,
+        "sha256": "284fc273d7bed48f6e42906a398d1a8cca8e6dbb343ebcd81ca078eae25cde98",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 548,
+        "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 425,
+        "sha256": "a70978638c7155dd124a1057a0b8c3362cc562ea51810a15b95da178a2e89360",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3822,
+        "sha256": "2785a3b6a913fe98a34f39801a5025ddb0e8de3fd9377373820410ba5c099c30",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/go-nogo/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game go-nogo passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

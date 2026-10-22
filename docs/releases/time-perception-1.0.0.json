@@ -1,0 +1,169 @@
+{
+  "gameId": "time-perception",
+  "version": "1.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/1.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/1.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/",
+  "publishedAt": "2026-10-22T08:13:07.003Z",
+  "verifiedAt": "2026-10-22T08:16:49.344Z",
+  "fileCount": 5,
+  "totalBytes": 593475,
+  "files": [
+    {
+      "path": "assets/index-3tClsBkR.js",
+      "size": 570365,
+      "sha256": "875c88e72f12ed86ad3452eff566f35e74f1acb1154893f6ec47acbe6d5009d9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-hH8VwdTd.css",
+      "size": 18965,
+      "sha256": "5e1d6eef7a3495716a9f3cd6a44e73d7a5cbb634af88ba0179e58f021da2f789",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 519,
+      "sha256": "19edd1ee6f9f313cd19936bd23e908289946de4a547b38d2be72fc47f2db6efa",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "d3c12bf751b9e20ebf768467bb8e2c4fa4f68196ef96ffbd5ef34f7a4f7e4c6d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3224,
+      "sha256": "cd1c0fa6bff4f64c85a96388e27105c198b8c397e628e0a47d4968c26ec6c40f",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:13:07.003Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "time-perception",
+        "version": "1.0.0",
+        "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First release of a new game; no earlier version exists. Reverting the registration removes it from the lobby while the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/time-perception/1.0.0/",
+  "changes": [
+    "New game: Watch how long a dot stays lit, then reproduce, compare or estimate that time, practising your sense of duration.",
+    "Self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-time-perception-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs time-perception --dry-run: 5 files, digest a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:49.344Z",
+    "files": [
+      {
+        "path": "assets/index-3tClsBkR.js",
+        "status": 200,
+        "size": 570365,
+        "sha256": "875c88e72f12ed86ad3452eff566f35e74f1acb1154893f6ec47acbe6d5009d9",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-hH8VwdTd.css",
+        "status": 200,
+        "size": 18965,
+        "sha256": "5e1d6eef7a3495716a9f3cd6a44e73d7a5cbb634af88ba0179e58f021da2f789",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 519,
+        "sha256": "19edd1ee6f9f313cd19936bd23e908289946de4a547b38d2be72fc47f2db6efa",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "d3c12bf751b9e20ebf768467bb8e2c4fa4f68196ef96ffbd5ef34f7a4f7e4c6d",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3224,
+        "sha256": "cd1c0fa6bff4f64c85a96388e27105c198b8c397e628e0a47d4968c26ec6c40f",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/time-perception/1.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.0",
+      "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.0",
+      "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7",
+      "category": "higher-cognition"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game time-perception passed --production-hub --lobby and --production-hub --lobby --mobile --english against 1.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

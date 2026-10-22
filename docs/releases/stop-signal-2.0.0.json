@@ -1,0 +1,171 @@
+{
+  "gameId": "stop-signal",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/",
+  "publishedAt": "2026-10-22T08:03:48.339Z",
+  "verifiedAt": "2026-10-22T08:16:13.804Z",
+  "fileCount": 5,
+  "totalBytes": 606385,
+  "files": [
+    {
+      "path": "assets/index-BNUQn_R5.js",
+      "size": 577772,
+      "sha256": "2379ba1fa38713f5f0cc486d3af7b6e6053e9a073f59ff0e2f2594a00c965f97",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DD_uh1iB.css",
+      "size": 19922,
+      "sha256": "6592ba8c1de9d86b5aa8861c840d695069c9f1b295e13378a6ae25dc564f6d64",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 600,
+      "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "e3bd729f3ec0bbfbe60ed00c465c38c380938294f440205e803e080323f294f1",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7666,
+      "sha256": "6c291529abc7e9cfd6a0cf6dcac752f2a85a1d39873d31c506a26259bd9c7d9e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「發佈並push」, then ran `node .tmp/brain-tools/publish-approved.mjs` after the exact version and contentSha256 of all 21 games were presented; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T08:03:48.339Z",
+    "scope": "Publish and activate the 21 brain-training games listed in docs/brain-training-r2-rewrite.md",
+    "games": [
+      {
+        "gameId": "stop-signal",
+        "version": "2.0.0",
+        "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` the owner started the publisher twice; the runs overlapped about five minutes apart and the second rebuilt each game, matched the same digest and re-verified the stored version without overwriting it."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert fd6fd951 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/stop-signal/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version (ExpFactory jsPsych or Pixi reference game) into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "Instructions now describe judging the two shapes; new 顯示按鍵提示 (keyGuide) setting keeps the shapes on the buttons in counted blocks; counted blocks balance the two shapes",
+    "Practice can be turned off in settings"
+  ],
+  "sourceCommit": "fd6fd951d026768932bb776cd32562a1200d6a6b",
+  "platformDeploy": {
+    "commit": "fd6fd951",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39749494225",
+    "conclusion": "success",
+    "note": "The owner committed and pushed the registration after all 21 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39749494225)"
+      },
+      {
+        "name": "seo",
+        "status": "passed",
+        "scope": "npm run test:seo locally"
+      }
+    ],
+    "unitTests": "scripts/check-stop-signal-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture and middleware 410 suites",
+    "localBrowser": "scripts/brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs stop-signal --dry-run: 5 files, digest 1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656; a second build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T08:16:13.804Z",
+    "files": [
+      {
+        "path": "assets/index-BNUQn_R5.js",
+        "status": 200,
+        "size": 577772,
+        "sha256": "2379ba1fa38713f5f0cc486d3af7b6e6053e9a073f59ff0e2f2594a00c965f97",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DD_uh1iB.css",
+        "status": 200,
+        "size": 19922,
+        "sha256": "6592ba8c1de9d86b5aa8861c840d695069c9f1b295e13378a6ae25dc564f6d64",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 600,
+        "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 425,
+        "sha256": "e3bd729f3ec0bbfbe60ed00c465c38c380938294f440205e803e080323f294f1",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7666,
+        "sha256": "6c291529abc7e9cfd6a0cf6dcac752f2a85a1d39873d31c506a26259bd9c7d9e",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/stop-signal/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game stop-signal passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}
