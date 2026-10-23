@@ -39,6 +39,8 @@ import keepTrackCatalog from './keep-track/public/game.json';
 import letterMemoryCatalog from './letter-memory/public/game.json';
 import plusMinusCatalog from './plus-minus/public/game.json';
 import ufovCatalog from './ufov/public/game.json';
+import everyBallCatalog from './every-ball-response/public/game.json';
+import tongueCatchCatalog from './tongue-catch/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -349,14 +351,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'every-ball-response',
-    trainer: 'brain',
-    purpose: 'attention',
+    trainer: everyBallCatalog.trainer as 'brain',
+    purpose: everyBallCatalog.category as 'attention',
+    imagePath: `/assets/game-previews/every-ball-response/${everyBallCatalog.preview}`,
     kind: 'brain-route',
     path: '/attention-training?game=every-ball-response',
-    zh: ['有球必應', '依球類拍手、拍大腿或抑制反應，練習注意與反應控制。'],
-    en: ['Every Ball Gets a Response', 'Clap, tap, or inhibit a response according to the ball to practise attention control.'],
-    titleKey: 'module.attention.everyBall.title',
-    descriptionKey: 'module.attention.everyBall.body',
+    zh: [everyBallCatalog.copy['zh-TW'].title, everyBallCatalog.copy['zh-TW'].description],
+    en: [everyBallCatalog.copy.en.title, everyBallCatalog.copy.en.description],
   },
   {
     id: 'stroop',
@@ -730,14 +731,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'tongue-catch',
-    trainer: 'mouth',
-    purpose: 'oral',
+    trainer: tongueCatchCatalog.trainer as 'mouth',
+    purpose: tongueCatchCatalog.category as 'oral',
+    imagePath: `/assets/game-previews/tongue-catch/${tongueCatchCatalog.preview}`,
     kind: 'mouth-oral',
     path: '/oral-training?game=tongue-catch',
-    zh: ['舌頭動作訓練', '辨識舌頭左右伸出方向，練習口腔肌肉控制與動作維持。'],
-    en: ['Tongue Movement Training', 'Recognize left and right tongue movement to practise oral control and sustained movement.'],
-    titleKey: 'tongue.title',
-    descriptionKey: 'tongue.desc',
+    zh: [tongueCatchCatalog.copy['zh-TW'].title, tongueCatchCatalog.copy['zh-TW'].description],
+    en: [tongueCatchCatalog.copy.en.title, tongueCatchCatalog.copy.en.description],
   },
 ] as const;
 

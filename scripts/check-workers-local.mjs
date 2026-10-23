@@ -76,11 +76,10 @@ async function CheckHub(site) {
   Expect(`hub migrated ${migratedGameId} asset is 410 before assets`, legacy.status === 410
     && legacy.headers['cache-control'] === 'no-store' && !legacy.body.includes('legacy'), legacy);
   const legacyEntry = await Get(site, `/games/${migratedGameId}/`);
-  Expect(`hub migrated ${migratedGameId} entry still serves the R2 link page`, legacyEntry.status === 200, legacyEntry);
-  const legacyGame = await Get(site, '/games/every-ball-response/');
-  Expect('hub unmigrated game keeps per-game headers', legacyGame.status === 200
-    && legacyGame.headers['referrer-policy'] === 'no-referrer'
-    && legacyGame.headers['x-robots-tag'] === 'noindex, nofollow, noarchive', legacyGame);
+  // Every official game is on R2 now, so the per-game headers are checked on a migrated entry.
+  Expect(`hub migrated ${migratedGameId} entry still serves the R2 link page with per-game headers`, legacyEntry.status === 200
+    && legacyEntry.headers['referrer-policy'] === 'no-referrer'
+    && legacyEntry.headers['x-robots-tag'] === 'noindex, nofollow, noarchive', legacyEntry);
   const serviceWorker = await Get(site, '/sw.js');
   Expect('hub /sw.js keeps no-cache and scope headers', serviceWorker.status === 200
     && serviceWorker.headers['cache-control'] === 'no-cache, no-store, must-revalidate'

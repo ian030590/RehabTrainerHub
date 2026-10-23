@@ -604,9 +604,9 @@ const victimVisionCount = await onRequestGet({
 });
 assert.deepEqual(await victimVisionCount.json(), { count: 1 });
 
-// A still-unmigrated JSON-shell game keeps the legacy Hub score path.
-const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'every-ball-response', gameId: 'every-ball-response', score: {
-  schema: 'rehab-trainer.game-score/v1', gameId: 'every-ball-response',
+// Every official game is on R2 now; a game outside the registry still uses the legacy Hub score path.
+const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'unregistered-game', gameId: 'unregistered-game', score: {
+  schema: 'rehab-trainer.game-score/v1', gameId: 'unregistered-game',
   rounds: Array.from({ length: 1500 }, (_, index) => ({ score: index % 2, responseMs: 300 })), summary: { total: 750 },
 } };
 const migratedScoreRecord = { ...scoreRecord, id: 'unsigned-reading-record', moduleId: 'reading-training', gameId: 'reading-training',

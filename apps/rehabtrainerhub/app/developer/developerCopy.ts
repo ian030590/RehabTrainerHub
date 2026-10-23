@@ -42,8 +42,8 @@ const copy = {
         {
           number: '02',
           title: '內建遊戲貢獻',
-          body: '位於 apps/rehabtrainerhub/games/{gameId}/，必須同時擁有 settings.json 與 score.json，並由 OfficialGameShell 註冊。',
-          detail: '適合修改本倉庫與共用 Hub 結果畫面。',
+          body: '位於 apps/rehabtrainerhub/games/{gameId}/，自行呈現設定、聚光燈教學與成果，並以 public/game.json 宣告目錄文案、分類與預覽圖；不使用 settings.json 或 score.json。',
+          detail: '適合修改本倉庫；擁有者核准精確版本後才發布到 R2。',
         },
       ],
       notice: '本平台提供一般居家練習工具，不是醫療器材開發框架。活動名稱、提示與結果不得宣稱診斷、治療、恢復功能或保證療效。',
@@ -137,9 +137,9 @@ const copy = {
     settings: {
       eyebrow: 'Configuration schema',
       title: 'settings.json：由 Hub 產生設定介面',
-      body: 'settings.json 是兩條開發路徑都需要的宣告。Hub 在建立 iframe 前驗證它，並將使用者選擇的值傳給遊戲。遊戲內不得再複製一份設定畫面。',
+      body: 'settings.json 是第三方投稿的設定宣告。Hub 在建立 iframe 前驗證它，並將使用者選擇的值傳給遊戲。遊戲內不得再複製一份設定畫面。內建遊戲自行呈現設定表單，沒有這個檔案。',
       rules: [
-        'schemaVersion 固定為 1，gameId 必須與遊戲 slug／資料夾名稱完全相同。',
+        'schemaVersion 固定為 1，gameId 必須與投稿 slug 完全相同。',
         '文字必須同時提供 zh-TW 與 en；最多 16 個 section、64 個欄位、64 KiB JSON。',
         '支援 slider、list、checkbox、color。slider 的 default 必須落在 min／max 且符合 step。',
         'key 以小寫英文字母開頭，可含英數、點、底線與連字號；禁止 auth、email、name、token、user 等敏感名稱。',
@@ -154,9 +154,9 @@ const copy = {
       ],
     },
     score: {
-      eyebrow: 'Built-in games only',
-      title: 'score.json：原生與內建遊戲的結果投影',
-      body: '原生投稿與內建遊戲使用 score.json，宣告遊戲結果的數值／布林欄位如何呈現為表格、圖表與摘要；計分公式由遊戲執行。',
+      eyebrow: 'Native packages',
+      title: 'score.json：原生投稿的結果投影',
+      body: '原生投稿使用 score.json，宣告遊戲結果的數值／布林欄位如何呈現為表格、圖表與摘要；計分公式由遊戲執行。內建遊戲自行呈現成果，沒有這個檔案。',
       externalNotice: '原生 ZIP 必須提供 score.json，遊戲透過私有通道回傳 details 與 detailRows；舊版 jsPsych 投稿仍回傳彙總指標。',
       rules: [
         'schema 固定為 rehab-trainer.game-score/v1；gameId 與 settings.json 相同。',
@@ -359,8 +359,8 @@ const copy = {
         {
           number: '02',
           title: 'Built-in game contribution',
-          body: 'Lives at apps/rehabtrainerhub/games/{gameId}/, owns both settings.json and score.json, and registers them with OfficialGameShell.',
-          detail: 'For repository changes using the shared Hub result view.',
+          body: 'Lives at apps/rehabtrainerhub/games/{gameId}/, shows its own settings, spotlight tutorial, and results, and declares its catalog copy, category, and preview image in public/game.json. It has no settings.json or score.json.',
+          detail: 'For repository changes. The owner approves the exact version before it is published to R2.',
         },
       ],
       notice: 'This platform provides general home-practice tools; it is not a medical-device development framework. Names, instructions, and results must not claim diagnosis, treatment, functional recovery, or guaranteed outcomes.',
@@ -454,9 +454,9 @@ const copy = {
     settings: {
       eyebrow: 'Configuration schema',
       title: 'settings.json: Hub-generated configuration',
-      body: 'Both development paths use settings.json. The Hub validates it before creating the iframe and sends the selected values to the game. Do not duplicate this settings screen inside the game.',
+      body: 'Third-party submissions declare their settings in settings.json. The Hub validates it before creating the iframe and sends the selected values to the game. Do not duplicate this settings screen inside the game. Built-in games show their own settings form and have no settings.json.',
       rules: [
-        'schemaVersion is 1. gameId must exactly match the submitted slug or built-in folder name.',
+        'schemaVersion is 1. gameId must exactly match the submitted slug.',
         'Every visible string requires zh-TW and en. Limits: 16 sections, 64 fields, and 64 KiB of JSON.',
         'Supported controls are slider, list, checkbox, and color. Slider defaults must align with min, max, and step.',
         'Keys start with a lowercase letter and may contain letters, numbers, dots, underscores, or hyphens. Sensitive names such as auth, email, name, token, and user are rejected.',
@@ -471,9 +471,9 @@ const copy = {
       ],
     },
     score: {
-      eyebrow: 'Built-in games only',
-      title: 'score.json: native and built-in results',
-      body: 'Native submissions and built-in games use score.json to map numeric and boolean game results to shared tables, charts, and summaries. Scoring formulas run in the game.',
+      eyebrow: 'Native packages',
+      title: 'score.json: native package results',
+      body: 'Native submissions use score.json to map numeric and boolean game results to shared tables, charts, and summaries. Scoring formulas run in the game. Built-in games show their own results and have no score.json.',
       externalNotice: 'Native ZIP packages must include score.json and return details and detailRows through the private channel. Legacy jsPsych packages still return aggregates.',
       rules: [
         'schema is rehab-trainer.game-score/v1. gameId matches settings.json.',

@@ -26,14 +26,21 @@ import { CheckReadingTraining } from './reading-training-browser.mjs';
 import { CheckHartChart } from './hart-chart-browser.mjs';
 import { CheckMovingCard } from './moving-card-browser.mjs';
 import { CheckBrainGame, brainGameSpecs } from './brain-r2-browser.mjs';
+import { CheckEveryBall, microphoneFixtureScript } from './every-ball-response-browser.mjs';
+import { CheckTongueCatch, FaceFixtureScript } from './tongue-catch-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'every-ball-response', 'tongue-catch', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
 const brainGame = Object.hasOwn(brainGameSpecs, gameId);
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
+// Every Ball uses the container's pose and microphone proxies; it sits with the attention games.
+const sensorGame = gameId === 'every-ball-response';
+const brainPurpose = brainGame ? brainGameSpecs[gameId].purpose : sensorGame ? 'attention' : null;
+// Tongue Catch uses the container's face and tongue proxy and is the only mouth game.
+const tongueGame = gameId === 'tongue-catch';
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
 // The Hub build embeds this origin from officialGameReleases.json; local runs swap it for the local runner.
@@ -53,6 +60,10 @@ const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabt
 const runnerOutput = resolve(process.env.RUNNER_OUTPUT_ROOT || resolve(root, 'apps/usergamerunner/dist'));
 if (handGame && !remote) assert.ok(existsSync(resolve(runnerOutput, 'input/hand-tracking-1.0.0/index.js')),
   'Build the runner hand input first; use RUNNER_OUTPUT_ROOT for a fixed browser snapshot.');
+if (sensorGame && !remote) for (const input of ['pose-tracking-1.0.0', 'microphone-1.0.0']) assert.ok(existsSync(resolve(runnerOutput, `input/${input}/index.js`)),
+  'Build the runner sensor inputs first; use RUNNER_OUTPUT_ROOT for a fixed browser snapshot.');
+if (tongueGame && !remote) assert.ok(existsSync(resolve(runnerOutput, 'input/tongue-tracking-1.0.0/index.js')),
+  'Build the runner tongue input first; use RUNNER_OUTPUT_ROOT for a fixed browser snapshot.');
 const browserPath = process.env.BRAVE_BIN || [
   'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
   '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
@@ -61,8 +72,9 @@ const browserPath = process.env.BRAVE_BIN || [
 assert.ok(browserPath, 'Install Brave or set BRAVE_BIN.');
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
-const handFixtures = handGame ? await LoadGestureCameraFixtures(root) : new Map();
+const handFixtures = handGame || sensorGame ? await LoadGestureCameraFixtures(root) : new Map();
 if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
+const facePortrait = tongueGame ? `data:image/jpeg;base64,${(await LoadEyeCameraFixture(root)).toString('base64')}` : null;
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
 assert.ok(!rendererFailure || unavailableTexture || ['driving-rehab', 'moving-card', 'gabor-patching', 'reading-training'].includes(gameId), 'Renderer failure fixture requires a supported game.');
 const sqlite = new DatabaseSync(':memory:');
@@ -155,7 +167,7 @@ try {
       }
       if (url.pathname.startsWith('/api/')) {
         const oldGame = { id: ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: brainGame ? 'brain' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: brainGame ? brainGameSpecs[gameId].purpose : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+          summary: 'Legacy publication', trainer: brainPurpose ? 'brain' : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: brainPurpose ?? (tongueGame ? 'oral' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb'), developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -192,7 +204,8 @@ try {
   browser = spawn(browserPath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-allow-origins=*',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows',
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
-    ...((handGame || gameId === 'oculomotor-training') ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : []),
+    ...((handGame || sensorGame || tongueGame || gameId === 'oculomotor-training') ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : []),
+    ...(sensorGame || tongueGame ? ['--autoplay-policy=no-user-gesture-required'] : []),
     `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   let connection;
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -296,7 +309,7 @@ try {
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
   await send('Page.enable', {}, session);
-  if (handGame) await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+  if (handGame || sensorGame) await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (window === window.top) {
       const fixtureImages = ${JSON.stringify(Object.fromEntries([...handFixtures].map(([path, bytes]) => [path.split('/').at(-1).replace('.jpg', ''), 'data:image/jpeg;base64,' + bytes.toString('base64')])))};
       const nativeGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
@@ -316,6 +329,8 @@ try {
       };
     }
   ` }, session);
+  if (sensorGame) await send('Page.addScriptToEvaluateOnNewDocument', { source: microphoneFixtureScript }, session);
+  if (tongueGame) await send('Page.addScriptToEvaluateOnNewDocument', { source: FaceFixtureScript(facePortrait) }, session);
   if (['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
     source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe,
   }, session);
@@ -352,7 +367,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainGame ? 'brain' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainPurpose ? 'brain' : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -377,7 +392,7 @@ try {
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainGame ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainGameSpecs[gameId].purpose] : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
@@ -416,7 +431,7 @@ try {
   let gameContext;
   const findGameSettings = () => until(async () => {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
-      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu form ${gameId === 'driving-rehab' ? 'input' : brainGame ? ':is(input, select)' : 'select'}"))`, context)) { gameContext = context; return true; } } catch {}
+      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu form ${gameId === 'driving-rehab' || tongueGame ? 'input' : brainGame ? ':is(input, select)' : 'select'}"))`, context)) { gameContext = context; return true; } } catch {}
     }
     return false;
   }, 'game-owned settings');
@@ -425,7 +440,9 @@ try {
   if (settingsMemory) {
     // The container (Hub page or standalone launcher) keeps confirmed settings in its own localStorage.
     const storageKey = `trainerhub.game-settings/v1:${gameId}`;
-    const firstSelect = `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    // Tongue Catch has only sliders, so its activity time stands in for the first list.
+    const firstSelect = tongueGame ? `document.querySelector(".${phasePrefix}-phase-menu form [name=durationSec]")`
+      : `document.querySelector(".${phasePrefix}-phase-menu form select")`;
     if (gameId === 'driving-rehab') {
       await until(async () => {
         if (await evaluate(`!document.querySelector('[name=controlMode] option[value=arrow]').disabled`, gameContext)) return true;
@@ -435,7 +452,12 @@ try {
         return false;
       }, 'keyboard ready before remembering settings');
     }
-    const chosen = await evaluate(`(() => {
+    const chosen = await evaluate(tongueGame ? `(() => {
+      const input = ${firstSelect};
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, input.max);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return input.max;
+    })()` : `(() => {
       const select = ${firstSelect};
       const option = [...select.options].reverse().find(item => item.value !== select.value && !item.disabled);
       Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, option.value);
@@ -507,6 +529,18 @@ try {
     const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
     await CheckDrivingRehab({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
+  } else if (tongueGame) {
+    const screenshots = resolve(root, '.tmp/tongue-catch-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckTongueCatch({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
+  } else if (sensorGame) {
+    const screenshots = resolve(root, '.tmp/every-ball-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--microphone') ? 'microphone' : 'camera'}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckEveryBall({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (brainGame) {
     const screenshots = resolve(root, `.tmp/${gameId}-validation`, `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });

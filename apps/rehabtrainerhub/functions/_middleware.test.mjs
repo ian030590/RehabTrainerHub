@@ -3,7 +3,7 @@ import test from 'node:test';
 import { onRequest, canonicalRedirectHosts } from './_middleware.js';
 
 test('migrated games reject legacy assets before Pages can serve retained cache', () => {
-  for (const gameId of ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'moving-card', 'stroop', 'flanker', 'go-nogo', 'stop-signal', 'attention-network-task', 'n-back', 'number-letter', 'digit-span', 'spatial-span', 'tower-of-london', 'reaction-time', 'tic-tac-toe', 'connect4', 'hex', 'dots-and-boxes', 'lights-out', 'sliding-puzzle', 'maze', 'sudoku', 'memory-match', 'simon-says', 'whack-a-mole', 'minesweeper', 'antisaccade', 'keep-track', 'letter-memory', 'plus-minus', 'ufov']) {
+  for (const gameId of ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'moving-card', 'stroop', 'flanker', 'go-nogo', 'stop-signal', 'attention-network-task', 'n-back', 'number-letter', 'digit-span', 'spatial-span', 'tower-of-london', 'reaction-time', 'tic-tac-toe', 'connect4', 'hex', 'dots-and-boxes', 'lights-out', 'sliding-puzzle', 'maze', 'sudoku', 'memory-match', 'simon-says', 'whack-a-mole', 'minesweeper', 'antisaccade', 'keep-track', 'letter-memory', 'plus-minus', 'ufov', 'every-ball-response', 'tongue-catch']) {
     for (const path of ['settings.json', 'score.json', 'assets/legacy.js', 'sw.js', 'manifest.webmanifest']) {
       for (const method of ['GET', 'HEAD']) {
         let assetsRead = false;
@@ -18,7 +18,7 @@ test('migrated games reject legacy assets before Pages can serve retained cache'
 });
 
 test('migrated compatibility entry still reaches the static R2 link', () => {
-  for (const gameId of ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'moving-card', 'stroop', 'flanker', 'go-nogo', 'stop-signal', 'attention-network-task', 'n-back', 'number-letter', 'digit-span', 'spatial-span', 'tower-of-london', 'reaction-time', 'tic-tac-toe', 'connect4', 'hex', 'dots-and-boxes', 'lights-out', 'sliding-puzzle', 'maze', 'sudoku', 'memory-match', 'simon-says', 'whack-a-mole', 'minesweeper', 'antisaccade', 'keep-track', 'letter-memory', 'plus-minus', 'ufov']) {
+  for (const gameId of ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'moving-card', 'stroop', 'flanker', 'go-nogo', 'stop-signal', 'attention-network-task', 'n-back', 'number-letter', 'digit-span', 'spatial-span', 'tower-of-london', 'reaction-time', 'tic-tac-toe', 'connect4', 'hex', 'dots-and-boxes', 'lights-out', 'sliding-puzzle', 'maze', 'sudoku', 'memory-match', 'simon-says', 'whack-a-mole', 'minesweeper', 'antisaccade', 'keep-track', 'letter-memory', 'plus-minus', 'ufov', 'every-ball-response', 'tongue-catch']) {
     for (const path of ['', 'index.html']) {
       const expected = new Response('R2 PWA link');
       assert.equal(onRequest({ request: new Request(`https://trainerhub.cc/games/${gameId}/${path}`), next: () => expected }), expected);
@@ -26,8 +26,9 @@ test('migrated compatibility entry still reaches the static R2 link', () => {
   }
 });
 
-test('unmigrated games, previews and APIs keep their existing routing', () => {
-  for (const path of ['/games/every-ball-response/settings.json', '/assets/game-previews/asteroid-shield/preview.webp', '/api/official-game-sessions']) {
+test('unregistered games, previews and APIs keep their existing routing', () => {
+  // Every official game is on R2 now, so an id outside the registry stands in for a game that is not.
+  for (const path of ['/games/unregistered-game/settings.json', '/assets/game-previews/asteroid-shield/preview.webp', '/api/official-game-sessions']) {
     const expected = new Response('existing route');
     assert.equal(onRequest({ request: new Request('https://trainerhub.cc' + path), next: () => expected }), expected);
   }

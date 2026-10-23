@@ -58,6 +58,8 @@ const games = {
   'letter-memory': { version: '2.0.0', file: 'LetterMemoryRecall.tsx', settings: 'settings.ts' },
   'plus-minus': { version: '2.0.0', file: 'PlusMinusSwitch.tsx', settings: 'settings.ts' },
   ufov: { version: '2.0.0', file: 'UfovGame.tsx', settings: 'settings.ts' },
+  'every-ball-response': { version: '2.0.0', file: 'EveryBallGame.tsx', settings: 'settings.ts' },
+  'tongue-catch': { version: '2.0.0', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
 };
 const nonce = 'a'.repeat(64);
 

@@ -1,0 +1,64 @@
+{
+  "source": "apps/rehabtrainerhub/games/tongue-catch settings.json, score.json, TongueCatchGame.tsx and storage/tongueRehabStorage.ts before the R2 move (commit 0497235c)",
+  "preview": {
+    "path": "apps/rehabtrainerhub/public/assets/training-modules/tongue-catch.webp",
+    "sha256": "52004b8544704ef4e8dd67ba109d763ee572eb6c4815ada318f7bd3f6d6f3a31"
+  },
+  "catalog": {
+    "trainer": "mouth",
+    "category": "oral",
+    "zh-TW": ["舌頭動作訓練", "辨識舌頭左右伸出方向，練習口腔肌肉控制與動作維持。"],
+    "en": ["Tongue Movement Training", "Recognize left and right tongue movement to practise oral control and sustained movement."]
+  },
+  "settings": [
+    { "key": "sensitivityPercent", "type": "slider", "default": 65, "min": 45, "max": 95, "step": 5 },
+    { "key": "durationSec", "type": "slider", "default": 60, "min": 30, "max": 300, "step": 15 },
+    { "key": "edgeChancePercent", "type": "slider", "default": 40, "min": 0, "max": 90, "step": 5 }
+  ],
+  "hiddenSettings": [
+    { "key": "growthRate", "default": 240, "min": 80, "max": 360, "step": 20 },
+    { "key": "appleSpeed", "default": 90, "min": 60, "max": 260, "step": 10 },
+    { "key": "spawnIntervalSec", "default": 2.2, "min": 0.6, "max": 3.5, "step": 0.1 },
+    { "key": "cameraOpacity", "default": 0.78 }
+  ],
+  "detection": {
+    "intervalMs": 72,
+    "calibrationCaptureMs": 1900,
+    "minClassExamples": 10,
+    "labels": ["Rest", "Tongue_Left", "Tongue_Right"]
+  },
+  "play": {
+    "maxFrameSeconds": 0.05,
+    "mouthFollowRate": 9,
+    "retractFactor": 1.7,
+    "tongueSegments": 10,
+    "tongueWidth": 28,
+    "catchMinLength": 20,
+    "visibleMinLength": 2,
+    "minHoldSeconds": 0.12,
+    "startY": 0.66,
+    "defaultMouth": { "x": 0.5, "y": 0.64 },
+    "appleSize": [95, 120],
+    "edgeLeft": [0.1, 0.28],
+    "edgeRight": [0.72, 0.9],
+    "center": [0.27, 0.73],
+    "swayAmplitude": [5, 9],
+    "swaySpeed": [1.7, 2.3],
+    "swayRotation": 0.09
+  },
+  "score": {
+    "summary": [
+      { "key": "duration", "source": "Duration_Seconds", "unit": "s" },
+      { "key": "caught", "source": "Score", "unit": null },
+      { "key": "missed", "source": "Missed", "unit": null },
+      { "key": "holdSeconds", "source": "Average_Hold_Seconds", "unit": "s" },
+      { "key": "threshold", "source": "Sensitivity", "unit": null }
+    ],
+    "columns": [
+      { "key": "object", "source": "Apple_Index", "unit": null },
+      { "key": "caught", "source": "Apple_Caught", "unit": null },
+      { "key": "position", "source": "Apple_Horizontal_Position_Percent", "unit": "%" }
+    ],
+    "defaultRoundMetricKey": "caught"
+  }
+}

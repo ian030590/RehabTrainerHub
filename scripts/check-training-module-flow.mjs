@@ -343,23 +343,13 @@ const implementationGroups = [
   })),
   {
     ids: ['brain:every-ball-response'],
-    files: ['every-ball-response/EveryBallResponsePage.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
+    files: ['every-ball-response/EveryBallGame.tsx'],
+    tokens: ["setPhase('rules')", "setPhase('playing')", "setPhase('results')", 'SendGameResult', 'EveryBallTutorial', 'ValidateSettings(settings)'],
   },
   {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
+    tokens: ["setPhase('rules')", "setPhase('calibration')", "setPhase('playing')", "setPhase('results')", 'SendGameResult', 'TongueTutorial', 'ValidateSettings(settings)'],
   },
 ];
 
@@ -419,12 +409,6 @@ const jsPsychLifecycleGroups = [
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {
-    status: 'native-timeline',
-    ids: ['brain:every-ball-response'],
-    files: ['every-ball-response/EveryBallResponsePage.tsx'],
-    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
-  },
-  {
     status: 'external-runtime-adapter',
     ids: ['vision:hart-chart'],
     files: ['hart-chart/HartChartPage.tsx'],
@@ -451,6 +435,7 @@ const jsPsychLifecycleGroups = [
     'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
     'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
     'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
+    'brain:every-ball-response': 'every-ball-response/EveryBallGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
     ids: [id],
@@ -521,18 +506,18 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .filter(({ status }) => status === 'utility-only-pending')
   .flatMap(({ ids }) => ids);
 
-const configPermissionImplementations = {
-  'brain:every-ball-response': 'every-ball-response/EveryBallResponsePage.tsx',
-  'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
-};
+// Tongue Catch was the last game to open the camera itself; every camera game now uses a reviewed proxy.
+const configPermissionImplementations = {};
 const proxyPermissionImplementations = {
   'motor:gesture-battler': { file: 'gesture-battler/GestureBattlerGame.tsx', denialToken: 'gesture.error.permission' },
   'motor:motor-cortex-rehab': { file: 'motor-cortex-rehab/MotorCortexRehabGame.tsx', denialToken: 'labels.permission' },
+  'brain:every-ball-response': { file: 'every-ball-response/EveryBallGame.tsx', denialToken: 'labels.errors[inputMode]', start: 'StartSensorInput', stop: 'StopSensorInput' },
+  'mouth:tongue-catch': { file: 'tongue-catch/TongueCatchGame.tsx', denialToken: 'labels.errors', start: 'StartSensorInput', stop: 'StopSensorInput' },
 };
-for (const [catalogId, { file, denialToken }] of Object.entries(proxyPermissionImplementations)) {
+for (const [catalogId, { file, denialToken, start = 'StartHandInput', stop = 'StopHandInput' }] of Object.entries(proxyPermissionImplementations)) {
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');
-  assert.ok(source.includes('StartHandInput'), `${catalogId} must request reviewed private input.`);
-  assert.ok(source.includes('StopHandInput'), `${catalogId} must release private input.`);
+  assert.ok(source.includes(start), `${catalogId} must request reviewed private input.`);
+  assert.ok(source.includes(stop), `${catalogId} must release private input.`);
   assert.ok(source.includes(denialToken), `${catalogId} must report camera denial.`);
   assert.ok(!/mediaDevices|getUserMedia/.test(source), `${catalogId} cannot request a camera inside the opaque package.`);
 }

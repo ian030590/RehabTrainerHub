@@ -1,0 +1,180 @@
+:root {
+  font-family: system-ui, sans-serif;
+  /* The container draws the camera image behind this frame; a matching color scheme keeps the frame transparent. */
+  color-scheme: light;
+  --primary: #6750a4; --primary-hover: #4f378b; --primary-soft: #f1edf7;
+  --background: #f7f5f8; --surface: #fff; --text: #202428; --heading: #1d1b20;
+  --text-muted: #605d66; --border: #d6d2dc; --border-strong: #7a757f; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  /* Colors from the original game's stylesheet. */
+  --tongue-sky: #dbeafe;
+  --tongue-field: radial-gradient(circle at 50% 30%, rgb(219 234 254 / .85), rgb(226 232 240 / .98)), var(--tongue-sky);
+  /* The original drew the camera at 78% opacity over the field; the field now sits on top of the camera at the remaining 22%. */
+  --tongue-camera-tint: .22;
+  --tongue-rope-light: #fda4af; --tongue-rope-dark: #e11d48; --tongue-rope-edge: #9f1239; --tongue-rope-shine: rgba(255,255,255,.45);
+  --tongue-cue-lip: #fff; --tongue-cue-ink: #475569; --tongue-cue-mouth: #7f1d1d; --tongue-cue-tongue: #fb7185; --tongue-cue-tongue-edge: #be123c;
+  --tongue-cue-glow: #ffe4e6;
+  --tongue-step-surface: #e7f2d5; --tongue-step-ink: #365314; --tongue-step-border: #273329;
+  --tongue-progress-track: #e2e8f0; --tongue-progress-start: #fb7185; --tongue-progress-end: #e11d48;
+  --tongue-guide-line: rgba(255,255,255,.74); --tongue-guide-shade: rgba(15,23,42,.08); --tongue-guide-edge: rgba(15,23,42,.22);
+  --tongue-camera-shade: rgba(15,23,42,.22); --tongue-card-shadow: rgba(15,23,42,.18);
+  --tongue-warning-surface: #fffbeb; --tongue-warning-ink: #92400e; --tongue-warning-edge: rgba(245,158,11,.55);
+  --tongue-hud-bg: rgba(255,255,255,.92); --tongue-hud-border: rgba(17,24,39,.12);
+  --tongue-preview-surface: rgba(255,255,255,.55);
+  color: var(--text); background: transparent;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+
+/* The field is its own layer so it can thin out while the container shows the camera image behind it. */
+.tongue-root { position: fixed; inset: 0; overflow: hidden; background: transparent; }
+.tongue-field { position: absolute; inset: 0; background: var(--tongue-field); transition: opacity 160ms ease; }
+.tongue-root.is-camera .tongue-field { opacity: var(--tongue-camera-tint); }
+.tongue-root.tongue-catch-phase-calibration .tongue-field { opacity: 0; }
+.tongue-jspsych-host { display: none; }
+.tongue-stage { position: absolute; inset: 0; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  --tongue-top: 104px; --tongue-warning-top: 96px; }
+.tongue-canvas-host { position: absolute; inset: 0; pointer-events: none; }
+.tongue-canvas { display: block; width: 100%; height: 100%; }
+
+.tongue-hud { position: absolute; z-index: 3; top: max(18px, env(safe-area-inset-top)); left: max(18px, env(safe-area-inset-left)); right: max(18px, env(safe-area-inset-right));
+  display: grid; grid-template-columns: repeat(3, minmax(90px, .7fr)) minmax(150px, 1fr) auto; align-items: center; gap: 10px; padding: 12px;
+  border: 1px solid var(--tongue-hud-border); border-radius: var(--radius); background: var(--tongue-hud-bg); }
+.tongue-hud-item { display: grid; gap: 2px; min-width: 0; margin: 0; }
+.tongue-hud-item span { overflow: hidden; color: var(--text-muted); font-size: .875rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.tongue-hud-item strong { overflow: hidden; color: var(--text); font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tongue-face-warning { position: absolute; z-index: 4; top: calc(max(18px, env(safe-area-inset-top)) + var(--tongue-warning-top)); left: 50%; max-width: calc(100% - 32px);
+  margin: 0; padding: 9px 14px; border: 1px solid var(--tongue-warning-edge); border-radius: var(--radius); background: var(--tongue-warning-surface);
+  color: var(--tongue-warning-ink); font-size: .875rem; font-weight: 800; text-align: center; transform: translateX(-50%); }
+
+/* The original calibration drawing. */
+.tongue-direction-cue { width: 220px; height: 150px; display: grid; place-items: center; border-radius: 50%;
+  background: radial-gradient(circle, var(--surface) 45%, var(--tongue-cue-glow) 100%); color: var(--tongue-cue-ink); }
+.tongue-cue { width: 190px; height: 136px; }
+.tongue-cue-lips { fill: var(--tongue-cue-lip); stroke: currentColor; }
+.tongue-cue-mouth { stroke: var(--tongue-cue-mouth); }
+.tongue-cue-tongue { fill: var(--tongue-cue-tongue); stroke: var(--tongue-cue-tongue-edge); }
+
+/* Tutorial scene: the three calibration steps, then the mouth, its tongue and two apples, below the HUD. */
+.tongue-preview-scene { position: absolute; z-index: 1; inset: var(--tongue-top) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.tongue-preview-calibration { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 8px; list-style: none; }
+.tongue-preview-step { display: grid; justify-items: center; gap: 2px; width: 9rem; padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); text-align: center; }
+.tongue-preview-step strong { color: var(--heading); font-size: 1.05rem; }
+.tongue-preview-step > span:last-child { color: var(--text-muted); font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tongue-preview-scene .tongue-direction-cue { width: 96px; height: 64px; }
+.tongue-preview-scene .tongue-cue { width: 84px; height: 60px; }
+.tongue-preview-play { position: relative; width: min(36rem, 100%); height: 14rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--tongue-preview-surface); }
+.tongue-preview-apples { position: absolute; top: 8px; left: 8px; right: 8px; height: 7.5rem; }
+.tongue-preview-apple { position: absolute; width: 64px; height: 64px; }
+.tongue-preview-apple-center { top: 0; left: 36%; }
+.tongue-preview-apple-edge { bottom: 0; left: 78%; }
+.tongue-preview-mouth { position: absolute; left: 12%; bottom: 12px; display: flex; align-items: center; }
+.tongue-preview-rope { width: 10rem; height: 16px; margin-left: -30px; border: 2px solid var(--tongue-rope-edge); border-radius: 999px;
+  background: linear-gradient(var(--tongue-rope-light), var(--tongue-rope-dark)); }
+.tongue-input-status { margin: 12px 0 0; color: var(--text); font-weight: 700; line-height: 1.6; }
+
+/* Calibration: the camera on the left (or on top on a phone) and the instructions on an opaque card. */
+.tongue-calibration-overlay { position: absolute; z-index: 7; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(360px, 34vw, 460px); }
+.tongue-calibration-camera-space { position: relative; display: grid; place-items: center; min-width: 0; overflow: hidden;
+  background: linear-gradient(180deg, transparent 75%, var(--tongue-camera-shade)); pointer-events: none; }
+.tongue-camera-guide { width: min(46vh, 42vw); aspect-ratio: .78; border: 3px solid var(--tongue-guide-line); border-radius: 48% 48% 44% 44%;
+  box-shadow: 0 0 0 9999px var(--tongue-guide-shade), 0 0 0 1px var(--tongue-guide-edge); }
+.tongue-calibration-card { width: 100%; height: 100%; display: grid; align-content: center; justify-items: center; gap: 15px; padding: clamp(24px, 4vw, 46px);
+  overflow-y: auto; border-left: 1px solid var(--border); background: var(--surface); box-shadow: -16px 0 44px var(--tongue-card-shadow); text-align: center; }
+.tongue-calibration-card h1 { margin: 0; color: var(--heading); font-size: clamp(28px, 4vw, 42px); }
+.tongue-calibration-card p { max-width: 520px; margin: 0; color: var(--text-muted); font-size: 17px; line-height: 1.65; }
+.tongue-calibration-card > strong { color: var(--primary-hover); }
+.tongue-step-count { width: fit-content; padding: 6px 9px; border: 2px solid var(--tongue-step-border); background: var(--tongue-step-surface); color: var(--tongue-step-ink); font-size: 13px; font-weight: 800; }
+.tongue-calibration-progress { width: min(420px, 100%); height: 22px; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--tongue-progress-track); }
+.tongue-calibration-progress span { display: block; height: 100%; border-radius: inherit; transform-origin: left; transition: transform 80ms linear;
+  background: linear-gradient(90deg, var(--tongue-progress-start), var(--tongue-progress-end)); }
+.tongue-calibration-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.tongue-calibration-actions .btn-primary { border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); }
+
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.tongue-input-error { margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--error); border-radius: var(--radius); color: var(--error); font-weight: 700; line-height: 1.5; }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 32rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.score-key-grid strong { white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .tongue-stage { --tongue-top: 150px; --tongue-warning-top: 138px; }
+  .tongue-hud { grid-template-columns: repeat(3, minmax(0, 1fr)); top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); }
+  .tongue-hud-status { grid-column: span 2; }
+}
+@media (max-width: 720px) {
+  .tongue-calibration-overlay { grid-template-columns: 1fr; grid-template-rows: minmax(44vh, 1fr) auto; }
+  .tongue-calibration-camera-space { min-height: 44vh; }
+  .tongue-camera-guide { width: min(30vh, 42vw); }
+  .tongue-calibration-card { height: auto; max-height: 56vh; align-content: start; gap: 10px; padding: 18px max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    border-top: 1px solid var(--border); border-left: 0; box-shadow: 0 -12px 34px var(--tongue-card-shadow); }
+  .tongue-calibration-card h1 { font-size: 26px; }
+  .tongue-calibration-card p { font-size: 14px; line-height: 1.45; }
+  .tongue-direction-cue { width: 130px; height: 82px; }
+  .tongue-cue { width: 118px; height: 78px; }
+}
+@media (max-width: 620px) {
+  .tongue-stage { --tongue-top: 158px; --tongue-warning-top: 132px; }
+  .tongue-hud { gap: 6px 8px; padding: 8px; }
+  .tongue-hud-item span { font-size: .8rem; }
+  .tongue-preview-calibration { gap: 8px; padding: 4px; }
+  .tongue-preview-step { width: 6.5rem; padding: 6px 4px; }
+  .tongue-preview-scene .tongue-direction-cue { width: 72px; height: 48px; }
+  .tongue-preview-scene .tongue-cue { width: 64px; height: 46px; }
+  .tongue-preview-play { height: 11rem; }
+  .tongue-preview-apples { height: 6rem; }
+  .tongue-preview-apple { width: 48px; height: 48px; }
+  .tongue-preview-apple-edge { left: 74%; }
+  .tongue-preview-rope { width: 7rem; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .tongue-stage { --tongue-top: 64px; --tongue-warning-top: 52px; }
+  .tongue-hud { top: max(6px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right));
+    grid-template-columns: repeat(3, minmax(0, .7fr)) minmax(0, 1fr) auto; gap: 6px; padding: 6px 8px; }
+  .tongue-hud-status { grid-column: auto; }
+  .tongue-hud-item span { font-size: .75rem; }
+  .tongue-hud-item strong { font-size: .875rem; }
+  .tongue-hud .tongue-stop { min-height: 36px; padding-block: 4px; }
+  /* The steps and the play preview sit side by side so both fit under the HUD. */
+  .tongue-preview-scene { flex-direction: row; gap: 12px; }
+  .tongue-preview-calibration { flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 4px; }
+  .tongue-preview-step { width: 8rem; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 6px; padding: 4px 6px; text-align: left; }
+  .tongue-preview-step .tongue-direction-cue { grid-row: span 2; }
+  .tongue-preview-scene .tongue-direction-cue { width: 52px; height: 36px; }
+  .tongue-preview-scene .tongue-cue { width: 48px; height: 34px; }
+  .tongue-preview-play { width: min(24rem, 100%); height: min(11rem, calc(100dvh - 96px)); }
+  .tongue-preview-apples { height: 5rem; }
+  .tongue-preview-apple { width: 40px; height: 40px; }
+  .tongue-preview-rope { width: 6rem; }
+  .tongue-calibration-overlay { grid-template-columns: minmax(0, 1fr) min(320px, 48vw); grid-template-rows: none; }
+  .tongue-calibration-camera-space { min-height: 0; }
+  .tongue-camera-guide { width: min(46vh, 42vw); }
+  .tongue-calibration-card { height: 100%; max-height: none; align-content: start; gap: 8px; border-top: 0; border-left: 1px solid var(--border);
+    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) 16px; }
+  .tongue-calibration-card h1 { font-size: 24px; }
+  .tongue-calibration-card p { font-size: 13px; line-height: 1.35; }
+  .tongue-direction-cue { width: 120px; height: 76px; }
+  .tongue-cue { width: 108px; height: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tongue-field, .tongue-calibration-progress span { transition: none; }
+}

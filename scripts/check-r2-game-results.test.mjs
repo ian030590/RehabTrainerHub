@@ -62,6 +62,8 @@ const cases = [
   { id: 'letter-memory', defaultMetric: 'responseMs', alternate: 'correctItems', row: { trial: 1, practice: 0, correct: 1, responseMs: 2, setting: 2000, load: 7, correctItems: 4, requiredItems: 4 } },
   { id: 'plus-minus', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, question: 1, practice: 0, setting: 30, condition: 0, correct: 1, responseMs: 2, number: 27, response: 30 } },
   { id: 'ufov', defaultMetric: 'exposureMs', alternate: 'responseMs', row: { trial: 1, correct: 1, subtest: 2, axis: 4, exposureMs: 2, requestedMs: 50, responseMs: 800, syncValid: 1, dropped: 0, contrast: 100, angle: 15 } },
+  { id: 'every-ball-response', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, level: 2, correct: 1, responseMs: 2, fixationMs: 2000, ball: 0, expected: 1, response: 1, outcome: 0, source: 4 } },
+  { id: 'tongue-catch', defaultMetric: 'caught', alternate: 'position', row: { object: 1, caught: 2, position: -62 } },
 ];
 
 for (const fixture of cases) {

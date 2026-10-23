@@ -592,11 +592,18 @@ function BuildAgentPrompt(fields: PromptFields, language: HubLanguage): string {
       : (language === 'en' ? 'Pointer/touch' : '滑鼠／觸控');
   const routeContract = fields.route === 'built-in'
     ? (language === 'en'
-      ? `Create an isolated module at apps/rehabtrainerhub/games/{gameId}/. It must own its runtime and include settings.json and score.json, import both in main.tsx, and register both with OfficialGameShell. Do not move renderer or game-loop state into shared packages.`
-      : `在 apps/rehabtrainerhub/games/{gameId}/ 建立獨立模組。模組自行擁有 runtime，必須包含 settings.json 與 score.json，在 main.tsx 匯入兩者並向 OfficialGameShell 註冊。不得把 renderer 或 game-loop 長生命週期狀態移入共用 package。`)
+      ? `Create a self-contained package at apps/rehabtrainerhub/games/{gameId}/ with its own package.json, Vite entry, runtime, i18n, and public/game.json for the catalog copy, category, and preview image. The game shows its own settings form, spotlight tutorial, and results, so it has no settings.json or score.json. It runs on the runner origin in a sandbox="allow-scripts" iframe and sends results only through the private MessageChannel the Hub gives it. Do not import packages/ui, platform packages, or another game's code. The owner approves the exact version and contentSha256 before it is published to R2. Published files are never overwritten, so every change ships as a new version.`
+      : `在 apps/rehabtrainerhub/games/{gameId}/ 建立自包含套件，自有 package.json、Vite entry、runtime、i18n，以及宣告目錄文案、分類與預覽圖的 public/game.json。遊戲自行呈現設定表單、聚光燈教學與成果，不建立 settings.json 或 score.json。遊戲在隔離執行站的 sandbox="allow-scripts" iframe 中執行，成果只走 Hub 交給它的私有 MessageChannel。不得引入 packages/ui、平台套件或其他遊戲的程式碼。擁有者核准精確 version 與 contentSha256 後才發布到 R2；已發布檔案不可覆寫，每次修改都要升版本。`)
     : (language === 'en'
       ? `Create a native HTML/ZIP package with index.html, settings.json, and score.json at the root, plus readable source, styles, and local assets. The game calculates its own result fields, and score.json declares their labels and mapping. Do not bundle jsPsych or the platform bridge. The package still goes through the upload scan and manual review.`
       : `建立原生 HTML／ZIP 套件：根目錄放 index.html、settings.json 與 score.json，並附可閱讀的原始碼、樣式與本地資產。遊戲自行計算結果欄位，由 score.json 宣告欄位名稱與對應方式。不得自行打包 jsPsych 或平台通訊橋樑。套件仍須經過上傳掃描與人工審核。`);
+  const settingsContract = fields.route === 'built-in'
+    ? (language === 'en'
+      ? '- The game owns its settings form, defaults, and validation. The Hub does not copy them.'
+      : '- 遊戲自行擁有設定表單、預設值與驗證；Hub 不複製這些內容。')
+    : (language === 'en'
+      ? '- settings.json uses schemaVersion 1, exact gameId, and bilingual zh-TW/en text. Use only slider, list, checkbox, or color fields. The game must not duplicate the Hub settings screen.'
+      : '- settings.json 使用 schemaVersion 1、完全一致的 gameId 與 zh-TW／en 雙語文字，只能使用 slider、list、checkbox、color；遊戲內不可複製 Hub 設定畫面。');
 
   if (language === 'en') {
     return `# Role
@@ -615,7 +622,7 @@ Build "${value(fields.title)}" as a ${route}.
 
 # Non-negotiable platform contract
 ${routeContract}
-- settings.json uses schemaVersion 1, exact gameId, and bilingual zh-TW/en text. Use only slider, list, checkbox, or color fields. The game must not duplicate the Hub settings screen.
+${settingsContract}
 - Keep the game self-contained. Do not use network APIs, external URLs, cookies, navigation, forms, nested frames, dynamic code evaluation, workers, camera, microphone, geolocation, or personal data.
 - Return or project only finite numeric/boolean/null aggregates. Never include raw trials, free text, identifiers, images, audio, or motion traces.
 
@@ -652,7 +659,7 @@ Use semantic HTML, visible keyboard focus, 44×44 CSS-pixel targets, keyboard eq
 
 # 不可違反的平台契約
 ${routeContract}
-- settings.json 使用 schemaVersion 1、完全一致的 gameId 與 zh-TW／en 雙語文字，只能使用 slider、list、checkbox、color；遊戲內不可複製 Hub 設定畫面。
+${settingsContract}
 - 套件必須自足。禁止網路 API、外部 URL、Cookie、導頁、表單、巢狀 frame、動態執行程式碼、worker、攝影機、麥克風、定位與個資。
 - 只回傳或投影有限數值、布林與 null 的彙總資料；禁止原始 trial、自由文字、識別碼、影像、聲音或動作軌跡。
 

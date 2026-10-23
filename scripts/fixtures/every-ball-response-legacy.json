@@ -1,0 +1,154 @@
+{
+  "source": "apps/rehabtrainerhub/games/every-ball-response settings.json, score.json and EveryBallResponsePage.tsx before the R2 move (commit 0497235c)",
+  "settings": [
+    {
+      "key": "difficulty",
+      "type": "list",
+      "default": "medium",
+      "options": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    {
+      "key": "rounds",
+      "type": "slider",
+      "default": 20,
+      "min": 5,
+      "max": 60,
+      "step": 5
+    }
+  ],
+  "hiddenSettings": [
+    {
+      "key": "inputMode",
+      "default": "camera",
+      "options": [
+        "camera",
+        "microphone"
+      ]
+    },
+    {
+      "key": "fixationStyle",
+      "default": "cross",
+      "options": [
+        "cross",
+        "blank"
+      ]
+    },
+    {
+      "key": "microphoneSensitivity",
+      "default": 0.65,
+      "min": 0.35,
+      "max": 0.9
+    }
+  ],
+  "levels": [
+    {
+      "difficulty": "easy",
+      "level": 1,
+      "passAccuracy": 100
+    },
+    {
+      "difficulty": "medium",
+      "level": 2,
+      "passAccuracy": 85
+    },
+    {
+      "difficulty": "hard",
+      "level": 3,
+      "passAccuracy": 80
+    }
+  ],
+  "timing": {
+    "fixationMinMs": 1000,
+    "fixationMaxMs": 3000,
+    "stimulusMs": 900,
+    "responseWindowMs": 1800,
+    "feedbackMs": 550
+  },
+  "camera": {
+    "detectionIntervalMs": 70,
+    "cooldownMs": 480,
+    "clapCloseDistance": 0.12,
+    "clapOpenDistance": 0.2,
+    "thighFallbackY": 0.62
+  },
+  "microphone": {
+    "cooldownMs": 320,
+    "thresholdBase": 0.085,
+    "thresholdSlope": 0.06,
+    "rearmRatio": 0.62,
+    "clapHighRatio": 0.34,
+    "highBandStart": 0.38,
+    "meterGain": 8.5
+  },
+  "score": {
+    "summary": [
+      {
+        "key": "trials",
+        "source": "Trial_Count",
+        "unit": null
+      },
+      {
+        "key": "correct",
+        "source": "Correct_Count",
+        "unit": null
+      },
+      {
+        "key": "accuracy",
+        "source": "Accuracy_Percent",
+        "unit": "%"
+      },
+      {
+        "key": "misses",
+        "source": "Misses",
+        "unit": null
+      },
+      {
+        "key": "falseAlarms",
+        "source": "False_Alarms",
+        "unit": null
+      },
+      {
+        "key": "wrongActions",
+        "source": "Wrong_Actions",
+        "unit": null
+      },
+      {
+        "key": "responseMs",
+        "source": "Average_RT_ms",
+        "unit": "ms"
+      }
+    ],
+    "columns": [
+      {
+        "key": "trial",
+        "source": "Trial_Number",
+        "unit": null
+      },
+      {
+        "key": "level",
+        "source": "Level",
+        "unit": null
+      },
+      {
+        "key": "correct",
+        "source": "Correct",
+        "unit": null
+      },
+      {
+        "key": "responseMs",
+        "source": "Reaction_Time_ms",
+        "unit": "ms"
+      },
+      {
+        "key": "fixationMs",
+        "source": "Fixation_ms",
+        "unit": "ms"
+      }
+    ]
+  },
+  "previewSha256": "ea7b94384420ee8652a08b2e9cff3dd1be9a4c7c9f1a9283ced9362394499356"
+}

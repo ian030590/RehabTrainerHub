@@ -2,6 +2,7 @@ import { access, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
+import officialGameReleases from '../packages/ui/src/officialGameReleases.json' with { type: 'json' };
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const gamesRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub/games');
@@ -189,7 +190,10 @@ const definitions = {
   ]),
 };
 
+let written = 0;
 for (const [gameId, sectionList] of Object.entries(definitions)) {
+  // R2 games show their own settings form and must not get a settings.json back.
+  if (Object.hasOwn(officialGameReleases, gameId)) continue;
   const definition = ParseGameSettingsDefinition({
     schemaVersion: 1,
     gameId,
@@ -202,9 +206,10 @@ for (const [gameId, sectionList] of Object.entries(definitions)) {
     throw new Error(`Refusing to overwrite ${settingsPath}; pass --force to replace it.`);
   }
   await writeFile(settingsPath, `${JSON.stringify(definition, null, 2)}\n`, 'utf8');
+  written++;
 }
 
-console.log(`Scaffolded ${Object.keys(definitions).length} official game settings files.`);
+console.log(`Scaffolded ${written} official game settings files.`);
 
 function Sections(primaryZh, primaryEn, primaryFields, secondaryFields = []) {
   const result = [{

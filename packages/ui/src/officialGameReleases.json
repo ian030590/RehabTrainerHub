@@ -190,5 +190,13 @@
   "ufov": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "周邊視野訓練"
+  },
+  "every-ball-response": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "有球必應"
+  },
+  "tongue-catch": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "舌頭動作訓練"
   }
 }

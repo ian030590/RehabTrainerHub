@@ -54,6 +54,8 @@ const cases = [
   { id: 'letter-memory', component: 'LetterMemoryRecall', tutorial: 'LetterMemoryTutorial', logic: { '../logic/letterMemory': 'logic/letterMemory.ts', '../LetterPad': 'LetterPad.tsx' } },
   { id: 'plus-minus', component: 'PlusMinusSwitch', tutorial: 'PlusMinusTutorial', logic: { '../NumberPad': 'NumberPad.tsx' } },
   { id: 'ufov', component: 'UfovGame', tutorial: 'UfovTutorial', logic: { '../AnswerPad': 'AnswerPad.tsx' } },
+  { id: 'every-ball-response', component: 'EveryBallGame', tutorial: 'EveryBallTutorial', logic: { '../labels': 'labels.ts', '../BallIcon': 'BallIcon.tsx' } },
+  { id: 'tongue-catch', component: 'TongueCatchGame', tutorial: 'TongueTutorial', logic: { '../labels': 'labels.ts', '../TongueCue': 'TongueCue.tsx' } },
 ];
 
 for (const fixture of cases) {

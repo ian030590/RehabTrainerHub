@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "every-ball-response",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "有球必應", "description": "依球類拍手、拍大腿或抑制反應，練習注意與反應控制。" },
+    "en": { "title": "Every Ball Gets a Response", "description": "Clap, tap your thigh, or hold back a response depending on the ball to practice attention control." }
+  }
+}

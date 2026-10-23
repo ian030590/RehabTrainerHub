@@ -120,20 +120,19 @@ test('Every Ball summary counts outcomes, times only correct actions, and applie
 });
 
 test('Every Ball score maps all five trial and seven summary fields from real records', async () => {
-  const { GradeEveryBallTrial, SummarizeEveryBallTrials, BuildEveryBallScore } = await ImportCore();
-  const scoreJson = JSON.parse(await readFile(new URL('score.json', gameRoot), 'utf8'));
-  const scoreSource = await readFile(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8');
-  const output = ts.transpileModule(scoreSource, { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
-  const { ParseGameScoreDefinition, BuildGameScore } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+  const { GradeEveryBallTrial, SummarizeEveryBallTrials } = await ImportCore();
+  const scoreOutput = ts.transpileModule(await readFile(new URL('score.ts', gameRoot), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const { BuildGameScore } = await import(`data:text/javascript;base64,${Buffer.from(scoreOutput).toString('base64')}`);
   const rows = [
     GradeEveryBallTrial(plan(2, 'basketball', 1), response('clap', 123.8)),
     GradeEveryBallTrial(plan(2, 'soccer', 2), response('clap', 212)),
     GradeEveryBallTrial(plan(2, 'tennis', 3), null),
     GradeEveryBallTrial(plan(2, 'basketball', 4), null),
   ];
-  const summary = SummarizeEveryBallTrials(rows, 2);
-  const score = BuildGameScore(ParseGameScoreDefinition(scoreJson), BuildEveryBallScore(summary));
-  assert.deepEqual(score.rounds.map(row => ({ ...row })), [
+  const score = BuildGameScore(SummarizeEveryBallTrials(rows, 2));
+  assert.deepEqual(score.rounds.map(({ trial, level, correct, responseMs, fixationMs }) => ({ trial, level, correct, responseMs, fixationMs })), [
     { trial: 1, level: 2, correct: 1, responseMs: 124, fixationMs: 2000 },
     { trial: 2, level: 2, correct: 0, responseMs: 212, fixationMs: 2000 },
     { trial: 3, level: 2, correct: 1, responseMs: null, fixationMs: 2000 },

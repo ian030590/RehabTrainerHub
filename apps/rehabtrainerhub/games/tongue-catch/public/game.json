@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tongue-catch",
+  "trainer": "mouth",
+  "category": "oral",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "舌頭動作訓練", "description": "辨識舌頭左右伸出方向，練習口腔肌肉控制與動作維持。" },
+    "en": { "title": "Tongue Movement Training", "description": "Recognize left and right tongue movement to practice oral control and sustained movement." }
+  }
+}

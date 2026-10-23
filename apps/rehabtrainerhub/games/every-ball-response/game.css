@@ -1,0 +1,170 @@
+:root {
+  font-family: system-ui, sans-serif;
+  /* The container draws the camera image behind this frame; a matching color scheme keeps the frame transparent. */
+  color-scheme: light;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --every-ball-field: #fff;
+  --every-ball-ink: #111827; --every-ball-label: #111827;
+  --every-ball-basketball: #f97316; --every-ball-basketball-edge: #7c2d12;
+  --every-ball-soccer: #f8fafc;
+  --every-ball-tennis: #a3e635; --every-ball-tennis-edge: #3f6212; --every-ball-tennis-seam: #fff;
+  --every-ball-beach-1: #38bdf8; --every-ball-beach-2: #facc15; --every-ball-beach-3: #fb7185; --every-ball-beach-4: #fff; --every-ball-beach-edge: #0f172a;
+  --every-ball-correct: #16a34a; --every-ball-wrong: #dc2626;
+  --every-ball-hand: rgba(14,165,233,.72); --every-ball-body: rgba(22,163,74,.84);
+  --every-ball-camera-idle: #0f172a; --every-ball-camera-text: #e2e8f0; --every-ball-camera-border: rgba(17,24,39,.18);
+  --every-ball-hud-bg: rgba(255,255,255,.92); --every-ball-hud-border: rgba(17,24,39,.12);
+  --every-ball-meter-track: #e5e7eb; --every-ball-meter-low: #16a34a; --every-ball-meter-mid: #facc15; --every-ball-meter-high: #ef4444;
+  --every-ball-action-bg: rgba(15,23,42,.72); --every-ball-action-pressed: rgba(37,99,235,.86); --every-ball-action-border: rgba(255,255,255,.52); --every-ball-action-text: #fff;
+  --every-ball-card: #fff; --every-ball-card-none: #f1f3f5;
+  color: var(--text); background: transparent;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+
+/* The field color is its own layer so a hole can be cut where the container shows the camera image. */
+.every-ball-root { position: fixed; inset: 0; overflow: hidden; background: transparent; }
+.every-ball-field { position: absolute; inset: 0; background: var(--every-ball-field); clip-path: var(--every-ball-hole, none); }
+.every-ball-jspsych-host { display: none; }
+.every-ball-stage { position: absolute; inset: 0; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  --every-ball-top: 104px; --every-ball-bottom: 232px; }
+.every-ball-canvas-host { position: absolute; inset: 0; clip-path: var(--every-ball-hole, none); }
+.every-ball-canvas { display: block; width: 100%; height: 100%; }
+
+.every-ball-hud { position: absolute; z-index: 3; top: max(18px, env(safe-area-inset-top)); left: max(18px, env(safe-area-inset-left)); right: max(18px, env(safe-area-inset-right));
+  display: grid; grid-template-columns: minmax(160px, 1fr) minmax(150px, .8fr) minmax(180px, 1fr) auto; align-items: center; gap: 10px; padding: 12px;
+  border: 1px solid var(--every-ball-hud-border); border-radius: var(--radius); background: var(--every-ball-hud-bg); }
+.every-ball-hud.has-meter { grid-template-columns: minmax(160px, 1fr) minmax(150px, .8fr) minmax(180px, 1fr) minmax(110px, .45fr) auto; }
+.every-ball-hud-item { display: grid; gap: 2px; min-width: 0; margin: 0; }
+.every-ball-hud-item span { overflow: hidden; color: var(--text-muted); font-size: .875rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.every-ball-hud-item strong { overflow: hidden; color: var(--text); font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.every-ball-meter { height: 14px; overflow: hidden; border-radius: 999px; background: var(--every-ball-meter-track); }
+.every-ball-meter-level { display: block; width: 100%; height: 100%; border-radius: inherit; transform: scaleX(0); transform-origin: left;
+  background: linear-gradient(90deg, var(--every-ball-meter-low), var(--every-ball-meter-mid), var(--every-ball-meter-high)); }
+
+.every-ball-camera { position: absolute; z-index: 3; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom));
+  width: min(260px, 32vw); aspect-ratio: 4 / 3; overflow: hidden; border: 2px solid var(--every-ball-camera-border); border-radius: var(--radius); background: var(--every-ball-camera-idle); }
+.every-ball-camera.is-live { background: transparent; }
+.every-ball-camera-view { position: absolute; inset: 0; display: grid; place-items: center; padding: 8px; }
+.every-ball-camera-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); pointer-events: none; }
+.every-ball-camera-waiting { position: relative; margin: 0; color: var(--every-ball-camera-text); font-size: .875rem; font-weight: 700; line-height: 1.4; text-align: center; }
+
+.every-ball-actions { position: absolute; z-index: 4; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px; touch-action: none; }
+.every-ball-stage.is-camera .every-ball-actions { right: auto; left: max(14px, env(safe-area-inset-left)); }
+.every-ball-action { min-width: 108px; min-height: 54px; padding: 10px 16px; border-color: var(--every-ball-action-border); background: var(--every-ball-action-bg);
+  color: var(--every-ball-action-text); font-size: 1.125rem; font-weight: 800; -webkit-tap-highlight-color: transparent; }
+.every-ball-action:active { background: var(--every-ball-action-pressed); transform: scale(.97); }
+
+/* Tutorial scene: the rule cards and one trial's timeline, between the HUD and the camera window. */
+.every-ball-preview-scene { position: absolute; z-index: 1; inset: var(--every-ball-top) max(16px, env(safe-area-inset-right)) var(--every-ball-bottom) max(16px, env(safe-area-inset-left));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.every-ball-rule-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 8px; list-style: none; }
+.every-ball-rule-card { display: grid; justify-items: center; gap: 4px; width: 8.5rem; padding: 12px 8px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--every-ball-card); text-align: center; }
+.every-ball-rule-card strong { font-size: 1rem; }
+.every-ball-rule-card span { color: var(--heading); font-size: 1.05rem; font-weight: 800; }
+.every-ball-rule-card.every-ball-rule-none { background: var(--every-ball-card-none); }
+.every-ball-rule-card.every-ball-rule-none span { color: var(--text-muted); }
+.every-ball-rule-card .every-ball-icon { width: 56px; }
+.every-ball-trial-preview { display: grid; grid-template-columns: repeat(4, minmax(0, 7.5rem)); gap: 12px; margin: 0; padding: 8px; list-style: none; counter-reset: step; }
+.every-ball-trial-preview li { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 10px 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--every-ball-card); text-align: center; }
+.every-ball-trial-preview strong { font-size: .95rem; }
+.every-ball-trial-preview li > span:last-child { color: var(--text-muted); font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.every-ball-step-mark { display: grid; place-items: center; height: 40px; color: var(--every-ball-ink); font-size: 2rem; font-weight: 800; line-height: 1; }
+.every-ball-step-mark .every-ball-icon { width: 36px; }
+.every-ball-step-respond { font-size: 1rem; }
+.every-ball-step-feedback { display: flex; gap: 6px; }
+.every-ball-step-correct { color: var(--every-ball-correct); }
+.every-ball-step-wrong { color: var(--every-ball-wrong); }
+.every-ball-icon { display: block; height: auto; overflow: visible; }
+.every-ball-icon-edge, .every-ball-icon-seam { fill: none; stroke-linecap: round; }
+.every-ball-icon-basketball .every-ball-icon-fill { fill: var(--every-ball-basketball); }
+.every-ball-icon-basketball .every-ball-icon-edge { stroke: var(--every-ball-basketball-edge); stroke-width: 6; }
+.every-ball-icon-basketball .every-ball-icon-seam { stroke: var(--every-ball-ink); stroke-width: 4; }
+.every-ball-icon-soccer .every-ball-icon-fill { fill: var(--every-ball-soccer); }
+.every-ball-icon-soccer .every-ball-icon-patch { fill: var(--every-ball-ink); }
+.every-ball-icon-soccer .every-ball-icon-seam { stroke: var(--every-ball-ink); stroke-width: 3; }
+.every-ball-icon-soccer .every-ball-icon-edge { stroke: var(--every-ball-ink); stroke-width: 5; }
+.every-ball-icon-tennis .every-ball-icon-fill { fill: var(--every-ball-tennis); }
+.every-ball-icon-tennis .every-ball-icon-seam { stroke: var(--every-ball-tennis-seam); stroke-width: 7; }
+.every-ball-icon-tennis .every-ball-icon-edge { stroke: var(--every-ball-tennis-edge); stroke-width: 5; }
+.every-ball-icon-panel-0 { fill: var(--every-ball-beach-1); }
+.every-ball-icon-panel-1 { fill: var(--every-ball-beach-2); }
+.every-ball-icon-panel-2 { fill: var(--every-ball-beach-3); }
+.every-ball-icon-panel-3 { fill: var(--every-ball-beach-4); }
+.every-ball-icon-beach .every-ball-icon-edge { stroke: var(--every-ball-beach-edge); stroke-width: 5; }
+.every-ball-icon-cap { fill: var(--every-ball-beach-4); stroke: var(--every-ball-beach-edge); stroke-width: 3; }
+
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.every-ball-input-error { margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--error); border-radius: var(--radius); color: var(--error); font-weight: 700; line-height: 1.5; }
+.every-ball-input-status { margin: 12px 0 0; color: var(--text); font-weight: 700; line-height: 1.6; }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.score-key-grid strong { white-space: nowrap; }
+.score-errors { padding: 24px 0; border-top: 1px solid var(--border); }
+
+@media (max-width: 900px) {
+  .every-ball-stage { --every-ball-top: 150px; --every-ball-bottom: 168px; }
+  .every-ball-hud, .every-ball-hud.has-meter { grid-template-columns: 1fr 1fr; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); }
+  .every-ball-hud .every-ball-stop { width: 100%; }
+  .every-ball-camera { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); width: min(180px, 42vw); }
+  .every-ball-trial-preview { grid-template-columns: repeat(2, minmax(0, 8rem)); }
+}
+@media (max-width: 620px) {
+  .every-ball-stage { --every-ball-top: 176px; --every-ball-bottom: 148px; }
+  .every-ball-hud, .every-ball-hud.has-meter { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; padding: 8px; }
+  .every-ball-hud-status { grid-column: 1 / -1; }
+  .every-ball-hud-status strong { overflow: visible; overflow-wrap: anywhere; white-space: normal; }
+  .every-ball-hud .every-ball-stop { grid-column: 2; }
+  .every-ball-camera { right: auto; left: max(10px, env(safe-area-inset-left)); width: min(124px, 34vw); }
+  .every-ball-stage.is-camera .every-ball-actions { left: auto; right: max(14px, env(safe-area-inset-right)); }
+  .every-ball-action { min-width: 96px; min-height: 50px; padding-inline: 12px; font-size: 1rem; }
+  .every-ball-rule-cards { gap: 8px; }
+  .every-ball-rule-card { width: 7rem; padding: 8px 4px; }
+  .every-ball-rule-card .every-ball-icon { width: 40px; }
+  .every-ball-trial-preview { gap: 8px; }
+  .every-ball-trial-preview li { padding: 6px 4px; }
+  .every-ball-step-mark { height: 30px; font-size: 1.5rem; }
+  .every-ball-step-mark .every-ball-icon { width: 28px; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .every-ball-stage { --every-ball-top: 64px; --every-ball-bottom: 12px; }
+  /* Both lists sit side by side as 2 by 2 grids, between the camera window on the left and the buttons on the right. */
+  .every-ball-preview-scene { left: max(128px, env(safe-area-inset-left)); right: max(112px, env(safe-area-inset-right)); flex-direction: row; gap: 12px; }
+  .every-ball-hud, .every-ball-hud.has-meter { top: max(6px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right));
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 6px; padding: 6px 8px; }
+  .every-ball-hud.has-meter { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(72px, .5fr) auto; }
+  .every-ball-hud-item span { font-size: .75rem; }
+  .every-ball-hud-item strong { font-size: .875rem; }
+  .every-ball-hud-status, .every-ball-hud .every-ball-stop { grid-column: auto; }
+  .every-ball-hud .every-ball-stop { width: auto; }
+  .every-ball-camera { right: auto; left: max(8px, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(112px, 20vw); }
+  .every-ball-stage.is-camera .every-ball-actions { left: auto; right: max(10px, env(safe-area-inset-right)); }
+  .every-ball-action { min-width: 90px; min-height: 44px; padding: 6px 12px; font-size: 1rem; }
+  .every-ball-rule-cards { display: grid; grid-template-columns: repeat(2, 5rem); gap: 8px; }
+  .every-ball-rule-card { width: auto; padding: 6px 4px; }
+  .every-ball-rule-card .every-ball-icon { width: 32px; }
+  .every-ball-trial-preview { grid-template-columns: repeat(2, minmax(0, 5.5rem)); gap: 6px; }
+  .every-ball-step-mark { height: 26px; font-size: 1.25rem; }
+  .every-ball-step-mark .every-ball-icon { width: 24px; }
+}

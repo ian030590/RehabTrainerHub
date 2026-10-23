@@ -447,6 +447,8 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 2026-10-23 使用者明確回答「核准三種代理（建議）」與「容器在遊戲後方顯示（建議）」。只限可信官方 `every-ball-response`（`pose-tracking`、`microphone-level`）與 `tongue-catch`（`tongue-tracking`）release，使用者同意後由 Hub／獨立 PWA 容器執行；遊戲維持 `sandbox="allow-scripts"`、相機與麥克風禁止、`connect-src 'none'`。姿勢代理只傳雙手 21 點與髖、膝 4 點座標；麥克風代理只傳音量與高低頻比例，不傳聲音；臉部代理在代理內跑 MediaPipe 臉部模型與 TensorFlow 舌頭分類，校正樣本只存在代理記憶體，遊戲只收到嘴部位置、方向（休息／左／右）與信心值。相機畫面由容器自己顯示在透明遊戲畫面後方或遊戲指定的小窗位置，遊戲只能指定位置，讀不到影像。先部署相容 runner，再發布核准遊戲，最後才切換 Hub registry。實作與驗收見各遊戲遷移紀錄。
 
+2026-10-24 兩款 `2.0.0` 候選完成：有球必應見 `docs/every-ball-response-r2-migration.md`，舌頭動作訓練見 `docs/tongue-catch-r2-migration.md`。兩款核准、發布並推送 registry 後，所有官方遊戲都是 R2 自包含套件。
+
 每一個遊戲都必須符合：自有依賴、設定／教學／結果完整，成績頁具備主要統計、資料圖表與個別回合明細；Hub output 無該遊戲 bundle；匿名／登入隔離與冪等保存；桌面／手機互動；獨立 PWA；不可變發布收據；回退步驟；未改變用途或引入新的醫療效能宣稱。
 
 ## 10. 本次 TDD／回歸紀錄與限制

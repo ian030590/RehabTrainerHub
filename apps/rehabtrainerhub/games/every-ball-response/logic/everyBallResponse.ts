@@ -54,6 +54,9 @@ export const everyBallTiming = {
   feedbackMs: 550,
 };
 
+// Accuracy a level needs before it counts as reached.
+export const levelPassAccuracy = { 1: 100, 2: 85, 3: 80 } as const;
+
 export function GetExpectedAction(levelId: LevelId, ball: BallId): ExpectedAction {
   if (ball === 'basketball') return 'clap';
   if (levelId === 3 && ball === 'soccer') return 'thigh';
@@ -127,22 +130,7 @@ export function SummarizeEveryBallTrials(trials: TrialRecord[], levelId: LevelId
     misses: trials.filter(trial => trial.Outcome === 'miss').length,
     falseAlarms: trials.filter(trial => trial.Outcome === 'false_alarm').length,
     wrongActions: trials.filter(trial => trial.Outcome === 'wrong_action').length,
-    passed: accuracy >= ({ 1: 100, 2: 85, 3: 80 } as const)[levelId],
+    passed: accuracy >= levelPassAccuracy[levelId],
     trials,
-  };
-}
-
-export function BuildEveryBallScore(summary: SessionSummary) {
-  return {
-    detailRows: summary.trials,
-    details: {
-      Trial_Count: summary.total,
-      Correct_Count: summary.correct,
-      Accuracy_Percent: summary.accuracy,
-      Misses: summary.misses,
-      False_Alarms: summary.falseAlarms,
-      Wrong_Actions: summary.wrongActions,
-      Average_RT_ms: summary.averageRtMs,
-    },
   };
 }

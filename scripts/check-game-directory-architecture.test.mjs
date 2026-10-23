@@ -94,8 +94,27 @@ test('catalog and game roots retain one exact settings definition per official g
       for (const field of section.fields) fieldTypes.add(field.type);
     }
   }
-  // UFOV took the only legacy checkbox fields with it when it moved to R2.
-  assert.deepEqual([...fieldTypes].sort(), ['list', 'slider']);
+  // Tongue Catch took the last settings.json with it; every official game now shows its own settings form.
+  assert.deepEqual([...fieldTypes], []);
+});
+
+test('the developer guide describes built-in games as self-contained R2 packages', async () => {
+  for (const file of ['app/developer/DeveloperGuide.tsx', 'app/developer/developerCopy.ts']) {
+    const source = await ReadHub(file);
+    // settings.json and score.json now belong to third-party packages only.
+    for (const stale of [/OfficialGameShell/, /必須同時擁有 settings\.json/, /owns both settings\.json/, /兩條開發路徑都需要/, /Both development paths use settings\.json/,
+      /原生與內建遊戲/, /native and built-in results/, /Native submissions and built-in games use score\.json/, /Built-in games only/, /共用 Hub 結果畫面/, /shared Hub result view/]) {
+      assert.doesNotMatch(source, stale, `${file} still describes built-in games with the legacy files: ${stale}`);
+    }
+    assert.match(source, /public\/game\.json/, `${file} names the catalog file a built-in game owns`);
+  }
+});
+
+test('the settings scaffold cannot put a settings.json back into an R2 game', async () => {
+  // Every official game is on R2, so running the old scaffold must write nothing.
+  const scaffold = await readFile(resolve(repositoryRoot, 'scripts/scaffold-official-game-settings.mjs'), 'utf8');
+  assert.match(scaffold, /officialGameReleases\.json/);
+  assert.match(scaffold, /if \(Object\.hasOwn\(officialGameReleases, gameId\)\) continue;/);
 });
 
 test('Hub builds per-game outputs and cannot restore a public trainer runtime', async () => {
@@ -223,7 +242,13 @@ test('legacy game pages define every token the settings form uses', async () => 
 test('legacy game pages head the settings form with the catalog name in the page language', async () => {
   // The browser tab title is Chinese only; the form heading comes from the game's own dictionaries instead.
   const catalog = await ReadHub('games/catalog.ts');
-  for (const gameId of ['every-ball-response', 'tongue-catch']) {
+  // No legacy page is left; the check stays for any game that goes back to the shell.
+  const legacyPages = [];
+  for (const gameId of expectedOfficialGameIds) {
+    if ((await ReadHub(`games/${gameId}/main.tsx`)).includes('<OfficialGameShell')) legacyPages.push(gameId);
+  }
+  assert.deepEqual(legacyPages, []);
+  for (const gameId of legacyPages) {
     const titleKey = (await ReadHub(`games/${gameId}/main.tsx`)).match(/<OfficialGameShell\b[^>]*\btitleKey="([^"]+)"/)?.[1];
     assert.ok(titleKey, `${gameId} names its heading key`);
     const names = catalog.match(new RegExp(`id: '${gameId}',[\\s\\S]*?zh: \\['([^']+)'[\\s\\S]*?en: \\['([^']+)'`));
