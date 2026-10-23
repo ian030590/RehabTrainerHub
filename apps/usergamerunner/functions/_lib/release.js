@@ -21,6 +21,7 @@ const allowedCapabilities = new Set([
   'result-files',
   'settings-storage',
   'tongue-tracking',
+  'head-tracking',
   'touch',
 ]);
 
@@ -187,6 +188,7 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
   if (['pose-tracking', 'microphone-level'].some(capability => value.capabilities?.includes(capability))
     && (value.gameId !== 'every-ball-response' || value.presentation !== 'game')) Fail('Pose and microphone input are restricted to the official Every Ball game.');
   if (value.capabilities?.includes('tongue-tracking') && (value.gameId !== 'tongue-catch' || value.presentation !== 'game')) Fail('Tongue input is restricted to the official tongue game.');
+  if (value.capabilities?.includes('head-tracking') && (value.gameId !== 'seagull-flight' || value.presentation !== 'game')) Fail('Head input is restricted to the official seagull game.');
   if (!entry || !/\.html?$/i.test(entry)) {
     Fail('entry must name an HTML file in the release.');
   }

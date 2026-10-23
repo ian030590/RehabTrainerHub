@@ -120,10 +120,10 @@ export async function HandleRequest(context) {
 
   if (route.kind === 'launcher') {
     const official = release.presentation === 'game';
-    const camera = official && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'tongue-tracking'].some(capability => release.capabilities.includes(capability));
+    const camera = official && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'tongue-tracking', 'head-tracking'].some(capability => release.capabilities.includes(capability));
     const microphone = official && release.capabilities.includes('microphone-level');
     // MediaPipe compiles its WASM in the launcher; the game package never gets this.
-    const mediaPipe = ['hand-tracking', 'pose-tracking', 'tongue-tracking'].some(capability => release.capabilities.includes(capability));
+    const mediaPipe = ['hand-tracking', 'pose-tracking', 'tongue-tracking', 'head-tracking'].some(capability => release.capabilities.includes(capability));
     // Official games that remember settings also use the official launcher, which owns the runner origin's storage.
     const officialLauncher = UsesOfficialLauncher(release);
     if (officialLauncher) {

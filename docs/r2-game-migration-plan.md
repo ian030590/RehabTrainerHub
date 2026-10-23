@@ -449,6 +449,10 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 2026-10-24 兩款 `2.0.0` 候選完成：有球必應見 `docs/every-ball-response-r2-migration.md`，舌頭動作訓練見 `docs/tongue-catch-r2-migration.md`。兩款核准、發布並推送 registry 後，所有官方遊戲都是 R2 自包含套件。
 
+### 海鷗飛行的頭部轉動輸入例外
+
+2026-10-24 使用者明確回答「Approve head proxy (Recommended)」。只限可信官方 `seagull-flight`（`head-tracking`）release，使用者同意後由 Hub／獨立 PWA 容器執行 runner 的 `/input/head-tracking-1.0.0/`：MediaPipe 臉部模型輸出臉部轉換矩陣，代理換算成偏航、俯仰、側傾角度，遊戲只收到這三個角度與是否找到臉。代理沒有校正樣本，中立姿勢由遊戲自己記錄。遊戲維持 `sandbox="allow-scripts"`、相機與麥克風禁止、`connect-src 'none'`，相機畫面與全螢幕沿用容器的做法。部署順序同上：先部署相容 runner，再發布核准遊戲，最後才切換 Hub registry。這是新的官方遊戲，不是舊流程遷移；實作與驗收見 `docs/seagull-flight-r2.md`。
+
 每一個遊戲都必須符合：自有依賴、設定／教學／結果完整，成績頁具備主要統計、資料圖表與個別回合明細；Hub output 無該遊戲 bundle；匿名／登入隔離與冪等保存；桌面／手機互動；獨立 PWA；不可變發布收據；回退步驟；未改變用途或引入新的醫療效能宣稱。
 
 ## 10. 本次 TDD／回歸紀錄與限制

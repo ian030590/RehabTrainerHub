@@ -17,6 +17,60 @@ const ballState = () => ({ gameId: 'every-ball-response', version: '2.0.0', sess
   capabilities: ['pose-tracking', 'microphone-level', 'settings-storage'] });
 const tongueState = () => ({ gameId: 'tongue-catch', version: '2.0.0', sessionNonce: nonce, sequence: -1, complete: false,
   capabilities: ['tongue-tracking', 'settings-storage'] });
+const headState = () => ({ gameId: 'seagull-flight', version: '1.0.0', sessionNonce: nonce, sequence: -1, complete: false,
+  capabilities: ['head-tracking', 'settings-storage'] });
+
+test('head input belongs to the seagull game and its head-tracking release only', () => {
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-start', { input: 'head' }), headState()), true);
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-stop', {}), headState()), true);
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-preview', { visible: true, x: 0, y: 0, width: 0.6, height: 1 }), headState()), true,
+    'The seagull game shows the camera image while it finds the neutral head position.');
+  assert.equal(AcceptGameMessage(Message(headState(), 'fullscreen-request', {}), headState()), true);
+  for (const state of [{ ...headState(), gameId: 'tongue-catch' }, { ...headState(), gameId: 'oculomotor-training' }, { ...headState(), capabilities: ['settings-storage'] }]) {
+    assert.equal(AcceptGameMessage(Message(state, 'input-start', { input: 'head' }), state), false, `${state.gameId} ${state.capabilities}`);
+  }
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-start', { input: 'tongue' }), headState()), false, 'The seagull game cannot borrow the tongue proxy.');
+  assert.equal(AcceptGameMessage(Message(tongueState(), 'input-start', { input: 'head' }), tongueState()), false);
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-capture', { label: 'Rest', active: true }), headState()), false,
+    'The head proxy keeps no calibration samples.');
+  assert.equal(AcceptGameMessage(Message(headState(), 'input-start', { input: 'head' }), { ...headState(), complete: true }), false);
+});
+
+// Column-major 4x4 rotation about one axis, as MediaPipe returns facial transformation matrices.
+function Rotation(axis, degrees, translation = [0, 0, -40]) {
+  const c = Math.cos(degrees * Math.PI / 180);
+  const s = Math.sin(degrees * Math.PI / 180);
+  const rows = { x: [[1, 0, 0], [0, c, -s], [0, s, c]], y: [[c, 0, s], [0, 1, 0], [-s, 0, c]], z: [[c, -s, 0], [s, c, 0], [0, 0, 1]] }[axis];
+  const data = new Array(16).fill(0);
+  for (let row = 0; row < 3; row++) for (let column = 0; column < 3; column++) data[column * 4 + row] = rows[row][column] * 1.3;
+  [data[12], data[13], data[14], data[15]] = [...translation, 1];
+  return data;
+}
+
+test('head proxy turns the face matrix into yaw, pitch and roll and sends nothing else', async () => {
+  const { CreateHeadPoseDetector, MatrixToHeadAngles } = await import('../runtime/headPoseDetector.js');
+  // Signs follow FlyingMoo: yaw > 0 when the user turns to their own right, pitch > 0 when they look up.
+  assert.deepEqual(MatrixToHeadAngles(Rotation('y', 0)), { yaw: 0, pitch: 0, roll: 0 });
+  assert.deepEqual(MatrixToHeadAngles(Rotation('y', -20)), { yaw: 20, pitch: 0, roll: 0 });
+  assert.deepEqual(MatrixToHeadAngles(Rotation('y', 15)), { yaw: -15, pitch: 0, roll: 0 });
+  assert.deepEqual(MatrixToHeadAngles(Rotation('x', -12)), { yaw: 0, pitch: 12, roll: 0 });
+  assert.deepEqual(MatrixToHeadAngles(Rotation('z', 8)), { yaw: 0, pitch: 0, roll: 8 });
+  const fixture = { result: { faceLandmarks: [[{ x: 0.5, y: 0.5, z: 0 }]], facialTransformationMatrixes: [{ data: Rotation('y', -20.004) }] }, closed: 0 };
+  const detector = CreateHeadPoseDetector({ landmarker: { detectForVideo: (video, timestamp) => ({ ...fixture.result, timestamp }), close: () => fixture.closed++ } });
+  const video = { videoWidth: 960, videoHeight: 720 };
+  assert.deepEqual(detector.Detect(video, 40), { timestamp: 40, videoWidth: 960, videoHeight: 720, face: true, yaw: 20, pitch: 0, roll: 0 });
+  fixture.result = { faceLandmarks: [], facialTransformationMatrixes: [] };
+  assert.deepEqual(detector.Detect(video, 80), { timestamp: 80, videoWidth: 960, videoHeight: 720, face: false, yaw: null, pitch: null, roll: null });
+  fixture.result = { faceLandmarks: [[{ x: 0.5, y: 0.5, z: 0 }]], facialTransformationMatrixes: [{ data: new Array(16).fill(Number.NaN) }] };
+  assert.equal(detector.Detect(video, 120).face, false, 'An unreadable matrix counts as no face, not as a turn.');
+  detector.Close();
+  assert.equal(fixture.closed, 1);
+  const { readFile } = await import('node:fs/promises');
+  const entry = await readFile(new URL('../runtime/headTrackingEntry.ts', import.meta.url), 'utf8');
+  assert.match(entry, /outputFacialTransformationMatrixes: true/);
+  assert.match(entry, /modelAssetPath: assetBase \+ 'face_landmarker\.task'/);
+  assert.doesNotMatch(entry, /tensorflow|https?:\/\//, 'The head proxy uses only the reviewed face model from the runner.');
+});
 
 test('sensor input requests are limited to the reviewed game and capability', () => {
   assert.equal(AcceptGameMessage(Message(ballState(), 'input-start', { input: 'pose' }), ballState()), true);
@@ -367,7 +421,9 @@ test('sensor capabilities validate only for their official games', () => {
   const Validate = release => ValidateRelease(release, release.gameId, release.version);
   assert.doesNotThrow(() => Validate(Release('every-ball-response', ['pose-tracking', 'microphone-level']).release));
   assert.doesNotThrow(() => Validate(Release('tongue-catch', ['tongue-tracking']).release));
-  for (const [gameId, capability] of [['gesture-battler', 'pose-tracking'], ['ufov', 'microphone-level'], ['every-ball-response', 'tongue-tracking']]) {
+  assert.doesNotThrow(() => Validate(Release('seagull-flight', ['head-tracking']).release));
+  for (const [gameId, capability] of [['gesture-battler', 'pose-tracking'], ['ufov', 'microphone-level'], ['every-ball-response', 'tongue-tracking'],
+    ['tongue-catch', 'head-tracking'], ['oculomotor-training', 'head-tracking'], ['seagull-flight', 'tongue-tracking']]) {
     assert.throws(() => Validate(Release(gameId, [capability]).release), /restricted/, `${gameId} ${capability}`);
   }
   const { presentation, ...embed } = Release('tongue-catch', ['tongue-tracking']).release;
@@ -418,6 +474,20 @@ test('trusted sensor launchers get exactly the devices they declare; game packag
   assert.match(tongueLauncher.headers.get('permissions-policy'), /microphone=\(\)/, 'The tongue game never gets the microphone.');
   assert.match(await tongueLauncher.text(), /src="\/input\/tongue-tracking-1\.0\.0\/index\.js"/);
   assert.match(await (await tongue('sw.js')).text(), /\/input\/tongue-tracking-1\.0\.0\/face_landmarker\.task/);
+
+  const head = await Serve('seagull-flight', ['head-tracking', 'settings-storage']);
+  const headLauncher = await head('');
+  assert.match(headLauncher.headers.get('permissions-policy'), /camera=\(self\)/);
+  assert.match(headLauncher.headers.get('permissions-policy'), /microphone=\(\)/, 'The seagull game never gets the microphone.');
+  assert.match(headLauncher.headers.get('content-security-policy'), /script-src 'nonce-[^']+' 'self' 'wasm-unsafe-eval'/);
+  const headHtml = await headLauncher.text();
+  assert.match(headHtml, /src="\/input\/head-tracking-1\.0\.0\/index\.js"/);
+  assert.match(headHtml, /<div id="input-preview"[^>]*hidden/);
+  assert.match(headHtml, /遊戲只收到頭部轉動角度/);
+  const headWorker = await (await head('sw.js')).text();
+  for (const path of ['/input/head-tracking-1.0.0/index.js', '/input/head-tracking-1.0.0/face_landmarker.task', '/input/head-tracking-1.0.0/wasm/vision_wasm_internal.wasm']) {
+    assert.ok(headWorker.includes(path), `The seagull PWA works offline with ${path}`);
+  }
 
   const unofficial = await Serve('tongue-catch', ['tongue-tracking'], false);
   assert.equal((await unofficial('')).status, 404, 'A release missing from the official catalog gets no device access.');
@@ -485,13 +555,13 @@ test('sensor proxy files are immutable, CORS-readable static assets with a WASM 
   const { readFile } = await import('node:fs/promises');
   const headers = (await readFile(new URL('../public/_headers', import.meta.url), 'utf8')).replaceAll('\r\n', '\n');
   const Block = pattern => headers.split('\n\n').find(block => block.split('\n')[0] === pattern) ?? '';
-  for (const directory of ['pose-tracking-1.0.0', 'tongue-tracking-1.0.0', 'microphone-1.0.0']) {
+  for (const directory of ['pose-tracking-1.0.0', 'tongue-tracking-1.0.0', 'head-tracking-1.0.0', 'microphone-1.0.0']) {
     const block = Block(`/input/${directory}/*`);
     assert.match(block, /Access-Control-Allow-Origin: \*/, directory);
     assert.match(block, /Cross-Origin-Resource-Policy: cross-origin/, directory);
     assert.match(block, /Cache-Control: public, max-age=31536000, immutable/, directory);
   }
-  for (const directory of ['pose-tracking-1.0.0', 'tongue-tracking-1.0.0']) {
+  for (const directory of ['pose-tracking-1.0.0', 'tongue-tracking-1.0.0', 'head-tracking-1.0.0']) {
     assert.match(Block(`/input/${directory}/wasm/*.wasm`), /Content-Type: application\/wasm/, directory);
   }
 });

@@ -32,6 +32,10 @@ const sensorConsent: Record<SensorInput, Record<'zh' | 'en', [string, string, st
     zh: ['啟用相機', '影像只在此裝置由 MediaPipe 與 TensorFlow 處理。遊戲只收到嘴部位置與舌頭方向，校正影像不會離開此裝置。', '允許相機'],
     en: ['Enable camera', 'MediaPipe and TensorFlow run on this device. Only the mouth position and tongue direction reach the game; calibration images never leave this device.', 'Enable camera'],
   },
+  head: {
+    zh: ['啟用相機', '影像只在此裝置由 MediaPipe 處理。遊戲只收到頭部轉動角度，不會上傳相機影像。', '允許相機'],
+    en: ['Enable camera', 'MediaPipe runs on this device. Only head turn angles reach the game; camera images are never uploaded.', 'Enable camera'],
+  },
 };
 
 type Result = { config: Record<string, string | number | boolean>; score: GameScore };
@@ -210,7 +214,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         cancelConsent: () => { consentReply.current?.(false); consentReply.current = null; setCameraConsent(false); },
       });
     }
-    const sensorInputs = (['pose', 'microphone', 'tongue'] as const).filter(input => SensorAllowed(state, input));
+    const sensorInputs = (['pose', 'microphone', 'tongue', 'head'] as const).filter(input => SensorAllowed(state, input));
     sensorRef.current = sensorInputs.length === 0 ? null : CreateSensorInputHost({
       inputs: [...sensorInputs], preview: previewRef.current, shell: shellRef.current, page: document,
       post: message => channel.port1.postMessage({ ...message, sessionNonce: nonce }),
@@ -278,7 +282,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     aria-label={module.copy[language === 'en' ? 'en' : 'zh-TW'].title}
     onCancel={event => { event.preventDefault(); void close(); }}>
     <div ref={shellRef} className={`embedded-training-frame ${ready ? 'is-ready' : ''}`}>
-      {session && (['pose', 'tongue'] as const).some(input => SensorAllowed({ gameId: module.runtimeId, capabilities: session.capabilities ?? [] }, input))
+      {session && (['pose', 'tongue', 'head'] as const).some(input => SensorAllowed({ gameId: module.runtimeId, capabilities: session.capabilities ?? [] }, input))
         && <div ref={previewRef} className="training-input-preview" hidden />}
       {!ready && <div className="training-loading-stage" role={error ? 'alert' : 'status'}>
         <p>{error ? (language === 'en' ? 'Game could not be loaded' : '無法載入遊戲') : (language === 'en' ? 'Loading game…' : '正在載入遊戲…')}</p>

@@ -1,4 +1,4 @@
-export type SensorInput = 'pose' | 'microphone' | 'tongue';
+export type SensorInput = 'pose' | 'microphone' | 'tongue' | 'head';
 export type SensorInputReply = { type: 'ready' | 'frame' | 'error'; payload: unknown };
 export type SensorInputController = {
   Start: (onFrame: (payload: unknown) => void, onError: (reason: string) => void) => Promise<boolean>;

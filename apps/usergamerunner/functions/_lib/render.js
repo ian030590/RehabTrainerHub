@@ -16,7 +16,7 @@ const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
 const mediaPipeWasm = ['wasm/vision_wasm_internal.js', 'wasm/vision_wasm_internal.wasm', 'wasm/vision_wasm_nosimd_internal.js', 'wasm/vision_wasm_nosimd_internal.wasm'];
 
 export function UsesOfficialLauncher(release) {
-  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'microphone-level', 'tongue-tracking', 'settings-storage', 'result-files']
+  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'microphone-level', 'tongue-tracking', 'head-tracking', 'settings-storage', 'result-files']
     .some(capability => release.capabilities.includes(capability));
 }
 
@@ -509,6 +509,9 @@ export async function RenderServiceWorker(release, basePath) {
     ...(release.capabilities.includes('tongue-tracking') ? [
       'index.js', 'face_landmarker.task', ...mediaPipeWasm,
     ].map(path => '/input/tongue-tracking-1.0.0/' + path) : []),
+    ...(release.capabilities.includes('head-tracking') ? [
+      'index.js', 'face_landmarker.task', ...mediaPipeWasm,
+    ].map(path => '/input/head-tracking-1.0.0/' + path) : []),
     ...(release.capabilities.includes('microphone-level') ? ['/input/microphone-1.0.0/index.js'] : []),
     ...(release.capabilities.includes('eye-tracking') ? [
       'index.js', 'preview.html', 'preview.css', 'webgazer.js', 'eyeTrackingEntry.js', 'eyeTrackingController.js',

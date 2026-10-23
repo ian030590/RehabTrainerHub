@@ -75,6 +75,9 @@ test('the Hub overlay wires sensor games through the host, consent copy, preview
   assert.match(overlay, /遊戲只收到雙手與髖、膝的座標/);
   assert.match(overlay, /遊戲只收到音量與高低頻比例/);
   assert.match(overlay, /遊戲只收到嘴部位置與舌頭方向/);
+  assert.match(overlay, /遊戲只收到頭部轉動角度/);
+  assert.match(overlay, /\(\['pose', 'microphone', 'tongue', 'head'\] as const\)\.filter\(input => SensorAllowed\(state, input\)\)/);
+  assert.match(overlay, /\(\['pose', 'tongue', 'head'\] as const\)\.some\(input => SensorAllowed/, 'The head game gets the container preview.');
   assert.match(overlay, /sandbox="allow-scripts"/);
   assert.doesNotMatch(overlay, /allow-same-origin/);
   const styles = await readFile(resolve(root, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');

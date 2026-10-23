@@ -7,16 +7,18 @@ const sensorConsent = {
   pose: ['啟用相機 / Enable camera', '影像只在此裝置由 MediaPipe 處理；遊戲只收到雙手與髖、膝的座標，不會上傳影像。\nMediaPipe runs on this device. Only hand, hip and knee coordinates reach the game; images are never uploaded.', '允許相機 / Enable camera'],
   microphone: ['啟用麥克風 / Enable microphone', '聲音只在此裝置分析；遊戲只收到音量與高低頻比例，不會錄音或上傳。\nSound is analyzed on this device. Only loudness and the balance of high and low sounds reach the game; nothing is recorded or uploaded.', '允許麥克風 / Enable microphone'],
   tongue: ['啟用相機 / Enable camera', '影像只在此裝置由 MediaPipe 與 TensorFlow 處理；遊戲只收到嘴部位置與舌頭方向，校正影像不會離開此裝置。\nMediaPipe and TensorFlow run on this device. Only the mouth position and tongue direction reach the game; calibration images never leave this device.', '允許相機 / Enable camera'],
+  head: ['啟用相機 / Enable camera', '影像只在此裝置由 MediaPipe 處理；遊戲只收到頭部轉動角度，不會上傳影像。\nMediaPipe runs on this device. Only head turn angles reach the game; images are never uploaded.', '允許相機 / Enable camera'],
 };
 
 export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
   // Official standalone launcher: camera input brokers when the game uses them, and the game's saved settings.
   const eyeTracking = release.capabilities.includes('eye-tracking');
   const camera = eyeTracking || release.capabilities.includes('hand-tracking');
-  // Sensor proxies for the two reviewed games; the release validator already tied each capability to its game.
+  // Sensor proxies for the reviewed games; the release validator already tied each capability to its game.
   const sensors = [['pose', 'pose-tracking', 'pose-tracking-1.0.0', 'TrainerHubPoseTracking'],
     ['microphone', 'microphone-level', 'microphone-1.0.0', 'TrainerHubMicrophone'],
-    ['tongue', 'tongue-tracking', 'tongue-tracking-1.0.0', 'TrainerHubTongueTracking']]
+    ['tongue', 'tongue-tracking', 'tongue-tracking-1.0.0', 'TrainerHubTongueTracking'],
+    ['head', 'head-tracking', 'head-tracking-1.0.0', 'TrainerHubHeadTracking']]
     .filter(([, capability]) => release.capabilities.includes(capability));
   const cameraSensor = sensors.some(([input]) => input !== 'microphone');
   const configuration = JSON.stringify({ gameId: release.gameId, version: release.version,

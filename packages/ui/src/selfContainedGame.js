@@ -59,11 +59,11 @@ export function AcceptGameSettingsMessage(message, state) {
 // The standalone launcher inlines these helpers, so they only use helpers it also defines.
 export function SensorAllowed(state, input) {
   const owners = { pose: ['every-ball-response', 'pose-tracking'], microphone: ['every-ball-response', 'microphone-level'],
-    tongue: ['tongue-catch', 'tongue-tracking'] };
+    tongue: ['tongue-catch', 'tongue-tracking'], head: ['seagull-flight', 'head-tracking'] };
   return Object.hasOwn(owners, input) && state.gameId === owners[input][0] && state.capabilities?.includes(owners[input][1]) === true;
 }
 
-export function CameraSensorAllowed(state) { return SensorAllowed(state, 'pose') || SensorAllowed(state, 'tongue'); }
+export function CameraSensorAllowed(state) { return ['pose', 'tongue', 'head'].some(input => SensorAllowed(state, input)); }
 
 // The preview rectangle is relative to the game frame and has to stay inside it.
 export function IsPreviewRect(value) {
@@ -91,7 +91,7 @@ export function AcceptGameMessage(message, state) {
     const eyeInput = state.gameId === 'oculomotor-training' && state.capabilities?.includes('eye-tracking') && exact(message.payload, []);
     const sensorInput = message.type === 'input-start'
       ? exact(message.payload, ['input']) && SensorAllowed(state, message.payload.input)
-      : exact(message.payload, []) && ['pose', 'microphone', 'tongue'].some(input => SensorAllowed(state, input));
+      : exact(message.payload, []) && ['pose', 'microphone', 'tongue', 'head'].some(input => SensorAllowed(state, input));
     if (state.complete || !(eyeInput || sensorInput || (state.capabilities?.includes('hand-tracking') && validPayload))) return false;
   } else if (message.type === 'input-preview') {
     if (state.complete || !CameraSensorAllowed(state) || !IsPreviewRect(message.payload)) return false;

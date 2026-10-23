@@ -3,13 +3,15 @@ import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { build } from 'vite';
 
-// Versioned sensor proxies for Every Ball (pose, microphone) and tongue training. Every model and WASM file
+// Versioned sensor proxies for Every Ball (pose, microphone), tongue training and the seagull head game. Every model and WASM file
 // is checked against scripts/r2-ai-assets.manifest.json; browsers never load them from a CDN.
 const proxies = [
   { directory: 'pose-tracking-1.0.0', entry: 'poseTrackingEntry.ts', global: 'TrainerHubPoseTracking',
     models: ['/hand_landmarker/', '/pose_landmarker_lite/'], tensorflow: false },
   { directory: 'tongue-tracking-1.0.0', entry: 'tongueTrackingEntry.ts', global: 'TrainerHubTongueTracking',
     models: ['/face_landmarker/'], tensorflow: true },
+  { directory: 'head-tracking-1.0.0', entry: 'headTrackingEntry.ts', global: 'TrainerHubHeadTracking',
+    models: ['/face_landmarker/'], tensorflow: false },
   { directory: 'microphone-1.0.0', entry: 'microphoneEntry.js', global: 'TrainerHubMicrophone', models: null, tensorflow: false },
 ];
 
@@ -44,7 +46,7 @@ export async function BuildSensorInputs(appRoot, outputDirectory) {
       },
     });
   }
-  console.log('Built versioned pose, tongue and microphone input with verified MediaPipe 0.10.35 WASM and models.');
+  console.log('Built versioned pose, tongue, head and microphone input with verified MediaPipe 0.10.35 WASM and models.');
 }
 
 async function ReadVerifiedAsset(root, asset) {

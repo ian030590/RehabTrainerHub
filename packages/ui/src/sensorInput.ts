@@ -5,6 +5,7 @@ const bundles: Record<SensorInput, [string, string]> = {
   pose: ['pose-tracking-1.0.0', 'TrainerHubPoseTracking'],
   microphone: ['microphone-1.0.0', 'TrainerHubMicrophone'],
   tongue: ['tongue-tracking-1.0.0', 'TrainerHubTongueTracking'],
+  head: ['head-tracking-1.0.0', 'TrainerHubHeadTracking'],
 };
 const loaded = new Map<string, Promise<SensorInputApi>>();
 
