@@ -1,0 +1,175 @@
+{
+  "gameId": "go-nogo",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/",
+  "publishedAt": "2026-10-23T04:38:14.034Z",
+  "verifiedAt": "2026-10-23T04:49:11.145Z",
+  "fileCount": 5,
+  "totalBytes": 592643,
+  "files": [
+    {
+      "path": "assets/index-CM4U0f0Z.js",
+      "size": 568563,
+      "sha256": "8d57c0fa356d69041cb6f03ba004da8e78a8243124a82df4a85846e283f02489",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BKXdiHKB.css",
+      "size": 19285,
+      "sha256": "ba902b9b2e8e112173989e45423b95c46574ace64d93f5affd809b4ad7a6125b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "4f59acfb1a30d35b1214dbee41ecd5bb0c4df8cbc8102636860ac3c58140ad65",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3822,
+      "sha256": "2785a3b6a913fe98a34f39801a5025ddb0e8de3fd9377373820410ba5c099c30",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56"
+    },
+    "2.0.1": {
+      "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:38:14.034Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "go-nogo",
+        "version": "2.0.1",
+        "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:38:14.034Z",
+      "2026-10-23T04:40:13.259Z",
+      "2026-10-23T04:44:11.035Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56",
+    "command": "node scripts/publish-official-game.mjs go-nogo --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/go-nogo/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs go-nogo --dry-run: 5 files, digest b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:11.145Z",
+    "files": [
+      {
+        "path": "assets/index-CM4U0f0Z.js",
+        "status": 200,
+        "size": 568563,
+        "sha256": "8d57c0fa356d69041cb6f03ba004da8e78a8243124a82df4a85846e283f02489",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BKXdiHKB.css",
+        "status": 200,
+        "size": 19285,
+        "sha256": "ba902b9b2e8e112173989e45423b95c46574ace64d93f5affd809b4ad7a6125b",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 548,
+        "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 425,
+        "sha256": "4f59acfb1a30d35b1214dbee41ecd5bb0c4df8cbc8102636860ac3c58140ad65",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3822,
+        "sha256": "2785a3b6a913fe98a34f39801a5025ddb0e8de3fd9377373820410ba5c099c30",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/go-nogo/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game go-nogo passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

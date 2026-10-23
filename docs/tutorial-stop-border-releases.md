@@ -1,6 +1,6 @@
 # 教學「停止」複本邊框修正：21 款腦力練習發布候選
 
-狀態：**發布候選，待擁有者核准**。
+狀態：**已發布並完成正式驗收（2026-10-23）**。擁有者執行 `publish-approved.mjs` 與 UFOV 一起發布；正式 runner 與 Hub 檢查、每款一次正式大廳 Brave 流程都通過，發布過程與收據見 `docs/ufov-r2-migration.md`「發布與正式驗收」及 `docs/releases/<gameId>-<version>.json`。回退：`node scripts/publish-official-game.mjs <gameId> --activate-version <前一版>`（前一版只差在教學複本沒有邊框）。
 
 21 款腦力練習的教學場景用不能操作的 `span.btn` 複本呈現「停止」，基礎樣式只套用在 `button`，所以複本沒有邊框。`239cc879` 為 21 款補上 `span.btn` 規則，並在 `scripts/brain-r2-browser.mjs` 檢查教學複本與正式按鈕的邊框樣式、寬度、圓角與高度相同。每款只升 patch 版本，沒有其他行為改動。
 

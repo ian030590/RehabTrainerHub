@@ -1,0 +1,175 @@
+{
+  "gameId": "spatial-span",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/spatial-span/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/spatial-span/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/spatial-span/",
+  "publishedAt": "2026-10-23T04:39:40.488Z",
+  "verifiedAt": "2026-10-23T04:49:25.824Z",
+  "fileCount": 5,
+  "totalBytes": 598991,
+  "files": [
+    {
+      "path": "assets/index-phiKsxIc.js",
+      "size": 573534,
+      "sha256": "4aa03c11777afe8be4fe9b07dab1d129cc11485af4fac97b511d701d04d2d106",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BkiK0ykl.css",
+      "size": 19809,
+      "sha256": "60e97f6ee6229e5ee2aeee03518a30c25f5bab76202daa67aa5123c639073134",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 590,
+      "sha256": "3225ff6c471b2d53ebe5e8eafbe87bcb169c19c6a43e1bf9fe493005881719ef",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 426,
+      "sha256": "f823e4cc69873228600bc35e79804dbd23f35d26edab809e6123dddcdf2cb92e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4632,
+      "sha256": "350616c1259cbecef0528b0d4e20d0f6e214929b03fc84585389faf03f96c0a9",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "96e132f476f634e35f6d69ca2b1a5162526457804becf4d3a37a0a57fa840ed0"
+    },
+    "2.0.1": {
+      "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:39:40.488Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "spatial-span",
+        "version": "2.0.1",
+        "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:39:40.488Z",
+      "2026-10-23T04:41:11.506Z",
+      "2026-10-23T04:45:08.928Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "96e132f476f634e35f6d69ca2b1a5162526457804becf4d3a37a0a57fa840ed0",
+    "command": "node scripts/publish-official-game.mjs spatial-span --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/spatial-span/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs spatial-span --dry-run: 5 files, digest a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:25.824Z",
+    "files": [
+      {
+        "path": "assets/index-phiKsxIc.js",
+        "status": 200,
+        "size": 573534,
+        "sha256": "4aa03c11777afe8be4fe9b07dab1d129cc11485af4fac97b511d701d04d2d106",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BkiK0ykl.css",
+        "status": 200,
+        "size": 19809,
+        "sha256": "60e97f6ee6229e5ee2aeee03518a30c25f5bab76202daa67aa5123c639073134",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 590,
+        "sha256": "3225ff6c471b2d53ebe5e8eafbe87bcb169c19c6a43e1bf9fe493005881719ef",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 426,
+        "sha256": "f823e4cc69873228600bc35e79804dbd23f35d26edab809e6123dddcdf2cb92e",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4632,
+        "sha256": "350616c1259cbecef0528b0d4e20d0f6e214929b03fc84585389faf03f96c0a9",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/spatial-span/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game spatial-span passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

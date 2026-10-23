@@ -1,0 +1,175 @@
+{
+  "gameId": "divided-attention",
+  "version": "1.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/1.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/1.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/",
+  "publishedAt": "2026-10-23T04:43:46.492Z",
+  "verifiedAt": "2026-10-23T04:50:03.972Z",
+  "fileCount": 5,
+  "totalBytes": 597156,
+  "files": [
+    {
+      "path": "assets/index-BoyIs9gs.js",
+      "size": 569683,
+      "sha256": "d876910ad508b6f852aa10fae6748c634c17c6c9bb75dfd3d7b15d88fde83f50",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CajF1fCX.css",
+      "size": 19853,
+      "sha256": "9d4f0cefff6d101485dfc1a7a7d6a808c41f963bcb4adfa4daf2099248430baf",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 567,
+      "sha256": "0b94c75f8294919487293a6e204ac3f6b230099e563f760cb5945ea709d21a77",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "832565fad90d7703fc90274f9d1f8b98bc6f697ceca7433585871dbff4a5aabe",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6648,
+      "sha256": "1fc2f122829ac5f83ed0f7a1fa4b7ea50316861f6faf904446695adbcc76103f",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.1",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "b17a194e8ecd3b5df6bf02d96d4fb3df34ee6a048cd8de6335a4821afe9d4608"
+    },
+    "1.0.1": {
+      "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:43:46.492Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "divided-attention",
+        "version": "1.0.1",
+        "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:43:46.492Z",
+      "2026-10-23T04:43:51.835Z",
+      "2026-10-23T04:47:42.233Z"
+    ]
+  },
+  "rollback": {
+    "version": "1.0.0",
+    "contentSha256": "b17a194e8ecd3b5df6bf02d96d4fb3df34ee6a048cd8de6335a4821afe9d4608",
+    "command": "node scripts/publish-official-game.mjs divided-attention --activate-version 1.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "1.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/divided-attention/1.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs divided-attention --dry-run: 5 files, digest f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:50:03.972Z",
+    "files": [
+      {
+        "path": "assets/index-BoyIs9gs.js",
+        "status": 200,
+        "size": 569683,
+        "sha256": "d876910ad508b6f852aa10fae6748c634c17c6c9bb75dfd3d7b15d88fde83f50",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CajF1fCX.css",
+        "status": 200,
+        "size": 19853,
+        "sha256": "9d4f0cefff6d101485dfc1a7a7d6a808c41f963bcb4adfa4daf2099248430baf",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 567,
+        "sha256": "0b94c75f8294919487293a6e204ac3f6b230099e563f760cb5945ea709d21a77",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 405,
+        "sha256": "832565fad90d7703fc90274f9d1f8b98bc6f697ceca7433585871dbff4a5aabe",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6648,
+        "sha256": "1fc2f122829ac5f83ed0f7a1fa4b7ea50316861f6faf904446695adbcc76103f",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/divided-attention/1.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.1",
+      "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.1",
+      "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game divided-attention passed --production-hub --lobby against 1.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

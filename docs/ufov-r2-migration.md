@@ -1,6 +1,6 @@
 # UFOV（周邊視野訓練）R2 搬遷審查單
 
-狀態：**發布候選，待擁有者核准**。`ufov` 寫成 R2 自包含套件 `2.0.0`（自有設定、聚光燈教學、成果與 i18n），成果檔案改由容器代為下載。Hub／runner 的 `result-files` 支援已在 `1ea4c6c1` 提交，必須先推送部署，再發布遊戲，最後推送本次登記。
+狀態：**已發布並完成正式驗收（2026-10-23）**。`ufov` 寫成 R2 自包含套件 `2.0.0`（自有設定、聚光燈教學、成果與 i18n），成果檔案改由容器代為下載。擁有者依序推送 `1ea4c6c1`（Hub／runner 的 `result-files` 支援，部署 run `39899301147`）、發布 `ufov@2.0.0`，再推送本次登記（`099b3502`，部署 run `39902770901`）。收據見 `docs/releases/ufov-2.0.0.json`。
 
 範圍：擁有者要求依 `docs/r2-game-migration-plan.md` 搬遷剩餘遊戲並提供聚光燈說明；UFOV 原本因成果下載暫留舊流程（見 `docs/sixteen-games-r2-migration.md`），擁有者回答「UFOV做法跟眼動練習的眼動資料下載一樣」。
 
@@ -67,3 +67,10 @@
 1. 推送 `1ea4c6c1` 以前的提交（含 `result-files` 的 Hub／runner 支援），等部署完成：`git push origin 1ea4c6c1:main`。
 2. 發布：`node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`（同一份清單另含 21 款腦力練習的停止鈕邊框修正版）。
 3. 正式 runner 驗證通過後，推送本次 UFOV 登記：`git push origin main`。
+
+## 發布與正式驗收
+
+- 發布紀錄：第一次在 Cloudflare 帳號查詢遇到 403，尚未上傳任何檔案；`npx wrangler whoami` 更新權杖後重跑。第二次在 digit-span 遇到一次性的 R2 PUT 500。之後的執行超過 120 秒轉到背景但仍在跑，重跑時兩個發布程序同時建置同一個 `dist/`：其中一個在 UFOV 比對 digest 不一致而停下，沒有上傳 UFOV。最後 22 款的 current 都是核准的版本與 digest，R2 目錄保留舊版本。發布工具現在用鎖定檔防止同時執行第二份。
+- 正式 runner：22 款的每個檔案 bytes、穩定 PWA 轉址與啟動頁都和核准 manifest 一致。
+- 正式 Hub：22 款各在目錄出現一次，`/api/official-game-sessions` 固定核准的 version／contentSha256，舊 `settings.json` 回 410。
+- 正式 Hub 大廳的 Brave 流程：UFOV 桌機與手機英文各一次（含三個下載檔），21 款停止鈕邊框修正版各一次桌機；`/api/*` 只寫本機 SQLite，沒有建立正式帳號或訓練紀錄。

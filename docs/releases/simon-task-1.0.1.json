@@ -1,0 +1,175 @@
+{
+  "gameId": "simon-task",
+  "version": "1.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/",
+  "publishedAt": "2026-10-23T04:40:14.993Z",
+  "verifiedAt": "2026-10-23T04:49:30.698Z",
+  "fileCount": 5,
+  "totalBytes": 589996,
+  "files": [
+    {
+      "path": "assets/index-DzrJr7c_.js",
+      "size": 566208,
+      "sha256": "153b6a20cc5c75c468884ca922024906a658cced3184bd0a8d75884e5c14931d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D8SdVMqu.css",
+      "size": 19118,
+      "sha256": "dcc15acf6ba5fb202b152231d9c8b8db2e50e75ce924379c49dcfa726b4c9058",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 496,
+      "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "c118fd1abb2d3171bb5768c88eef895596912409f9c7bf3f9f69da3f67972bf9",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3772,
+      "sha256": "c775ecd01bc6018e2504ad41aeca1f2013f36dc8cfbc684f28ec45d730b18800",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.1",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e"
+    },
+    "1.0.1": {
+      "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:40:14.993Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "simon-task",
+        "version": "1.0.1",
+        "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:40:14.993Z",
+      "2026-10-23T04:41:31.083Z",
+      "2026-10-23T04:45:29.979Z"
+    ]
+  },
+  "rollback": {
+    "version": "1.0.0",
+    "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e",
+    "command": "node scripts/publish-official-game.mjs simon-task --activate-version 1.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "1.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/simon-task/1.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs simon-task --dry-run: 5 files, digest 2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:30.698Z",
+    "files": [
+      {
+        "path": "assets/index-DzrJr7c_.js",
+        "status": 200,
+        "size": 566208,
+        "sha256": "153b6a20cc5c75c468884ca922024906a658cced3184bd0a8d75884e5c14931d",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-D8SdVMqu.css",
+        "status": 200,
+        "size": 19118,
+        "sha256": "dcc15acf6ba5fb202b152231d9c8b8db2e50e75ce924379c49dcfa726b4c9058",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 496,
+        "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "c118fd1abb2d3171bb5768c88eef895596912409f9c7bf3f9f69da3f67972bf9",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3772,
+        "sha256": "c775ecd01bc6018e2504ad41aeca1f2013f36dc8cfbc684f28ec45d730b18800",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/simon-task/1.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.1",
+      "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.1",
+      "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game simon-task passed --production-hub --lobby against 1.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

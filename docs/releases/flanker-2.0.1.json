@@ -1,0 +1,175 @@
+{
+  "gameId": "flanker",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/",
+  "publishedAt": "2026-10-23T04:39:11.872Z",
+  "verifiedAt": "2026-10-23T04:49:20.991Z",
+  "fileCount": 5,
+  "totalBytes": 595610,
+  "files": [
+    {
+      "path": "assets/index-DKH1-lda.js",
+      "size": 570859,
+      "sha256": "01d04a3dfaec318dfd37c9e2fbf04f1854a0dde6ac3784181353352c8e01d61f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BJb3aB8U.css",
+      "size": 19685,
+      "sha256": "68687e78c19705e332cf4f55c107cd86f79ebb8ade53f6bf18550375d697ff7f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 525,
+      "sha256": "ac359b5beaa3ed464d35f5e19d1992f5c45870d0a3d7b50b01aaf69cf3696373",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 421,
+      "sha256": "a5f058c36c9d34c0bd0ef1dd1109265b306657198314a30acee3da24a5757234",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4120,
+      "sha256": "4c00bc32d1a7c3ceb391a2ab1e975ec3a615923316d64a355ed1d5cc0271b912",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5912c200f53afd7ca9e998b960caae1cdc3a9e4877708d9b59332129b9f40f11"
+    },
+    "2.0.1": {
+      "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:39:11.872Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "flanker",
+        "version": "2.0.1",
+        "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:39:11.872Z",
+      "2026-10-23T04:40:53.433Z",
+      "2026-10-23T04:44:47.197Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "5912c200f53afd7ca9e998b960caae1cdc3a9e4877708d9b59332129b9f40f11",
+    "command": "node scripts/publish-official-game.mjs flanker --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/flanker/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs flanker --dry-run: 5 files, digest adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:20.991Z",
+    "files": [
+      {
+        "path": "assets/index-DKH1-lda.js",
+        "status": 200,
+        "size": 570859,
+        "sha256": "01d04a3dfaec318dfd37c9e2fbf04f1854a0dde6ac3784181353352c8e01d61f",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BJb3aB8U.css",
+        "status": 200,
+        "size": 19685,
+        "sha256": "68687e78c19705e332cf4f55c107cd86f79ebb8ade53f6bf18550375d697ff7f",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 525,
+        "sha256": "ac359b5beaa3ed464d35f5e19d1992f5c45870d0a3d7b50b01aaf69cf3696373",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 421,
+        "sha256": "a5f058c36c9d34c0bd0ef1dd1109265b306657198314a30acee3da24a5757234",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4120,
+        "sha256": "4c00bc32d1a7c3ceb391a2ab1e975ec3a615923316d64a355ed1d5cc0271b912",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/flanker/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game flanker passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

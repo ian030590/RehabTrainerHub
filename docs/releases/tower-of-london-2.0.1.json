@@ -1,0 +1,175 @@
+{
+  "gameId": "tower-of-london",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/",
+  "publishedAt": "2026-10-23T04:41:46.466Z",
+  "verifiedAt": "2026-10-23T04:49:45.074Z",
+  "fileCount": 5,
+  "totalBytes": 602763,
+  "files": [
+    {
+      "path": "assets/index-DQBkfxzs.js",
+      "size": 572488,
+      "sha256": "0ed874848117cdfa40264a5db1d10fc57249372dda53e8b256cb3957f48ad5e3",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CycIc4DR.css",
+      "size": 21234,
+      "sha256": "399fdafa4ed4fb71e945277b47961fe5ab5137e618b10c02340a5134f6c0780d",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 589,
+      "sha256": "ae6f3014e08b1aea3c3e9ce76f479881821708cbf36749bf345ca1183dd9c8c4",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 426,
+      "sha256": "83cbc4c259affdc78ddb8586fb17e7e7f0843e879a953c06e2521fc257251f4c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8026,
+      "sha256": "035eba8f45392b45e53b4cc2b9c45a49cbdcfe19d158cc97ea6d5c4b52fb9dbd",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "b4f980da59e419d1815c797f80e4d01b4b6d13310bb8b1e4aa9ace1c98fda3bf"
+    },
+    "2.0.1": {
+      "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:41:46.466Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "tower-of-london",
+        "version": "2.0.1",
+        "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:41:46.466Z",
+      "2026-10-23T04:42:30.539Z",
+      "2026-10-23T04:46:27.100Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "b4f980da59e419d1815c797f80e4d01b4b6d13310bb8b1e4aa9ace1c98fda3bf",
+    "command": "node scripts/publish-official-game.mjs tower-of-london --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/tower-of-london/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs tower-of-london --dry-run: 5 files, digest 6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:45.074Z",
+    "files": [
+      {
+        "path": "assets/index-DQBkfxzs.js",
+        "status": 200,
+        "size": 572488,
+        "sha256": "0ed874848117cdfa40264a5db1d10fc57249372dda53e8b256cb3957f48ad5e3",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CycIc4DR.css",
+        "status": 200,
+        "size": 21234,
+        "sha256": "399fdafa4ed4fb71e945277b47961fe5ab5137e618b10c02340a5134f6c0780d",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 589,
+        "sha256": "ae6f3014e08b1aea3c3e9ce76f479881821708cbf36749bf345ca1183dd9c8c4",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 426,
+        "sha256": "83cbc4c259affdc78ddb8586fb17e7e7f0843e879a953c06e2521fc257251f4c",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8026,
+        "sha256": "035eba8f45392b45e53b4cc2b9c45a49cbdcfe19d158cc97ea6d5c4b52fb9dbd",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/tower-of-london/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game tower-of-london passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

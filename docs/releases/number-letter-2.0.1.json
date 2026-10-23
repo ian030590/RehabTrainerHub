@@ -1,0 +1,175 @@
+{
+  "gameId": "number-letter",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/",
+  "publishedAt": "2026-10-23T04:40:45.722Z",
+  "verifiedAt": "2026-10-23T04:49:35.547Z",
+  "fileCount": 5,
+  "totalBytes": 599944,
+  "files": [
+    {
+      "path": "assets/index-BRzSwJWP.js",
+      "size": 576104,
+      "sha256": "bdb033bb51fa30a209ad31ed181ba6390421339699c28ba511984db4b0ec8609",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Wwji_8d6.css",
+      "size": 20240,
+      "sha256": "3094e12ecfe5ac9752b518859c4ee1bb4f2f724c700e74bc69c1ddf498d08c65",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 685,
+      "sha256": "70f331b743aed78632f930899422073605878a9c316da7ccf90578405853ea3f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 427,
+      "sha256": "ef5b92eb7865e12d26b9b170c7fd9a0ce0d89a48a253cfb4bcf4e73dcf18fb84",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2488,
+      "sha256": "317445a828bb73c538748c44bd55096c2209ddc1ecb7e933df3ec5558ff881aa",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "41b750e4cc68947a9bf6d05823bb157bc740607006d8821fbcbfd285d36c02c2"
+    },
+    "2.0.1": {
+      "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:40:45.722Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "number-letter",
+        "version": "2.0.1",
+        "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:40:45.722Z",
+      "2026-10-23T04:41:50.849Z",
+      "2026-10-23T04:45:48.147Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "41b750e4cc68947a9bf6d05823bb157bc740607006d8821fbcbfd285d36c02c2",
+    "command": "node scripts/publish-official-game.mjs number-letter --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/number-letter/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs number-letter --dry-run: 5 files, digest 2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:35.547Z",
+    "files": [
+      {
+        "path": "assets/index-BRzSwJWP.js",
+        "status": 200,
+        "size": 576104,
+        "sha256": "bdb033bb51fa30a209ad31ed181ba6390421339699c28ba511984db4b0ec8609",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-Wwji_8d6.css",
+        "status": 200,
+        "size": 20240,
+        "sha256": "3094e12ecfe5ac9752b518859c4ee1bb4f2f724c700e74bc69c1ddf498d08c65",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 685,
+        "sha256": "70f331b743aed78632f930899422073605878a9c316da7ccf90578405853ea3f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 427,
+        "sha256": "ef5b92eb7865e12d26b9b170c7fd9a0ce0d89a48a253cfb4bcf4e73dcf18fb84",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2488,
+        "sha256": "317445a828bb73c538748c44bd55096c2209ddc1ecb7e933df3ec5558ff881aa",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/number-letter/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game number-letter passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

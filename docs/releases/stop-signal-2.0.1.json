@@ -1,0 +1,176 @@
+{
+  "gameId": "stop-signal",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stop-signal/",
+  "publishedAt": "2026-10-23T04:27:43.247Z",
+  "verifiedAt": "2026-10-23T04:48:31.908Z",
+  "fileCount": 5,
+  "totalBytes": 606480,
+  "files": [
+    {
+      "path": "assets/index-BXq7uLrM.js",
+      "size": 577772,
+      "sha256": "840ec2eebce9c1f79eeaf53751091b462d6606d6160a4a10c71aeaff4eeaf0c9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-iiLU9Gmv.css",
+      "size": 20017,
+      "sha256": "0b26167204b43060bf23a2a5dfe85427057915f61214ade7aff80f6c967614ce",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 600,
+      "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "db1721deedffda9dfa3fb8a3c51636af16fc10c7b93a06e6165010a5bc13d94e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7666,
+      "sha256": "6c291529abc7e9cfd6a0cf6dcac752f2a85a1d39873d31c506a26259bd9c7d9e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656"
+    },
+    "2.0.1": {
+      "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:27:43.247Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "stop-signal",
+        "version": "2.0.1",
+        "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:27:43.247Z",
+      "2026-10-23T04:35:22.025Z",
+      "2026-10-23T04:37:41.925Z",
+      "2026-10-23T04:41:37.156Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "1f0350ff380a05c067f27c8ab60936788fd748e4d3129867e0871c533e6fc656",
+    "command": "node scripts/publish-official-game.mjs stop-signal --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/stop-signal/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs stop-signal --dry-run: 5 files, digest efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:48:31.908Z",
+    "files": [
+      {
+        "path": "assets/index-BXq7uLrM.js",
+        "status": 200,
+        "size": 577772,
+        "sha256": "840ec2eebce9c1f79eeaf53751091b462d6606d6160a4a10c71aeaff4eeaf0c9",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-iiLU9Gmv.css",
+        "status": 200,
+        "size": 20017,
+        "sha256": "0b26167204b43060bf23a2a5dfe85427057915f61214ade7aff80f6c967614ce",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 600,
+        "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 425,
+        "sha256": "db1721deedffda9dfa3fb8a3c51636af16fc10c7b93a06e6165010a5bc13d94e",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7666,
+        "sha256": "6c291529abc7e9cfd6a0cf6dcac752f2a85a1d39873d31c506a26259bd9c7d9e",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/stop-signal/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game stop-signal passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

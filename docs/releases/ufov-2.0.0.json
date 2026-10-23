@@ -1,0 +1,180 @@
+{
+  "gameId": "ufov",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/",
+  "publishedAt": "2026-10-23T04:44:47.817Z",
+  "verifiedAt": "2026-10-23T04:50:13.459Z",
+  "fileCount": 5,
+  "totalBytes": 628854,
+  "files": [
+    {
+      "path": "assets/index-DpHe4i1W.js",
+      "size": 604991,
+      "sha256": "f9ee5866a44cc9025f1731cfa978c84993cc2fec6c51aae78a40e31f0b78c292",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CfLyi458.css",
+      "size": 21559,
+      "sha256": "2861c1fadac30b8e7117122af0f5fdc081b2f6986160e891725173b1c448f3ff",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 620,
+      "sha256": "28490f6082430516399f4a5685ce912c470c2a648b73bb283e33df5930942b76",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "ce88cc18f97fd45ae64a92fd7a0faecf82a4b1f75e471e125e45f329a7ec44f0",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1276,
+      "sha256": "2f89f774349de6b2c412260a81a4a00e610cef412efa4c879bba552d9480c966",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "result-files",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:44:47.817Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "ufov",
+        "version": "2.0.0",
+        "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:44:47.817Z",
+      "2026-10-23T04:48:19.960Z"
+    ]
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 1f8f1688 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the registration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/ufov/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "Settings, ranges and defaults match the old settings.json (scripts/fixtures/ufov-legacy.json); phones and tablets still offer only activity 1",
+    "Staircase, frame timing, the dropped-frame retry and pause, and the practice mode follow the old rules",
+    "Vehicle answers keep their icons and gain visible Car/Truck labels; directions use a 3x3 pad with arrows and names instead of the radial wheel; a late click can no longer answer the next trial",
+    "Results show the presentation-time threshold, the fastest correct time and correct answers in whole milliseconds (saved values keep two decimals), per-direction results for activities 2 and 3, the session settings, a switchable per-trial chart and table",
+    "Downloads: the game hands three files (trials CSV with 21 columns, summary CSV, mouse trajectory JSON) to its container through the result-files capability, and the Hub or the standalone launcher downloads them; the CSVs have a UTF-8 BOM and no participant, date or time columns",
+    "Copy uses activity/practice/session record wording instead of assessment/test/Subtest"
+  ],
+  "sourceCommit": "1f8f1688e935285adf139ecc09c2c4f04cbb4753",
+  "platformDeploy": {
+    "commit": "099b3502",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39902770901",
+    "conclusion": "success",
+    "note": "The owner pushed the UFOV registration after all 22 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39902770901)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-ufov-game.test.mjs and timing/peripheralAttentionTiming.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/ufov-r2-browser.mjs drove all 18 settings, every spotlight (no panel needs scrolling), a 10-trial real run with deliberate wrong answers, the results, the three downloaded files and the save lifecycle: lobby desktop guest, lobby signed-in English, lobby phone English, lobby tablet, standalone desktop and phone, and Stop without saving from the lobby and the standalone phone. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs ufov --dry-run: 5 files, digest f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:50:13.459Z",
+    "files": [
+      {
+        "path": "assets/index-DpHe4i1W.js",
+        "status": 200,
+        "size": 604991,
+        "sha256": "f9ee5866a44cc9025f1731cfa978c84993cc2fec6c51aae78a40e31f0b78c292",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CfLyi458.css",
+        "status": 200,
+        "size": 21559,
+        "sha256": "2861c1fadac30b8e7117122af0f5fdc081b2f6986160e891725173b1c448f3ff",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 620,
+        "sha256": "28490f6082430516399f4a5685ce912c470c2a648b73bb283e33df5930942b76",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "ce88cc18f97fd45ae64a92fd7a0faecf82a4b1f75e471e125e45f329a7ec44f0",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 1276,
+        "sha256": "2f89f774349de6b2c412260a81a4a00e610cef412efa4c879bba552d9480c966",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/ufov/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game ufov passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0, including the three file downloads. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

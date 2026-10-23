@@ -1,0 +1,175 @@
+{
+  "gameId": "card-sorting",
+  "version": "1.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/1.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/1.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/",
+  "publishedAt": "2026-10-23T04:41:15.682Z",
+  "verifiedAt": "2026-10-23T04:49:40.293Z",
+  "fileCount": 5,
+  "totalBytes": 592510,
+  "files": [
+    {
+      "path": "assets/index-CaUJRKFd.js",
+      "size": 566532,
+      "sha256": "2431eed05a5eac8d7edbd7e90628c0dfc09b816aa89f79a95b3a36a9bf26fe16",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DGOxQBJL.css",
+      "size": 18858,
+      "sha256": "5c7073681ad67fe9af7beeff4385c18982f237beaa781ea0e5d367dbe0445cbc",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 574,
+      "sha256": "6222f2bbc552f6c4cec7bb98e8d291604d4e3d011e6ab162653c18bf7e8e302d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "2f219bf3822e5d9367204efc7ebe9c94fa4b2e10b993bb0f7eecfe7624ef43cd",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6138,
+      "sha256": "a99ca0791f089a50ab4d40248d3cc6312988f1360fcc812bf9417d942956165e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.1",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "d7a6552de193753f546d7d037dadb69392d7f8fe117d5733601535d61fa15c84"
+    },
+    "1.0.1": {
+      "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:41:15.682Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "card-sorting",
+        "version": "1.0.1",
+        "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:41:15.682Z",
+      "2026-10-23T04:42:11.848Z",
+      "2026-10-23T04:46:07.642Z"
+    ]
+  },
+  "rollback": {
+    "version": "1.0.0",
+    "contentSha256": "d7a6552de193753f546d7d037dadb69392d7f8fe117d5733601535d61fa15c84",
+    "command": "node scripts/publish-official-game.mjs card-sorting --activate-version 1.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "1.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/card-sorting/1.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs card-sorting --dry-run: 5 files, digest fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:40.293Z",
+    "files": [
+      {
+        "path": "assets/index-CaUJRKFd.js",
+        "status": 200,
+        "size": 566532,
+        "sha256": "2431eed05a5eac8d7edbd7e90628c0dfc09b816aa89f79a95b3a36a9bf26fe16",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DGOxQBJL.css",
+        "status": 200,
+        "size": 18858,
+        "sha256": "5c7073681ad67fe9af7beeff4385c18982f237beaa781ea0e5d367dbe0445cbc",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 574,
+        "sha256": "6222f2bbc552f6c4cec7bb98e8d291604d4e3d011e6ab162653c18bf7e8e302d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "2f219bf3822e5d9367204efc7ebe9c94fa4b2e10b993bb0f7eecfe7624ef43cd",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6138,
+        "sha256": "a99ca0791f089a50ab4d40248d3cc6312988f1360fcc812bf9417d942956165e",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/card-sorting/1.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.1",
+      "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.1",
+      "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game card-sorting passed --production-hub --lobby against 1.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

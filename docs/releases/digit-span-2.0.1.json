@@ -1,0 +1,175 @@
+{
+  "gameId": "digit-span",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/digit-span/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/digit-span/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/digit-span/",
+  "publishedAt": "2026-10-23T04:37:45.581Z",
+  "verifiedAt": "2026-10-23T04:49:06.199Z",
+  "fileCount": 5,
+  "totalBytes": 598106,
+  "files": [
+    {
+      "path": "assets/index--5qD_GsL.js",
+      "size": 571924,
+      "sha256": "039e0f0ab18cc5416253b2be8a9f7be8b15100528a40ceeeb72bcaa76340bfa5",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D2l--6S2.css",
+      "size": 20004,
+      "sha256": "02e37c49982a48a25e45f31f40375ce0138bcf2d82850d63ddfc2d05eeef3837",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 576,
+      "sha256": "485444d345e6054f0d4b96d24c79cf2c6d2f61b4eb66fcb269238832ba03e2bc",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "b30af3a125d39806730e58be7fe3f00c3eddc5b7cfeeb931d871bf27b97292e7",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5178,
+      "sha256": "5427ee915921a80f7099ea580fd0b94434de6d39ae406dc2f4d3ca1ba9d3c903",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "74344a97038a4a588f2af679d69218401778fdae8426d5f03348ac6dbe3ed3a5"
+    },
+    "2.0.1": {
+      "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:37:45.581Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "digit-span",
+        "version": "2.0.1",
+        "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:37:45.581Z",
+      "2026-10-23T04:39:49.623Z",
+      "2026-10-23T04:43:51.473Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "74344a97038a4a588f2af679d69218401778fdae8426d5f03348ac6dbe3ed3a5",
+    "command": "node scripts/publish-official-game.mjs digit-span --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/digit-span/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs digit-span --dry-run: 5 files, digest d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:06.199Z",
+    "files": [
+      {
+        "path": "assets/index--5qD_GsL.js",
+        "status": 200,
+        "size": 571924,
+        "sha256": "039e0f0ab18cc5416253b2be8a9f7be8b15100528a40ceeeb72bcaa76340bfa5",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-D2l--6S2.css",
+        "status": 200,
+        "size": 20004,
+        "sha256": "02e37c49982a48a25e45f31f40375ce0138bcf2d82850d63ddfc2d05eeef3837",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 576,
+        "sha256": "485444d345e6054f0d4b96d24c79cf2c6d2f61b4eb66fcb269238832ba03e2bc",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 424,
+        "sha256": "b30af3a125d39806730e58be7fe3f00c3eddc5b7cfeeb931d871bf27b97292e7",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5178,
+        "sha256": "5427ee915921a80f7099ea580fd0b94434de6d39ae406dc2f4d3ca1ba9d3c903",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/digit-span/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game digit-span passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

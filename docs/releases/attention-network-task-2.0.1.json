@@ -1,0 +1,175 @@
+{
+  "gameId": "attention-network-task",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/",
+  "publishedAt": "2026-10-23T04:43:17.007Z",
+  "verifiedAt": "2026-10-23T04:49:59.141Z",
+  "fileCount": 5,
+  "totalBytes": 598370,
+  "files": [
+    {
+      "path": "assets/index-7n4l0D5I.js",
+      "size": 573540,
+      "sha256": "21b4467670678c2a226fc0a9b63661595e45b590924432f92ec6beb8721620c6",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CzxxYYin.css",
+      "size": 19966,
+      "sha256": "43b4fabc06e1d542ca42dde05544733400199f23360d156cfd461f0204653c67",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 610,
+      "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "d21932161d0d7d1d0e003280fa37dfa44eba1f28f081a13d39d8078ca511e888",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3834,
+      "sha256": "225aaec455e211122a79bcab8d4597173b3fed739ec9f7ec2f2958f06d27606a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf"
+    },
+    "2.0.1": {
+      "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:43:17.007Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "attention-network-task",
+        "version": "2.0.1",
+        "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:43:17.007Z",
+      "2026-10-23T04:43:28.773Z",
+      "2026-10-23T04:47:24.054Z"
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf",
+    "command": "node scripts/publish-official-game.mjs attention-network-task --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "2.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/attention-network-task/2.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs attention-network-task --dry-run: 5 files, digest ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:49:59.141Z",
+    "files": [
+      {
+        "path": "assets/index-7n4l0D5I.js",
+        "status": 200,
+        "size": 573540,
+        "sha256": "21b4467670678c2a226fc0a9b63661595e45b590924432f92ec6beb8721620c6",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CzxxYYin.css",
+        "status": 200,
+        "size": 19966,
+        "sha256": "43b4fabc06e1d542ca42dde05544733400199f23360d156cfd461f0204653c67",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 610,
+        "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "d21932161d0d7d1d0e003280fa37dfa44eba1f28f081a13d39d8078ca511e888",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3834,
+        "sha256": "225aaec455e211122a79bcab8d4597173b3fed739ec9f7ec2f2958f06d27606a",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/attention-network-task/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.1",
+      "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game attention-network-task passed --production-hub --lobby against 2.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

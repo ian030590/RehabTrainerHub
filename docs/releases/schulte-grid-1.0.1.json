@@ -1,0 +1,176 @@
+{
+  "gameId": "schulte-grid",
+  "version": "1.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/1.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/1.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/",
+  "publishedAt": "2026-10-23T04:30:26.831Z",
+  "verifiedAt": "2026-10-23T04:48:56.346Z",
+  "fileCount": 5,
+  "totalBytes": 597363,
+  "files": [
+    {
+      "path": "assets/index-DE_62I3D.js",
+      "size": 565222,
+      "sha256": "175d5580fa086d5b559a2605ae71cc7339a9ab60981690a4e6fa57e77e563413",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BUrKiDKe.css",
+      "size": 18667,
+      "sha256": "3392e8b4c4946e417b99cc9398aa71c2bb825bdf3a37b0af0002aa5efe13c531",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 465,
+      "sha256": "10c0474d455a1d9c3826638a89ee022aff293a6b8f4e830e3bc3fe935062e2a2",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "f4ddeb35459d9e9cef15ca705bb505b48825eca619eb7963ffe15289b77e0594",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 12604,
+      "sha256": "582348f45d0cb4484ecdcf89eac943962d6b03a2d6c525eba3e028a2f58facae",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.1",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "ce30439975f7b807965b1b83712524ec0f955c9aaaaaad42a2b55ce1f101408d"
+    },
+    "1.0.1": {
+      "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:30:26.831Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "schulte-grid",
+        "version": "1.0.1",
+        "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:30:26.831Z",
+      "2026-10-23T04:36:56.794Z",
+      "2026-10-23T04:39:13.638Z",
+      "2026-10-23T04:43:13.060Z"
+    ]
+  },
+  "rollback": {
+    "version": "1.0.0",
+    "contentSha256": "ce30439975f7b807965b1b83712524ec0f955c9aaaaaad42a2b55ce1f101408d",
+    "command": "node scripts/publish-official-game.mjs schulte-grid --activate-version 1.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "1.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/schulte-grid/1.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs schulte-grid --dry-run: 5 files, digest af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:48:56.346Z",
+    "files": [
+      {
+        "path": "assets/index-DE_62I3D.js",
+        "status": 200,
+        "size": 565222,
+        "sha256": "175d5580fa086d5b559a2605ae71cc7339a9ab60981690a4e6fa57e77e563413",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BUrKiDKe.css",
+        "status": 200,
+        "size": 18667,
+        "sha256": "3392e8b4c4946e417b99cc9398aa71c2bb825bdf3a37b0af0002aa5efe13c531",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 465,
+        "sha256": "10c0474d455a1d9c3826638a89ee022aff293a6b8f4e830e3bc3fe935062e2a2",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 405,
+        "sha256": "f4ddeb35459d9e9cef15ca705bb505b48825eca619eb7963ffe15289b77e0594",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 12604,
+        "sha256": "582348f45d0cb4484ecdcf89eac943962d6b03a2d6c525eba3e028a2f58facae",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/schulte-grid/1.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.1",
+      "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.1",
+      "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game schulte-grid passed --production-hub --lobby against 1.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

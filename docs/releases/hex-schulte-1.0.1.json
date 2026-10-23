@@ -1,0 +1,176 @@
+{
+  "gameId": "hex-schulte",
+  "version": "1.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/1.0.1/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/1.0.1/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/",
+  "publishedAt": "2026-10-23T04:28:41.161Z",
+  "verifiedAt": "2026-10-23T04:48:41.687Z",
+  "fileCount": 5,
+  "totalBytes": 600194,
+  "files": [
+    {
+      "path": "assets/index-BrlXHq7G.js",
+      "size": 567676,
+      "sha256": "ec0bfccbd091bbf6341ff6e702dad6dcb23f40c999406ead23707662ab156206",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-xxbgyhRb.css",
+      "size": 19930,
+      "sha256": "4dad896827d7d43b17e9e143bff14015195d60800f2bf07f97597545ec883b91",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 553,
+      "sha256": "5bc0a64b6a7ac19826f59ce7857564c7d7a287ba44ee910c7efb3a0d192285ec",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "dab9b45ba1d03239d82c126571a50a3323499a69e65003b859234df078053743",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 11624,
+      "sha256": "a7efc6eb28ee0fae7f3de686da79ca356935be28503302dc7cd4573f145a2d34",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.0.1",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "3d92ae8cc394ada98a6eab518c23d41b2955cbdf501c38d01f6de2d542429844"
+    },
+    "1.0.1": {
+      "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner asked for the side findings to be fixed as well (「順帶發現的問題，請一併處理」, which covered the tutorial Stop border) and chose the container download for UFOV (「UFOV做法跟眼動練習的眼動資料下載一樣」). After the exact version and contentSha256 of all 22 games were presented (docs/tutorial-stop-border-releases.md, docs/ufov-r2-migration.md), the owner pushed the container support (`git push origin 1ea4c6c1:main`) and ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch22-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-23T04:28:41.161Z",
+    "scope": "Publish and activate the 22 games listed in .tmp/brain-tools/batch22-candidates.txt (21 Stop border re-releases and UFOV 2.0.0)",
+    "games": [
+      {
+        "gameId": "hex-schulte",
+        "version": "1.0.1",
+        "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first run stopped at a 403 Cloudflare account lookup before any upload; `npx wrangler whoami` refreshed the token. The second run stopped at a transient R2 PUT 500 on digit-span. Later runs went past 120 s, moved to the background and kept running, so reruns overlapped: one overlapping run stopped at a UFOV digest mismatch caused by two builds writing the same dist/, before uploading anything for UFOV. Every PUBLISHED line carries the approved digest; repeats re-activated the same immutable release.",
+    "publishedLogLines": [
+      "2026-10-23T04:28:41.161Z",
+      "2026-10-23T04:36:00.896Z",
+      "2026-10-23T04:38:19.504Z",
+      "2026-10-23T04:42:15.936Z"
+    ]
+  },
+  "rollback": {
+    "version": "1.0.0",
+    "contentSha256": "3d92ae8cc394ada98a6eab518c23d41b2955cbdf501c38d01f6de2d542429844",
+    "command": "node scripts/publish-official-game.mjs hex-schulte --activate-version 1.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "1.0.0 has the borderless tutorial Stop copy; nothing else differs."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hex-schulte/1.0.1/",
+  "changes": [
+    "The tutorial shows the Stop button as a copy that cannot be pressed (span.btn). The base button styles applied only to button elements, so the copy had no border. The copy now has the same border style, width, radius and height as the real Stop button.",
+    "Patch version only; settings, rules, results and saved fields are unchanged."
+  ],
+  "sourceCommit": "239cc8797020fd515e1263c1ca0f2d62fd017f35",
+  "platformDeploy": {
+    "commit": "1ea4c6c1",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39899301147",
+    "conclusion": "success",
+    "note": "Already registered; the deploy that carried the source commit (and the result-files container support) ran before the publish. The game needs no new capability."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39899301147)"
+      }
+    ],
+    "unitTests": "Shared brain-game suites; scripts/brain-r2-browser.mjs now checks that the tutorial Stop copy matches the real button border style, width, radius and height",
+    "localBrowser": "scripts/check-r2-game-browser.mjs ran settings, every spotlight with the border comparison, a real run and the results and save lifecycle; each game passed twice locally. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs hex-schulte --dry-run: 5 files, digest 170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-23T04:48:41.687Z",
+    "files": [
+      {
+        "path": "assets/index-BrlXHq7G.js",
+        "status": 200,
+        "size": 567676,
+        "sha256": "ec0bfccbd091bbf6341ff6e702dad6dcb23f40c999406ead23707662ab156206",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-xxbgyhRb.css",
+        "status": 200,
+        "size": 19930,
+        "sha256": "4dad896827d7d43b17e9e143bff14015195d60800f2bf07f97597545ec883b91",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 553,
+        "sha256": "5bc0a64b6a7ac19826f59ce7857564c7d7a287ba44ee910c7efb3a0d192285ec",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "dab9b45ba1d03239d82c126571a50a3323499a69e65003b859234df078053743",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 11624,
+        "sha256": "a7efc6eb28ee0fae7f3de686da79ca356935be28503302dc7cd4573f145a2d34",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/hex-schulte/1.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "1.0.1",
+      "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "1.0.1",
+      "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game hex-schulte passed --production-hub --lobby against 1.0.1. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}
