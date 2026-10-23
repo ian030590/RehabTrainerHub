@@ -414,6 +414,23 @@ summary:focus-visible {
   opacity: 1;
 }
 
+/* Sensor games: the Hub shows the camera image here, behind the transparent game frame, where the game asks. */
+.training-input-preview {
+  position: absolute;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.training-input-preview[hidden] {
+  display: none;
+}
+
+/* The Hub enters fullscreen on the frame so the camera image and its consent dialog stay visible. */
+.embedded-training-frame:fullscreen {
+  background: var(--background);
+}
+
 .embedded-training-error {
   width: min(640px, calc(100% - 32px));
   margin: auto;

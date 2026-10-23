@@ -55,6 +55,23 @@ export function AcceptGameSettingsMessage(message, state) {
   return true;
 }
 
+// Reviewed sensor proxies: each input belongs to one official game and the capability its release declares.
+// The standalone launcher inlines these helpers, so they only use helpers it also defines.
+export function SensorAllowed(state, input) {
+  const owners = { pose: ['every-ball-response', 'pose-tracking'], microphone: ['every-ball-response', 'microphone-level'],
+    tongue: ['tongue-catch', 'tongue-tracking'] };
+  return Object.hasOwn(owners, input) && state.gameId === owners[input][0] && state.capabilities?.includes(owners[input][1]) === true;
+}
+
+export function CameraSensorAllowed(state) { return SensorAllowed(state, 'pose') || SensorAllowed(state, 'tongue'); }
+
+// The preview rectangle is relative to the game frame and has to stay inside it.
+export function IsPreviewRect(value) {
+  return exact(value, ['visible', 'x', 'y', 'width', 'height']) && typeof value.visible === 'boolean'
+    && ['x', 'y', 'width', 'height'].every(key => typeof value[key] === 'number' && Number.isFinite(value[key]) && value[key] >= 0 && value[key] <= 1)
+    && value.x + value.width <= 1 + 1e-9 && value.y + value.height <= 1 + 1e-9;
+}
+
 /** Called only on a port transferred to the exact sandboxed iframe window. */
 export function AcceptGameMessage(message, state) {
   if (message?.type === 'settings') return AcceptGameSettingsMessage(message, state);
@@ -72,7 +89,18 @@ export function AcceptGameMessage(message, state) {
     const validPayload = exact(message.payload, []) || (message.type === 'input-start'
       && exact(message.payload, ['hand']) && ['any', 'left', 'right'].includes(message.payload.hand));
     const eyeInput = state.gameId === 'oculomotor-training' && state.capabilities?.includes('eye-tracking') && exact(message.payload, []);
-    if (state.complete || !(eyeInput || (state.capabilities?.includes('hand-tracking') && validPayload))) return false;
+    const sensorInput = message.type === 'input-start'
+      ? exact(message.payload, ['input']) && SensorAllowed(state, message.payload.input)
+      : exact(message.payload, []) && ['pose', 'microphone', 'tongue'].some(input => SensorAllowed(state, input));
+    if (state.complete || !(eyeInput || sensorInput || (state.capabilities?.includes('hand-tracking') && validPayload))) return false;
+  } else if (message.type === 'input-preview') {
+    if (state.complete || !CameraSensorAllowed(state) || !IsPreviewRect(message.payload)) return false;
+  } else if (message.type === 'input-capture') {
+    if (state.complete || !SensorAllowed(state, 'tongue') || !exact(message.payload, ['label', 'active'])
+      || !['Rest', 'Tongue_Left', 'Tongue_Right'].includes(message.payload.label) || typeof message.payload.active !== 'boolean') return false;
+  } else if (['fullscreen-request', 'fullscreen-exit'].includes(message.type)) {
+    // The camera image sits behind the game frame, so the container enters fullscreen with both of them.
+    if (!CameraSensorAllowed(state) || !exact(message.payload, [])) return false;
   } else if (['input-calibrate', 'input-reset', 'gaze-csv', 'csv-file', 'csv-download'].includes(message.type)) {
     if (state.gameId !== 'oculomotor-training' || !state.capabilities?.includes('eye-tracking')
       || (state.complete && message.type !== 'csv-download')) return false;

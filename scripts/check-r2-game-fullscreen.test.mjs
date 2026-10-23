@@ -203,11 +203,12 @@ test('Hub closes every R2 game only after fullscreen and camera cleanup', async 
   const actions = [];
   const close = await LoadFunction('apps/rehabtrainerhub/app/train/R2GameOverlay.tsx', 'close', {
     inputRef: { current: { Stop: () => actions.push('stop-camera') } },
+    sensorRef: { current: { Stop: () => actions.push('stop-sensors') } },
     ExitFullscreenIfActive: () => { actions.push('exit-fullscreen'); return fullscreen.promise; },
     onClose: () => actions.push('close'),
   });
   const pending = close();
-  assert.deepEqual(actions, ['stop-camera', 'exit-fullscreen']);
+  assert.deepEqual(actions, ['stop-camera', 'stop-sensors', 'exit-fullscreen']);
   fullscreen.resolve();
   await pending;
   assert.equal(actions.at(-1), 'close');

@@ -178,6 +178,8 @@ Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。�
 
 **已核准的眼動輸入例外（2026-10-10）：** 使用者於本對話回答「核准眼動輸入代理方案」。僅可信官方 `oculomotor-training` release 可宣告 `eye-tracking`；Hub／獨立 PWA 經明確同意後，在固定第一方 `/input/eye-tracking-1.0.0/` 文件執行原固定摘要 WebGazer 與模型。遊戲保持嚴格沙盒、camera 禁止、`connect-src 'none'`，只以私有通道交換有範圍／nonce／sequence 驗證的數值座標、臉部就緒旗標與校正點；影像與身份不進入遊戲。相機／模型／排程於完成、取消、停止、斷線及撤回清理。CSV 經 Hub 用原工作階段／身份寫入私人 bucket，成功後才保存摘要，獨立 PWA 提供本機成果與 CSV 下載。例外不授權第三方相機、不放寬 package CSP，精確版本發布仍須另核准；見 `docs/oculomotor-r2-migration.md`。
 
+**已核准的姿勢／麥克風／舌頭輸入例外（2026-10-23）：** 使用者於本對話回答「核准三種代理（建議）」與「容器在遊戲後方顯示（建議）」。只有可信官方 `every-ball-response` 可宣告 `pose-tracking` 與 `microphone-level`，只有 `tongue-catch` 可宣告 `tongue-tracking`；Hub／獨立 PWA 經明確同意後，執行 runner 版本化 `/input/pose-tracking-1.0.0/`、`/input/microphone-1.0.0/`、`/input/tongue-tracking-1.0.0/` 的固定摘要模型與程式。遊戲保持嚴格沙盒、camera 與 microphone 禁止、`connect-src 'none'`，只經私有通道收到經 nonce／sequence 驗證的數值：雙手 21 點與髖膝 4 點、音量與高低頻比例、嘴部位置與舌頭方向／信心值；影像、聲音、校正樣本與身份不進入遊戲。相機畫面由容器顯示在透明遊戲 iframe 後方的指定區域，遊戲只送正規化位置；需要相機畫面的全螢幕由容器對自己的外框執行。結算、退出、撤回、取消與斷線都停止裝置、模型與排程。例外不授權第三方相機或麥克風、不放寬 package CSP，精確版本發布仍須另核准。
+
 手勢指令對戰 `2.0.0` 已核准精確版本／摘要、發布 R2，完成 runner 先部署／Hub 切換、七項 CI／兩站部署與正式 API／桌機／手機／英文指定模式／獨立 PWA 驗收，見 `docs/gesture-battler-r2-migration.md` 與 `docs/releases/gesture-battler-2.0.0.json`。目前六款完成／34 款舊流程，Hub 排除六款 R2 bundle。MediaPipe 實際模型／WASM 與校正／對戰已測，感測來源使用已核對圖片形成的串流；尚未驗收實體相機、真人數字 1–5 或 Safari／iOS，不把錄製影像當成硬體驗收。`test:game-architecture` 增加手勢聚光燈與自包含遷移測試；`test:gamerunner` 覆蓋代理取消、初始化競態、拒絕／斷線、私有輸入與官方 launcher 安全邊界。兩份 workflow 沿用既有七項 matrix 與相同命令；手勢 Brave 完整流程採 `node scripts/check-r2-game-browser.mjs --game gesture-battler --lobby`，另驗證手機、英文、登入、session 失敗、撤回與獨立 PWA，不加入 Linux CI。
 
 ### 訓練 Overlay 流程

@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import './check-r2-game-results.test.mjs';
 import './check-r2-game-ui.test.mjs';
 import './check-r2-game-fullscreen.test.mjs';
+import './check-r2-sensor-host.test.mjs';
 import './check-r2-game-audio.test.mjs';
 import './check-hart-chart-migration.test.mjs';
 import './check-hart-chart-tutorial.test.mjs';

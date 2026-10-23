@@ -119,7 +119,11 @@ export async function HandleRequest(context) {
   const { release } = loadedRelease;
 
   if (route.kind === 'launcher') {
-    const handTracking = release.presentation === 'game' && (release.capabilities.includes('hand-tracking') || release.capabilities.includes('eye-tracking'));
+    const official = release.presentation === 'game';
+    const camera = official && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'tongue-tracking'].some(capability => release.capabilities.includes(capability));
+    const microphone = official && release.capabilities.includes('microphone-level');
+    // MediaPipe compiles its WASM in the launcher; the game package never gets this.
+    const mediaPipe = ['hand-tracking', 'pose-tracking', 'tongue-tracking'].some(capability => release.capabilities.includes(capability));
     // Official games that remember settings also use the official launcher, which owns the runner origin's storage.
     const officialLauncher = UsesOfficialLauncher(release);
     if (officialLauncher) {
@@ -156,12 +160,15 @@ export async function HandleRequest(context) {
       "img-src 'self' data:",
       "manifest-src 'self'",
       "object-src 'none'",
-      `script-src 'nonce-${rendered.cspNonce}'${release.capabilities.includes('hand-tracking') ? " 'self' 'wasm-unsafe-eval'" : ''}`,
+      `script-src 'nonce-${rendered.cspNonce}'${mediaPipe ? " 'self' 'wasm-unsafe-eval'" : ''}`,
       `style-src 'nonce-${rendered.cspNonce}'`,
       "worker-src 'self'",
     ].join('; ');
     const headers = DocumentHeaders(launcherCsp, 'text/html; charset=utf-8', 'no-cache');
-    if (handTracking) headers.set('Permissions-Policy', commonPermissionsPolicy.replace('camera=()', 'camera=(self)'));
+    if (camera || microphone) {
+      headers.set('Permissions-Policy', commonPermissionsPolicy.replace('camera=()', camera ? 'camera=(self)' : 'camera=()')
+        .replace('microphone=()', microphone ? 'microphone=(self)' : 'microphone=()'));
+    }
     return BodyResponse(request, rendered.body, { headers });
   }
 

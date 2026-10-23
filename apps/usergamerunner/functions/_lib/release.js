@@ -15,9 +15,12 @@ const allowedCapabilities = new Set([
   'hand-tracking',
   'eye-tracking',
   'keyboard',
+  'microphone-level',
   'pointer',
+  'pose-tracking',
   'result-files',
   'settings-storage',
+  'tongue-tracking',
   'touch',
 ]);
 
@@ -181,6 +184,9 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
   if (value.capabilities?.includes('eye-tracking') && value.gameId !== 'oculomotor-training') Fail('Eye tracking is restricted to the official eye game.');
   if (value.capabilities?.includes('settings-storage') && value.presentation !== 'game') Fail('Settings storage is restricted to official games.');
   if (value.capabilities?.includes('result-files') && (value.gameId !== 'ufov' || value.presentation !== 'game')) Fail('Result files are restricted to the official UFOV game.');
+  if (['pose-tracking', 'microphone-level'].some(capability => value.capabilities?.includes(capability))
+    && (value.gameId !== 'every-ball-response' || value.presentation !== 'game')) Fail('Pose and microphone input are restricted to the official Every Ball game.');
+  if (value.capabilities?.includes('tongue-tracking') && (value.gameId !== 'tongue-catch' || value.presentation !== 'game')) Fail('Tongue input is restricted to the official tongue game.');
   if (!entry || !/\.html?$/i.test(entry)) {
     Fail('entry must name an HTML file in the release.');
   }

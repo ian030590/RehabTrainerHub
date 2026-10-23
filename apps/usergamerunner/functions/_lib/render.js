@@ -12,9 +12,11 @@ const maximumResultPayloadBytes = 64 * 1024;
 const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
 const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
+// The two MediaPipe builds a browser may pick; the module build is not used by the input proxies.
+const mediaPipeWasm = ['wasm/vision_wasm_internal.js', 'wasm/vision_wasm_internal.wasm', 'wasm/vision_wasm_nosimd_internal.js', 'wasm/vision_wasm_nosimd_internal.wasm'];
 
 export function UsesOfficialLauncher(release) {
-  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'settings-storage', 'result-files']
+  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'pose-tracking', 'microphone-level', 'tongue-tracking', 'settings-storage', 'result-files']
     .some(capability => release.capabilities.includes(capability));
 }
 
@@ -501,6 +503,13 @@ export async function RenderServiceWorker(release, basePath) {
       '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.wasm',
       '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.wasm',
     ] : []),
+    ...(release.capabilities.includes('pose-tracking') ? [
+      'index.js', 'hand_landmarker.task', 'pose_landmarker_lite.task', ...mediaPipeWasm,
+    ].map(path => '/input/pose-tracking-1.0.0/' + path) : []),
+    ...(release.capabilities.includes('tongue-tracking') ? [
+      'index.js', 'face_landmarker.task', ...mediaPipeWasm,
+    ].map(path => '/input/tongue-tracking-1.0.0/' + path) : []),
+    ...(release.capabilities.includes('microphone-level') ? ['/input/microphone-1.0.0/index.js'] : []),
     ...(release.capabilities.includes('eye-tracking') ? [
       'index.js', 'preview.html', 'preview.css', 'webgazer.js', 'eyeTrackingEntry.js', 'eyeTrackingController.js',
       'models/facemesh/model.json', 'models/facemesh/group1-shard1of1.bin',

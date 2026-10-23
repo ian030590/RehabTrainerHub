@@ -443,6 +443,10 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 2026-10-10 使用者明確回答「核准眼動輸入代理方案」。僅可信官方 `oculomotor-training` 的 `eye-tracking` release 能由 Hub／獨立 PWA 在同意後啟動固定第一方 WebGazer 文件；原 vendor 與四份模型／權重逐檔核對摘要，瀏覽器不讀 CDN，影像留在裝置。只有可信輸入文件的 CSP／Permissions Policy 允許模型所需的執行與相機，遊戲依然 `sandbox="allow-scripts"`、相機禁止、`connect-src 'none'`。私有通道只交換數值座標／時間／就緒與校正點，驗 nonce／sequence／範圍，不傳身份或影像。原校正、驗證、刺激、成果與 CSV 由遊戲擁有；Hub 以原固定 session／身份保存經驗證的私人 CSV，成功後才存摘要，PWA 提供本機成果及下載。完成、停止、取消、退出、斷線與撤回均清理。此為架構核准，當版精確發布及正式驗收另依步驟 E／F，詳見眼動審查紀錄。
 
+### 有球必應與舌頭動作訓練的感測器輸入例外
+
+2026-10-23 使用者明確回答「核准三種代理（建議）」與「容器在遊戲後方顯示（建議）」。只限可信官方 `every-ball-response`（`pose-tracking`、`microphone-level`）與 `tongue-catch`（`tongue-tracking`）release，使用者同意後由 Hub／獨立 PWA 容器執行；遊戲維持 `sandbox="allow-scripts"`、相機與麥克風禁止、`connect-src 'none'`。姿勢代理只傳雙手 21 點與髖、膝 4 點座標；麥克風代理只傳音量與高低頻比例，不傳聲音；臉部代理在代理內跑 MediaPipe 臉部模型與 TensorFlow 舌頭分類，校正樣本只存在代理記憶體，遊戲只收到嘴部位置、方向（休息／左／右）與信心值。相機畫面由容器自己顯示在透明遊戲畫面後方或遊戲指定的小窗位置，遊戲只能指定位置，讀不到影像。先部署相容 runner，再發布核准遊戲，最後才切換 Hub registry。實作與驗收見各遊戲遷移紀錄。
+
 每一個遊戲都必須符合：自有依賴、設定／教學／結果完整，成績頁具備主要統計、資料圖表與個別回合明細；Hub output 無該遊戲 bundle；匿名／登入隔離與冪等保存；桌面／手機互動；獨立 PWA；不可變發布收據；回退步驟；未改變用途或引入新的醫療效能宣稱。
 
 ## 10. 本次 TDD／回歸紀錄與限制
