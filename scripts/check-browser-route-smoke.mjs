@@ -323,13 +323,19 @@ try {
     cdp.events
       .filter((event) => event.sessionId === sessionId && event.method === 'Network.requestWillBeSent')
       .map((event) => [event.params.requestId, {
+        frameId: event.params.frameId,
         type: event.params.type,
         url: event.params.request.url,
       }]),
   );
+  // A request canceled because the page removed its iframe (a game sent back to settings) is not a broken resource.
+  const removedFrames = new Set(cdp.events
+    .filter((event) => event.sessionId === sessionId && event.method === 'Page.frameDetached' && event.params.reason === 'remove')
+    .map((event) => event.params.frameId));
   const failedResources = cdp.events
     .filter((event) => event.sessionId === sessionId && event.method === 'Network.loadingFailed')
     .map((event) => ({ ...event.params, request: criticalRequests.get(event.params.requestId) }))
+    .filter((event) => !(event.canceled && removedFrames.has(event.request?.frameId)))
     .filter((event) => ['Document', 'Script', 'Stylesheet'].includes(event.request?.type))
     .filter((event) => IsSameOrigin(event.request?.url, navigationUrl))
     .map((event) => `${event.request.url}: ${event.errorText}`);
