@@ -1,6 +1,6 @@
 {
   "name": "@rehab-trainer/game-attentional-blink",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "rehabTrainer": {

@@ -103,7 +103,7 @@ test('Simon results save bounded numeric rows through the private channel', asyn
 });
 
 test('Simon owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SimonTaskGame', category: 'attention' });
+  await CheckGamePackaging(gameId, { component: 'SimonTaskGame', category: 'attention', version: '1.0.1' });
 });
 
 test('Simon private bridge accepts only its own parent and replays settings and language', async () => {

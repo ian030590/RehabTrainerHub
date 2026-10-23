@@ -95,7 +95,7 @@ test('time perception results save bounded numeric rows through the private chan
 });
 
 test('time perception owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TimePerceptionGame', category: 'higher-cognition' });
+  await CheckGamePackaging(gameId, { component: 'TimePerceptionGame', category: 'higher-cognition', version: '1.0.1' });
 });
 
 test('time perception private bridge accepts only its own parent and replays settings and language', async () => {

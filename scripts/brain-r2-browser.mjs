@@ -1335,9 +1335,9 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted tutorial');
   const buttonLook = selector => game(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); const style = getComputedStyle(element);
     return [style.borderTopStyle, style.borderTopWidth, style.borderTopLeftRadius, Math.round(element.getBoundingClientRect().height)].join(' '); })()`);
-  let tutorialStop = null;
+  // The tutorial scene shows an inert copy of Stop; it must look like the real button, spotlit or not.
+  const tutorialStop = await game(`Boolean(document.querySelector(${JSON.stringify(spec.stopSelector)}))`) ? await buttonLook(spec.stopSelector) : null;
   for (const target of spec.tutorialTargets) {
-    if (target === spec.stopSelector) tutorialStop = await buttonLook(target);
     const spotlight = await checkSpotlight(target);
     const intersects = spotlight.target.left < spotlight.panel.right && spotlight.target.right > spotlight.panel.left
       && spotlight.target.top < spotlight.panel.bottom && spotlight.target.bottom > spotlight.panel.top;
@@ -1383,8 +1383,7 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   await until(() => game(`document.fullscreenElement === document.querySelector('.${gameId}-game-root')`), 'native fullscreen root');
   if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
   assert.ok(await game(`document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight`), 'Stage fits the viewport.');
-  // The board-game batch checks that the tutorial's copy of Stop looks like the button it points at.
-  if (gameId in migratedBrainGameSpecs && tutorialStop) assert.equal(await buttonLook(spec.stopSelector), tutorialStop, 'The tutorial Stop matches the real Stop button.');
+  if (tutorialStop) assert.equal(await buttonLook(spec.stopSelector), tutorialStop, 'The tutorial Stop matches the real Stop button.');
   if (process.argv.includes('--stop')) {
     await tap(spec.stopSelector);
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving');

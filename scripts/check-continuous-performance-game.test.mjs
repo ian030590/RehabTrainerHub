@@ -124,7 +124,7 @@ test('CPT results save bounded numeric rows through the private channel', async 
 });
 
 test('CPT owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'ContinuousPerformanceGame', category: 'attention' });
+  await CheckGamePackaging(gameId, { component: 'ContinuousPerformanceGame', category: 'attention', version: '1.0.1' });
 });
 
 test('CPT private bridge accepts only its own parent and replays settings and language', async () => {

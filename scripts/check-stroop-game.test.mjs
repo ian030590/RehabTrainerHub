@@ -121,7 +121,7 @@ test('Stroop rows keep the original columns, include practice items and save thr
 });
 
 test('Stroop owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'StroopGame', category: 'attention', version: '2.0.0' });
+  await CheckGamePackaging(gameId, { component: 'StroopGame', category: 'attention', version: '2.0.1' });
 });
 
 test('Stroop private bridge accepts only its own parent and replays settings and language', async () => {

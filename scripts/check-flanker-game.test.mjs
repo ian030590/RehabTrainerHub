@@ -91,7 +91,7 @@ test('Flanker rows keep the original columns, include practice items and save th
 });
 
 test('Flanker owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'FlankerGame', category: 'attention', version: '2.0.0' });
+  await CheckGamePackaging(gameId, { component: 'FlankerGame', category: 'attention', version: '2.0.1' });
 });
 
 test('Flanker private bridge accepts only its own parent and replays settings and language', async () => {

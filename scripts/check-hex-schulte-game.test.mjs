@@ -79,7 +79,7 @@ test('hex Schulte results save bounded numeric rows through the private channel'
 });
 
 test('hex Schulte owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'HexSchulteGame', category: 'attention' });
+  await CheckGamePackaging(gameId, { component: 'HexSchulteGame', category: 'attention', version: '1.0.1' });
 });
 
 test('hex Schulte private bridge accepts only its own parent and replays settings and language', async () => {

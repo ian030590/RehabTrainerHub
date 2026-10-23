@@ -90,7 +90,7 @@ test('pattern memory results save bounded numeric rows through the private chann
 });
 
 test('pattern memory owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'PatternMemoryGame', category: 'memory' });
+  await CheckGamePackaging(gameId, { component: 'PatternMemoryGame', category: 'memory', version: '1.0.1' });
 });
 
 test('pattern memory private bridge accepts only its own parent and replays settings and language', async () => {

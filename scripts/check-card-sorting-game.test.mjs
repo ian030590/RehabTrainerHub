@@ -91,7 +91,7 @@ test('card sorting results save bounded numeric rows through the private channel
 });
 
 test('card sorting owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'CardSortingGame', category: 'higher-cognition' });
+  await CheckGamePackaging(gameId, { component: 'CardSortingGame', category: 'higher-cognition', version: '1.0.1' });
 });
 
 test('card sorting private bridge accepts only its own parent and replays settings and language', async () => {

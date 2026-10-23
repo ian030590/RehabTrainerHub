@@ -148,7 +148,7 @@ test('SART results save bounded numeric rows through the private channel', async
 test('SART owns its runtime, catalogue entry and results without Hub dependencies', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-sart');
-  assert.equal(pkg.version, '1.0.0');
+  assert.equal(pkg.version, '1.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   for (const capability of ['settings-storage', 'keyboard', 'touch', 'fullscreen']) assert.ok(pkg.rehabTrainer.capabilities.includes(capability), capability);
   for (const file of await readdir(gameRoot, { recursive: true })) {

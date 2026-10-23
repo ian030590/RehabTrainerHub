@@ -11,7 +11,9 @@
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 button, input, select { font: inherit; }
-button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
 button:disabled { opacity: .6; cursor: wait; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .btn-primary { color: var(--text-on-accent); background: var(--primary); }

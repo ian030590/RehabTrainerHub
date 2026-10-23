@@ -271,6 +271,17 @@ test('official games have no Toutour dependency and own their rules styles', asy
   await access(resolve(hubRoot, 'app/tour/hubTour.ts'));
 });
 
+test('tutorial copies of buttons share the base button border', async () => {
+  for (const gameId of expectedOfficialGameIds) {
+    const rulesRoot = resolve(gamesRoot, gameId, 'rules');
+    const files = await readdir(rulesRoot).catch(() => []);
+    const sources = await Promise.all(files.filter((file) => file.endsWith('.tsx')).map((file) => readFile(resolve(rulesRoot, file), 'utf8')));
+    if (!sources.some((source) => /<span className="btn\b/.test(source))) continue;
+    const css = await readFile(resolve(gamesRoot, gameId, 'game.css'), 'utf8');
+    assert.match(css, /^button, span\.btn \{[^}]*border:/m, `${gameId}: the tutorial span.btn must get the base button border.`);
+  }
+});
+
 test('transitive game imports keep engines and dictionaries within their game', async () => {
   const configPath = resolve(hubRoot, 'tsconfig.games.json');
   const config = ts.readConfigFile(configPath, ts.sys.readFile);
