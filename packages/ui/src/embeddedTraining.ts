@@ -80,8 +80,20 @@ export interface HubTrainingReadyMessage {
   type: typeof hubTrainingReadyMessageType;
 }
 
+// Why a game went back to settings. Only these values travel; the settings form shows its own wording for each.
+export const hubTrainingConfigureReasons = [
+  'camera-denied',
+  'camera-unavailable',
+  'camera-unsupported',
+  'microphone-denied',
+  'microphone-unavailable',
+  'microphone-unsupported',
+] as const;
+export type HubTrainingConfigureReason = typeof hubTrainingConfigureReasons[number];
+
 export interface HubTrainingConfigureMessage {
   type: typeof hubTrainingConfigureMessageType;
+  reason?: HubTrainingConfigureReason;
 }
 
 type HubTrainingMessage =
@@ -252,16 +264,32 @@ export function NotifyHubTrainingReady() {
 /**
  * Ask the verified Hub parent to unmount this runtime and show its catalog-owned
  * settings form again. Standalone game PWAs use the same JSON settings shell.
+ * A reason from the fixed list lets the form say why; anything else is dropped.
  */
-export function RequestHubTrainingConfiguration(): boolean {
+export function RequestHubTrainingConfiguration(reason?: HubTrainingConfigureReason): boolean {
+  const knownReason = IsHubTrainingConfigureReason(reason) ? reason : null;
   if (!IsEmbeddedHubTraining()) {
     if (typeof window === 'undefined' || !GetOfficialGameIdFromPath(window.location.pathname)) return false;
-    window.dispatchEvent(new Event('rehab-trainer:standalone-configure'));
+    window.dispatchEvent(new CustomEvent('rehab-trainer:standalone-configure', {
+      detail: knownReason ? { reason: knownReason } : null,
+    }));
     return true;
   }
   NotifyHubTrainingActive(false);
-  PostHubTrainingMessage({ type: hubTrainingConfigureMessageType });
+  PostHubTrainingMessage(knownReason
+    ? { type: hubTrainingConfigureMessageType, reason: knownReason }
+    : { type: hubTrainingConfigureMessageType });
   return true;
+}
+
+export function IsHubTrainingConfigureReason(value: unknown): value is HubTrainingConfigureReason {
+  return typeof value === 'string' && (hubTrainingConfigureReasons as readonly string[]).includes(value);
+}
+
+export function GetHubTrainingConfigureReason(value: unknown): HubTrainingConfigureReason | null {
+  if (!IsHubTrainingConfigureMessage(value)) return null;
+  const { reason } = value as { reason?: unknown };
+  return IsHubTrainingConfigureReason(reason) ? reason : null;
 }
 
 export function IsHubTrainingCompleteMessage(value: unknown): value is HubTrainingCompleteMessage {

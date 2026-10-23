@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { RequestHubTrainingConfiguration } from '../embeddedTraining';
+import { RequestHubTrainingConfiguration, type HubTrainingConfigureReason } from '../embeddedTraining';
 
 export type MediaPermissionPreflightStatus =
   | 'idle'
@@ -41,6 +41,17 @@ function GetRequestKey(audio: boolean, video: boolean) {
   return `${audio ? 'audio' : ''}:${video ? 'video' : ''}`;
 }
 
+// Tells the settings form which device failed and how. When both devices were requested,
+// the error does not say which one failed, so no reason is sent.
+function GetConfigureReason(
+  audio: boolean,
+  video: boolean,
+  problem: 'denied' | 'unavailable' | 'unsupported',
+): HubTrainingConfigureReason | undefined {
+  if (audio && video) return undefined;
+  return video ? `camera-${problem}` as const : `microphone-${problem}` as const;
+}
+
 function IsPermissionDenied(error: unknown) {
   return error instanceof DOMException
     && (error.name === 'NotAllowedError' || error.name === 'SecurityError');
@@ -53,7 +64,7 @@ function RequestMediaPermission(audio: boolean, video: boolean, force: boolean):
 
   if (!navigator.mediaDevices?.getUserMedia) {
     const error = new Error('Media device access is not supported by this browser.');
-    RequestHubTrainingConfiguration();
+    RequestHubTrainingConfiguration(GetConfigureReason(audio, video, 'unsupported'));
     const promise = Promise.reject(error);
     promise.catch(() => undefined);
     return promise;
@@ -79,7 +90,7 @@ function RequestMediaPermission(audio: boolean, video: boolean, force: boolean):
     // config to rules. Notify the Hub here, before React effect cancellation can
     // discard the result, so a denied device never exposes the retired runtime
     // config screen.
-    RequestHubTrainingConfiguration();
+    RequestHubTrainingConfiguration(GetConfigureReason(audio, video, IsPermissionDenied(error) ? 'denied' : 'unavailable'));
     throw error;
   });
   entry.promise.catch(() => undefined);

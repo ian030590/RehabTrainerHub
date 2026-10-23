@@ -15,6 +15,7 @@ import {
 } from '@rehab-trainer/hub-modules/catalog';
 import {
   CreateHubGameSettingsMessage,
+  GetHubTrainingConfigureReason,
   IsHubTrainingActiveMessage,
   IsHubTrainingCompleteMessage,
   IsHubTrainingConfigureMessage,
@@ -27,6 +28,7 @@ import {
   type GameScore,
   type GameScoreMetadata,
   type GameScoreDefinition,
+  type HubTrainingConfigureReason,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
@@ -66,6 +68,7 @@ function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const [settingsError, setSettingsError] = useState(false);
   const [settingsRequestKey, setSettingsRequestKey] = useState(0);
   const [configuredSettings, setConfiguredSettings] = useState<GameSettingsValues | null>(null);
+  const [configureReason, setConfigureReason] = useState<HubTrainingConfigureReason | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
@@ -194,6 +197,7 @@ function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         setIsTrainingComplete(false);
         setIsLoaded(false);
         setIsReady(false);
+        setConfigureReason(GetHubTrainingConfigureReason(event.data));
         setConfiguredSettings(null);
       } else if (IsHubTrainingExitMessage(event.data)) {
         closeOverlay();
@@ -248,6 +252,7 @@ function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         <GameSettingsForm
           definition={definition}
           language={language}
+          notice={configureReason}
           onCancel={closeOverlay}
           onSubmit={(values) => {
             // Preserve the settings button's user activation for fullscreen. The
@@ -259,6 +264,7 @@ function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
             void fullscreenRequest.finally(() => {
               if (dialog?.isConnected && !dialog.open) dialog.showModal();
             });
+            setConfigureReason(null);
             setConfiguredSettings(values);
           }}
           title={moduleCopy.title}

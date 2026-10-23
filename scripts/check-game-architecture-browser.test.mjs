@@ -265,6 +265,31 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(standalone.exitCode, 0, `${gameId}: ${standalone.stdout}\n${standalone.stderr}`);
   }
+  // A blocked camera sends the person back to settings, and the form must say why, on screen without scrolling.
+  const blockedCamera = [
+    ['Hub overlay', `http://127.0.0.1:${address.port}/`, [
+      '.official-game-card[data-runtime-id="every-ball-response"] button',
+      'dialog.training-overlay-config button[type="submit"]',
+    ], 'dialog.training-overlay-config .game-settings-form [role="alert"]', '瀏覽器沒有允許使用相機'],
+    ['standalone', `http://127.0.0.1:${address.port}/games/every-ball-response/?lang=en`, [
+      '.game-settings-form button[type="submit"]',
+    ], '.game-settings-form [role="alert"]', 'The browser did not allow the camera'],
+  ];
+  for (const [label, url, clicks, alertSelector, text] of blockedCamera) {
+    const blocked = await Run(process.execPath, [
+      browserSmokeScript,
+      '--url', url,
+      '--fakeMedia', 'deny',
+      '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh',
+      '--clickSelectors', clicks.join(','),
+      '--waitForSelector', alertSelector,
+      '--allSelectors', `${alertSelector},.game-settings-form button[type="submit"]`,
+      '--visibleSelectors', alertSelector,
+      '--text', text,
+      '--timeoutMs', '10000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(blocked.exitCode, 0, `blocked camera, ${label}: ${blocked.stdout}\n${blocked.stderr}`);
+  }
 });
 
 function FindBravePath() {

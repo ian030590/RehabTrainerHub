@@ -34,11 +34,14 @@ const mockAuthUser = args.mockAuthUser === 'true';
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 // Camera games check media before their rules; a fake device lets that check pass headlessly.
-const fakeMediaFlags = args.fakeMedia === 'true' ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : [];
+// "deny" keeps the fake camera but refuses permission, like a person who blocks the camera in the browser.
+const fakeMediaFlags = args.fakeMedia === 'true'
+  ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']
+  : args.fakeMedia === 'deny' ? ['--use-fake-device-for-media-stream', '--deny-permission-prompts'] : [];
 const keyPressReadyTimeoutMs = Number(args.keyPressReadyTimeoutMs ?? timeoutMs);
 
 if (expectedSelectors.length === 0 && !externalUrl) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--foregroundSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--foregroundSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>] [--fakeMedia true|deny] [--waitForSelector <cssSelector>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -205,6 +208,7 @@ try {
   await Wait(timeoutMs);
   await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
   if (clickSelectors.length > 0) await Wait(800);
+  if (args.waitForSelector) await WaitForSelector(cdp, sessionId, args.waitForSelector, timeoutMs);
   if (args.keyPress) {
     if (keyPressReadySelector) await WaitForSelector(cdp, sessionId, keyPressReadySelector, keyPressReadyTimeoutMs);
     if (args.keyPress !== 'Enter') throw new Error('The keyPress option currently supports Enter.');
@@ -421,7 +425,7 @@ async function WaitForSelector(cdp, sessionId, selector, timeoutMs) {
     if (result.result.value) return;
     await Wait(100);
   }
-  throw new Error(`Timed out waiting for selector before key press: ${selector}`);
+  throw new Error(`Timed out waiting for selector: ${selector}`);
 }
 
 function ParseArgs(argv) {

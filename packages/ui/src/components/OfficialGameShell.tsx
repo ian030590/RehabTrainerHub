@@ -3,9 +3,11 @@ import { NormalizeGameSettingsValues, ParseGameSettingsDefinition } from '@rehab
 import {
   GetHostedGameSettings,
   IsEmbeddedHubTraining,
+  IsHubTrainingConfigureReason,
   NotifyHubTrainingReady,
   SetHostedGameSettings,
   SetGameScoreDefinition,
+  type HubTrainingConfigureReason,
 } from '../embeddedTraining';
 import { EnterFullscreenFromUserGesture } from '../fullscreen';
 import { useT } from '../i18n/games';
@@ -33,6 +35,7 @@ export function OfficialGameShell({ children, settings, score, title }: {
   const received = useHostedGameSettings();
   const [configured, setConfigured] = useState(false);
   const [session, setSession] = useState(0);
+  const [notice, setNotice] = useState<HubTrainingConfigureReason | null>(null);
   const embedded = IsEmbeddedHubTraining();
 
   useEffect(() => {
@@ -54,7 +57,9 @@ export function OfficialGameShell({ children, settings, score, title }: {
 
   useEffect(() => {
     if (embedded) NotifyHubTrainingReady();
-    const configure = () => {
+    const configure = (event: Event) => {
+      const reason = (event as CustomEvent<{ reason?: unknown } | null>).detail?.reason;
+      setNotice(IsHubTrainingConfigureReason(reason) ? reason : null);
       setConfigured(false);
       setSession((value) => value + 1);
     };
@@ -73,9 +78,11 @@ export function OfficialGameShell({ children, settings, score, title }: {
   return <GameSettingsForm
     definition={definition}
     language={lang}
+    notice={notice}
     title={title}
     onCancel={() => window.history.back()}
     onSubmit={(values) => {
+      setNotice(null);
       // The settings submit is the user gesture that browsers require for fullscreen.
       // Request it before mounting the game runtime, whose iframe load is too late.
       void EnterFullscreenFromUserGesture(document.documentElement);

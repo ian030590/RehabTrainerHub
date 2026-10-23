@@ -170,6 +170,8 @@ R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window �
 
 Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。現行未遷移流程依 catalog 的 `settingsPath` 讀取遊戲擁有的 JSON，交由統一 `GameSettingsForm` 呈現；沒有另載入 trainer-owned config entry。R2 遊戲的設定／結果都留在 iframe，Hub 不解讀 UI 描述檔。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime／lifecycle 均屬各遊戲。
 
+**舊流程返回設定的原因（2026-10-23）：** 未遷移遊戲的共用相機／麥克風檢查（`useMediaPermissionPreflight`）失敗時，`rehab-trainer:training-configure`（獨立入口為 `rehab-trainer:standalone-configure` 事件）只帶固定清單中的 `reason`：`camera-denied`、`camera-unavailable`、`camera-unsupported` 與對應的 `microphone-*`；同時要求兩種裝置時不帶原因。Hub overlay 與獨立入口的 `GameSettingsForm` 以自己的文案顯示原因（`role="alert"`），不顯示遊戲送來的文字，清單外的值一律丟棄。2026-09-09 設定改由 Hub 表單呈現後原因沒有顯示，這次補上；遊戲本身沒有改動。本機 `check-browser-route-smoke.mjs --fakeMedia deny` 用假相機加拒絕權限重現。
+
 **已核准的手部輸入例外（2026-10-09）：** 使用者接受「輸入代理，維持嚴格沙盒」。宣告 `hand-tracking` 的可信官方版本，由 Hub 或 runner 的獨立 PWA 容器經明確同意取得相機、執行固定版本 MediaPipe；模型／WASM 由 runner 的 `/input/hand-tracking-1.0.0/` 提供，瀏覽器不讀 CDN。遊戲保持 `sandbox="allow-scripts"`、相機禁止與原 package CSP，只經私有 MessageChannel 收到經 nonce／sequence 驗證的 21 點 xyz 或空手部訊息，不傳影像／身份資料，不上傳影像。校正、手勢判定、玩法與成績仍由遊戲擁有。此例外不開放第三方任意模型、相機權限或沙盒放寬；結算、退出、撤回與取消啟動皆停止相機、模型及排程。
 
 **已核准的眼動輸入例外（2026-10-10）：** 使用者於本對話回答「核准眼動輸入代理方案」。僅可信官方 `oculomotor-training` release 可宣告 `eye-tracking`；Hub／獨立 PWA 經明確同意後，在固定第一方 `/input/eye-tracking-1.0.0/` 文件執行原固定摘要 WebGazer 與模型。遊戲保持嚴格沙盒、camera 禁止、`connect-src 'none'`，只以私有通道交換有範圍／nonce／sequence 驗證的數值座標、臉部就緒旗標與校正點；影像與身份不進入遊戲。相機／模型／排程於完成、取消、停止、斷線及撤回清理。CSV 經 Hub 用原工作階段／身份寫入私人 bucket，成功後才保存摘要，獨立 PWA 提供本機成果與 CSV 下載。例外不授權第三方相機、不放寬 package CSP，精確版本發布仍須另核准；見 `docs/oculomotor-r2-migration.md`。

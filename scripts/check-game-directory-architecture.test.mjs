@@ -218,6 +218,14 @@ test('both official and developer overlays configure before mounting their ifram
   assert.match(officialOverlay, /CreateHubGameSettingsMessage\(module\.runtimeId, sessionNonce, configuredSettings\)/);
   assert.match(officialOverlay, /IsHubTrainingConfigureMessage\(event\.data\)/);
   assert.match(officialOverlay, /setConfiguredSettings\(null\)/);
+  // The settings form says why the game went back (for example a blocked camera), in the Hub's own wording.
+  assert.match(officialOverlay, /setConfigureReason\(GetHubTrainingConfigureReason\(event\.data\)\)/);
+  assert.match(officialOverlay, /<GameSettingsForm[\s\S]*?notice=\{configureReason\}/);
+  const shell = await ReadUi('components/OfficialGameShell.tsx');
+  assert.match(shell, /IsHubTrainingConfigureReason\(reason\)/);
+  assert.match(shell, /<GameSettingsForm[\s\S]*?notice=\{notice\}/);
+  const form = await ReadUi('components/GameSettingsForm.tsx');
+  assert.match(form, /role="alert"/);
   assert.match(officialOverlay, /new URL\(BuildTrainingModuleHref\(module\), window\.location\.origin\)/);
 
   assert.equal((packageOverlay.match(/<iframe\b/g) ?? []).length, 1);

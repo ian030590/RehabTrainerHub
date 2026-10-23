@@ -10,11 +10,14 @@ import {
   type GameSettingsSection,
   type GameSettingsValues,
 } from '@rehab-trainer/game-settings';
+import type { HubTrainingConfigureReason } from '../embeddedTraining';
 import { Button } from './ui/button';
 
 interface GameSettingsFormProps {
   definition: GameSettingsDefinition;
   language: 'en' | 'zh';
+  // Why the game sent the person back here, such as a blocked camera.
+  notice?: HubTrainingConfigureReason | null;
   title: string;
   onCancel: () => void;
   onSubmit: (values: GameSettingsValues) => void;
@@ -23,6 +26,7 @@ interface GameSettingsFormProps {
 export function GameSettingsForm({
   definition,
   language,
+  notice = null,
   onCancel,
   onSubmit,
   title,
@@ -44,6 +48,16 @@ export function GameSettingsForm({
         intro: '請調整這次活動的參數；平台只會將下列設定值傳送給遊戲。',
         start: '開始訓練',
       };
+  const noticeText = notice ? GetNoticeText(notice, language, copy.start) : null;
+  const noticeBlock = noticeText && (
+    <div
+      className="rounded-[var(--radius)] border border-[var(--error)] bg-[color-mix(in_srgb,var(--error)_8%,transparent)] px-4 py-3"
+      role="alert"
+    >
+      <p className="m-0 font-black text-[var(--error)]">{noticeText.title}</p>
+      <p className="mt-1 mb-0 text-sm leading-6">{noticeText.detail}</p>
+    </div>
+  );
 
   const updateValue = (key: string, value: string | number | boolean) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -65,6 +79,7 @@ export function GameSettingsForm({
 
       {!startOnly && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
         <div className="mx-auto grid w-full gap-5">
+          {noticeBlock}
           {definition.sections.map((section) => {
             const isCompass = IsDirectionsCompassSection(section);
             const activeCompassCount = isCompass
@@ -157,6 +172,8 @@ export function GameSettingsForm({
         </div>
       </div>}
 
+      {startOnly && noticeBlock && <div className="px-5 pt-5 sm:px-8">{noticeBlock}</div>}
+
       <footer className="flex flex-col-reverse gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:flex-row sm:justify-end sm:px-8">
         <Button onClick={onCancel} type="button" variant="outline">{copy.cancel}</Button>
         <Button size="lg" type="submit">
@@ -166,6 +183,26 @@ export function GameSettingsForm({
       </footer>
     </form>
   );
+}
+
+function GetNoticeText(notice: HubTrainingConfigureReason, language: 'en' | 'zh', start: string) {
+  const [device, problem] = notice.split('-') as ['camera' | 'microphone', 'denied' | 'unavailable' | 'unsupported'];
+  if (language === 'en') {
+    const name = device === 'camera' ? 'camera' : 'microphone';
+    const detail = {
+      denied: `The browser did not allow the ${name}, so training went back to settings. Allow this site to use the ${name} in the browser's site settings, then select ${start}.`,
+      unavailable: `The browser could not find a working ${name}, so training went back to settings. Check that the ${name} is connected and no other app is using it, then select ${start}.`,
+      unsupported: `This browser cannot use a ${name}, so training went back to settings. Open this site in Chrome, Edge or Safari.`,
+    }[problem];
+    return { title: device === 'camera' ? 'Camera unavailable' : 'Microphone unavailable', detail };
+  }
+  const name = device === 'camera' ? '相機' : '麥克風';
+  const detail = {
+    denied: `瀏覽器沒有允許使用${name}，所以回到設定。請在瀏覽器的網站設定允許本網站使用${name}，再按「${start}」。`,
+    unavailable: `找不到可用的${name}，所以回到設定。請確認${name}已接上，而且沒有其他程式正在使用，再按「${start}」。`,
+    unsupported: `這個瀏覽器無法使用${name}，所以回到設定。請改用 Chrome、Edge 或 Safari 開啟本網站。`,
+  }[problem];
+  return { title: `無法使用${name}`, detail };
 }
 
 function GameSettingControl({

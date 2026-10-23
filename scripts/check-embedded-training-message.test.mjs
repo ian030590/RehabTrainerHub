@@ -192,6 +192,70 @@ test('embedded training reports active state to its verified Hub origin', (conte
   assert.equal(embeddedTraining.IsHubTrainingConfigureMessage({
     type: 'rehab-trainer:training-exit',
   }), false);
+
+  // A failed camera or microphone check tells the Hub why training went back to settings. Only reasons from
+  // the fixed list travel; the Hub shows its own wording for them.
+  assert.equal(embeddedTraining.RequestHubTrainingConfiguration('camera-denied'), true);
+  messages.shift();
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-configure', reason: 'camera-denied' },
+    'https://trainerhub.cc',
+  ]);
+  for (const unknown of ['<img src=x onerror=alert(1)>', { type: 'click' }]) {
+    embeddedTraining.RequestHubTrainingConfiguration(unknown);
+    messages.shift();
+    assert.deepEqual(messages.shift(), [{ type: 'rehab-trainer:training-configure' }, 'https://trainerhub.cc']);
+  }
+  assert.equal(embeddedTraining.GetHubTrainingConfigureReason({
+    type: 'rehab-trainer:training-configure', reason: 'microphone-unavailable',
+  }), 'microphone-unavailable');
+  assert.equal(embeddedTraining.GetHubTrainingConfigureReason({
+    type: 'rehab-trainer:training-configure', reason: 'Camera blocked. Call 0800-000-000',
+  }), null);
+  assert.equal(embeddedTraining.GetHubTrainingConfigureReason({ type: 'rehab-trainer:training-configure' }), null);
+  assert.equal(embeddedTraining.GetHubTrainingConfigureReason({
+    type: 'rehab-trainer:training-exit', reason: 'camera-denied',
+  }), null);
+});
+
+test('a failed camera or microphone check sends the reason it went back to settings', async (context) => {
+  const hookSource = await readFile(new URL('../packages/ui/src/hooks/useMediaPermissionPreflight.ts', import.meta.url), 'utf8');
+  const ToModuleUrl = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`;
+  // Run the hook once without React: state setters are ignored and the effect runs right away.
+  const reactStub = `export const useState = value => [typeof value === 'function' ? value() : value, () => undefined];
+export const useCallback = callback => callback;
+export const useEffect = effect => { effect(); };`;
+  const trainingStub = 'export function RequestHubTrainingConfiguration(reason) { globalThis.configureReasons.push(reason ?? null); return true; }';
+  const hookCode = ts.transpileModule(hookSource, { compilerOptions }).outputText
+    .replace("'react'", JSON.stringify(ToModuleUrl(reactStub)))
+    .replace("'../embeddedTraining'", JSON.stringify(ToModuleUrl(trainingStub)));
+  const { useMediaPermissionPreflight } = await import(ToModuleUrl(hookCode));
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  context.after(() => {
+    Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
+    delete globalThis.configureReasons;
+  });
+  const cases = [
+    [{ video: true }, new DOMException('Permission denied', 'NotAllowedError'), 'camera-denied'],
+    [{ video: true }, new DOMException('Requested device not found', 'NotFoundError'), 'camera-unavailable'],
+    [{ video: true }, new DOMException('Could not start video source', 'NotReadableError'), 'camera-unavailable'],
+    [{ audio: true }, new DOMException('Permission denied', 'NotAllowedError'), 'microphone-denied'],
+    [{ audio: true }, new DOMException('Requested device not found', 'NotFoundError'), 'microphone-unavailable'],
+    // With both devices requested the error does not say which one failed, so no reason is sent.
+    [{ audio: true, video: true }, new DOMException('Permission denied', 'NotAllowedError'), null],
+    [{ video: true }, null, 'camera-unsupported'],
+    [{ audio: true }, null, 'microphone-unsupported'],
+  ];
+  for (const [options, error, reason] of cases) {
+    globalThis.configureReasons = [];
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: error ? { mediaDevices: { getUserMedia: () => Promise.reject(error) } } : {},
+    });
+    useMediaPermissionPreflight(options);
+    await new Promise(resolveTick => setTimeout(resolveTick, 0));
+    assert.deepEqual(globalThis.configureReasons, [reason], `${JSON.stringify(options)} ${error?.name ?? 'unsupported'}`);
+  }
 });
 
 test('Hub accepts messages only from the expected same-origin runtime frame', () => {
@@ -248,6 +312,7 @@ test('official games accept settings only from their verified Hub parent', (cont
     }
   }
 
+  const customEventDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'CustomEvent');
   Object.defineProperty(globalThis, 'CustomEvent', {
     configurable: true,
     value: TestCustomEvent,
@@ -258,7 +323,8 @@ test('official games accept settings only from their verified Hub parent', (cont
     value: { referrer: 'https://trainerhub.cc/train/?module=motor%3Adrawing-defense' },
   });
   context.after(() => {
-    delete globalThis.CustomEvent;
+    // Put back Node's own CustomEvent; later tests dispatch real events.
+    Object.defineProperty(globalThis, 'CustomEvent', customEventDescriptor);
     delete globalThis.document;
     delete globalThis.window;
   });
@@ -305,13 +371,19 @@ test('training results expose exactly one source-aware navigation button', () =>
 
 test('standalone games reopen their own configuration without browser history', (context) => {
   const dispatched = [];
-  const windowMock = { location: { pathname: '/games/n-back/', search: '' }, dispatchEvent: event => dispatched.push(event.type) };
+  const windowMock = { location: { pathname: '/games/n-back/', search: '' }, dispatchEvent: event => dispatched.push([event.type, event.detail ?? null]) };
   windowMock.self = windowMock;
   windowMock.top = windowMock;
   Object.defineProperty(globalThis, 'window', { configurable: true, value: windowMock });
   context.after(() => { delete globalThis.window; });
   assert.equal(embeddedTraining.RequestHubTrainingConfiguration(), true);
-  assert.deepEqual(dispatched, ['rehab-trainer:standalone-configure']);
+  assert.equal(embeddedTraining.RequestHubTrainingConfiguration('camera-unsupported'), true);
+  embeddedTraining.RequestHubTrainingConfiguration('not-a-reason');
+  assert.deepEqual(dispatched, [
+    ['rehab-trainer:standalone-configure', null],
+    ['rehab-trainer:standalone-configure', { reason: 'camera-unsupported' }],
+    ['rehab-trainer:standalone-configure', null],
+  ]);
   windowMock.location.pathname = '/qa/';
   assert.equal(embeddedTraining.RequestHubTrainingConfiguration(), false);
 });

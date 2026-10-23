@@ -546,9 +546,10 @@ const mediaPermissionPreflightSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/hooks/useMediaPermissionPreflight.ts'),
   'utf8',
 );
-assert.ok(
-  mediaPermissionPreflightSource.includes('RequestHubTrainingConfiguration()'),
-  'Media preflight failures must request the Hub-owned form even when a phase change cancels the consuming effect.',
+assert.equal(
+  (mediaPermissionPreflightSource.match(/RequestHubTrainingConfiguration\(GetConfigureReason\(audio, video, /g) ?? []).length,
+  2,
+  'Media preflight failures must request the Hub-owned form, with the reason, even when a phase change cancels the consuming effect.',
 );
 const directMediaAccessFiles = [
   ...ListTypeScriptFiles(moduleRoot),
