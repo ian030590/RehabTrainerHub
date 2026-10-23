@@ -13,6 +13,7 @@ import { useHubLanguage } from '../i18n/HubLanguage';
 import { CreateEyeTrackingBroker } from '@rehab-trainer/ui/eyeTrackingBroker.js';
 import { LoadEyeTrackingInput, type EyeInputBroker } from '@rehab-trainer/ui/eyeTrackingInput';
 import { SaveOculomotorCsv, type OculomotorCsvPayload } from '@rehab-trainer/ui/saveOculomotorCsv';
+import { DownloadResultFile, StageResultFile } from '@rehab-trainer/ui/resultFiles.js';
 
 type Result = { config: Record<string, string | number | boolean>; score: GameScore };
 type Session = { recordId: string; token: string; version: string; contentSha256: string; capabilities?: string[] };
@@ -33,6 +34,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
   const csvRef = useRef<OculomotorCsvPayload | null>(null);
   const csvFileRef = useRef<{ text: string; fileName: string } | null>(null);
   const csvSaved = useRef(false);
+  const resultFilesRef = useRef(new Map<string, string>());
   const consentReply = useRef<((allowed: boolean) => void) | null>(null);
   const consentButtonRef = useRef<HTMLButtonElement>(null);
   const consentPreviousFocus = useRef<HTMLElement | null>(null);
@@ -201,6 +203,8 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         const link = document.createElement('a'); link.href = url; link.download = file.fileName; link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
       }
+      if (message.type === 'result-file') StageResultFile(resultFilesRef.current, message.payload);
+      if (message.type === 'result-file-download' && resultFilesRef.current.has(message.payload.fileName)) DownloadResultFile(message.payload.fileName, resultFilesRef.current.get(message.payload.fileName)!);
       if (message.type === 'sample' && sampleCount++ < 100) {
         const body = new FormData();
         body.append('image', message.payload.image, 'drawing.png');
@@ -227,7 +231,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     <div className={`embedded-training-frame ${ready ? 'is-ready' : ''}`}>
       {!ready && <div className="training-loading-stage" role={error ? 'alert' : 'status'}>
         <p>{error ? (language === 'en' ? 'Game could not be loaded' : '無法載入遊戲') : (language === 'en' ? 'Loading game…' : '正在載入遊戲…')}</p>
-        {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; csvSaved.current = false; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
+        {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; resultFilesRef.current.clear(); csvSaved.current = false; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
       </div>}
       {!unavailable && source && <iframe key={generation} ref={frameRef} src={source} title={release.name} onLoad={initialize}
         sandbox="allow-scripts" allow={`autoplay; fullscreen${session?.capabilities?.includes('gamepad') ? '; gamepad *' : ''}`} allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}

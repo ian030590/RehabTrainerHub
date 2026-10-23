@@ -16,6 +16,7 @@ const allowedCapabilities = new Set([
   'eye-tracking',
   'keyboard',
   'pointer',
+  'result-files',
   'settings-storage',
   'touch',
 ]);
@@ -179,6 +180,7 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
   const entry = NormalizePackagePath(value.entry);
   if (value.capabilities?.includes('eye-tracking') && value.gameId !== 'oculomotor-training') Fail('Eye tracking is restricted to the official eye game.');
   if (value.capabilities?.includes('settings-storage') && value.presentation !== 'game') Fail('Settings storage is restricted to official games.');
+  if (value.capabilities?.includes('result-files') && (value.gameId !== 'ufov' || value.presentation !== 'game')) Fail('Result files are restricted to the official UFOV game.');
   if (!entry || !/\.html?$/i.test(entry)) {
     Fail('entry must name an HTML file in the release.');
   }

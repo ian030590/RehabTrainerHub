@@ -177,6 +177,16 @@ sequenceDiagram
 - 保存只在本裝置、本瀏覽器；不同裝置或瀏覽器不同步，清除網站資料即回到預設值。同一台裝置的訪客與登入帳號共用同一份設定。設定不進入 D1、R2 或任何伺服器，因此不隨使用者數量增加伺服器負擔。
 - 測試：`scripts/check-r2-settings-memory.test.mjs`（容器訊息規則、儲存讀寫失敗、Hub 接線、每款遊戲的還原與預設值回退）、`apps/usergamerunner/tests/settingsMemory.test.mjs`（能力限制、官方啟動頁、實際打包後的啟動頁保存與回傳），以及本機 Brave `node scripts/check-r2-game-browser.mjs --game <gameId> --settings-memory [--standalone]`（改設定→確認→容器 `localStorage` 有值、遊戲本身無法存取 storage→重新整理後設定被還原）。
 
+### 成果檔案下載（`result-files`）
+
+2026-10-23 擁有者回答「UFOV做法跟眼動練習的眼動資料下載一樣」。R2 iframe 不能下載檔案，也不得為此加上 `allow-downloads`，所以檔案由容器代為下載，做法與眼動練習的 CSV 下載相同。
+
+- 只有可信官方 `ufov`（`presentation: "game"`）可宣告 `result-files`；`apps/usergamerunner/functions/_lib/release.js` 拒絕其他遊戲。宣告後獨立入口改用官方啟動頁。
+- 遊戲在送出成果之前，以 `result-file`（`{ fileName, text }`）經私有 port 交給容器，最多三個檔案：`ufov-YYYYMMDD-HHMMSS-trials.csv`、`-summary.csv`、`-trajectory.json`。同名檔案重送會取代舊內容。
+- 容器（Hub `R2GameOverlay`、獨立 PWA 官方啟動頁）用 `packages/ui/src/resultFiles.js` 檢查：檔名固定、欄位固定、每格只能是數字、空白或固定字詞（`car`／`truck`）、指標名稱不得含身份字樣、總大小 ≤4 MiB。不合格的檔案直接丟棄。
+- 成果送出後不再接受新檔案，只接受 `result-file-download`（`{ fileName }`）；容器以 Blob 下載已保存的檔案，CSV 前加 BOM。檔案不上傳、不進 D1／R2，關閉、重新載入或回到設定時丟棄。
+- 測試：`apps/usergamerunner/tests/resultFiles.test.mjs`（檔案檢查、訊息規則、能力限制、Hub 接線，以及實際打包後的啟動頁只下載成果前保存的檔案、離開後清空）。
+
 ## 6. R2 套件與安全限制
 
 ```text

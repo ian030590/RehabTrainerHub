@@ -1,4 +1,5 @@
 import { IsOculomotorCsvPayload, IsReferenceCsvPayload } from './oculomotorCsv.js';
+import { IsUfovResultFile, IsUfovResultFileName } from './resultFiles.js';
 const sensitiveKey = /(auth|email|jwt|name|password|token|user|participant|secret|cookie|credential|phone)/i;
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value));
@@ -83,6 +84,11 @@ export function AcceptGameMessage(message, state) {
     } else if (message.type === 'csv-file') {
       if (!IsReferenceCsvPayload(message.payload)) return false;
     } else if (!exact(message.payload, [])) return false;
+  } else if (['result-file', 'result-file-download'].includes(message.type)) {
+    // Files are staged before the result; the download request may follow it from the results page.
+    if (state.gameId !== 'ufov' || !state.capabilities?.includes('result-files')) return false;
+    if (message.type === 'result-file' ? state.complete || !IsUfovResultFile(message.payload)
+      : !exact(message.payload, ['fileName']) || !IsUfovResultFileName(message.payload.fileName)) return false;
   } else if (message.type === 'sample') {
     if (state.complete || !exact(message.payload, ['image', 'metadata'])
       || !(message.payload.image instanceof Blob) || message.payload.image.type !== 'image/png'

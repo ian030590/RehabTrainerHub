@@ -14,7 +14,7 @@ const releaseHealthCheckIntervalMs = 60 * 1000;
 const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
 
 export function UsesOfficialLauncher(release) {
-  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'settings-storage']
+  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'settings-storage', 'result-files']
     .some(capability => release.capabilities.includes(capability));
 }
 

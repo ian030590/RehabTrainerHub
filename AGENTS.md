@@ -165,6 +165,8 @@ R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window �
 
 **設定值保存在本裝置（2026-10-17）：** 每款 R2 遊戲開啟時使用本裝置上次確認的設定，沒有或無效才用預設值。遊戲是不透明 origin、不能用 `localStorage`，也不得因此放寬沙盒；宣告 `settings-storage` 的官方版本由容器（Hub 或 runner 獨立 PWA 啟動頁）以 `trainerhub.game-settings/v1:<gameId>` 存在自己的 `localStorage`，經私有 port 的 `init.settings` 交回，遊戲確認設定後送 `settings` 訊息（與成果 config 相同限制）。遊戲以自身驗證還原。第三方投稿遊戲由 Hub 記住 `GameSettingsForm` 上次送出的值（`trainerhub.package-settings/v1:<slug>`，以該遊戲 `settings.json` 重新驗證）；未遷移官方遊戲不改動。不開放通用鍵值儲存。細節見 `docs/r2-game-migration-plan.md` 第 5 節。
 
+**成果檔案下載（2026-10-23）：** 擁有者回答「UFOV做法跟眼動練習的眼動資料下載一樣」。僅可信官方 `ufov` 可宣告 `result-files`：遊戲送出成果前經私有 port 以 `result-file` 交給容器最多三個固定檔名的 CSV／JSON，容器依 `packages/ui/src/resultFiles.js` 檢查固定欄位、只含數字或固定字詞、無身份欄位、≤4 MiB；成果送出後只接受 `result-file-download`，由 Hub 或獨立 PWA 啟動頁以 Blob 下載。iframe 不加 `allow-downloads`，檔案不上傳、不進 D1／R2，關閉或回到設定即丟棄。細節見 `docs/r2-game-migration-plan.md` 第 5 節。
+
 Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。現行未遷移流程依 catalog 的 `settingsPath` 讀取遊戲擁有的 JSON，交由統一 `GameSettingsForm` 呈現；沒有另載入 trainer-owned config entry。R2 遊戲的設定／結果都留在 iframe，Hub 不解讀 UI 描述檔。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime／lifecycle 均屬各遊戲。
 
 **已核准的手部輸入例外（2026-10-09）：** 使用者接受「輸入代理，維持嚴格沙盒」。宣告 `hand-tracking` 的可信官方版本，由 Hub 或 runner 的獨立 PWA 容器經明確同意取得相機、執行固定版本 MediaPipe；模型／WASM 由 runner 的 `/input/hand-tracking-1.0.0/` 提供，瀏覽器不讀 CDN。遊戲保持 `sandbox="allow-scripts"`、相機禁止與原 package CSP，只經私有 MessageChannel 收到經 nonce／sequence 驗證的 21 點 xyz 或空手部訊息，不傳影像／身份資料，不上傳影像。校正、手勢判定、玩法與成績仍由遊戲擁有。此例外不開放第三方任意模型、相機權限或沙盒放寬；結算、退出、撤回與取消啟動皆停止相機、模型及排程。

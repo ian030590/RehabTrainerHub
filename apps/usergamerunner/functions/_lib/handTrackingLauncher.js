@@ -1,4 +1,5 @@
 import { AcceptGameMessage, AcceptGameSettingsMessage, IsGameResult, IsGameSettings, ReadSavedGameSettings, WriteSavedGameSettings } from '../../../../packages/ui/src/selfContainedGame.js';
+import { DownloadResultFile, IsUfovResultFile, IsUfovResultFileName, ResultFileMimeType, StageResultFile, ufovTrialColumns } from '../../../../packages/ui/src/resultFiles.js';
 import { EscapeHtml } from './render.js';
 
 export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
@@ -37,11 +38,17 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       const AcceptGameSettingsMessage = ${AcceptGameSettingsMessage.toString()};
       const ReadSavedGameSettings = ${ReadSavedGameSettings.toString()};
       const WriteSavedGameSettings = ${WriteSavedGameSettings.toString()};
-      const accept = ${eyeTracking ? 'TrainerHubEyeTracking.AcceptGameMessage' : AcceptGameMessage.toString()};
+${release.capabilities.includes('result-files') ? `      const ufovTrialColumns = ${JSON.stringify(ufovTrialColumns)};
+      const IsUfovResultFileName = ${IsUfovResultFileName.toString()};
+      const IsUfovResultFile = ${IsUfovResultFile.toString()};
+      const ResultFileMimeType = ${ResultFileMimeType.toString()};
+      const DownloadResultFile = ${DownloadResultFile.toString()};
+      const StageResultFile = ${StageResultFile.toString()};
+` : ''}      const accept = ${eyeTracking ? 'TrainerHubEyeTracking.AcceptGameMessage' : AcceptGameMessage.toString()};
       let storage = null;
       try { storage = window.localStorage; } catch { /* Blocked storage only means defaults next time. */ }
       let port = null; let initialized = false; let consentReply = null; let previousFocus = null;
-      let csv = null;
+      let csv = null; const resultFiles = new Map();
       const broker = ${camera ? `${eyeTracking ? 'TrainerHubEyeTracking' : 'TrainerHubHandTracking'}.CreateBroker({
         send: message => port?.postMessage({ ...message, sessionNonce:nonce }),
         requestConsent: () => new Promise(resolve => { consentReply = resolve; previousFocus = document.activeElement; consent.hidden=false; document.getElementById('camera-enable').focus(); }),
@@ -66,7 +73,9 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
           if(data.type==='input-reset')broker.Reset();
           if(data.type==='csv-file')csv=data.payload;
           if(data.type==='csv-download' && csv)TrainerHubEyeTracking.DownloadCsv(csv);
-          if(data.type==='exit') { broker.Stop(); csv=null;state.complete=false;port.postMessage({schema:'trainerhub.game/v1',type:'configure',sessionNonce:nonce}); }
+          if(data.type==='result-file')StageResultFile(resultFiles,data.payload);
+          if(data.type==='result-file-download' && resultFiles.has(data.payload.fileName))DownloadResultFile(data.payload.fileName,resultFiles.get(data.payload.fileName));
+          if(data.type==='exit') { broker.Stop(); csv=null;resultFiles.clear();state.complete=false;port.postMessage({schema:'trainerhub.game/v1',type:'configure',sessionNonce:nonce}); }
         };
         port.onmessageerror=stop;port.start();
         const settings=config.capabilities.includes('settings-storage')?ReadSavedGameSettings(storage,config.gameId):null;
