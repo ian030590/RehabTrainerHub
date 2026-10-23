@@ -1,0 +1,171 @@
+{
+  "gameId": "simon-says",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/",
+  "publishedAt": "2026-10-22T23:45:30.385Z",
+  "verifiedAt": "2026-10-22T23:49:02.183Z",
+  "fileCount": 5,
+  "totalBytes": 593139,
+  "files": [
+    {
+      "path": "assets/index-CIjohm3g.js",
+      "size": 566739,
+      "sha256": "eff553ba40232ac8d83b876a154050c9215737f9bde305e956970cbcc2327a1a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-KiacnFB4.css",
+      "size": 20363,
+      "sha256": "9993314a882f541a53574b9c0f5b07fafc852a881abc6a22bd07fb1a4ecd7f9c",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 497,
+      "sha256": "bce5dec392eb284f77d67ceab447e5b7b8eafb9baa9271876f12bd44cc4f739f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "ab433b10d17b76470cd0950bd0f93c5f7836eee150901e2b22361bf02a9c8fd3",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5138,
+      "sha256": "6e9d6a373d1446cb34aa3d2369b8874396394d06a9b72f5ca7c5332b9b00de2a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:45:30.385Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "simon-says",
+        "version": "2.0.0",
+        "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/simon-says/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "DOM pads instead of Pixi with shapes and numbers on each pad; number keys 1 to 4 answer; the miss screen stays 1.6 s (was 420 ms); lives became a 1/3/5 list (was a slider)",
+    "Trial rows add correctTaps; summary adds completed, maxLives, longestCorrect and targetLength"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-simon-says-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs simon-says --dry-run: 5 files, digest 3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:49:02.183Z",
+    "files": [
+      {
+        "path": "assets/index-CIjohm3g.js",
+        "status": 200,
+        "size": 566739,
+        "sha256": "eff553ba40232ac8d83b876a154050c9215737f9bde305e956970cbcc2327a1a",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-KiacnFB4.css",
+        "status": 200,
+        "size": 20363,
+        "sha256": "9993314a882f541a53574b9c0f5b07fafc852a881abc6a22bd07fb1a4ecd7f9c",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 497,
+        "sha256": "bce5dec392eb284f77d67ceab447e5b7b8eafb9baa9271876f12bd44cc4f739f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "ab433b10d17b76470cd0950bd0f93c5f7836eee150901e2b22361bf02a9c8fd3",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5138,
+        "sha256": "6e9d6a373d1446cb34aa3d2369b8874396394d06a9b72f5ca7c5332b9b00de2a",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/simon-says/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game simon-says passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

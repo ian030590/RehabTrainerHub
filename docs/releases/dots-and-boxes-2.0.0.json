@@ -1,0 +1,173 @@
+{
+  "gameId": "dots-and-boxes",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/",
+  "publishedAt": "2026-10-22T23:42:30.797Z",
+  "verifiedAt": "2026-10-22T23:48:53.813Z",
+  "fileCount": 5,
+  "totalBytes": 600453,
+  "files": [
+    {
+      "path": "assets/index-Czxuqqi1.js",
+      "size": 569857,
+      "sha256": "982133c519dc928216f9444aa96ca1f66efef450e44ef4fd26debf86e7892216",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CuUAXP8c.css",
+      "size": 20271,
+      "sha256": "42a9268ce34fa50bb172144f1450e721977a9188730a39e1ccd4a91be5b5805a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 525,
+      "sha256": "44ab76e2b3994952b18c828290b8feb9815b767308ebe57bf41230a56d9effa3",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "05089be36768318596226baafdfa0a6c36e4d577d332e0125ca0331afc31d0ef",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 9398,
+      "sha256": "873925acefbec64cc3b2ae6db90636fac1554016aa2072afc00e5ec4e431302a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:42:30.797Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "dots-and-boxes",
+        "version": "2.0.0",
+        "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/dots-and-boxes/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "DOM board instead of Pixi; edges use diamond-shaped tap areas",
+    "The final board and result text stay 1.6 to 1.8 s before the results page; an illegal move plays the error sound and explains why; the trial table has one row per move; time limits count down as m:ss",
+    "New blue and rust colors, and the two sides also differ by filled and ring shapes, not only by color",
+    "Summary adds boxes, draw and meanThinkMs"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-dots-and-boxes-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs dots-and-boxes --dry-run: 5 files, digest 40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:48:53.813Z",
+    "files": [
+      {
+        "path": "assets/index-Czxuqqi1.js",
+        "status": 200,
+        "size": 569857,
+        "sha256": "982133c519dc928216f9444aa96ca1f66efef450e44ef4fd26debf86e7892216",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CuUAXP8c.css",
+        "status": 200,
+        "size": 20271,
+        "sha256": "42a9268ce34fa50bb172144f1450e721977a9188730a39e1ccd4a91be5b5805a",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 525,
+        "sha256": "44ab76e2b3994952b18c828290b8feb9815b767308ebe57bf41230a56d9effa3",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "05089be36768318596226baafdfa0a6c36e4d577d332e0125ca0331afc31d0ef",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 9398,
+        "sha256": "873925acefbec64cc3b2ae6db90636fac1554016aa2072afc00e5ec4e431302a",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/dots-and-boxes/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game dots-and-boxes passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

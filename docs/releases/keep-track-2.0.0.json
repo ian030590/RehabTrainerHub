@@ -1,0 +1,171 @@
+{
+  "gameId": "keep-track",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/",
+  "publishedAt": "2026-10-22T23:47:30.102Z",
+  "verifiedAt": "2026-10-22T23:49:07.319Z",
+  "fileCount": 5,
+  "totalBytes": 606286,
+  "files": [
+    {
+      "path": "assets/index-f9qzDmtb.js",
+      "size": 570798,
+      "sha256": "969eb7823d1fc83cf9191d8d3f25e8397b2de5288a06e101db3b7f0a0858c097",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DOmimTW-.css",
+      "size": 19766,
+      "sha256": "ad478a8263d5c2b1ff6e70f6869ab1856e0cab9a43c4f135c484af56e55d70de",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 592,
+      "sha256": "47cd04b1e0ad4fc682b720922445ab92320f71686943145f1fe49591a0b16135",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "b9e73702cb0f68a84322655a36cadf6b1e5c863539dba8e078d4e99d5c97447f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 14706,
+      "sha256": "fede7e97c06e2cb5b3e1d8dfffec60405c484d1ec99444eadf94247e4a4ac7c5",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:47:30.102Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "keep-track",
+        "version": "2.0.0",
+        "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/keep-track/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "English name Keep Track Task -> Keep Track; answers are picked from the 5 words of each target category instead of free English typing; words follow the interface language; counted rounds split evenly into loads 3, 4 and 5; practice shows the answers and became a setting",
+    "Summary adds correctItems, requiredItems and itemAccuracy"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-keep-track-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs keep-track --dry-run: 5 files, digest 7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:49:07.319Z",
+    "files": [
+      {
+        "path": "assets/index-f9qzDmtb.js",
+        "status": 200,
+        "size": 570798,
+        "sha256": "969eb7823d1fc83cf9191d8d3f25e8397b2de5288a06e101db3b7f0a0858c097",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DOmimTW-.css",
+        "status": 200,
+        "size": 19766,
+        "sha256": "ad478a8263d5c2b1ff6e70f6869ab1856e0cab9a43c4f135c484af56e55d70de",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 592,
+        "sha256": "47cd04b1e0ad4fc682b720922445ab92320f71686943145f1fe49591a0b16135",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 424,
+        "sha256": "b9e73702cb0f68a84322655a36cadf6b1e5c863539dba8e078d4e99d5c97447f",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 14706,
+        "sha256": "fede7e97c06e2cb5b3e1d8dfffec60405c484d1ec99444eadf94247e4a4ac7c5",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/keep-track/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game keep-track passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

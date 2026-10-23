@@ -1,0 +1,173 @@
+{
+  "gameId": "hex",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/",
+  "publishedAt": "2026-10-22T23:41:58.806Z",
+  "verifiedAt": "2026-10-22T23:48:52.474Z",
+  "fileCount": 5,
+  "totalBytes": 602115,
+  "files": [
+    {
+      "path": "assets/index-DtunpZzS.js",
+      "size": 566767,
+      "sha256": "38a2c4967394111e5562322f3404e9f3066294b6d73245727e9c9b9cd0733401",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CIE5Zz3H.css",
+      "size": 19956,
+      "sha256": "fd4f187e409c7b50128ea68019b4415efb580bb0d8683f4e4d905f1ed54fda4d",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 481,
+      "sha256": "89f3432f64a7471f8786bae8db1dfe9e9a3865f3b19b74a803c878e44ec1dde8",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 403,
+      "sha256": "b898e5a41502469eb640b3084d7093140483fac30b0ff552329896e25e48d362",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 14508,
+      "sha256": "a16638d75bc2a33ad92e0cbe6be1ebba6c2d6f220c8a14edd1c9b486365caac4",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:41:58.806Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "hex",
+        "version": "2.0.0",
+        "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hex/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "DOM board instead of Pixi; the board turns 90 degrees on portrait screens",
+    "The final board and result text stay 1.6 to 1.8 s before the results page; an illegal move plays the error sound and explains why; the trial table has one row per move; time limits count down as m:ss",
+    "New blue and rust colors, and the two sides also differ by filled and ring shapes, not only by color",
+    "Summary adds draw and meanThinkMs"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-hex-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs hex --dry-run: 5 files, digest 9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:48:52.474Z",
+    "files": [
+      {
+        "path": "assets/index-DtunpZzS.js",
+        "status": 200,
+        "size": 566767,
+        "sha256": "38a2c4967394111e5562322f3404e9f3066294b6d73245727e9c9b9cd0733401",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CIE5Zz3H.css",
+        "status": 200,
+        "size": 19956,
+        "sha256": "fd4f187e409c7b50128ea68019b4415efb580bb0d8683f4e4d905f1ed54fda4d",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 481,
+        "sha256": "89f3432f64a7471f8786bae8db1dfe9e9a3865f3b19b74a803c878e44ec1dde8",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 403,
+        "sha256": "b898e5a41502469eb640b3084d7093140483fac30b0ff552329896e25e48d362",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 14508,
+        "sha256": "a16638d75bc2a33ad92e0cbe6be1ebba6c2d6f220c8a14edd1c9b486365caac4",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/hex/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game hex passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

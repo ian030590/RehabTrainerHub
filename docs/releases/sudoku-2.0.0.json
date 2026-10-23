@@ -1,0 +1,173 @@
+{
+  "gameId": "sudoku",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/",
+  "publishedAt": "2026-10-22T23:44:28.527Z",
+  "verifiedAt": "2026-10-22T23:48:59.652Z",
+  "fileCount": 5,
+  "totalBytes": 597347,
+  "files": [
+    {
+      "path": "assets/index-D8CFkImu.js",
+      "size": 568969,
+      "sha256": "d65710e1e889dbecb90cb3af6b67c02c3c98cd7f0e100b78b8129efbc5fc5511",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CjEJItwg.css",
+      "size": 18692,
+      "sha256": "692a86d6fd16559f18c9fbadb30773213a87642f11f82372cc9ca96d70949dde",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 506,
+      "sha256": "9de6d72ddd29797b748d705162a3c63854a5a9839b25878d15cd576d256c69c8",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 396,
+      "sha256": "bed94462250f9ba9fcc108e39fff49b047fb548ff734ae55382e527475c7a5b2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8784,
+      "sha256": "86186ce1ecf0274217f0989d1c5c7e0fb1973400f573e9ac678683b1e26ea0c8",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:44:28.527Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "sudoku",
+        "version": "2.0.0",
+        "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/sudoku/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "DOM board instead of Pixi",
+    "The final board and result text stay 1.6 to 1.8 s before the results page; an illegal move plays the error sound and explains why; the trial table has one row per move; time limits count down as m:ss",
+    "Any fill that follows the rules completes the puzzle; keyboard digit entry",
+    "Summary errors now count filled boards that break a rule; adds blanksLeft and meanThinkMs"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-sudoku-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs sudoku --dry-run: 5 files, digest 14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:48:59.652Z",
+    "files": [
+      {
+        "path": "assets/index-D8CFkImu.js",
+        "status": 200,
+        "size": 568969,
+        "sha256": "d65710e1e889dbecb90cb3af6b67c02c3c98cd7f0e100b78b8129efbc5fc5511",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CjEJItwg.css",
+        "status": 200,
+        "size": 18692,
+        "sha256": "692a86d6fd16559f18c9fbadb30773213a87642f11f82372cc9ca96d70949dde",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 506,
+        "sha256": "9de6d72ddd29797b748d705162a3c63854a5a9839b25878d15cd576d256c69c8",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 396,
+        "sha256": "bed94462250f9ba9fcc108e39fff49b047fb548ff734ae55382e527475c7a5b2",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8784,
+        "sha256": "86186ce1ecf0274217f0989d1c5c7e0fb1973400f573e9ac678683b1e26ea0c8",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/sudoku/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439",
+      "category": "higher-cognition"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game sudoku passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

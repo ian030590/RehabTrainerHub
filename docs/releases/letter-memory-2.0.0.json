@@ -1,0 +1,170 @@
+{
+  "gameId": "letter-memory",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/",
+  "publishedAt": "2026-10-22T23:48:01.022Z",
+  "verifiedAt": "2026-10-22T23:49:08.474Z",
+  "fileCount": 5,
+  "totalBytes": 596437,
+  "files": [
+    {
+      "path": "assets/index-C7avEgGg.js",
+      "size": 568956,
+      "sha256": "271f1d669db013558154ddc2a00473402aee9a2188e612ab7b1b68c9b2ecbc76",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DJqFBLMN.css",
+      "size": 19269,
+      "sha256": "f054f0a96d171163650c34ae9758fcfbd4fce15abcb318288da0c659a16b0919",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 625,
+      "sha256": "f5fd75a609e8a98a9f322cfeecfa1413ef8c99dec0567a1b74e27b33f4330ccb",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 427,
+      "sha256": "a816bef88064050f51e65397636696d2af39142dc143835b4acae248f637e40e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7160,
+      "sha256": "544607941b3d2389322bd295e5b1d1a332bae6a1639145d07f8e9923b6fba6c0",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:48:01.022Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "letter-memory",
+        "version": "2.0.0",
+        "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/letter-memory/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "English name Letter Memory Task -> Letter Memory; an on-screen A to Z keyboard answers (physical keys, Backspace and Enter work too) and exactly 4 letters are required; string lengths cycle 5/7/9/11 in shuffled order; neighboring letters never repeat; practice feedback shows 2 s and practice became a setting"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-letter-memory-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs letter-memory --dry-run: 5 files, digest 3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:49:08.474Z",
+    "files": [
+      {
+        "path": "assets/index-C7avEgGg.js",
+        "status": 200,
+        "size": 568956,
+        "sha256": "271f1d669db013558154ddc2a00473402aee9a2188e612ab7b1b68c9b2ecbc76",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DJqFBLMN.css",
+        "status": 200,
+        "size": 19269,
+        "sha256": "f054f0a96d171163650c34ae9758fcfbd4fce15abcb318288da0c659a16b0919",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 625,
+        "sha256": "f5fd75a609e8a98a9f322cfeecfa1413ef8c99dec0567a1b74e27b33f4330ccb",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 427,
+        "sha256": "a816bef88064050f51e65397636696d2af39142dc143835b4acae248f637e40e",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7160,
+        "sha256": "544607941b3d2389322bd295e5b1d1a332bae6a1639145d07f8e9923b6fba6c0",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/letter-memory/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563",
+      "category": "memory"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game letter-memory passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "gameId": "antisaccade",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/2.0.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/",
+  "publishedAt": "2026-10-22T23:47:01.862Z",
+  "verifiedAt": "2026-10-22T23:49:06.136Z",
+  "fileCount": 5,
+  "totalBytes": 594477,
+  "files": [
+    {
+      "path": "assets/index-C1q8xYmL.js",
+      "size": 569179,
+      "sha256": "48cb5a03e3b1bf3e28730c44623d86e4e799be3a446ce431a602914fed2cdac8",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Bur1aF_R.css",
+      "size": 19441,
+      "sha256": "f7d96b3973e76052ec1412c4e80f099de64256e29729f759b52489413feb77d5",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 638,
+      "sha256": "b69e19c181355e457ff7bac56f6914ccb8524b8fa4e5766c7c56f7ceb3d4fb56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "e5f696e48d99bab42a83d4d0111623f9d3448897864935b89178995f922f5c01",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4794,
+      "sha256": "a08a136e7ae4e224e38a6da2d12a138f924e9770822318663df373e23afe3f73",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "Owner replied 「核准發佈」 after the exact version and contentSha256 of all 16 games were presented, then ran `node .tmp/brain-tools/publish-approved.mjs .tmp/brain-tools/batch16-candidates.txt`; the script rebuilt each game and published only on an exact digest match",
+    "recordedAt": "2026-10-22T23:47:01.862Z",
+    "scope": "Publish and activate the 16 click and keyboard games listed in docs/sixteen-games-r2-migration.md",
+    "games": [
+      {
+        "gameId": "antisaccade",
+        "version": "2.0.0",
+        "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc"
+      }
+    ],
+    "publishedBy": "Owner. Auto mode does not let the agent run the publish command.",
+    "runs": "The first attempt stopped at a 403 Cloudflare account lookup before any upload. After `npx wrangler whoami` refreshed the token, the owner reran the publisher once and all 16 games published."
+  },
+  "rollback": {
+    "version": null,
+    "executed": false,
+    "command": "git revert 993c4248 and push to main",
+    "note": "First R2 release; the earlier version was Hub-hosted. Reverting the migration commit redeploys the Hub-hosted version; the immutable R2 objects stay."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/antisaccade/2.0.0/",
+  "changes": [
+    "Rewritten from the Hub-hosted legacy version into a self-contained R2 package with its own settings dialog, spotlight tutorial, results and zh/en copy; settings.json, score.json, public/runtime and the OfficialGameShell dependency are gone and the old Hub sub-assets return 410",
+    "English name Antisaccade Task -> Antisaccade; practice became a setting (on by default, 22 trials) with 800 ms feedback, counted trials have none; arrow directions balance every 6 trials; fixation 500 ms; practice is left out of the statistics",
+    "Summary adds correctResponseMs, wrong and misses"
+  ],
+  "sourceCommit": "993c4248d25c3d2f1bdbbd916536f4b641e1aa2c",
+  "platformDeploy": {
+    "commit": "993c4248",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39874525824",
+    "conclusion": "success",
+    "note": "The owner pushed the registration after all 16 games were published and verified on the runner."
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming, pwa, game-architecture, hub-functions, gamerunner, entrypoints, cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local run after the last change; deploy workflow verify matrix passed (run 39874525824)"
+      },
+      {
+        "name": "seo, training-flow",
+        "status": "passed",
+        "scope": "npm run test:seo and npm run test:training-flow locally"
+      }
+    ],
+    "unitTests": "scripts/check-antisaccade-game.test.mjs plus the shared UI, results, settings memory, audio, antislop, research contract, directory architecture, middleware 410 and training flow suites",
+    "localBrowser": "scripts/migrated-brain-r2-browser.mjs drove settings, every spotlight, a full real run and the results and save lifecycle: standalone desktop and phone English, then --lobby --signed-in and --lobby --mobile --english against the built Hub and runner. Records were written only to local SQLite.",
+    "dryRun": "node scripts/publish-official-game.mjs antisaccade --dry-run: 5 files, digest 5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc; a second clean build gave the same digest"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-22T23:49:06.136Z",
+    "files": [
+      {
+        "path": "assets/index-C1q8xYmL.js",
+        "status": 200,
+        "size": 569179,
+        "sha256": "48cb5a03e3b1bf3e28730c44623d86e4e799be3a446ce431a602914fed2cdac8",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-Bur1aF_R.css",
+        "status": 200,
+        "size": 19441,
+        "sha256": "f7d96b3973e76052ec1412c4e80f099de64256e29729f759b52489413feb77d5",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 638,
+        "sha256": "b69e19c181355e457ff7bac56f6914ccb8524b8fa4e5766c7c56f7ceb3d4fb56",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 425,
+        "sha256": "e5f696e48d99bab42a83d4d0111623f9d3448897864935b89178995f922f5c01",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4794,
+        "sha256": "a08a136e7ae4e224e38a6da2d12a138f924e9770822318663df373e23afe3f73",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/antisaccade/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc"
+    },
+    "catalog": {
+      "listed": 1,
+      "version": "2.0.0",
+      "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc",
+      "category": "attention"
+    },
+    "legacyHubSettingsStatus": 410,
+    "browser": "node scripts/check-r2-game-browser.mjs --game antisaccade passed --production-hub --lobby and --production-hub --lobby --mobile --english against 2.0.0. /api/* was intercepted into local SQLite only; no production account or training record was created."
+  }
+}
