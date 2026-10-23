@@ -33,6 +33,12 @@ export interface PeripheralAttentionScreenGeometry {
   vehicleScale: number;
 }
 
+type Rgb = [number, number, number];
+
+// Stimulus and field colors come from the --ufov-stimulus and --ufov-field tokens. Lower contrast lifts the
+// field toward the stimulus color, as the legacy page lifted black toward white; the stimuli keep their color.
+interface StageColors { stimulus: string; background: string; stimulusRgb: Rgb; fieldRgb: Rgb }
+
 interface CanvasSize {
   context: CanvasRenderingContext2D;
   cssWidth: number;
@@ -131,28 +137,26 @@ export function DrawPeripheralAttentionCanvasStage(
   if (!size) return;
 
   if (options.phase === 'mask') {
-    DrawNoiseMask(canvas, size.context, options.maskImageData);
+    DrawNoiseMask(canvas, size.context, options.maskImageData, ReadStageColors(stage, size.context, 100));
     return;
   }
 
   const { context, cssWidth, cssHeight, dpr } = size;
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const contrastPercent = Clamp(Number(options.contrastPercent) || 100, 5, 100);
-  const backgroundValue = Math.round(255 * (1 - contrastPercent / 100));
-  const backgroundColor = `rgb(${backgroundValue}, ${backgroundValue}, ${backgroundValue})`;
+  const colors = ReadStageColors(stage, context, Clamp(Number(options.contrastPercent) || 100, 5, 100));
   context.clearRect(0, 0, cssWidth, cssHeight);
-  context.fillStyle = backgroundColor;
+  context.fillStyle = colors.background;
   context.fillRect(0, 0, cssWidth, cssHeight);
   const metrics = GetStageMetrics(cssWidth, cssHeight, options.geometry);
 
   if (options.phase === 'fixation') {
-    DrawCenterBox(context, cssWidth / 2, cssHeight / 2, metrics.centerBoxSize, metrics.centerBoxBorder);
+    DrawCenterBox(context, cssWidth / 2, cssHeight / 2, metrics.centerBoxSize, metrics.centerBoxBorder, colors);
     return;
   }
 
-  DrawCentralStimulus(context, cssWidth / 2, cssHeight / 2, options.centralTarget, metrics, backgroundColor);
+  DrawCentralStimulus(context, cssWidth / 2, cssHeight / 2, options.centralTarget, metrics, colors);
   if (options.hasPeripheral && options.peripheralSlot) {
-    DrawPeripheralStimuli(context, options, cssWidth, cssHeight, metrics, backgroundColor);
+    DrawPeripheralStimuli(context, options, cssWidth, cssHeight, metrics, colors);
   }
 }
 
@@ -160,7 +164,7 @@ export function PreparePeripheralAttentionNoiseMask(stage: HTMLElement) {
   const canvas = GetStageCanvas(stage);
   const size = ResizeCanvasToStage(canvas, stage);
   if (!size) return null;
-  return CreateNoiseImageData(size.context, canvas.width, canvas.height);
+  return CreateNoiseImageData(size.context, canvas.width, canvas.height, ReadStageColors(stage, size.context, 100));
 }
 
 function GetStageCanvas(stage: HTMLElement) {
@@ -216,10 +220,10 @@ function GetStageMetrics(cssWidth: number, cssHeight: number, geometry?: Periphe
   };
 }
 
-function DrawCenterBox(context: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, border: number) {
+function DrawCenterBox(context: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, border: number, colors: StageColors) {
   const offset = size / 2;
   const strokeOffset = border / 2;
-  context.strokeStyle = '#fff';
+  context.strokeStyle = colors.stimulus;
   context.lineWidth = border;
   context.strokeRect(
     centerX - offset + strokeOffset,
@@ -235,10 +239,10 @@ function DrawCentralStimulus(
   centerY: number,
   target: PeripheralAttentionCanvasTarget,
   metrics: ReturnType<typeof GetStageMetrics>,
-  backgroundColor: string,
+  colors: StageColors,
 ) {
-  DrawCenterBox(context, centerX, centerY, metrics.centerBoxSize, metrics.centerBoxBorder);
-  DrawVehicle(context, centerX, centerY, target, metrics.vehicleScale, backgroundColor);
+  DrawCenterBox(context, centerX, centerY, metrics.centerBoxSize, metrics.centerBoxBorder, colors);
+  DrawVehicle(context, centerX, centerY, target, metrics.vehicleScale, colors);
 }
 
 function DrawPeripheralStimuli(
@@ -247,7 +251,7 @@ function DrawPeripheralStimuli(
   width: number,
   height: number,
   metrics: ReturnType<typeof GetStageMetrics>,
-  backgroundColor: string,
+  colors: StageColors,
 ) {
   const targetSlot = options.peripheralSlot;
   if (!targetSlot) return;
@@ -263,9 +267,9 @@ function DrawPeripheralStimuli(
     const pointX = width / 2 + Math.cos(angle) * radius;
     const pointY = height / 2 + Math.sin(angle) * radius;
     if (isTarget) {
-      DrawVehicle(context, pointX, pointY, 'car', metrics.vehicleScale, backgroundColor);
+      DrawVehicle(context, pointX, pointY, 'car', metrics.vehicleScale, colors);
     } else {
-      DrawTriangleDistractor(context, pointX, pointY, metrics.distractorWidth, metrics.distractorHeight, metrics.distractorStroke, backgroundColor);
+      DrawTriangleDistractor(context, pointX, pointY, metrics.distractorWidth, metrics.distractorHeight, metrics.distractorStroke, colors);
     }
   });
 }
@@ -276,14 +280,14 @@ function DrawVehicle(
   centerY: number,
   target: PeripheralAttentionCanvasTarget,
   scale: number,
-  backgroundColor: string,
+  colors: StageColors,
 ) {
   context.save();
   context.translate(centerX, centerY);
   context.scale(scale, scale);
   context.translate(-baseVehicleWidth / 2, -baseVehicleHeight / 2);
-  if (target === 'truck') DrawTruck(context, backgroundColor);
-  else DrawCar(context, backgroundColor);
+  if (target === 'truck') DrawTruck(context, colors);
+  else DrawCar(context, colors);
   context.restore();
 }
 
@@ -300,8 +304,8 @@ function DrawRoundedPolygon(context: CanvasRenderingContext2D, points: { x: numb
   context.fill();
 }
 
-function DrawCar(context: CanvasRenderingContext2D, backgroundColor: string) {
-  context.fillStyle = '#fff';
+function DrawCar(context: CanvasRenderingContext2D, colors: StageColors) {
+  context.fillStyle = colors.stimulus;
   context.beginPath();
   context.moveTo(21, 1.5); context.lineTo(51, 1.5); context.quadraticCurveTo(55.5, 1.5, 57.8, 6.5);
   context.lineTo(71.5, 38.5); context.quadraticCurveTo(73.5, 43.5, 68, 44.5); context.lineTo(66.5, 44.5);
@@ -310,14 +314,14 @@ function DrawCar(context: CanvasRenderingContext2D, backgroundColor: string) {
   context.lineTo(14.2, 6.5); context.quadraticCurveTo(16.5, 1.5, 21, 1.5);
   context.closePath();
   context.fill();
-  context.fillStyle = backgroundColor;
+  context.fillStyle = colors.background;
   DrawRoundedPolygon(context, [{ x: 21, y: 5.5 }, { x: 33.2, y: 5.5 }, { x: 33.2, y: 21.5 }, { x: 15, y: 21.5 }], 3.5);
   DrawRoundedPolygon(context, [{ x: 38.8, y: 5.5 }, { x: 51, y: 5.5 }, { x: 57, y: 21.5 }, { x: 38.8, y: 21.5 }], 3.5);
-  DrawVehicleWheels(context);
+  DrawVehicleWheels(context, colors);
 }
 
-function DrawTruck(context: CanvasRenderingContext2D, backgroundColor: string) {
-  context.fillStyle = '#fff';
+function DrawTruck(context: CanvasRenderingContext2D, colors: StageColors) {
+  context.fillStyle = colors.stimulus;
   context.beginPath();
   context.moveTo(38.8, 1.5); context.lineTo(51, 1.5); context.quadraticCurveTo(55.5, 1.5, 57.8, 6.5);
   context.lineTo(71.5, 38.5); context.quadraticCurveTo(73.5, 43.5, 68, 44.5); context.lineTo(66.5, 44.5);
@@ -326,46 +330,71 @@ function DrawTruck(context: CanvasRenderingContext2D, backgroundColor: string) {
   context.lineTo(3.5, 31.5); context.lineTo(37.5, 31.5); context.lineTo(37.5, 3.5); context.quadraticCurveTo(37.5, 1.5, 39.5, 1.5);
   context.closePath();
   context.fill();
-  context.fillStyle = backgroundColor;
+  context.fillStyle = colors.background;
   DrawRoundedPolygon(context, [{ x: 38.8, y: 5.5 }, { x: 51, y: 5.5 }, { x: 57, y: 21.5 }, { x: 38.8, y: 21.5 }], 3.5);
-  DrawVehicleWheels(context);
+  DrawVehicleWheels(context, colors);
 }
 
-function DrawVehicleWheels(context: CanvasRenderingContext2D) {
-  context.fillStyle = '#fff';
+function DrawVehicleWheels(context: CanvasRenderingContext2D, colors: StageColors) {
+  context.fillStyle = colors.stimulus;
   [17.5, 54.5].forEach((x) => { context.beginPath(); context.arc(x, 44.5, 8.5, 0, Math.PI * 2); context.fill(); });
 }
 
-function DrawTriangleDistractor(context: CanvasRenderingContext2D, centerX: number, centerY: number, width: number, height: number, strokeWidth: number, backgroundColor: string) {
+function DrawTriangleDistractor(context: CanvasRenderingContext2D, centerX: number, centerY: number, width: number, height: number, strokeWidth: number, colors: StageColors) {
   const left = centerX - width / 2;
   const top = centerY - height / 2;
   context.beginPath();
   context.moveTo(left, top); context.lineTo(left + width, top); context.lineTo(centerX, top + height);
-  context.closePath(); context.fillStyle = backgroundColor; context.fill(); context.strokeStyle = '#fff'; context.lineWidth = strokeWidth; context.stroke();
+  context.closePath(); context.fillStyle = colors.background; context.fill(); context.strokeStyle = colors.stimulus; context.lineWidth = strokeWidth; context.stroke();
 }
 
 function DrawNoiseMask(
   canvas: HTMLCanvasElement,
   context: CanvasRenderingContext2D,
   imageData: ImageData | null | undefined,
+  colors: StageColors,
 ) {
   context.setTransform(1, 0, 0, 1, 0, 0);
   const mask = imageData && imageData.width === canvas.width && imageData.height === canvas.height
     ? imageData
-    : CreateNoiseImageData(context, canvas.width, canvas.height);
+    : CreateNoiseImageData(context, canvas.width, canvas.height, colors);
   context.putImageData(mask, 0, 0);
 }
 
-function CreateNoiseImageData(context: CanvasRenderingContext2D, width: number, height: number) {
+function CreateNoiseImageData(context: CanvasRenderingContext2D, width: number, height: number, colors: StageColors) {
   const imageData = context.createImageData(width, height);
   for (let index = 0; index < imageData.data.length; index += 4) {
-    const value = Math.random() > 0.5 ? 255 : 0;
-    imageData.data[index] = value;
-    imageData.data[index + 1] = value;
-    imageData.data[index + 2] = value;
+    const color = Math.random() > 0.5 ? colors.stimulusRgb : colors.fieldRgb;
+    imageData.data[index] = color[0];
+    imageData.data[index + 1] = color[1];
+    imageData.data[index + 2] = color[2];
     imageData.data[index + 3] = 255;
   }
   return imageData;
+}
+
+function ReadStageColors(stage: HTMLElement, context: CanvasRenderingContext2D, contrastPercent: number): StageColors {
+  const style = getComputedStyle(stage);
+  const stimulusRgb = ParseCanvasColor(context, style.getPropertyValue('--ufov-stimulus'));
+  const fieldRgb = ParseCanvasColor(context, style.getPropertyValue('--ufov-field'));
+  const lift = 1 - contrastPercent / 100;
+  const backgroundRgb = fieldRgb.map((channel, index) => Math.round(channel + (stimulusRgb[index] - channel) * lift)) as Rgb;
+  return { stimulus: ToCanvasColor(stimulusRgb), background: ToCanvasColor(backgroundRgb), stimulusRgb, fieldRgb };
+}
+
+// The canvas normalizes any CSS color it accepts to #rrggbb or rgba(...), which gives the channels back.
+function ParseCanvasColor(context: CanvasRenderingContext2D, value: string): Rgb {
+  context.fillStyle = value.trim();
+  const normalized = String(context.fillStyle);
+  if (normalized.startsWith('#')) {
+    return [1, 3, 5].map(offset => Number.parseInt(normalized.slice(offset, offset + 2), 16)) as Rgb;
+  }
+  const channels = normalized.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [];
+  return channels.length === 3 ? channels as Rgb : [0, 0, 0];
+}
+
+function ToCanvasColor(color: Rgb) {
+  return `rgb(${color.join(', ')})`;
 }
 
 function Clamp(value: number, min: number, max: number) {

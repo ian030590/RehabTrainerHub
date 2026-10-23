@@ -270,6 +270,10 @@ try {
         const childSession = message.params.sessionId;
         await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
         if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) await send('Fetch.enable', { patterns: [{urlPattern:'*/__eye-test/*',requestStage:'Request'}] }, childSession);
+        // UFOV reads touch support once when it mounts, so its paused iframe gets touch emulation before any script runs.
+        if (gameId === 'ufov' && message.params.targetInfo.type === 'iframe' && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
+          await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, childSession);
+        }
         if (['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
           await send('Page.enable', {}, childSession);
           if (gameId === 'driving-rehab' && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
@@ -286,8 +290,8 @@ try {
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
-    ...(['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training', 'ufov'].includes(gameId), flatten: true,
+    ...(['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training', 'ufov'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
   }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
@@ -338,7 +342,8 @@ try {
   if (process.argv.includes('--screen-3-2')) await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 960, screenWidth: 1440, screenHeight: 960, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
-  if (gameId === 'driving-rehab' && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
+  // A phone or tablet has touch in the whole page, not only in the game iframe.
+  if (['driving-rehab', 'ufov'].includes(gameId) && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, session);
   }
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {

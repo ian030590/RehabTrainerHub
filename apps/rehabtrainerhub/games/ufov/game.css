@@ -1,0 +1,106 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
+  --game-background: #fff;
+  --ufov-stimulus: #fff; --ufov-field: #000; --ufov-control: #1d2329; --ufov-control-border: #8a949c; --ufov-hud-text: #b9c1c8;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button, span.btn { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+/* Tutorial scenes copy buttons as inert spans, so the copies need the button look too. */
+span.btn { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.ufov-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--ufov-field); }
+.ufov-jspsych-host { display: none; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.ufov-handheld-note, .ufov-geometry-note { margin: 8px 0 16px; color: var(--text); font-weight: 700; }
+.ufov-axis-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 4px 12px; margin: 0; padding: 0; border: 0; }
+.ufov-axis-options legend { margin-bottom: 8px; padding: 0; color: var(--text-muted); font-size: 1rem; }
+.ufov-axis-option { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.ufov-axis-option input { width: 22px; height: 22px; margin: 0; }
+.ufov-axis-warning { margin: 8px 0 0; color: var(--error); font-weight: 700; }
+
+/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
+.ufov-stage { position: absolute; inset: 0; overflow: hidden; background: var(--ufov-field); color: var(--ufov-stimulus); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.ufov-hud { position: absolute; z-index: 2; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); pointer-events: none; }
+.ufov-hud > * { pointer-events: auto; }
+.ufov-progress { margin: 0; color: var(--ufov-hud-text); font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ufov-stage .btn.ufov-stop { border-color: var(--ufov-control-border); background: var(--ufov-control); color: var(--ufov-stimulus); }
+.ufov-canvas-host, .ufov-canvas-stage { position: absolute; inset: 0; }
+.ufov-stage-canvas { display: block; width: 100%; height: 100%; }
+/* Answers cover the mask once it has shown for its full time; the canvas stays underneath. */
+.ufov-answer { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  padding: 72px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: var(--ufov-field); text-align: center; }
+.ufov-answer h2 { margin: 0; font-size: 1.5rem; }
+.ufov-vehicle { display: block; width: 100%; height: auto; }
+.ufov-vehicle-body { fill: currentColor; }
+.ufov-vehicle-window { fill: var(--ufov-window, var(--ufov-field)); }
+.ufov-vehicle-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: min(100%, 30rem); }
+.ufov-stage .btn.ufov-vehicle-choice, .ufov-stage .btn.ufov-direction { --ufov-window: var(--ufov-control); border-color: var(--ufov-control-border); background: var(--ufov-control); color: var(--ufov-stimulus); }
+.ufov-vehicle-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 128px; font-size: 1.25rem; }
+.ufov-vehicle-choice .ufov-vehicle { width: min(96px, 60%); }
+.ufov-direction-pad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(100%, 24rem); }
+.ufov-direction-pad::before { content: ''; grid-area: 2 / 2; place-self: center; width: 36%; aspect-ratio: 1; border: 2px solid var(--ufov-control-border); }
+.ufov-direction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 76px; padding: 6px; font-size: 1rem; }
+.ufov-direction-arrow { font-size: 1.75rem; line-height: 1; }
+.ufov-stage .btn:active { border-color: var(--ufov-stimulus); }
+.ufov-feedback { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 2rem; font-weight: 700; }
+.ufov-feedback span { font-size: 3rem; line-height: 1; }
+.ufov-sync-note { max-width: 32rem; margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.ufov-sync-pause { max-width: 32rem; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.ufov-sync-pause h2 { color: var(--heading); }
+
+/* Tutorial scene: the stimulus field and both answer steps stay inside the stage, so each can take a spotlight.
+   Wide windows put the answers beside the field; tall ones put them below. */
+.ufov-preview-scene { position: absolute; inset: 64px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  container-type: size; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.ufov-preview-field { --ufov-window: var(--ufov-field); position: relative; flex: 0 0 auto; width: min(100cqw, 46cqh); aspect-ratio: 1; }
+.ufov-preview-outer { position: absolute; inset: 0; }
+.ufov-preview-slot { position: absolute; width: 9%; transform: translate(-50%, -50%); }
+.ufov-triangle { display: block; width: 100%; height: auto; fill: var(--ufov-field); stroke: var(--ufov-stimulus); stroke-width: 6; }
+.ufov-preview-center { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 17%; aspect-ratio: 1; border: 3px solid var(--ufov-stimulus); transform: translate(-50%, -50%); }
+.ufov-preview-center .ufov-vehicle { width: 68%; }
+.ufov-preview-answers { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 24px; width: 100%; }
+.ufov-preview-answers .ufov-vehicle-choices { width: min(100%, 24rem); }
+.ufov-preview-answers .ufov-vehicle-choice { min-height: 96px; }
+.ufov-preview-answers .ufov-direction-pad { width: min(100%, 20rem); }
+.ufov-preview-answers .ufov-direction { min-height: 56px; }
+@media (min-aspect-ratio: 5/4) {
+  .ufov-preview-scene { flex-direction: row; gap: 24px; }
+  .ufov-preview-field { width: min(52cqw, 100cqh); }
+  .ufov-preview-answers { flex-direction: column; flex-wrap: nowrap; width: min(24rem, 44cqw); }
+}
+@media (max-height: 560px) {
+  .ufov-vehicle-choice, .ufov-preview-answers .ufov-vehicle-choice { min-height: 72px; }
+  .ufov-direction, .ufov-preview-answers .ufov-direction { min-height: 48px; }
+  .ufov-answer { gap: 12px; padding-top: 60px; }
+}
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
+.results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
+.results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+/* Values like "400 ms" keep the number and unit together on narrow phones. */
+.score-key-grid strong { white-space: nowrap; }
+.score-directions, .score-downloads { padding: 24px 0; border-top: 1px solid var(--border); }
+.score-downloads p { margin: 0 0 12px; color: var(--text-muted); }
+.score-download-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+.ufov-direction-table th[scope="row"] { font-weight: 700; }

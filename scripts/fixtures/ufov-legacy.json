@@ -1,0 +1,259 @@
+{
+  "source": "apps/rehabtrainerhub/games/ufov settings.json and score.json before the R2 move (commit 1ea4c6c1)",
+  "settings": [
+    {
+      "section": "core",
+      "key": "subtestId",
+      "type": "list",
+      "default": 1,
+      "options": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "section": "core",
+      "key": "mode",
+      "type": "list",
+      "default": "formal",
+      "options": [
+        "formal",
+        "practice"
+      ]
+    },
+    {
+      "section": "core",
+      "key": "stopCondition",
+      "type": "list",
+      "default": "adaptive_80",
+      "options": [
+        "adaptive_80",
+        "fixed_trials"
+      ]
+    },
+    {
+      "section": "core",
+      "key": "trialCount",
+      "type": "slider",
+      "default": 48,
+      "min": 10,
+      "max": 240,
+      "step": 1
+    },
+    {
+      "section": "stimulus",
+      "key": "contrastPercent",
+      "type": "slider",
+      "default": 100,
+      "min": 5,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "section": "stimulus",
+      "key": "targetVisualAngleDeg",
+      "type": "slider",
+      "default": 15,
+      "min": 5,
+      "max": 35,
+      "step": 0.5
+    },
+    {
+      "section": "stimulus",
+      "key": "vehicleVisualAngleDeg",
+      "type": "slider",
+      "default": 2.5,
+      "min": 0.8,
+      "max": 5,
+      "step": 0.1
+    },
+    {
+      "section": "screen",
+      "key": "screenWidthCm",
+      "type": "slider",
+      "default": 53.1,
+      "min": 10,
+      "max": 250,
+      "step": 0.1
+    },
+    {
+      "section": "screen",
+      "key": "screenHeightCm",
+      "type": "slider",
+      "default": 29.9,
+      "min": 10,
+      "max": 200,
+      "step": 0.1
+    },
+    {
+      "section": "screen",
+      "key": "viewingDistanceCm",
+      "type": "slider",
+      "default": 50,
+      "min": 20,
+      "max": 300,
+      "step": 1
+    },
+    {
+      "section": "directions",
+      "key": "axis0Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis1Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis2Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis3Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis4Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis5Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis6Enabled",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "section": "directions",
+      "key": "axis7Enabled",
+      "type": "checkbox",
+      "default": true
+    }
+  ],
+  "score": {
+    "summary": [
+      {
+        "key": "trials",
+        "source": "trialCount",
+        "unit": null
+      },
+      {
+        "key": "correct",
+        "source": "correctCount",
+        "unit": null
+      },
+      {
+        "key": "thresholdMs",
+        "source": "thresholdProcessingSpeedMs",
+        "unit": "ms"
+      },
+      {
+        "key": "bestMs",
+        "source": "bestCorrectProcessingSpeedMs",
+        "unit": "ms"
+      },
+      {
+        "key": "invalidTiming",
+        "source": "invalidTimingAttemptCount",
+        "unit": null
+      },
+      {
+        "key": "timingAttempts",
+        "source": "timingAttemptCount",
+        "unit": null
+      },
+      {
+        "key": "aborted",
+        "source": "aborted",
+        "unit": null
+      }
+    ],
+    "columns": [
+      {
+        "key": "trial",
+        "source": "Trial",
+        "unit": null
+      },
+      {
+        "key": "correct",
+        "source": "Correct",
+        "unit": null
+      },
+      {
+        "key": "subtest",
+        "source": "Subtest",
+        "unit": null
+      },
+      {
+        "key": "axis",
+        "source": "Peripheral_Axis",
+        "unit": null
+      },
+      {
+        "key": "exposureMs",
+        "source": "Actual_Duration_ms",
+        "unit": "ms"
+      },
+      {
+        "key": "requestedMs",
+        "source": "Requested_Duration_ms",
+        "unit": "ms"
+      },
+      {
+        "key": "responseMs",
+        "source": "Response_Time_ms",
+        "unit": "ms"
+      },
+      {
+        "key": "syncValid",
+        "source": "Frame_Sync_Valid",
+        "unit": null
+      },
+      {
+        "key": "dropped",
+        "source": "Dropped_Frames",
+        "unit": null
+      },
+      {
+        "key": "contrast",
+        "source": "Contrast_Percent",
+        "unit": "%"
+      },
+      {
+        "key": "angle",
+        "source": "Target_Visual_Angle_Deg",
+        "unit": "deg"
+      }
+    ],
+    "presentation": {
+      "primarySummaryKeys": [
+        "thresholdMs",
+        "bestMs",
+        "correct",
+        "trials"
+      ],
+      "qualitySummaryKeys": [
+        "invalidTiming",
+        "timingAttempts",
+        "aborted"
+      ],
+      "defaultRoundMetricKey": "exposureMs",
+      "chartType": "line"
+    }
+  },
+  "previewSha256": "2f89f774349de6b2c412260a81a4a00e610cef412efa4c879bba552d9480c966"
+}

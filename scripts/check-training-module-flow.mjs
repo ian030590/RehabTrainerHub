@@ -259,6 +259,7 @@ const nativeBrainGames = [
   ['keep-track', 'KeepTrackRecall', 'KeepTrackTutorial'],
   ['letter-memory', 'LetterMemoryRecall', 'LetterMemoryTutorial'],
   ['plus-minus', 'PlusMinusSwitch', 'PlusMinusTutorial'],
+  ['ufov', 'UfovGame', 'UfovTutorial'],
 ];
 
 const implementationGroups = [
@@ -341,17 +342,6 @@ const implementationGroups = [
     tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', tutorial, 'ValidateSettings(settings)'],
   })),
   {
-    ids: ['brain:ufov'],
-    files: [
-      'ufov/PeripheralAttentionPage.tsx',
-    ],
-    tokens: [
-      'finishExperiment',
-      'setResults(',
-      'PeripheralAttentionExperimentPlugin',
-    ],
-  },
-  {
     ids: ['brain:every-ball-response'],
     files: ['every-ball-response/EveryBallResponsePage.tsx'],
     tokens: [
@@ -426,12 +416,6 @@ const jsPsychLifecycleGroups = [
     status: 'native-timeline',
     ids: ['vision:oculomotor-training'],
     files: ['oculomotor-training/public/reference/experiment.js'],
-    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
-  },
-  {
-    status: 'native-timeline',
-    ids: ['brain:ufov'],
-    files: ['ufov/PeripheralAttentionPage.tsx'],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {

@@ -38,6 +38,7 @@ import antisaccadeCatalog from './antisaccade/public/game.json';
 import keepTrackCatalog from './keep-track/public/game.json';
 import letterMemoryCatalog from './letter-memory/public/game.json';
 import plusMinusCatalog from './plus-minus/public/game.json';
+import ufovCatalog from './ufov/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -338,14 +339,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'ufov',
-    trainer: 'brain',
-    purpose: 'attention',
+    trainer: ufovCatalog.trainer as 'brain',
+    purpose: ufovCatalog.category as 'attention',
+    imagePath: `/assets/game-previews/ufov/${ufovCatalog.preview}`,
     kind: 'brain-route',
     path: '/attention-training?game=ufov',
-    zh: ['周邊視野訓練', '以三階段活動練習處理速度、分散注意力與選擇性注意力。'],
-    en: ['Peripheral Visual Field Training', 'Use a three-stage activity to practise processing speed, divided attention, and selective attention.'],
-    titleKey: 'module.attention.ufov.title',
-    descriptionKey: 'module.attention.ufov.body',
+    zh: [ufovCatalog.copy['zh-TW'].title, ufovCatalog.copy['zh-TW'].description],
+    en: [ufovCatalog.copy.en.title, ufovCatalog.copy.en.description],
   },
   {
     id: 'every-ball-response',

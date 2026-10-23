@@ -61,6 +61,7 @@ const cases = [
   { id: 'keep-track', defaultMetric: 'responseMs', alternate: 'correctItems', row: { trial: 1, practice: 0, correct: 1, responseMs: 2, setting: 1500, load: 3, correctItems: 3, requiredItems: 3 } },
   { id: 'letter-memory', defaultMetric: 'responseMs', alternate: 'correctItems', row: { trial: 1, practice: 0, correct: 1, responseMs: 2, setting: 2000, load: 7, correctItems: 4, requiredItems: 4 } },
   { id: 'plus-minus', defaultMetric: 'responseMs', alternate: 'correct', row: { trial: 1, question: 1, practice: 0, setting: 30, condition: 0, correct: 1, responseMs: 2, number: 27, response: 30 } },
+  { id: 'ufov', defaultMetric: 'exposureMs', alternate: 'responseMs', row: { trial: 1, correct: 1, subtest: 2, axis: 4, exposureMs: 2, requestedMs: 50, responseMs: 800, syncValid: 1, dropped: 0, contrast: 100, angle: 15 } },
 ];
 
 for (const fixture of cases) {

@@ -16,7 +16,6 @@
   "dependencies": {
     "@rehab-trainer/game-every-ball-response": "*",
     "@rehab-trainer/game-tongue-catch": "*",
-    "@rehab-trainer/game-ufov": "*",
     "@tailwindcss/postcss": "^4.3.3",
     "fflate": "~0.8.2",
     "next": "^16.2.10",

@@ -53,6 +53,7 @@ const cases = [
   { id: 'keep-track', component: 'KeepTrackRecall', tutorial: 'KeepTrackTutorial', logic: { '../logic/keepTrack': 'logic/keepTrack.ts', '../AnswerRows': 'AnswerRows.tsx' } },
   { id: 'letter-memory', component: 'LetterMemoryRecall', tutorial: 'LetterMemoryTutorial', logic: { '../logic/letterMemory': 'logic/letterMemory.ts', '../LetterPad': 'LetterPad.tsx' } },
   { id: 'plus-minus', component: 'PlusMinusSwitch', tutorial: 'PlusMinusTutorial', logic: { '../NumberPad': 'NumberPad.tsx' } },
+  { id: 'ufov', component: 'UfovGame', tutorial: 'UfovTutorial', logic: { '../AnswerPad': 'AnswerPad.tsx' } },
 ];
 
 for (const fixture of cases) {

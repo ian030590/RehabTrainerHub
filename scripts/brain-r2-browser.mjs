@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { migratedBrainGameSpecs } from './migrated-brain-r2-browser.mjs';
+import { ufovBrowserSpec } from './ufov-r2-browser.mjs';
 
 // Per-game drivers for the R2 brain activities. Each one sets a short session, plays it with real
 // browser input and states what the saved record must contain.
@@ -1299,6 +1300,7 @@ export const brainGameSpecs = {
     rows: 20,
   },
   ...migratedBrainGameSpecs,
+  ufov: ufovBrowserSpec,
 };
 
 export async function CheckBrainGame(gameId, { game, evaluate, send, until, standalone, english, capture, checkSpotlight,
@@ -1342,11 +1344,15 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
     const intersects = spotlight.target.left < spotlight.panel.right && spotlight.target.right > spotlight.panel.left
       && spotlight.target.top < spotlight.panel.bottom && spotlight.target.bottom > spotlight.panel.top;
     assert.equal(intersects, false, `${target}: the instruction panel leaves the target visible.`);
+    if (spec.tourFitsWithoutScroll) {
+      assert.ok(await game(`(panel => panel.scrollHeight <= panel.clientHeight + 1)(document.querySelector('.game-tour'))`), `${target}: the instructions and their buttons fit without scrolling.`);
+    }
     await capture('tutorial-' + target.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, ''));
     await game(`document.querySelector('.game-tour button').click()`);
   }
   await until(() => game(`Boolean(document.querySelector('.training-confirmation'))`), 'final confirmation');
   await CheckConfirmationPresentation(game);
+  if (spec.afterConfirmation) await spec.afterConfirmation({ game, until });
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await capture('confirmation');
   const point = selector => game(`(() => {const rect=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:rect.left+rect.width/2,y:rect.top+rect.height/2};})()`);
@@ -1378,6 +1384,7 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
     await new Promise(resolve => setTimeout(resolve, ms));
     await send('Input.dispatchKeyEvent', { type: 'keyUp', key: ' ', code: 'Space', windowsVirtualKeyCode: 32 }, pointerSession);
   };
+  if (spec.beforeStart) await spec.beforeStart({ game, evaluate });
   await tap('.training-confirmation .btn-primary');
   await until(() => game(`Boolean(document.querySelector(${JSON.stringify(spec.runningSelector)}))`), 'running stage');
   await until(() => game(`document.fullscreenElement === document.querySelector('.${gameId}-game-root')`), 'native fullscreen root');
@@ -1398,6 +1405,7 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   await until(() => game(`!document.fullscreenElement`), 'results exit fullscreen');
   await CheckResultsPresentation(game, { defaultMetric: spec.defaultMetric, alternateMetric: spec.alternateMetric, english, capture });
   if (spec.rows) assert.equal(await game(`document.querySelector('.score-row-range').textContent.trim()`), `1–${Math.min(50, spec.rows)} / ${spec.rows}`);
+  if (spec.results) await spec.results({ game, evaluate, until, english, mobile, plan });
   if (standalone) {
     const scope = await evaluate('navigator.serviceWorker.ready.then(registration=>new URL(registration.scope).pathname)');
     assert.equal(scope, `/games/${gameId}/${version}/`);
@@ -1413,7 +1421,8 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
     if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
     const saved = JSON.parse(records[0].payload_json);
     assert.equal(saved.gameId, gameId);
-    assert.deepEqual(saved.config, spec.settings);
+    // A game may add what it actually ran to the saved settings, such as the activity a phone was limited to.
+    assert.deepEqual(saved.config, spec.config ?? spec.settings);
     spec.verify(saved, plan);
   }
   assert.deepEqual(errors, []);

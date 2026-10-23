@@ -33,6 +33,8 @@ const storageEntries = ParseStorageEntries(args.storage);
 const mockAuthUser = args.mockAuthUser === 'true';
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
+// Camera games check media before their rules; a fake device lets that check pass headlessly.
+const fakeMediaFlags = args.fakeMedia === 'true' ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : [];
 const keyPressReadyTimeoutMs = Number(args.keyPressReadyTimeoutMs ?? timeoutMs);
 
 if (expectedSelectors.length === 0 && !externalUrl) {
@@ -83,6 +85,7 @@ try {
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-first-run',
+    ...fakeMediaFlags,
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${debugPort}`,
     'about:blank',

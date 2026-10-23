@@ -12,6 +12,7 @@ import './check-r2-game-audio.test.mjs';
 import './check-hart-chart-migration.test.mjs';
 import './check-hart-chart-tutorial.test.mjs';
 import './check-sart-game.test.mjs';
+import './check-ufov-game.test.mjs';
 import './check-plus-minus-game.test.mjs';
 import './check-letter-memory-game.test.mjs';
 import './check-keep-track-game.test.mjs';

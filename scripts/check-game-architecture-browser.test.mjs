@@ -210,11 +210,10 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="ufov"] button',
+    '--clickSelectors', '.official-game-card[data-runtime-id="every-ball-response"] button',
     '--allSelectors', [
       'dialog.training-overlay-config form',
       'input[type="range"]',
-      'input[type="checkbox"]',
       'select',
       'button[type="submit"]',
     ].join(','),
@@ -231,16 +230,18 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="ufov"] button,dialog.training-overlay-config button[type="submit"]',
+    '--clickSelectors', '.official-game-card[data-runtime-id="tongue-catch"] button,dialog.training-overlay-config button[type="submit"]',
     '--fullscreenSelector', 'html',
     '--allSelectors', 'dialog.training-overlay-runtime iframe',
     '--timeoutMs', '10000',
   ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
   assert.equal(fullscreen.exitCode, 0, `Hub fullscreen: ${fullscreen.stdout}\n${fullscreen.stderr}`);
   for (const gameId of ['every-ball-response']) {
+    // Without a camera the game returns to the Hub settings and the iframe closes, so it gets a fake camera.
     const overlay = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/`,
+      '--fakeMedia', 'true',
       '--storage', 'rehab_hub_tour_seen=1',
       '--clickSelectors', `.official-game-card[data-runtime-id="${gameId}"] button,dialog.training-overlay-config button[type="submit"]`,
       '--allSelectors', 'dialog.training-overlay-runtime iframe',
@@ -250,12 +251,14 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(overlay.exitCode, 0, `${gameId}: ${overlay.stdout}\n${overlay.stderr}`);
   }
-  for (const gameId of ['ufov']) {
+  // The remaining legacy games check the camera before their rules, so the standalone loop gets a fake camera.
+  for (const gameId of ['every-ball-response']) {
     const rulesSelector = '.training-rules';
     const backSelectors = '.training-rules .btn-ghost';
     const standalone = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
+      '--fakeMedia', 'true',
       '--clickSelectors', `.game-settings-form button[type="submit"],${backSelectors},.game-settings-form button[type="submit"]`,
       '--allSelectors', `${rulesSelector},${rulesSelector} button`,
       '--timeoutMs', '10000',

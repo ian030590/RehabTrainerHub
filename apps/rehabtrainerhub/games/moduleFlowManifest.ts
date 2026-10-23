@@ -47,7 +47,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['vision:reading-training', 'reading-training/pixi-reading-training.ts', 'none', 'native-timeline'],
   ['vision:driving-rehab', 'driving-rehab/three-driving-rehab.ts', 'none', 'native-timeline'],
   ['vision:hart-chart', 'hart-chart/HartChartPage.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:ufov', 'ufov/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
+  ['brain:ufov', 'ufov/UfovGame.tsx', 'none', 'external-runtime-adapter'],
   ['brain:every-ball-response', 'every-ball-response/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
   ['brain:sart', 'sart/SartGame.tsx', 'none', 'external-runtime-adapter'],
   ['brain:schulte-grid', 'schulte-grid/SchulteGridGame.tsx', 'none', 'external-runtime-adapter'],

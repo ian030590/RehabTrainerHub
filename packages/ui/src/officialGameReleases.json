@@ -186,5 +186,9 @@
   "plus-minus": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "心算加減切換（Plus-Minus）"
+  },
+  "ufov": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "周邊視野訓練"
   }
 }

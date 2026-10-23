@@ -25,7 +25,10 @@ async function ImportTypeScriptModule(relativePath) {
 }
 
 const timing = await ImportTypeScriptModule('./peripheralAttentionTiming.ts');
-const pageSource = await readFile(new URL('../PeripheralAttentionPage.tsx', import.meta.url), 'utf8');
+// The R2 package runs trials in logic/ufovRun.ts; the component owns the run and its result rows.
+const runSource = await readFile(new URL('../logic/ufovRun.ts', import.meta.url), 'utf8');
+const gameSource = await readFile(new URL('../UfovGame.tsx', import.meta.url), 'utf8');
+const resultSource = (await Promise.all(['../score.ts', '../resultFiles.ts'].map(path => readFile(new URL(path, import.meta.url), 'utf8')))).join('\n');
 const {
   EvaluatePeripheralAttentionFrameSync,
   GetPeripheralAttentionSyncRecoveryAction,
@@ -128,34 +131,38 @@ test('UFOV experiment integrates per-trial measurement before formal result and 
     'MeasureDisplayRefreshRate({ ...peripheralAttentionTrialRefreshOptions, signal: abortSignal })',
     'ShouldCountPeripheralAttentionTrial(config.mode, attempt.timingAttempt.syncValid)',
     'invalidTimingAttemptCount += 1',
-    'await this.waitForSynchronizationResume(displayElement, labels, abortSignal)',
+    'await this.waitForSynchronizationResume(abortSignal)',
     'timing_attempts: timingAttempts',
-    'allFormalTrialsSynchronized',
-    'Frame_Sync_Valid',
   ]) {
-    assert.ok(pageSource.includes(marker), `UFOV synchronization contract missing: ${marker}`);
+    assert.ok(runSource.includes(marker), `UFOV synchronization contract missing: ${marker}`);
+  }
+  // Each saved round and each exported trial still says whether its frames were synchronized.
+  for (const marker of ['syncValid: trial.syncValid ? 1 : 0', 'sync_valid: trial.syncValid', "['invalid_timing_attempts', session.invalid_timing_attempt_count, 'count']"]) {
+    assert.ok(resultSource.includes(marker), `UFOV synchronization record missing: ${marker}`);
   }
 
-  const exclusion = pageSource.indexOf('if (!shouldCountTrial)');
-  const acceptedTrial = pageSource.indexOf('trials.push(record)', exclusion);
-  const staircaseUpdate = pageSource.indexOf('adaptiveState = this.updateAdaptiveState', exclusion);
+  const exclusion = runSource.indexOf('if (!shouldCountTrial)');
+  const acceptedTrial = runSource.indexOf('trials.push(record)', exclusion);
+  const staircaseUpdate = runSource.indexOf('adaptiveState = UpdateAdaptiveState', exclusion);
   assert.ok(exclusion >= 0 && acceptedTrial > exclusion, 'formal timing rejection must precede result insertion');
   assert.ok(staircaseUpdate > acceptedTrial, 'formal timing rejection must precede adaptive staircase updates');
 });
 
-test('UFOV aborts startup, per-trial rAF, waits, and stale jsPsych completion', () => {
+test('UFOV aborts startup, per-trial rAF, waits, and a stopped run never finishes', () => {
   for (const marker of [
-    'const runAbortControllerRef = useRef<AbortController | null>(null)',
-    'const runGenerationRef = useRef(0)',
+    'private readonly controller = new AbortController()',
+    'stop() { this.controller.abort(); }',
     'MeasureDisplayRefreshRate({ signal: abortSignal })',
-    'experimentRunAbortSignals.set(jsPsych, abortSignal)',
-    'if (!isCurrentRun()) return',
-    'runAbortControllerRef.current?.abort()',
-    "abortSignal?.addEventListener('abort', abortPresentation, { once: true })",
+    'if (!abortSignal.aborted) this.finish(session)',
+    "abortSignal.addEventListener('abort', abortPresentation, { once: true })",
     'window.cancelAnimationFrame(frameId)',
-    'ThrowIfPeripheralAttentionRunAborted(abortSignal)',
-    'WaitMs(this.jsPsych, fixationMs, abortSignal)',
+    'ThrowIfUfovRunAborted(abortSignal)',
+    'WaitMs(ufovTiming.fixationMs, abortSignal)',
   ]) {
-    assert.ok(pageSource.includes(marker), `UFOV cancellation contract missing: ${marker}`);
+    assert.ok(runSource.includes(marker), `UFOV cancellation contract missing: ${marker}`);
+  }
+  // Stopping, leaving the page or unmounting the running phase stops the run and its jsPsych lifecycle.
+  for (const marker of ['const generationRef = useRef(0)', 'runRef.current?.stop()', "jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' })", 'lifecycle.dispose()']) {
+    assert.ok(gameSource.includes(marker), `UFOV cancellation contract missing: ${marker}`);
   }
 });

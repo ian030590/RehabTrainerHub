@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "ufov",
+  "trainer": "brain",
+  "category": "attention",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "周邊視野訓練", "description": "以三種活動練習處理速度、分散注意力與選擇性注意力：辨認中央閃過的車輛，並找出外圈汽車的方向。" },
+    "en": { "title": "Peripheral Visual Field Training", "description": "Three activities for practicing processing speed, divided attention and selective attention: name the vehicle flashed in the center and find the car in the outer ring." }
+  }
+}
