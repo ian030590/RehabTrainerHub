@@ -247,6 +247,8 @@ test('Brave renders the settings-driven config UI before mounting an official ga
       '--allSelectors', 'dialog.training-overlay-runtime iframe',
       '--fullscreenSelector', 'html',
       '--foregroundSelector', 'dialog.training-overlay-runtime',
+      // The game inside the Hub iframe uses the trainer theme too (font and colors), not browser defaults.
+      '--browserAssertion', `getComputedStyle(document.querySelector('dialog.training-overlay-runtime iframe').contentDocument.body).fontFamily.includes('Noto Sans TC')`,
       '--timeoutMs', '10000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(overlay.exitCode, 0, `${gameId}: ${overlay.stdout}\n${overlay.stderr}`);
@@ -290,6 +292,63 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(blocked.exitCode, 0, `blocked camera, ${label}: ${blocked.stdout}\n${blocked.stderr}`);
   }
+  // Legacy game pages: the trainer theme colors the settings form, and the install button sits above the form in
+  // the page language instead of covering the title. Chrome fires beforeinstallprompt only when it offers install.
+  // The page scrolls as one: the extra row must not leave the form in a second scroll area beside the page's.
+  const settingsPageAssertion = (accent, heading) => `(async () => {
+    dispatchEvent(new Event('beforeinstallprompt'));
+    await new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)));
+    const install = document.getElementById('official-game-install');
+    const headingElement = document.querySelector('.game-settings-form h2');
+    const title = headingElement.getBoundingClientRect();
+    const box = install.getBoundingClientRect();
+    const root = document.getElementById('root');
+    const details = {
+      font: getComputedStyle(document.body).fontFamily,
+      start: getComputedStyle(document.querySelector('.game-settings-form button[type="submit"]')).backgroundColor,
+      install: [box.top, box.bottom, box.height],
+      title: [title.top, title.bottom],
+      label: install.querySelector('button').textContent,
+      heading: headingElement.textContent,
+      startLabel: document.querySelector('.game-settings-form button[type="submit"]').innerText.trim(),
+      root: [root.scrollHeight, root.clientHeight],
+    };
+    const overlaps = box.left < title.right && title.left < box.right && box.top < title.bottom && title.top < box.bottom;
+    if (!details.font.includes('Noto Sans TC') || details.start !== '${accent}' || !box.height || overlaps
+      || details.label !== 'Install this game' || details.heading !== ${JSON.stringify(heading)} || details.startLabel !== 'Start training'
+      || root.scrollHeight > root.clientHeight + 1) throw new Error(JSON.stringify(details));
+    return true;
+  })()`;
+  for (const [gameId, accent, heading] of [
+    ['every-ball-response', 'rgb(0, 94, 184)', 'Every Ball Gets a Response'],
+    ['tongue-catch', 'rgb(103, 80, 164)', 'Tongue Movement Training'],
+  ]) {
+    const themed = await Run(process.execPath, [
+      browserSmokeScript,
+      '--url', `http://127.0.0.1:${address.port}/games/${gameId}/?lang=en`,
+      '--allSelectors', '.game-settings-form h2,#official-game-install button',
+      '--viewportWidth', '390', '--viewportHeight', '844',
+      '--browserAssertion', settingsPageAssertion(accent, heading),
+      '--timeoutMs', '8000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(themed.exitCode, 0, `${gameId} settings page: ${themed.stdout}\n${themed.stderr}`);
+  }
+  // Once the game starts the install row stays out of the way, even if the browser offers install then.
+  const started = await Run(process.execPath, [
+    browserSmokeScript,
+    '--url', `http://127.0.0.1:${address.port}/games/every-ball-response/?lang=en`,
+    '--fakeMedia', 'true',
+    '--clickSelectors', '.game-settings-form button[type="submit"]',
+    '--waitForSelector', '.training-rules',
+    '--allSelectors', '.training-rules',
+    '--browserAssertion', `(async () => {
+      dispatchEvent(new Event('beforeinstallprompt'));
+      await new Promise(done => requestAnimationFrame(done));
+      return getComputedStyle(document.getElementById('official-game-install')).display === 'none';
+    })()`,
+    '--timeoutMs', '10000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(started.exitCode, 0, `install row during the game: ${started.stdout}\n${started.stderr}`);
 });
 
 function FindBravePath() {

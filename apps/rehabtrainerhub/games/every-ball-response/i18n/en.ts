@@ -48,6 +48,7 @@ export const en = {
   "training.downloadCsvScores": "Download CSV Scores",
   "training.drawing.desc": "Draw circles, crosses, squares, triangles, vertical lines, and horizontal lines with mouse or touch for fine upper-limb movement and hand-eye coordination practice.",
   "training.drawing.title": "Drawing Tower Defense",
+  "training.everyball.title": "Every Ball Gets a Response",
   "training.flanker.desc": "Identify center arrow direction while ignoring flanking distractors to practise focus and interference suppression.",
   "training.flanker.title": "Flanker Selective Attention",
   "training.gesture.desc": "Calibrate personal hand range, select moves with gestures 1–5, hold to charge, and defeat a pixel monster.",

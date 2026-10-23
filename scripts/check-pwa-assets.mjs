@@ -99,6 +99,13 @@ assert.match(officialGeneratorSource, /ValidateCatalogGames/);
 assert.match(officialGeneratorSource, /ValidateGeneratedOutput/);
 assert.match(readFileSync(resolve(repoRoot, 'scripts/official-game-service-worker.mjs'), 'utf8'), /runtimeDestinations/);
 assert.match(officialGeneratorSource, /data-official-game-pwa/);
+// The install button is its own row on the settings screen only, so it never covers the form title or a running game,
+// and it follows the language the game sets on <html lang>.
+assert.match(officialGeneratorSource, /html:has\(\.game-settings-form\) #official-game-install:not\(\[hidden\]\)/);
+assert.doesNotMatch(officialGeneratorSource, /#official-game-install \{[^}]*position: fixed/);
+assert.match(officialGeneratorSource, /'Install this game'/);
+assert.match(officialGeneratorSource, /attributeFilter: \['lang'\]/);
+assert.match(officialGeneratorSource, /html:has\(\.game-settings-form\) #root \{ height: auto; min-height: 0; \}/);
 assert.doesNotMatch(officialGeneratorSource, /function CollectFiles/);
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pwa-check-'));

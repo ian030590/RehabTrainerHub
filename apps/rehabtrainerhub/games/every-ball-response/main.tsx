@@ -19,7 +19,7 @@ if (rootElement) {
     <React.StrictMode>
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} score={score} title={document.title}>
+          <OfficialGameShell settings={settings} score={score} titleKey="training.everyball.title">
             <EveryBallResponsePage onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>

@@ -206,6 +206,35 @@ test('unified config UI remains Tailwind with native accessible controls', async
   assert.doesNotMatch(globals, /tailwindcss\/preflight|@import\s+["']tailwindcss["']/);
 });
 
+test('legacy game pages define every token the settings form uses', async () => {
+  // GameSettingsForm is written with the Hub's token names; the two legacy game pages only have the trainer theme.
+  const used = new Set();
+  for (const file of ['components/GameSettingsForm.tsx', 'components/ui/button.tsx']) {
+    for (const match of (await ReadUi(file)).matchAll(/var\(--([a-z0-9-]+)/g)) used.add(match[1]);
+  }
+  const defined = new Set([...(await ReadUi('trainerTheme.ts')).matchAll(/'--([a-z0-9-]+)':/g)].map(match => match[1]));
+  for (const match of (await ReadUi('components/GameSettings.css')).matchAll(/--([a-z0-9-]+):/g)) defined.add(match[1]);
+  assert.deepEqual([...used].filter(name => !defined.has(name)).sort(), []);
+  // These pages load no icon font, so a decorative icon would show its ligature name ("play_arrow") as text.
+  assert.match(await ReadUi('components/GameSettings.css'), /\.game-settings-form \.material-symbols-outlined \{\s*display: none;/);
+  assert.match(await ReadUi('components/OfficialGameShell.tsx'), /ApplyThemeTokens\(document\.documentElement, theme\)/);
+});
+
+test('legacy game pages head the settings form with the catalog name in the page language', async () => {
+  // The browser tab title is Chinese only; the form heading comes from the game's own dictionaries instead.
+  const catalog = await ReadHub('games/catalog.ts');
+  for (const gameId of ['every-ball-response', 'tongue-catch']) {
+    const titleKey = (await ReadHub(`games/${gameId}/main.tsx`)).match(/<OfficialGameShell\b[^>]*\btitleKey="([^"]+)"/)?.[1];
+    assert.ok(titleKey, `${gameId} names its heading key`);
+    const names = catalog.match(new RegExp(`id: '${gameId}',[\\s\\S]*?zh: \\['([^']+)'[\\s\\S]*?en: \\['([^']+)'`));
+    for (const [language, expected] of [['zh', names[1]], ['en', names[2]]]) {
+      const dictionary = await ReadHub(`games/${gameId}/i18n/${language}.ts`);
+      assert.equal(dictionary.match(new RegExp(`"${titleKey.replaceAll('.', '\\.')}": "([^"]+)"`))?.[1], expected, `${gameId} ${language}`);
+    }
+  }
+  assert.match(await ReadUi('components/OfficialGameShell.tsx'), /title=\{t\(titleKey\)\}/);
+});
+
 test('both official and developer overlays configure before mounting their iframe', async () => {
   const officialOverlay = await ReadHub('app/train/TrainingOverlay.tsx');
   const packageOverlay = await ReadHub('app/train/PackageGameOverlay.tsx');

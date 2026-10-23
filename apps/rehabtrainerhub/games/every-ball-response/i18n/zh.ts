@@ -48,6 +48,7 @@ export const zh = {
   "training.downloadCsvScores": "下載 CSV 成績",
   "training.drawing.desc": "以滑鼠或觸控繪製圓形、叉叉、方形、三角形與直橫線，進行上肢精細動作與手眼協調練習。",
   "training.drawing.title": "畫畫塔防",
+  "training.everyball.title": "有球必應",
   "training.flanker.desc": "辨識中央箭頭指向並忽略兩側干擾，練習視覺聚焦與干擾抑制。",
   "training.flanker.title": "側翼干擾選擇（Flanker）",
   "training.gesture.desc": "校正個人手部活動範圍後，以數字 1–5 手勢選招、持續集氣並擊敗像素怪物。",

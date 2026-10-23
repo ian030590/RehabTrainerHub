@@ -144,9 +144,13 @@ function BuildGameHtml(source, game, basePath, description) {
     serviceWorkerUrl: `${basePath}sw.js`,
   });
   const boot = `<style>
-    #official-game-install { position: fixed; z-index: 2147483000; inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto auto; padding: 8px; border: 1px solid ButtonBorder; border-radius: 10px; background: Canvas; color: CanvasText; box-shadow: 0 4px 18px color-mix(in srgb, CanvasText 18%, transparent); }
-    #official-game-install[hidden] { display: none; }
-    #official-game-install button { min-height: 42px; padding: 8px 14px; border: 1px solid ButtonBorder; border-radius: 999px; color: ButtonText; background: ButtonFace; font: inherit; font-weight: 700; cursor: pointer; }
+    #official-game-install { display: none; box-sizing: border-box; max-width: 42rem; margin: 0 auto; padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); justify-content: flex-end; }
+    /* Its own row above the settings form, and only there, so it never covers the form title or a running game. */
+    html:has(.game-settings-form) #official-game-install:not([hidden]) { display: flex; }
+    /* #root is one screen tall and scrolls by itself, so with the row above it the page scrolls twice.
+       On the settings page it takes the form's height instead. */
+    html:has(.game-settings-form) #root { height: auto; min-height: 0; }
+    #official-game-install button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-hover, ButtonBorder); border-radius: 999px; color: var(--accent, ButtonText); background: var(--bg-card, ButtonFace); font: inherit; font-weight: 700; cursor: pointer; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
   </style>
   <script>
@@ -160,6 +164,13 @@ function BuildGameHtml(source, game, basePath, description) {
       };
       enforceGameRoute();
       window.addEventListener('hashchange', enforceGameRoute);
+      // The game sets <html lang> from its language choice; the install label follows it.
+      const installLabels = { en: 'Install this game', zh: '安裝此遊戲' };
+      const updateInstallLabel = () => {
+        const button = document.querySelector('#official-game-install button');
+        if (button) button.textContent = document.documentElement.lang.startsWith('en') ? installLabels.en : installLabels.zh;
+      };
+      new MutationObserver(updateInstallLabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
       window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
         installPrompt = event;
@@ -180,6 +191,7 @@ function BuildGameHtml(source, game, basePath, description) {
         }
       }, true);
       document.addEventListener('DOMContentLoaded', () => {
+        updateInstallLabel();
         const shell = document.getElementById('official-game-install');
         const button = shell?.querySelector('button');
         button?.addEventListener('click', async () => {

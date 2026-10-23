@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { NormalizeGameSettingsValues, ParseGameSettingsDefinition } from '@rehab-trainer/game-settings';
 import {
   GetHostedGameSettings,
@@ -14,24 +14,33 @@ import { useT } from '../i18n/games';
 import { useHostedGameSettings } from '../hooks/useHostedGameSettings';
 import { GameSettingsForm } from './GameSettingsForm';
 import { GetOrCreateSubjectId } from '../storage/subjectId';
+import { ApplyThemeTokens, type TrainerThemeOverrides } from '../trainerTheme';
 import {
   ConfigureRemoteTrainingRecordVerification,
   FlushPendingRemoteTrainingRecords,
 } from '../auth/authClient';
 import './GameSettings.css';
 
-export function OfficialGameShell({ children, settings, score, title }: {
+export function OfficialGameShell({ children, settings, score, theme, titleKey }: {
   children: ReactNode;
   settings: unknown;
   score: unknown;
-  title: string;
+  // Category colors for this game; the default trainer theme fills in the rest.
+  theme?: TrainerThemeOverrides;
+  // Dictionary key of the game name, so the form heading follows the page language.
+  titleKey: string;
 }) {
+  // The trainer colors and font are CSS variables set from script; without them the page uses browser defaults.
+  useLayoutEffect(() => {
+    ApplyThemeTokens(document.documentElement, theme);
+  }, [theme]);
+
   const [definition] = useState(() => {
     const parsed = ParseGameSettingsDefinition(settings);
     SetGameScoreDefinition(score, parsed.gameId);
     return parsed;
   });
-  const { lang } = useT();
+  const { lang, t } = useT();
   const received = useHostedGameSettings();
   const [configured, setConfigured] = useState(false);
   const [session, setSession] = useState(0);
@@ -79,7 +88,7 @@ export function OfficialGameShell({ children, settings, score, title }: {
     definition={definition}
     language={lang}
     notice={notice}
-    title={title}
+    title={t(titleKey)}
     onCancel={() => window.history.back()}
     onSubmit={(values) => {
       setNotice(null);

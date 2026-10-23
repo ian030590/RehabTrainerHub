@@ -2,3 +2,31 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 @source "./GameSettingsForm.tsx";
 @source "./ui";
+
+/* GameSettingsForm uses the Hub's token names. This file loads only on the legacy game pages, which have the
+   trainer theme instead, so point those names at it. Set on body so the dark and high-contrast themes apply. */
+body {
+  --background: var(--bg);
+  --surface: var(--bg-card);
+  --surface-muted: var(--bg-panel);
+  --text: var(--text-primary);
+  --heading: var(--text-primary);
+  --primary: var(--accent);
+  --primary-hover: var(--accent-hover);
+  --primary-soft: var(--bg-accent-soft);
+  --border-strong: var(--border-hover);
+  --focus: var(--accent);
+  --radius: var(--radius-m);
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-floating);
+}
+
+/* The trainer muted text is below 4.5:1 on these backgrounds; the form's small descriptions use the secondary text. */
+.game-settings-form {
+  --text-muted: var(--text-secondary);
+}
+
+/* These pages load no icon font (they must work offline), so a decorative icon would show its name as text. */
+.game-settings-form .material-symbols-outlined {
+  display: none;
+}
