@@ -9,15 +9,8 @@ const root = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
 const read = (id, file) => readFileSync(new URL(`${id}/${file}`, root), 'utf8');
 const scoreModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
 const { ParseGameScoreDefinition } = await import(`data:text/javascript;base64,${Buffer.from(scoreModule).toString('base64')}`);
-const runtimeSummaryModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/expFactoryRuntime.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
-const {
-  GetExpFactoryRoundLimit,
-  HasReachedExpFactoryRoundLimit,
-  SummarizeExpFactoryTrials,
-} = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
 // Games written directly as R2 packages: entry component validated by the game's own settings module.
 const nativeR2Games = { sart: 'SartGame.tsx', 'schulte-grid': 'SchulteGridGame.tsx', 'hex-schulte': 'HexSchulteGame.tsx', 'continuous-performance': 'ContinuousPerformanceGame.tsx', 'simon-task': 'SimonTaskGame.tsx', 'card-sorting': 'CardSortingGame.tsx', 'attentional-blink': 'AttentionalBlinkGame.tsx', 'time-perception': 'TimePerceptionGame.tsx', 'divided-attention': 'DividedAttentionGame.tsx', 'pattern-memory': 'PatternMemoryGame.tsx', stroop: 'StroopGame.tsx', flanker: 'FlankerGame.tsx', 'go-nogo': 'GoNoGoGame.tsx', 'stop-signal': 'StopSignalGame.tsx', 'attention-network-task': 'AttentionNetworkGame.tsx', 'n-back': 'NBackLetters.tsx', 'number-letter': 'NumberLetterSwitch.tsx', 'digit-span': 'DigitSpanRecall.tsx', 'spatial-span': 'SpatialSpanRecall.tsx', 'tower-of-london': 'TowerPlanning.tsx', 'reaction-time': 'ReactionSignal.tsx', 'tic-tac-toe': 'TicTacToeGame.tsx', 'connect4': 'Connect4Game.tsx', hex: 'HexGame.tsx', 'dots-and-boxes': 'DotsAndBoxesGame.tsx', 'lights-out': 'LightsOutGame.tsx', 'sliding-puzzle': 'SlidingPuzzleGame.tsx', maze: 'MazeGame.tsx', sudoku: 'SudokuGame.tsx', 'memory-match': 'MemoryMatchGame.tsx', 'simon-says': 'SimonSaysGame.tsx', 'whack-a-mole': 'WhackAMoleGame.tsx', minesweeper: 'MinesweeperGame.tsx', antisaccade: 'AntisaccadeGame.tsx', 'keep-track': 'KeepTrackRecall.tsx', 'letter-memory': 'LetterMemoryRecall.tsx', 'plus-minus': 'PlusMinusSwitch.tsx' };
-const sample = (extra = {}) => ({ exp_stage: 'test', trial_id: 'stim', trial_index: 5, rt: 350, correct: true, correct_response: 90, key_press: 90, ...extra });
 
 test('every game exposes bounded grading settings and exact numeric score sources', () => {
   const ids = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name);
@@ -110,7 +103,7 @@ test('every game exposes bounded grading settings and exact numeric score source
   }
 });
 
-test('fixed-length brain games expose bounded end settings and stop at the selected round', () => {
+test('fixed-length brain games expose bounded end settings', () => {
   const fixedLengthSettings = {
     ufov: 'trialCount',
     'every-ball-response': 'rounds',
@@ -121,22 +114,5 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
     assert.ok(limit, `${id}: ${key} setting is missing`);
     assert.ok(limit.min > 0 && limit.default >= limit.min && limit.default <= limit.max, id);
   }
-
-  assert.equal(GetExpFactoryRoundLimit({ rounds: 48 }), 48);
-  assert.equal(GetExpFactoryRoundLimit({}), null);
-  for (const invalid of [0, -1, 1.5, '48', 10_001]) {
-    assert.throws(() => GetExpFactoryRoundLimit({ rounds: invalid }));
-  }
-  assert.equal(HasReachedExpFactoryRoundLimit(48, 47), false);
-  assert.equal(HasReachedExpFactoryRoundLimit(48, 48), true);
-  assert.equal(HasReachedExpFactoryRoundLimit(48, 49), true);
-  assert.equal(HasReachedExpFactoryRoundLimit(null, 999), false);
-});
-
-test('React runtime retains missing RT as null and full precision in summaries', () => {
-  const rows = [sample({ trial_id:'response', correct:true, rt:100.25 }), sample({ trial_id:'response', correct:false, rt:null }), sample({ trial_id:'response', correct:true, rt:101.5 })];
-  const summary = SummarizeExpFactoryTrials(rows);
-  assert.equal(summary.meanRtMs, 100.875);
-  assert.ok(Math.abs(summary.accuracyPercent - (200 / 3)) < 1e-12);
 });
 

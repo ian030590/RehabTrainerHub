@@ -265,9 +265,6 @@ test('official games have no Toutour dependency and own their rules styles', asy
       await access(resolve(gamesRoot, gameId, 'public/runtime/manifest.json'));
     }
   }
-  const shell = await ReadUi('components/ExpFactoryGame.tsx');
-  assert.doesNotMatch(shell, /tourComplete|game-tour-complete/);
-  assert.doesNotMatch(shell, /<iframe|postMessage/);
   await access(resolve(hubRoot, 'app/tour/hubTour.ts'));
 });
 
@@ -280,6 +277,17 @@ test('tutorial copies of buttons share the base button border', async () => {
     const css = await readFile(resolve(gamesRoot, gameId, 'game.css'), 'utf8');
     assert.match(css, /^button, span\.btn \{[^}]*border:/m, `${gameId}: the tutorial span.btn must get the base button border.`);
   }
+});
+
+test('the retired ExpFactory shell stays out of the shared UI package', async () => {
+  const uiPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/package.json'), 'utf8'));
+  assert.ok(!Object.keys(uiPackage.exports).some((path) => /ExpFactory/i.test(path)), 'packages/ui must not export the ExpFactory shell.');
+  for (const file of ['components/ExpFactoryGame.tsx', 'expFactoryRuntime.ts']) {
+    await assert.rejects(access(resolve(repositoryRoot, 'packages/ui/src', file)), `${file} must stay removed.`);
+  }
+  const rootPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
+  assert.doesNotMatch(rootPackage.scripts['test:training-flow'], /check-expfactory-originals/);
+  assert.match(rootPackage.scripts['test:training-flow'], /check-tour\.test\.mjs/, 'The Toutour style check must stay in a CI gate.');
 });
 
 test('transitive game imports keep engines and dictionaries within their game', async () => {

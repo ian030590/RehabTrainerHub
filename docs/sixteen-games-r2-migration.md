@@ -25,7 +25,7 @@
 | `letter-memory` | 字母記憶更新（Letter Memory） | memory | ExpFactory jsPsych |
 | `plus-minus` | 心算加減切換（Plus-Minus） | higher-cognition | ExpFactory jsPsych |
 
-gameId、分類與中文名稱不變。英文名稱去掉多餘字尾：Antisaccade Task → Antisaccade、Keep Track Task → Keep Track、Letter Memory Task → Letter Memory、Plus-Minus Arithmetic Switching → Plus-Minus Arithmetic。舊的 `settings.json`／`score.json`／`public/runtime` 與共用 `OfficialGameShell` 依賴全部移除；四款 ExpFactory 遊戲搬遷後，`packages/ui` 的 `ExpFactoryGame` 已沒有遊戲使用，這次保留檔案，另案清理。
+gameId、分類與中文名稱不變。英文名稱去掉多餘字尾：Antisaccade Task → Antisaccade、Keep Track Task → Keep Track、Letter Memory Task → Letter Memory、Plus-Minus Arithmetic Switching → Plus-Minus Arithmetic。舊的 `settings.json`／`score.json`／`public/runtime` 與共用 `OfficialGameShell` 依賴全部移除；四款 ExpFactory 遊戲搬遷後，`packages/ui` 的 `ExpFactoryGame` 已沒有遊戲使用，發布後連同 `expFactoryRuntime`、只檢查它的 `check-expfactory-originals.mjs` 與 `nativeInstructionTrainingFlow` 一起移除；原腳本裡 `toutour.css` 不得有漸層的檢查，改由 `check-tour.test.mjs` 在 `test:training-flow` 執行。
 
 ## 共同做法
 

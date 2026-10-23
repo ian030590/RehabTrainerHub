@@ -13,12 +13,6 @@ export const standardTrainingFlow: readonly TrainingFlowStep[] = [
   'results',
 ] as const;
 
-export const nativeInstructionTrainingFlow: readonly TrainingFlowStep[] = [
-  'card',
-  'config',
-  'training',
-  'results',
-] as const;
 export type TrainingMediaPermission =
   | 'none'
   | 'camera'

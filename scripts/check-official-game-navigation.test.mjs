@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import test from 'node:test';
@@ -9,33 +9,6 @@ import { BuildGameServiceWorker } from './official-game-service-worker.mjs';
 const root = resolve(import.meta.dirname, '..');
 const basePath = '/games/plus-minus/';
 const cacheName = 'trainerhub-official-game:plus-minus:regression';
-
-test('all ExpFactory runtime assets are precached without nested iframe documents', async (t) => {
-  const source = await readFile(resolve(root, 'packages/ui/src/components/ExpFactoryGame.tsx'), 'utf8');
-  assert.match(source, /new URL\('\.\/runtime\/', window\.location\.href\)/);
-  assert.doesNotMatch(source, /<iframe|postMessage/);
-  const gameRoot = resolve(root, 'apps/rehabtrainerhub/games');
-  const games = await readdir(gameRoot, { withFileTypes: true });
-  for (const game of games.filter((entry) => entry.isDirectory())) {
-    const files = await readdir(resolve(gameRoot, game.name));
-    const components = await Promise.all(files.filter((file) => file.endsWith('.tsx'))
-      .map((file) => readFile(resolve(gameRoot, game.name, file), 'utf8')));
-    if (!components.some((component) => component.includes('ExpFactoryGame'))) continue;
-    await t.test(game.name, async () => {
-      const manifest = JSON.parse(await readFile(resolve(gameRoot, game.name, 'public/runtime/manifest.json'), 'utf8'));
-      assert.ok(manifest.scripts.includes('experiment.js'));
-      const scope = `/games/${game.name}/`;
-      const runtimeUrls = [scope + 'runtime/manifest.json', scope + 'runtime/experiment.js'];
-      const worker = await CreateWorker(t, scope, runtimeUrls);
-      await worker.dispatch('install');
-      assert.ok(!worker.requests.some((path) => path.endsWith('/index.html')), 'Precache must use canonical directory URLs');
-      worker.offline = true;
-      const cacheNames = await worker.caches.keys();
-      const cache = await worker.caches.open(cacheNames[0]);
-      for (const path of runtimeUrls) assert.ok(await cache.match(worker.origin + path), `${path} must be cached.`);
-    });
-  }
-});
 
 test('redirected precache responses remain usable for offline iframe navigation', async (t) => {
   const worker = await CreateWorker(t);

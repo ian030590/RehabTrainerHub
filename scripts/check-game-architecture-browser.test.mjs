@@ -11,8 +11,6 @@ const repositoryRoot = resolve(import.meta.dirname, '..');
 const outputRoot = resolve(process.env.HUB_OUTPUT_ROOT || resolve(repositoryRoot, 'apps/rehabtrainerhub/out'));
 const browserSmokeScript = resolve(repositoryRoot, 'scripts/check-browser-route-smoke.mjs');
 const bravePath = FindBravePath();
-const expFactoryGameIds = [
-];
 
 test('Brave smoke rejects asynchronous assertion failures', async context => {
   assert.ok(bravePath, 'Brave is required for browser assertions.');
@@ -252,21 +250,6 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(overlay.exitCode, 0, `${gameId}: ${overlay.stdout}\n${overlay.stderr}`);
   }
-  for (const gameId of expFactoryGameIds) {
-    const guidedGame = await Run(process.execPath, [
-      browserSmokeScript,
-      '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
-      '--clickSelectors', '.game-settings-form button[type="submit"]',
-      '--keyPress', 'Enter',
-      '--keyPressReadySelector', '.display_stage',
-      '--keyPressReadyTimeoutMs', '10000',
-      '--allSelectors', '.cognitive-reference-game .display_stage,.jspsych-display-element .bilingual-copy-zh',
-      '--fullscreenSelector', 'html',
-      '--timeoutMs', '3000',
-    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
-    assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
-  }
-
   for (const gameId of ['ufov']) {
     const rulesSelector = '.training-rules';
     const backSelectors = '.training-rules .btn-ghost';

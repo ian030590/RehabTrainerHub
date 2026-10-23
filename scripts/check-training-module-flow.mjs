@@ -19,13 +19,8 @@ const manifestCode = ts.transpileModule(manifestSource, {
 const manifestUrl = `data:text/javascript;base64,${Buffer.from(manifestCode).toString('base64')}`;
 const {
   standardTrainingFlow,
-  nativeInstructionTrainingFlow,
   trainingModuleFlowManifest,
 } = await import(manifestUrl);
-
-const expFactoryGameFiles = Object.freeze({
-});
-const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
 
 const catalogIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|[A-Za-z][A-Za-z0-9]*Catalog\.trainer)/g,
@@ -205,12 +200,9 @@ assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction control
 
 for (const catalogId of catalogIds) {
   const manifest = trainingModuleFlowManifest[catalogId];
-  const expectedFlow = expFactoryCatalogIds.includes(catalogId)
-    ? nativeInstructionTrainingFlow
-    : standardTrainingFlow;
   assert.deepEqual(
     manifest.flow,
-    expectedFlow,
+    standardTrainingFlow,
     `${catalogId} has a stale card-to-results flow.`,
   );
   assert.ok(
@@ -369,11 +361,6 @@ const implementationGroups = [
       'TrainingResultActions',
     ],
   },
-  ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
-    ids: [id],
-    files: [file],
-    tokens: ['ExpFactoryGame', 'sourceCommit:'],
-  })),
   {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
@@ -473,16 +460,6 @@ const jsPsychLifecycleGroups = [
     files: [`${id}/${component}.tsx`],
     tokens: externalRuntimeAdapterTokens,
     forbiddenTokens: ['WriteJsPsychData'],
-  })),
-  ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
-    status: 'native-timeline',
-    ids: [id],
-    files: [`${file.slice(0, file.indexOf('/'))}/public/runtime/manifest.json`],
-    tokens: [
-      '"timelineName":',
-      '"experiment.js"',
-      '"research.js"',
-    ],
   })),
   ...Object.entries({
     'motor:drawing-defense': 'drawing-defense/DrawingTowerDefenseGame.tsx',
