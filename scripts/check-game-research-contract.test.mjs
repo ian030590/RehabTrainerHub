@@ -14,7 +14,7 @@ const nativeR2Games = { 'seagull-flight': 'SeagullFlightGame.tsx', sart: 'SartGa
 
 test('every game exposes bounded grading settings and exact numeric score sources', () => {
   const ids = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name);
-  assert.equal(ids.length, 51);
+  assert.deepEqual([...ids].sort(), Object.keys(migratedGames).sort(), 'Every game folder is a registered R2 game.');
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
       const entry = { 'hart-chart': 'HartChartPage.tsx', 'driving-rehab': 'DrivingRehabGame.tsx', 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',

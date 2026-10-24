@@ -62,6 +62,12 @@ const games = {
   'every-ball-response': { version: '2.0.0', file: 'EveryBallGame.tsx', settings: 'settings.ts' },
   'tongue-catch': { version: '2.0.0', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
 };
+const registeredGameIds = Object.keys(JSON.parse(await readFile(resolve(import.meta.dirname, '../packages/ui/src/officialGameReleases.json'), 'utf8'))).sort();
+
+test('settings memory is checked for every registered R2 game', () => {
+  assert.deepEqual(Object.keys(games).sort(), registeredGameIds);
+});
+
 const nonce = 'a'.repeat(64);
 
 function MemoryStorage(initial = {}) {

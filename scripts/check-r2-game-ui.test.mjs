@@ -59,6 +59,14 @@ const cases = [
   { id: 'tongue-catch', component: 'TongueCatchGame', tutorial: 'TongueTutorial', logic: { '../labels': 'labels.ts', '../TongueCue': 'TongueCue.tsx' } },
 ];
 
+const registeredGameIds = Object.keys(JSON.parse(await readFile(resolve(import.meta.dirname, '../packages/ui/src/officialGameReleases.json'), 'utf8'))).sort();
+// Games this suite does not render yet. A newly registered game must join `cases` or be listed here.
+const notInSharedUiSuite = ['hart-chart', 'motor-cortex-rehab', 'oculomotor-training'];
+
+test('the shared settings and results layout suite covers every registered R2 game', () => {
+  assert.deepEqual([...cases.map(fixture => fixture.id), ...notInSharedUiSuite].sort(), registeredGameIds);
+});
+
 for (const fixture of cases) {
   test(`${fixture.id}: final settings are readable and keep start and back actions`, async () => {
     for (const language of ['zh', 'en']) {

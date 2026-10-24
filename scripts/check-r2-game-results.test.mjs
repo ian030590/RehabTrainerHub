@@ -67,6 +67,14 @@ const cases = [
   { id: 'tongue-catch', defaultMetric: 'caught', alternate: 'position', row: { object: 1, caught: 2, position: -62 } },
 ];
 
+const registeredGameIds = Object.keys(JSON.parse(await readFile(resolve(import.meta.dirname, '../packages/ui/src/officialGameReleases.json'), 'utf8'))).sort();
+// Games this suite does not render yet. A newly registered game must join `cases` or be listed here.
+const notInSharedResultsSuite = ['oculomotor-training'];
+
+test('the shared results suite covers every registered R2 game', () => {
+  assert.deepEqual([...cases.map(fixture => fixture.id), ...notInSharedResultsSuite].sort(), registeredGameIds);
+});
+
 for (const fixture of cases) {
   test(`${fixture.id}: results show statistics, an accessible chart and localized round details`, async () => {
     for (const language of ['zh', 'en']) {

@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { access, readFile, readdir } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, relative, resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
@@ -10,59 +13,9 @@ const hubRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub');
 const gamesRoot = resolve(hubRoot, 'games');
 const catalogPath = resolve(hubRoot, 'games/catalog.ts');
 const migratedGames = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
-const expectedOfficialGameIds = Object.freeze([
-  'antisaccade',
-  'asteroid-shield',
-  'attention-network-task',
-  'attentional-blink',
-  'card-sorting',
-  'connect4',
-  'continuous-performance',
-  'digit-span',
-  'divided-attention',
-  'dots-and-boxes',
-  'drawing-defense',
-  'driving-rehab',
-  'every-ball-response',
-  'flanker',
-  'gabor-patching',
-  'gesture-battler',
-  'go-nogo',
-  'hart-chart',
-  'hex',
-  'hex-schulte',
-  'keep-track',
-  'letter-memory',
-  'lights-out',
-  'maze',
-  'memory-match',
-  'minesweeper',
-  'motor-cortex-rehab',
-  'moving-card',
-  'n-back',
-  'number-letter',
-  'oculomotor-training',
-  'pattern-memory',
-  'plus-minus',
-  'reaction-time',
-  'reading-training',
-  'sart',
-  'schulte-grid',
-  'simon-says',
-  'simon-task',
-  'sliding-puzzle',
-  'spatial-span',
-  'stop-signal',
-  'stroop',
-  'sudoku',
-  'tic-tac-toe',
-  'time-perception',
-  'tongue-catch',
-  'seagull-flight',
-  'tower-of-london',
-  'ufov',
-  'whack-a-mole',
-].sort());
+// The R2 release registry is the game inventory: a newly registered game joins every check below, and
+// the catalog test fails when the game folders, catalog entries and registry entries differ.
+const expectedOfficialGameIds = Object.freeze(Object.keys(migratedGames).sort());
 
 test('catalog and game roots retain one exact settings definition per official game', async () => {
   const catalogSource = await readFile(catalogPath, 'utf8');
@@ -176,6 +129,97 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
     );
     assert.match(workflow, /- "scripts\/\*\*"/);
     assert.match(workflow, /- "\.github\/workflows\/\*\*"/);
+  }
+});
+
+const ciWorkflowPaths = ['.github/workflows/ci.yml', '.github/workflows/deploy-cloudflare-pages.yml'];
+
+test('CI test discovery follows what a workflow runs and ignores comments, strings and script arguments', async () => {
+  const { FindCiTestFiles } = await import('./ci-test-files.mjs');
+  const fixture = await mkdtemp(resolve(tmpdir(), 'ci-test-files-'));
+  const files = {
+    'package.json': JSON.stringify({ scripts: {
+      'test:all': 'node --test scripts/a.test.mjs "lib/**/*.test.mjs" && node --test-reporter spec --test scripts/reporter.test.mjs && npm run test:more',
+      'test:more': 'node scripts/runner.mjs scripts/argument.test.mjs --test scripts/after.test.mjs',
+      'test:local': 'node --test scripts/local.test.mjs',
+      'test:other': 'node --test scripts/other.test.mjs',
+    } }),
+    // CRLF, as in the checked-in deploy workflow.
+    '.github/workflows/ci.yml': ('jobs:\n  verify:\n    strategy:\n      matrix:\n        include:\n          - name: all\n            command: npm run test:all\n'
+      + '          # - name: local\n          #   command: npm run test:local\n').replaceAll('\n', '\r\n'),
+    '.github/workflows/other.yml': 'jobs:\n  verify:\n    strategy:\n      matrix:\n        include:\n          - name: other\n            command: npm run test:other\n',
+    'scripts/a.test.mjs': "import './b.test.mjs';\n// import './commented.test.mjs';\n/* import './block.test.mjs'; */\n"
+      + "const text = \"import './string.test.mjs'\";\nconst pattern = /import('.\\/regex.test.mjs')/;\n",
+    'scripts/b.test.mjs': '',
+    'lib/deep/c.test.mjs': '',
+    'scripts/runner.mjs': "await import('./d.test.mjs');\n",
+    'scripts/d.test.mjs': '',
+    'scripts/reporter.test.mjs': '',
+    'scripts/argument.test.mjs': '',
+    'scripts/after.test.mjs': '',
+    'scripts/regex.test.mjs': '',
+    'scripts/commented.test.mjs': '',
+    'scripts/block.test.mjs': '',
+    'scripts/string.test.mjs': '',
+    'scripts/local.test.mjs': '',
+    'scripts/other.test.mjs': '',
+    'scripts/orphan.test.mjs': '',
+  };
+  for (const [path, content] of Object.entries(files)) {
+    await mkdir(dirname(resolve(fixture, path)), { recursive: true });
+    await writeFile(resolve(fixture, path), content);
+  }
+  const reached = FindCiTestFiles(fixture, '.github/workflows/ci.yml');
+  for (const path of ['scripts/a.test.mjs', 'scripts/b.test.mjs', 'lib/deep/c.test.mjs', 'scripts/d.test.mjs', 'scripts/reporter.test.mjs']) {
+    assert.ok(reached.has(path), `${path} runs in CI`);
+  }
+  for (const path of ['scripts/argument.test.mjs', 'scripts/after.test.mjs', 'scripts/regex.test.mjs', 'scripts/commented.test.mjs', 'scripts/block.test.mjs', 'scripts/string.test.mjs',
+    'scripts/local.test.mjs', 'scripts/other.test.mjs', 'scripts/orphan.test.mjs']) {
+    assert.equal(reached.has(path), false, `${path} does not run in this workflow`);
+  }
+  assert.ok(FindCiTestFiles(fixture, '.github/workflows/other.yml').has('scripts/other.test.mjs'));
+});
+
+test('every test file runs in each CI workflow except the documented local-only suites', async () => {
+  const { FindCiTestFiles } = await import('./ci-test-files.mjs');
+  const rootPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
+  // These need a local Brave or the SEO build and stay out of the Linux matrix (AGENTS.md, CI/CD).
+  const localOnly = {
+    'scripts/check-article-prerender.test.mjs': 'test:seo',
+    'scripts/check-game-architecture-browser.test.mjs': 'test:game-architecture:browser',
+  };
+  const testFiles = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '*.test.mjs'],
+    { cwd: repositoryRoot, encoding: 'utf8' }).split('\0').filter(path => path && existsSync(resolve(repositoryRoot, path)));
+  for (const workflowPath of ciWorkflowPaths) {
+    const reached = FindCiTestFiles(repositoryRoot, workflowPath);
+    assert.deepEqual(
+      testFiles.filter(path => !reached.has(path)).sort(),
+      Object.keys(localOnly).sort(),
+      `${workflowPath}: run each new test file from a CI gate command, or import it from a suite that already runs there.`,
+    );
+  }
+  for (const [path, script] of Object.entries(localOnly)) assert.ok(rootPackage.scripts[script].includes(path), `${script} runs ${path}`);
+});
+
+test('every R2 game has its own test suite in each CI workflow', async () => {
+  const { FindCiTestFiles } = await import('./ci-test-files.mjs');
+  // Games migrated before the scripts/check-<gameId>-game.test.mjs convention keep their migration suite.
+  const ownSuites = {
+    'asteroid-shield': 'scripts/check-asteroid-shield-migration.test.mjs',
+    'drawing-defense': 'scripts/check-drawing-defense-input.test.mjs',
+    'driving-rehab': 'scripts/check-driving-rehab-migration.test.mjs',
+    'gabor-patching': 'scripts/check-gabor-patching-migration.test.mjs',
+    'gesture-battler': 'scripts/check-gesture-battler-migration.test.mjs',
+    'hart-chart': 'scripts/check-hart-chart-migration.test.mjs',
+    'motor-cortex-rehab': 'scripts/check-motor-cortex-migration.test.mjs',
+    'moving-card': 'scripts/check-moving-card-migration.test.mjs',
+    'oculomotor-training': 'scripts/check-oculomotor-migration.test.mjs',
+    'reading-training': 'scripts/check-reading-training-migration.test.mjs',
+  };
+  for (const workflowPath of ciWorkflowPaths) {
+    const reached = FindCiTestFiles(repositoryRoot, workflowPath);
+    const missing = expectedOfficialGameIds.filter(gameId => !reached.has(ownSuites[gameId] ?? `scripts/check-${gameId}-game.test.mjs`));
+    assert.deepEqual(missing, [], `${workflowPath}: add scripts/check-<gameId>-game.test.mjs and run it from a CI gate.`);
   }
 });
 
@@ -364,6 +408,10 @@ test('transitive game imports keep engines and dictionaries within their game', 
       file = resolve(file);
       if (seen.has(file) || file.includes('node_modules')) return;
       seen.add(file);
+      if (Object.hasOwn(migratedGames, gameId)) {
+        assert.ok(!relative(resolve(gamesRoot, gameId), file).startsWith('..'),
+          `${gameId} is a self-contained R2 package and imports code outside its folder: ${relative(repositoryRoot, file).replaceAll('\\', '/')}`);
+      }
       const fromGames = relative(gamesRoot, file).replaceAll('\\', '/');
       if (!fromGames.startsWith('../') && fromGames.includes('/')) {
         assert.equal(fromGames.split('/')[0], gameId, `${gameId} imports another game: ${fromGames}`);
@@ -394,8 +442,13 @@ test('transitive game imports keep engines and dictionaries within their game', 
         if (file.includes(`${resolve(repositoryRoot, 'packages/ui/src')}`)) {
           assert.doesNotMatch(specifier, /^(?:pixi\.js|jspsych|three|@jspsych\/|@mediapipe\/|@tensorflow\/)/, `Shared shell imports a game engine: ${file}`);
         }
-        const target = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule?.resolvedFileName
-          ?? (specifier.startsWith('.') && ts.sys.fileExists(resolve(dirname(file), specifier)) ? resolve(dirname(file), specifier) : null);
+        // Vite query imports (`?worker`, `?url`, `?raw`) still bundle the file named before the query.
+        const path = specifier.replace(/\?.*$/, '');
+        const target = ts.resolveModuleName(path, file, options, ts.sys).resolvedModule?.resolvedFileName
+          ?? (path.startsWith('.') && ts.sys.fileExists(resolve(dirname(file), path)) ? resolve(dirname(file), path) : null);
+        if (Object.hasOwn(migratedGames, gameId) && path.startsWith('.')) {
+          assert.ok(target, `${gameId}: cannot resolve ${specifier} from ${relative(repositoryRoot, file).replaceAll('\\', '/')} to check its folder`);
+        }
         if (target) await Visit(target);
       }
     }
