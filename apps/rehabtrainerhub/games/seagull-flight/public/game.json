@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "seagull-flight",
+  "trainer": "vision",
+  "category": "vision",
+  "preview": "preview.webp",
+  "author": "居家訓練網",
+  "copy": {
+    "zh-TW": { "title": "海鷗飛行", "description": "點頭拍翅、轉頭滑翔，帶著海鷗穿過左右圓環，練習頭部動作與視線注視。" },
+    "en": { "title": "Seagull Flight", "description": "Nod to flap and turn to glide through alternating rings. Practice head movements while keeping your eyes on the gull." }
+  }
+}

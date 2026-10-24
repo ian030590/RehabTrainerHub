@@ -1,0 +1,16 @@
+{
+  "name": "@rehab-trainer/game-seagull-flight",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "rehabTrainer": {
+    "capabilities": ["audio", "fullscreen", "head-tracking", "keyboard", "pointer", "settings-storage", "touch"]
+  },
+  "scripts": { "build": "vite build" },
+  "dependencies": {
+    "jspsych": "8.2.3", "react": "^19.1.0", "react-dom": "^19.1.0", "three": "^0.184.0", "tone": "15.1.22"
+  },
+  "devDependencies": {
+    "@types/three": "^0.184.1", "@vitejs/plugin-react": "^4.5.2", "typescript": "~5.8.3", "vite": "^6.3.5"
+  }
+}

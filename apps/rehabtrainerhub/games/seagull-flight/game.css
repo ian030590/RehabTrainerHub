@@ -1,0 +1,111 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color-scheme: light;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #eaf3fc;
+  --background: #f5f7f8; --surface: #fff; --text: #202a32; --heading: #172d3b;
+  --text-muted: #52616b; --border: #d2dce2; --border-strong: #74828b; --text-on-accent: #fff;
+  --bg-overlay: rgba(15, 32, 45, .48); --radius: 8px; --error: #a12620;
+  --seagull-sky: #c9e5ed; --seagull-sea: #377f9b;
+  --seagull-body: #fff; --seagull-wing: #e5e9eb; --seagull-wingtip: #354b58;
+  --seagull-beak: #e3a83f; --seagull-ring: #e97822; --seagull-ring-passed: #fff;
+  --seagull-fixation: #172d3b; --seagull-cloud: #f5f7f8; --seagull-rock: #657d84; --seagull-light: #fff;
+  --seagull-warning-surface: #fff5dd; --seagull-warning-ink: #713d06;
+  --seagull-shadow: rgba(15, 32, 45, .18);
+  color: var(--text); background: transparent;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; background: transparent; }
+body { overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-width: 44px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: default; }
+button:active { transform: translateY(1px); }
+:is(button, input, select, [tabindex]):focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: var(--text-on-accent); }
+.btn-primary:hover { background: var(--primary-hover); }
+.seagull-root, .seagull-stage { position: fixed; inset: 0; background: transparent; }
+.seagull-stage { touch-action: manipulation; }
+.seagull-jspsych-host { display: none; }
+.seagull-canvas-host { position: absolute; inset: 0; pointer-events: none; }
+.seagull-canvas { display: block; width: 100%; height: 100%; }
+.seagull-flight-phase-calibration .seagull-canvas-host { visibility: hidden; }
+.seagull-hud { position: absolute; z-index: 3; top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
+.seagull-hud-item { display: grid; gap: 3px; min-width: 0; margin: 0; line-height: 1.4; }
+.seagull-hud-item span, .seagull-height label { font-size: .75rem; color: var(--text-muted); font-weight: 700; }
+.seagull-hud-item strong, .seagull-height strong { font-size: .9rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.seagull-height { min-width: 0; display: grid; gap: 4px; }
+.seagull-height label { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+.seagull-height meter { width: 100%; min-width: 0; height: 14px; accent-color: var(--primary); }
+.seagull-stop { justify-self: stretch; padding-inline: 6px; }
+.seagull-warning { position: absolute; z-index: 4; top: 165px; left: 50%; width: max-content; max-width: calc(100% - 24px); margin: 0; padding: 10px 14px; border: 1px solid var(--seagull-warning-ink); border-radius: var(--radius); background: var(--seagull-warning-surface); color: var(--seagull-warning-ink); font-weight: 800; text-align: center; transform: translateX(-50%); }
+.seagull-countdown { position: absolute; z-index: 2; top: 28%; left: 50%; margin: 0; padding: 8px 24px; border-radius: var(--radius); background: var(--surface); color: var(--heading); font-size: 3rem; font-weight: 800; transform: translateX(-50%); }
+.seagull-controls { position: absolute; z-index: 4; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; display: flex; gap: 12px; max-width: calc(100% - 24px); transform: translateX(-50%); }
+.seagull-controls button { min-width: 76px; min-height: 52px; padding: 10px; touch-action: none; }
+.seagull-preview-scene { position: absolute; z-index: 1; inset: 165px 16px 24px; display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; gap: 16px; }
+.seagull-preview-flap { display: grid; justify-items: center; width: min(220px, 60%); padding: 12px; background: var(--surface); border-radius: var(--radius); color: var(--heading); }
+.seagull-icon { display: block; width: 100%; max-height: 90px; }
+.seagull-icon-wing { fill: var(--seagull-wing); stroke: var(--seagull-wingtip); stroke-width: 2px; }
+.seagull-icon-body { fill: var(--seagull-body); stroke: var(--seagull-wingtip); stroke-width: 2px; }
+.seagull-preview-glide { display: flex; justify-content: center; align-items: center; gap: 20px; width: min(380px, 100%); padding: 10px; border-radius: var(--radius); background: var(--surface); }
+.seagull-preview-ring { width: 48px; height: 48px; flex: 0 0 auto; border: 7px solid var(--seagull-ring); border-radius: 50%; }
+.seagull-preview-sea { width: min(360px, 100%); padding: 18px 12px; background: var(--surface); border-bottom: 12px solid var(--seagull-sea); border-radius: var(--radius); text-align: center; }
+.training-panel.seagull-tutorial-ready { z-index: 1000; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.game-tour-blocker { position: fixed; z-index: 1100; inset: 0; }
+.game-tour-spotlight { position: fixed; z-index: 1101; border-radius: var(--radius); outline: 3px solid var(--primary); box-shadow: 0 0 0 100vmax var(--bg-overlay); pointer-events: none; }
+.game-tour { position: fixed; z-index: 1102; width: min(380px, calc(100vw - 32px)); max-height: calc(100dvh - 16px); overflow-y: auto; padding: 20px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 8px 24px var(--seagull-shadow); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0 0 12px; color: var(--heading); font-size: 1.3rem; line-height: 1.4; }
+.game-tour p { margin: 0 0 16px; }
+.game-tour button { margin: 4px 8px 4px 0; font-size: 1rem; }
+.game-tour button:first-of-type { background: var(--primary); border-color: var(--primary); color: var(--text-on-accent); }
+.game-settings-dialog { width: min(42rem, calc(100% - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; border: 0; border-radius: var(--radius); color: var(--text); background: transparent; box-shadow: 0 8px 24px var(--seagull-shadow); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); }
+.game-settings-dialog .training-config { max-width: none; max-height: calc(100dvh - 32px); margin: 0; }
+.training-setting label small { display: block; margin-top: 6px; }
+.training-config-body { min-width: 0; }
+.training-setting { min-width: 0; }
+.seagull-input-error { margin: 0; color: var(--error); font-weight: 700; }
+.seagull-input-status { margin-bottom: 0; }
+.seagull-calibration-overlay { position: fixed; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; background: transparent; }
+.seagull-calibration-camera-space { position: relative; min-height: 100px; }
+.seagull-calibration-cross { position: absolute; top: 50%; left: 50%; font-size: 4rem; font-weight: 800; color: var(--heading); background: var(--surface); line-height: 1; transform: translate(-50%, -50%); border: 2px solid var(--heading); padding: 2px 10px; }
+.seagull-calibration-card { min-width: 0; padding: 20px; background: var(--surface); color: var(--text); overflow-y: auto; max-height: 60dvh; border: 1px solid var(--border-strong); }
+.seagull-calibration-card h1 { margin-top: 0; font-size: 1.4rem; }
+.seagull-calibration-card p { line-height: 1.6; font-weight: 700; }
+.seagull-calibration-progress { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.seagull-calibration-progress span { display: block; height: 100%; background: var(--primary); transform-origin: left; }
+.seagull-calibration-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; }
+.results-container { position: fixed; z-index: 20; inset: 0; overflow-y: auto; overscroll-behavior: contain; background: var(--background); }
+@media (min-width: 600px) {
+  .seagull-hud { grid-template-columns: repeat(3, minmax(70px, .6fr)) minmax(100px, 1fr) minmax(110px, 1fr) auto; gap: 12px; padding: 12px 16px; }
+  .seagull-hud-item span, .seagull-height label { font-size: .875rem; }
+  .seagull-hud-item strong, .seagull-height strong { font-size: 1rem; }
+  .seagull-warning { top: 100px; }
+  .seagull-preview-scene { top: 100px; }
+  .seagull-calibration-overlay { grid-template-columns: minmax(0, 1fr) minmax(280px, 38%); grid-template-rows: 1fr; align-items: center; }
+  .seagull-calibration-camera-space { height: 100%; }
+  .seagull-calibration-card { margin-right: 16px; max-height: calc(100dvh - 32px); border-radius: var(--radius); }
+}
+@media (min-width: 1000px) {
+  .seagull-hud { left: 24px; right: 24px; top: 18px; }
+  .seagull-preview-scene { flex-direction: row; inset: 150px 6% 12%; }
+  .seagull-preview-flap, .seagull-preview-glide, .seagull-preview-sea { width: 26%; }
+  .seagull-calibration-card { padding: 32px; }
+}
+@media (max-height: 560px) {
+  .seagull-hud { grid-template-columns: repeat(3, minmax(44px, .6fr)) minmax(60px, 1fr) minmax(90px, 1fr) auto; gap: 6px; padding: 6px 8px; }
+  .seagull-hud-item span, .seagull-height label { font-size: .7rem; }
+  .seagull-hud-item strong, .seagull-height strong { font-size: .8rem; }
+  .seagull-warning { top: 78px; padding: 6px 10px; }
+  .seagull-preview-scene { inset: 90px 16px 16px; flex-direction: row; gap: 12px; }
+  .seagull-preview-flap, .seagull-preview-glide, .seagull-preview-sea { width: 30%; }
+  .seagull-preview-glide { flex-wrap: wrap; gap: 8px; }
+  .seagull-preview-ring { width: 36px; height: 36px; }
+  .seagull-calibration-overlay { grid-template-columns: minmax(0, 1fr) minmax(260px, 44%); grid-template-rows: 1fr; align-items: center; }
+  .seagull-calibration-camera-space { height: 100%; }
+  .seagull-calibration-card { max-height: calc(100dvh - 16px); padding: 16px; margin-right: 8px; }
+  .seagull-controls { bottom: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

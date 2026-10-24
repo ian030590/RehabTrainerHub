@@ -9,6 +9,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'seagull-flight', component: 'SeagullFlightGame', tutorial: 'SeagullTutorial', logic: { '../labels': 'labels.ts', '../SeagullIcon': 'SeagullIcon.tsx' } },
   { id: 'driving-rehab', component: 'DrivingRehabGame', tutorial: 'DrivingTutorial' },
   { id: 'reading-training', component: 'ReadingTrainingGame', tutorial: 'ReadingTutorial' },
   { id: 'gabor-patching', component: 'GaborPatchingGame', tutorial: 'GaborTutorial' },

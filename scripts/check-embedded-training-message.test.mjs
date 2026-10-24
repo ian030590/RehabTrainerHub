@@ -19,11 +19,11 @@ const embeddedCode = ts.transpileModule(embeddedSource, { compilerOptions }).out
 const embeddedUrl = `data:text/javascript;base64,${Buffer.from(embeddedCode).toString('base64')}`;
 const embeddedTraining = await import(embeddedUrl);
 
-test('all 50 score contracts accept bounded numeric rounds and reject unsafe data', async () => {
+test('all 51 score contracts accept bounded numeric rounds and reject unsafe data', async () => {
   const { readdir } = await import('node:fs/promises');
   const root = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
   const games = (await readdir(root, { withFileTypes: true })).filter(entry => entry.isDirectory());
-  assert.equal(games.length, 50);
+  assert.equal(games.length, 51);
   for (const game of games) {
     if (Object.hasOwn(migratedGames, game.name)) {
       assert.equal(IsGameResult({ config: { difficulty: 'Beginner' }, score: {

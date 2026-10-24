@@ -17,6 +17,8 @@ import './check-ufov-game.test.mjs';
 import './check-every-ball-response-game.test.mjs';
 import './check-every-ball-response-core.test.mjs';
 import './check-tongue-catch-game.test.mjs';
+import './check-seagull-flight-game.test.mjs';
+import './check-seagull-flight-runtime.test.mjs';
 import './check-plus-minus-game.test.mjs';
 import './check-letter-memory-game.test.mjs';
 import './check-keep-track-game.test.mjs';

@@ -58,6 +58,7 @@ const expectedOfficialGameIds = Object.freeze([
   'tic-tac-toe',
   'time-perception',
   'tongue-catch',
+  'seagull-flight',
   'tower-of-london',
   'ufov',
   'whack-a-mole',

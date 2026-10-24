@@ -41,6 +41,7 @@ import plusMinusCatalog from './plus-minus/public/game.json';
 import ufovCatalog from './ufov/public/game.json';
 import everyBallCatalog from './every-ball-response/public/game.json';
 import tongueCatchCatalog from './tongue-catch/public/game.json';
+import seagullFlightCatalog from './seagull-flight/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -738,6 +739,16 @@ const seeds: readonly TrainingCatalogSeed[] = [
     path: '/oral-training?game=tongue-catch',
     zh: [tongueCatchCatalog.copy['zh-TW'].title, tongueCatchCatalog.copy['zh-TW'].description],
     en: [tongueCatchCatalog.copy.en.title, tongueCatchCatalog.copy.en.description],
+  },
+  {
+    id: 'seagull-flight',
+    trainer: seagullFlightCatalog.trainer as 'vision',
+    purpose: seagullFlightCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/seagull-flight/${seagullFlightCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=seagull-flight',
+    zh: [seagullFlightCatalog.copy['zh-TW'].title, seagullFlightCatalog.copy['zh-TW'].description],
+    en: [seagullFlightCatalog.copy.en.title, seagullFlightCatalog.copy.en.description],
   },
 ] as const;
 

@@ -351,6 +351,11 @@ const implementationGroups = [
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: ["setPhase('rules')", "setPhase('calibration')", "setPhase('playing')", "setPhase('results')", 'SendGameResult', 'TongueTutorial', 'ValidateSettings(settings)'],
   },
+  {
+    ids: ['vision:seagull-flight'],
+    files: ['seagull-flight/SeagullFlightGame.tsx'],
+    tokens: ["setPhase('rules')", "setPhase('calibration')", "setPhase('playing')", "setPhase('results')", 'SendGameResult', 'SeagullTutorial', 'ValidateSettings(settings)'],
+  },
 ];
 
 const implementationIds = implementationGroups.flatMap(({ ids }) => ids);
@@ -435,6 +440,7 @@ const jsPsychLifecycleGroups = [
     'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
     'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
     'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
+    'vision:seagull-flight': 'seagull-flight/SeagullFlightGame.tsx',
     'brain:every-ball-response': 'every-ball-response/EveryBallGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
@@ -513,6 +519,7 @@ const proxyPermissionImplementations = {
   'motor:motor-cortex-rehab': { file: 'motor-cortex-rehab/MotorCortexRehabGame.tsx', denialToken: 'labels.permission' },
   'brain:every-ball-response': { file: 'every-ball-response/EveryBallGame.tsx', denialToken: 'labels.errors[inputMode]', start: 'StartSensorInput', stop: 'StopSensorInput' },
   'mouth:tongue-catch': { file: 'tongue-catch/TongueCatchGame.tsx', denialToken: 'labels.errors', start: 'StartSensorInput', stop: 'StopSensorInput' },
+  'vision:seagull-flight': { file: 'seagull-flight/SeagullFlightGame.tsx', denialToken: 'labels.errors', start: 'StartSensorInput', stop: 'StopSensorInput' },
 };
 for (const [catalogId, { file, denialToken, start = 'StartHandInput', stop = 'StopHandInput' }] of Object.entries(proxyPermissionImplementations)) {
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');

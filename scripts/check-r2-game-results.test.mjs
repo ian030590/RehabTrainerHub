@@ -8,6 +8,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'seagull-flight', defaultMetric: 'passed', alternate: 'headAngle', row: { ring: 1, passed: 2, side: 1, headAngle: 14, offset: 40, altitude: 60 } },
   { id: 'hart-chart', defaultMetric: 'accuracy', alternate: 'attempts', row: { accuracy: 2, durationMs: 1000, targets: 10, attempts: 12, hints: 0 } },
   { id: 'driving-rehab', defaultMetric: 'rt', alternate: 'avoided', row: { rt: 2, avoided: 1, responded: 1, collision: 0, distance: 12, otherCollision: 0 } },
   { id: 'reading-training', defaultMetric: 'responseMs', alternate: 'correct',
