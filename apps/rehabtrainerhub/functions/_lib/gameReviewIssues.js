@@ -171,7 +171,8 @@ function EncodeBase64Url(bytes) {
 
 async function GitHubRequest(path, token, fetchRequest, init = {}) {
   const response = await fetchRequest(`${githubApiOrigin}${path}`, {
-    method: init.method || 'GET', signal: AbortSignal.timeout(15000), redirect: 'error',
+    // Workers reject redirect: 'error'; 'manual' plus the response.ok check below refuses redirects.
+    method: init.method || 'GET', signal: AbortSignal.timeout(15000), redirect: 'manual',
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json',
       'Content-Type': 'application/json', 'User-Agent': 'RehabTrainerHub-game-review', 'X-GitHub-Api-Version': '2026-03-10' },
     ...(init.body ? { body: JSON.stringify(init.body) } : {}),

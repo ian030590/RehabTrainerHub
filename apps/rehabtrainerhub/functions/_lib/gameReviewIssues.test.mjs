@@ -72,6 +72,9 @@ test('a submission creates a durable version ticket while the code remains priva
   await ProcessGameReviewIssueJobs(env, { fetch: github.fetch, nowSeconds });
   assert.equal(releaseBucketReads, 0);
   assert.equal(github.created.length, 1);
+  // Workers fetch throws on 'error'; only 'follow' and 'manual' are accepted.
+  assert.ok(github.redirects.length > 1);
+  assert.ok(github.redirects.every(redirect => redirect === 'manual'));
   assert.doesNotMatch(github.created[0].body, /PRIVATE_SOURCE|quarantine\/|owner-1|token=/);
   const issue = await db.prepare('SELECT * FROM game_review_issues WHERE release_id = ?').bind(release.id).first();
   assert.equal(issue.status, 'ready');
@@ -96,6 +99,22 @@ test('GitHub outages retain the private ticket and retry the same release', asyn
   await ProcessGameReviewIssueJobs(CreateEnvironment(db), { fetch: github.fetch, nowSeconds: nowSeconds + 3600 });
   assert.equal(github.created.length, 1);
   assert.equal((await db.prepare('SELECT status FROM game_review_issues').first()).status, 'ready');
+});
+
+test('a GitHub redirect is treated as a failure and the job retries later', async context => {
+  for (const redirectStatus of [301, 302, 307]) {
+    const db = await CreateDatabase(context);
+    const release = await SeedRelease(db);
+    await db.batch(CreateGameReviewIssueStatements(db, release.id));
+    const github = CreateGitHub({ redirectStatus });
+    await ProcessGameReviewIssueJobs(CreateEnvironment(db), { fetch: github.fetch, nowSeconds });
+    assert.equal(github.created.length, 0);
+    assert.equal((await db.prepare('SELECT status FROM game_review_issues').first()).status, 'pending');
+    const job = await db.prepare('SELECT * FROM game_review_issue_jobs').first();
+    assert.equal(job.status, 'pending');
+    assert.equal(job.attempts, 1);
+    assert.doesNotMatch(job.last_error, /attacker|ghs_|BEGIN PRIVATE KEY/);
+  }
 });
 
 test('a lost create response is reconciled with the App-created Issue before retrying', async context => {
@@ -364,9 +383,10 @@ async function SeedRelease(db, overrides = {}) {
 }
 
 function CreateGitHub(options = {}) {
-  const github = { issues: [], created: [], outage: false, loseCreateResponse: false, ...options };
+  const github = { issues: [], created: [], redirects: [], outage: false, redirectStatus: 0, loseCreateResponse: false, ...options };
   github.fetch = async (input, init = {}) => {
     const url = new URL(input);
+    github.redirects.push(init.redirect);
     if (url.pathname.endsWith('/access_tokens')) {
       const payload = JSON.parse(init.body);
       assert.deepEqual(payload.repository_ids, [789]);
@@ -374,6 +394,9 @@ function CreateGitHub(options = {}) {
       return Response.json({ token: 'ghs_test_private', expires_at: new Date((nowSeconds + 7200) * 1000).toISOString() });
     }
     if (github.outage) return new Response(null, { status: 503 });
+    if (github.redirectStatus) {
+      return new Response(null, { status: github.redirectStatus, headers: { Location: 'https://attacker.example/issues' } });
+    }
     assert.ok(url.pathname.startsWith('/repos/ian030590/RehabTrainerHub/issues'));
     if (!init.method || init.method === 'GET') return Response.json(github.issues);
     const payload = JSON.parse(init.body);
