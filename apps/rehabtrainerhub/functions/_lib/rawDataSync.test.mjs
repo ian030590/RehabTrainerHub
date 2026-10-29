@@ -64,7 +64,8 @@ function CreateWebdav(options = {}) {
       const method = init.method;
       requests.push({ url: String(url), init, method, path });
       assert.equal(new Headers(init.headers).get('Authorization'), `Basic ${Buffer.from(`${options.username ?? username}:${password}`, 'utf8').toString('base64')}`);
-      assert.equal(init.redirect, 'error');
+      // Workers fetch throws on 'error'; only 'follow' and 'manual' are accepted.
+      assert.equal(init.redirect, 'manual');
       assert.ok(init.signal instanceof AbortSignal);
       assert.equal(parsed.username, '');
       assert.equal(parsed.password, '');

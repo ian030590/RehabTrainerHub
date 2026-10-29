@@ -33,7 +33,8 @@ export async function ProcessRawDataSync(env, options = {}) {
     if (remaining <= 0) throw new Error('Sync time budget exhausted.');
     const response = await fetchRequest(`${env.PCLOUD_WEBDAV_URL}${path}`, {
       method, headers: { Authorization: authorization, ...(method === 'PUT' ? { 'Content-Type': 'text/csv; charset=utf-8' } : {}) },
-      body, redirect: 'error', signal: AbortSignal.timeout(Math.min(30000, remaining)),
+      // Workers reject redirect: 'error'; 'manual' plus the accepted-status check below refuses redirects.
+      body, redirect: 'manual', signal: AbortSignal.timeout(Math.min(30000, remaining)),
     });
     if (!accepted.includes(response.status)) {
       log(`raw-data-sync webdav ${method} http=${response.status}`);
