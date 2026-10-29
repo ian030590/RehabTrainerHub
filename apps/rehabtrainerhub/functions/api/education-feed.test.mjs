@@ -72,9 +72,21 @@ test('Origin-less build requests read the fixed Blogger blog with a header-only 
   assert.equal(headers.get('X-Goog-Api-Key'), env.BLOGGER_API_KEY);
   assert.equal(headers.get('Accept'), 'application/json');
   assert.ok(!calls[0].url.includes(env.BLOGGER_API_KEY));
-  assert.equal(calls[0].init.redirect, 'error');
+  // Workers fetch throws on 'error'; only 'follow' and 'manual' are accepted.
+  assert.equal(calls[0].init.redirect, 'manual');
   assert.ok(calls[0].init.signal instanceof AbortSignal);
   assert.deepEqual(timeouts, [8000]);
+});
+
+test('an upstream redirect is rejected without following it', async (t) => {
+  for (const status of [301, 302, 307, 308]) {
+    const { calls } = StubUpstream(t, () => new Response(null, {
+      status, headers: { Location: 'https://attacker.example/feed' },
+    }));
+    await AssertUnavailable(await onRequestGet({ request: Request(), env }));
+    assert.equal(calls.length, 1);
+    t.mock.restoreAll();
+  }
 });
 
 test('a missing Blogger key returns 503 without fetching or logging credentials', async (t) => {

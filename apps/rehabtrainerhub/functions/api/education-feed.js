@@ -68,7 +68,8 @@ async function ReadEducationFeed(apiKey) {
     }).toString();
     const response = await fetch(url.href, {
       headers: { Accept: 'application/json', 'X-Goog-Api-Key': apiKey },
-      redirect: 'error',
+      // Workers reject redirect: 'error'; 'manual' plus the 200-only check below refuses redirects.
+      redirect: 'manual',
       signal: AbortSignal.timeout(feedTimeoutMs),
     });
     if (response.status !== 200) throw new Error('upstream status');
