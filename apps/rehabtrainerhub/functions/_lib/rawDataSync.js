@@ -11,8 +11,9 @@ export async function ProcessRawDataSync(env, options = {}) {
   const rootSegments = root === '/' ? [] : typeof root === 'string' ? root.slice(1).split('/') : [];
   const sources = [[env.RAW_DATA, 'RAW_DATA', 'pending/'], [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'guests/'],
     [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'users/']];
-  if (!['api.pcloud.com', 'eapi.pcloud.com'].includes(env.PCLOUD_API_HOST)
-    || typeof env.PCLOUD_ACCESS_TOKEN !== 'string' || !/^[\x21-\x7e]+$/.test(env.PCLOUD_ACCESS_TOKEN)
+  if (!['https://ewebdav.pcloud.com', 'https://webdav.pcloud.com'].includes(env.PCLOUD_WEBDAV_URL)
+    || typeof env.PCLOUD_WEBDAV_USERNAME !== 'string' || !env.PCLOUD_WEBDAV_USERNAME || /[:\p{C}]/u.test(env.PCLOUD_WEBDAV_USERNAME)
+    || typeof env.PCLOUD_WEBDAV_PASSWORD !== 'string' || !env.PCLOUD_WEBDAV_PASSWORD || /[\x00-\x1f\x7f-\x9f]/.test(env.PCLOUD_WEBDAV_PASSWORD)
     || typeof root !== 'string' || !root.startsWith('/') || root.length > 1024
     || !rootSegments.every((segment) => /^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(segment))
     || sources.some(([bucket]) => ['list', 'get', 'head', 'delete'].some((method) => typeof bucket?.[method] !== 'function'))) {
@@ -22,43 +23,35 @@ export async function ProcessRawDataSync(env, options = {}) {
 
   const summary = { scanned: 0, uploaded: 0, alreadySynced: 0, deleted: 0, skipped: 0, failed: 0 };
   const deadline = now() + maximumRunMs;
-  const folders = new Map([['', 0]]);
+  const folders = new Set();
+  const authorization = `Basic ${btoa(Array.from(new TextEncoder().encode(`${env.PCLOUD_WEBDAV_USERNAME}:${env.PCLOUD_WEBDAV_PASSWORD}`),
+    (byte) => String.fromCharCode(byte)).join(''))}`;
   let consecutiveFailures = 0;
   const HasBudget = () => summary.scanned < maximumFiles && now() < deadline && consecutiveFailures < 3;
-  const Request = async (method, body, allowMissing = false) => {
+  const Request = async (method, path, accepted, body) => {
     const remaining = deadline - now();
     if (remaining <= 0) throw new Error('Sync time budget exhausted.');
-    const response = await fetchRequest(`https://${env.PCLOUD_API_HOST}/${method}`, {
-      method: 'POST', headers: { Authorization: `Bearer ${env.PCLOUD_ACCESS_TOKEN}` },
+    const response = await fetchRequest(`${env.PCLOUD_WEBDAV_URL}${path}`, {
+      method, headers: { Authorization: authorization, ...(method === 'PUT' ? { 'Content-Type': 'text/csv; charset=utf-8' } : {}) },
       body, redirect: 'error', signal: AbortSignal.timeout(Math.min(30000, remaining)),
     });
-    if (!response.ok) {
-      log(`raw-data-sync pcloud ${method} http=${response.status}`);
-      throw new Error('pCloud HTTP error.');
+    if (!accepted.includes(response.status)) {
+      log(`raw-data-sync webdav ${method} http=${response.status}`);
+      await response.body?.cancel();
+      throw new Error('WebDAV HTTP error.');
     }
-    const result = await response.json();
-    if (result?.result !== 0) {
-      // 2002: a parent folder is missing, 2005: the folder is missing, 2009: the file is missing.
-      if (allowMissing && [2002, 2005, 2009].includes(result?.result)) return null;
-      log(`raw-data-sync pcloud ${method} result=${Number.isSafeInteger(result?.result) ? result.result : 'invalid'}`);
-      throw new Error('pCloud result error.');
-    }
-    return result;
+    if (method !== 'GET') await response.body?.cancel();
+    return response;
   };
   const EnsureFolder = async (segments) => {
     let path = '';
-    let folderId = 0;
     for (const segment of segments) {
-      path += `/${segment}`;
+      path += `/${encodeURIComponent(segment)}`;
       if (!folders.has(path)) {
-        const result = await Request('createfolderifnotexists', new URLSearchParams({ folderid: String(folderId), name: segment }));
-        const id = result.metadata?.folderid;
-        if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Invalid pCloud folder metadata.');
-        folders.set(path, id);
+        await Request('MKCOL', path, [201, 405]);
+        folders.add(path);
       }
-      folderId = folders.get(path);
     }
-    return folderId;
   };
 
   for (const [bucket, label, prefix] of sources) {
@@ -89,33 +82,22 @@ export async function ProcessRawDataSync(env, options = {}) {
             || TargetSegments(object, prefix)?.join('/') !== target.join('/')) throw new Error('R2 object changed.');
           const bytes = await object.arrayBuffer();
           if (bytes.byteLength !== object.size) throw new Error('R2 size mismatch.');
-          const sha1 = await Digest('SHA-1', bytes);
           const sha256 = await Digest('SHA-256', bytes);
           const segments = [...rootSegments, ...target];
-          const filename = segments.pop();
-          const path = `/${[...segments, filename].join('/')}`;
+          const path = `/${segments.map(encodeURIComponent).join('/')}`;
           operation = 'existing-checksum';
-          const existing = await Request('checksumfile', new URLSearchParams({ path }), true);
-          if (MatchesChecksum(existing, object.size, sha1, sha256)) {
+          const existing = await Request('GET', path, [200, 404]);
+          if (await MatchesRemote(existing, object.size, sha256)) {
             summary.alreadySynced++;
           } else {
             operation = 'folders';
-            const folderId = await EnsureFolder(segments);
-            const form = new FormData();
-            form.append('folderid', String(folderId));
-            form.append('nopartial', '1');
-            form.append('file', new Blob([bytes], { type: 'text/csv' }), filename);
+            await EnsureFolder(segments.slice(0, -1));
             operation = 'upload';
-            const uploaded = await Request('uploadfile', form);
-            const fileId = uploaded.fileids?.[0];
-            const metadata = uploaded.metadata?.[0];
-            if (uploaded.fileids?.length !== 1 || uploaded.metadata?.length !== 1
-              || !Number.isSafeInteger(fileId) || fileId <= 0 || metadata.fileid !== fileId
-              || metadata.name !== filename || metadata.size !== object.size) throw new Error('Invalid pCloud upload metadata.');
+            await Request('PUT', path, [200, 201, 204], bytes);
             summary.uploaded++;
             operation = 'uploaded-checksum';
-            const verified = await Request('checksumfile', new URLSearchParams({ fileid: String(fileId) }));
-            if (!MatchesChecksum(verified, object.size, sha1, sha256)) throw new Error('pCloud checksum mismatch.');
+            const verified = await Request('GET', path, [200]);
+            if (!await MatchesRemote(verified, object.size, sha256)) throw new Error('WebDAV checksum mismatch.');
           }
           operation = 'delete';
           const current = await bucket.head(listed.key);
@@ -191,7 +173,29 @@ async function Digest(algorithm, bytes) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function MatchesChecksum(result, size, sha1, sha256) {
-  return result?.metadata?.size === size && typeof result.sha1 === 'string' && result.sha1.toLowerCase() === sha1
-    && (!Object.hasOwn(result, 'sha256') || (typeof result.sha256 === 'string' && result.sha256.toLowerCase() === sha256));
+async function MatchesRemote(response, size, sha256) {
+  if (response.status !== 200 || Number(response.headers.get('Content-Length')) > maximumBytes) {
+    await response.body?.cancel();
+    return false;
+  }
+  const reader = response.body?.getReader();
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (offset + value.byteLength > size) {
+          await reader.cancel();
+          return false;
+        }
+        bytes.set(value, offset);
+        offset += value.byteLength;
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+  return offset === size && await Digest('SHA-256', bytes) === sha256;
 }

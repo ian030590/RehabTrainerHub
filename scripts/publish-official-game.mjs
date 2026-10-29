@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile, readdir, lstat, mkdir, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { ContentTypeForPath, IsValidVersion, NormalizePackagePath, PackageKey, ReleaseKey, ValidateRelease } from '../apps/usergamerunner/functions/_lib/release.js';
 import { OfficialGameCatalogKey, ValidateOfficialGameCatalog } from '../apps/usergamerunner/functions/_lib/officialCatalog.js';
 import { maxGameCatalogBytes, ParseGameCatalogMetadata } from '../apps/rehabtrainerhub/games/gameCatalogMetadata.js';
+import { GetCloudflareCredentials } from './cloudflare-credentials.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -55,27 +55,6 @@ export async function BuildOfficialGameRelease(gameId) {
     contentSha256: sha256(JSON.stringify(entries)), approvedAt: new Date().toISOString() };
   ValidateRelease(manifest, gameId, version);
   return { manifest, files, registered };
-}
-
-async function GetCloudflareCredentials() {
-  let token = process.env.CLOUDFLARE_API_TOKEN;
-  if (!token) {
-    const configPath = process.env.WRANGLER_AUTH_CONFIG || (process.platform === 'win32'
-      ? resolve(process.env.APPDATA, 'xdg.config/.wrangler/config/default.toml')
-      : resolve(homedir(), '.config/.wrangler/config/default.toml'));
-    const source = await readFile(configPath, 'utf8').catch(() => '');
-    token = source.match(/^oauth_token\s*=\s*"([^"]+)"/m)?.[1];
-  }
-  if (!token) throw new Error('Set CLOUDFLARE_API_TOKEN or sign in with Wrangler.');
-  let account = process.env.CLOUDFLARE_ACCOUNT_ID;
-  if (!account) {
-    const response = await fetch('https://api.cloudflare.com/client/v4/accounts', { headers: { Authorization: `Bearer ${token}` } });
-    if (!response.ok) throw new Error(`Cloudflare account lookup failed (${response.status}); refresh Wrangler login.`);
-    const data = await response.json();
-    if (data.result?.length !== 1) throw new Error('Set CLOUDFLARE_ACCOUNT_ID explicitly.');
-    account = data.result[0].id;
-  }
-  return { token, account };
 }
 
 async function CreateR2Request() {

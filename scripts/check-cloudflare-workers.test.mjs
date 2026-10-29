@@ -73,13 +73,16 @@ test('raw CSV sync is a separate daily cron with only its two private R2 buckets
   const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
   assert.match(config, /^workers_dev = false$/m);
   assert.match(config, /^crons = \["17 19 \* \* \*"\]$/m);
-  assert.match(config, /^PCLOUD_API_HOST = "(?:api|eapi)\.pcloud\.com"$/m);
+  assert.match(config, /^PCLOUD_WEBDAV_URL = "https:\/\/ewebdav\.pcloud\.com"$/m);
+  assert.doesNotMatch(config, /PCLOUD_API_HOST/);
+  assert.match(config, /#.*PCLOUD_WEBDAV_USERNAME/);
+  assert.match(config, /#.*PCLOUD_WEBDAV_PASSWORD/);
   assert.match(config, /^PCLOUD_ROOT_FOLDER = "\/[^"\r\n]*"$/m);
   const buckets = [...config.matchAll(/\[\[r2_buckets\]\]\s+binding = "([^"]+)"\s+bucket_name = "([^"]+)"/g)]
     .map((match) => [match[1], match[2]]);
   assert.deepEqual(buckets, [['RAW_DATA', 'rehab-raw-data'], ['OCULOMOTOR_DATA', 'oculomotor-data']]);
   assert.equal((config.match(/\[\[r2_buckets\]\]/g) ?? []).length, 2);
-  assert.doesNotMatch(config, /\[\[(?:d1_databases|kv_namespaces|services)\]\]|GAME_RELEASE_BUCKET|AUTH_|^PCLOUD_ACCESS_TOKEN\s*=/m);
+  assert.doesNotMatch(config, /\[\[(?:d1_databases|kv_namespaces|services)\]\]|GAME_RELEASE_BUCKET|AUTH_|^PCLOUD_(?:ACCESS_TOKEN|WEBDAV_USERNAME|WEBDAV_PASSWORD)\s*=/m);
   for (const path of ['apps/usergamerunner/wrangler.toml', 'apps/usergamerunner/wrangler.workers.jsonc']) {
     assert.doesNotMatch(readFileSync(resolve(defaultRepoRoot, path), 'utf8'), /RAW_DATA|OCULOMOTOR_DATA|rehab-raw-data|oculomotor-data/);
   }
@@ -214,6 +217,7 @@ test('Hub Worker secrets are an explicit runtime allowlist that keeps runner ori
     TURNSTILE_REQUIRED: '1',
     TURNSTILE_RECORDS_REQUIRED: '1',
     ANONYMOUS_RECORDS_ENABLED: '1',
+    TRAINING_PLANS_ENABLED: '1',
     GAME_RELEASE_OWNER_USER_ID: 'owner-id',
     CLOUDFLARE_API_TOKEN: 'deploy-token',
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: 'site-key',
@@ -224,17 +228,19 @@ test('Hub Worker secrets are an explicit runtime allowlist that keeps runner ori
   assert.deepEqual(Object.keys(secrets).sort(), [
     'ADMIN_ALLOW_BEARER', 'ANONYMOUS_RECORDS_ENABLED', 'AUTH_ALLOWED_ORIGINS', 'AUTH_ALLOW_LOCAL_ORIGINS',
     'AUTH_BASE_URL', 'AUTH_SESSION_SECRET', 'AUTH_STATE_SECRET', 'GAME_RELEASE_OWNER_USER_ID', 'GAME_RUNNER_ORIGIN',
-    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TURNSTILE_RECORDS_REQUIRED', 'TURNSTILE_REQUIRED',
+    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TRAINING_PLANS_ENABLED', 'TURNSTILE_RECORDS_REQUIRED', 'TURNSTILE_REQUIRED',
     'TURNSTILE_SECRET_KEY', 'TURNSTILE_SKIP_HOSTNAME_CHECK',
   ]);
   assert.equal(secrets.AUTH_BASE_URL, 'https://trainerhub.cc');
   assert.equal(secrets.AUTH_ALLOWED_ORIGINS, 'https://trainerhub.cc');
   assert.equal(secrets.GAME_RUNNER_ORIGIN, newOrigin);
+  assert.equal(secrets.TRAINING_PLANS_ENABLED, '1');
   for (const name of ['ADMIN_ALLOW_BEARER', 'AUTH_ALLOW_LOCAL_ORIGINS', 'TURNSTILE_SKIP_HOSTNAME_CHECK']) assert.equal(secrets[name], '0');
 
   const withoutOptional = CreateHubWorkerSecrets({ ...environment, TURNSTILE_SITE_KEY: '', TURNSTILE_SECRET_KEY: '',
-    TURNSTILE_REQUIRED: '0', TURNSTILE_RECORDS_REQUIRED: '0', ANONYMOUS_RECORDS_ENABLED: '0', GAME_RELEASE_OWNER_USER_ID: '' }, movedApps);
+    TURNSTILE_REQUIRED: '0', TURNSTILE_RECORDS_REQUIRED: '0', ANONYMOUS_RECORDS_ENABLED: '0', TRAINING_PLANS_ENABLED: '', GAME_RELEASE_OWNER_USER_ID: '' }, movedApps);
   assert.equal('TURNSTILE_SECRET_KEY' in withoutOptional, false, 'empty values are not uploaded as secrets');
+  assert.equal(withoutOptional.TRAINING_PLANS_ENABLED, '0', 'practice lists stay off unless the repository variable is 1');
   assert.equal('GAME_RELEASE_OWNER_USER_ID' in withoutOptional, false);
 
   for (const blocked of [newOrigin, 'https://trainerhub-user-games.pages.dev']) {
@@ -244,6 +250,7 @@ test('Hub Worker secrets are an explicit runtime allowlist that keeps runner ori
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, TURNSTILE_SECRET_KEY: '' }, movedApps), /configured together/);
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, AUTH_SESSION_SECRET: '' }, movedApps), /AUTH_SESSION_SECRET/);
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, TURNSTILE_RECORDS_REQUIRED: '0' }, movedApps), /ANONYMOUS_RECORDS_ENABLED=1 requires/);
+  assert.throws(() => CreateHubWorkerSecrets({ ...environment, TRAINING_PLANS_ENABLED: 'yes' }, movedApps), /TRAINING_PLANS_ENABLED must be 0 or 1/);
 });
 
 test('asset responses keep Pages defaults while Function responses stay untouched', async () => {
@@ -406,7 +413,8 @@ test('the deploy workflow deploys Workers by default and Pages only when the rep
   assert.match(workersStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET != 'pages' && github\.ref == 'refs\/heads\/main' \}\}/);
   assert.match(workersStep, /run: node scripts\/deploy-cloudflare-workers\.mjs\n/);
   for (const name of ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'AUTH_SESSION_SECRET', 'AUTH_STATE_SECRET',
-    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TURNSTILE_SECRET_KEY', 'GAME_RELEASE_OWNER_USER_ID']) {
+    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TURNSTILE_SECRET_KEY', 'GAME_RELEASE_OWNER_USER_ID',
+    'ANONYMOUS_RECORDS_ENABLED', 'TRAINING_PLANS_ENABLED']) {
     assert.match(workersStep, new RegExp(`${name}: \\$\\{\\{ (?:secrets|vars)\\.${name} \\}\\}`), name);
   }
   assert.deepEqual(MatrixCommands(deploy), MatrixCommands(ci));

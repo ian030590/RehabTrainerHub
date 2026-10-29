@@ -31,7 +31,7 @@
     "test:i18n": "node scripts/check-i18n.mjs",
     "test:driving-rehab": "node --test scripts/check-driving-rehab-core.test.mjs",
     "test:driving-rehab-browser": "node scripts/check-driving-rehab-browser.mjs",
-    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs scripts/pages-deployment-scope.test.mjs scripts/check-cloudflare-workers.test.mjs",
+    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs scripts/pages-deployment-scope.test.mjs scripts/check-cloudflare-workers.test.mjs scripts/cleanup-d1-raw-records.test.mjs scripts/cleanup-oculomotor-csv.test.mjs",
     "test:workers-local": "node scripts/check-workers-local.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs apps/usergamerunner/tests/gameBridge.test.mjs packages/game-settings/src/index.test.mjs",

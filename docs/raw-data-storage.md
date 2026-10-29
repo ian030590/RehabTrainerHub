@@ -57,15 +57,15 @@ presence 與 face_found 為 0/1。tongue direction 為 Rest=0、Tongue_Left=-1�
 
 新眼動物件以 metadata 的 Subject ID 與固定日期轉成 `eye/oculomotor-training/<subjectId>/<date>/<recordId>.csv`，pCloud 路徑不包含帳號 ID。同步 list 帶 customMetadata，在 get 與刪除前 head 再檢查對應。舊 users 物件沒有有效 subjectId／recordedDate 時保留、不上傳、不刪除；舊 guests 物件沒有日期 metadata 時沿用 uploaded 的 UTC 日期。
 
-同步驗證完成後 R2 CSV 被刪除，下載 API 對不存在的檔案回覆 404。進度頁移除該檔下載按鈕，雙語說明同步檔案已封存、當次摘要仍保留；空白、載入、下載中及錯誤狀態均保留。404 不提供 pCloud 連結，也不讓 Subject ID 成為查詢授權。
+獨立同步 Worker 以 EU WebDAV `https://ewebdav.pcloud.com` 傳送 CSV；登入 email 與密碼只透過 `PCLOUD_WEBDAV_USERNAME`／`PCLOUD_WEBDAV_PASSWORD` secrets 設定，不再讀取 API token。GET 回讀的 byte 長度與 SHA-256 均相符，再通過 R2 head 檢查後才刪除 R2 CSV，下載 API 對不存在的檔案回覆 404。進度頁移除該檔下載按鈕，雙語說明同步檔案已封存、當次摘要仍保留；空白、載入、下載中及錯誤狀態均保留。404 不提供 pCloud 連結，也不讓 Subject ID 成為查詢授權。
 
 ## 後續與人工驗收
 
 - **TODO：滑鼠／pointer 座標只存在各遊戲沙盒內，需要逐款新版本與精確發布核准；本次不擷取。** 獨立 runner/PWA 的座標錄製亦不在此次 Hub 容器範圍。
 - **歷史 D1 資料未遷移、未刪除。** 舊 payload_json、game_runs、管理端匯出仍可能包含逐次資料；清理需擁有者另外核准與驗證。
 - 舊帳號眼動 CSV 缺少 metadata 的對應與補登需另案處理；不能宣稱所有歷史眼動均已同步。
-- 擁有者需部署 Hub 寫入端、建立私人 bucket，並依同步文件設定 pCloud secrets、確認區域／目錄與部署獨立排程 Worker。不得在同步 Worker 啟用前宣稱正式排程已運作。
-- 正式驗收用不含真人資料的 session：確認 D1 只有摘要、CSV metadata／bytes 與 pCloud 路徑相符；確認摘要校驗通過後 CSV 才刪除；同 record ID 更改 bytes 必須 409；中斷上傳與錯誤權杖不能造成原始檔遺失；封存後成果重試成功且下載 404 有說明。
+- 擁有者需部署 Hub 寫入端、建立私人 bucket，並依同步文件設定兩個 WebDAV secrets、移除已設定的舊 `PCLOUD_ACCESS_TOKEN`、確認 EU 端點／目錄，並手動部署獨立排程 Worker（目前 CI 部署腳本只部署 Hub／runner）。不得在同步 Worker 啟用前宣稱正式排程已運作。
+- 正式驗收用不含真人資料的 session：確認 D1 只有摘要、CSV metadata／bytes 與 pCloud 路徑相符；確認摘要校驗通過後 CSV 才刪除；同 record ID 更改 bytes 必須 409；中斷上傳與錯誤 WebDAV 密碼不能造成原始檔遺失；封存後成果重試成功且下載 404 有說明。
 - 瀏覽器人工驗收仍需桌機／360px 手機、鍵盤 Tab／Escape、相機同意／取消、實體代理輸入與進度頁下載；本機 hook harness 不等同實體相機或真實 pCloud 驗證。
 
 ## 測試紀錄

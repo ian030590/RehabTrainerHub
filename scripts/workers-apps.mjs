@@ -159,6 +159,7 @@ export function CreateHubWorkerSecrets(environment, apps, { dryRun = false } = {
   }
   const anonymousRecords = flag('ANONYMOUS_RECORDS_ENABLED');
   if (anonymousRecords === '1' && recordsRequired !== '1') throw new Error('ANONYMOUS_RECORDS_ENABLED=1 requires TURNSTILE_RECORDS_REQUIRED=1.');
+  const trainingPlans = flag('TRAINING_PLANS_ENABLED');
 
   // The old Pages runner keeps serving installed PWAs, so its origins stay blocked too.
   const runnerOrigins = new Set([runner.siteUrl, runner.pagesApp.siteUrl, runner.pagesApp.deploymentUrl].map(ToOrigin));
@@ -183,6 +184,7 @@ export function CreateHubWorkerSecrets(environment, apps, { dryRun = false } = {
     GAME_RUNNER_ORIGIN: runner.siteUrl,
     GOOGLE_CLIENT_ID: required('GOOGLE_CLIENT_ID'),
     GOOGLE_CLIENT_SECRET: required('GOOGLE_CLIENT_SECRET'),
+    TRAINING_PLANS_ENABLED: trainingPlans,
     TURNSTILE_RECORDS_REQUIRED: recordsRequired,
     TURNSTILE_REQUIRED: turnstileRequired,
     TURNSTILE_SECRET_KEY: secretKey,

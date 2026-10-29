@@ -1,10 +1,10 @@
 # 練習清單後端與操作畫面
 
-這個功能讓管理員或獲指派的工作人員，替指定玩家建立一份練習清單，包含遊戲、每週次數與設定。玩家依清單完成活動後累計本週進度。後端、工作人員分頁、玩家大廳區塊與遊戲設定串接均已實作，功能仍預設關閉。
+這個功能讓管理員或獲指派的工作人員，替指定玩家建立一份練習清單，包含遊戲、每週次數與設定。玩家依清單完成活動後累計本週進度。後端、工作人員分頁、玩家大廳區塊與遊戲設定串接均已實作。開關預設關閉；2026-10-29 擁有者決定在正式站開啟。
 
 ## 功能開關與啟用前提
 
-`TRAINING_PLANS_ENABLED` 只有字串 `'1'` 才會啟用。未設定、`'0'`、`'true'` 都停用。本次沒有更改正式環境設定，也沒有對正式環境執行 migration、部署或發布。
+`TRAINING_PLANS_ENABLED` 只有字串 `'1'` 才會啟用。未設定、`'0'`、`'true'` 都停用。正式站的值來自 GitHub repo variable `TRAINING_PLANS_ENABLED`（2026-10-29 設為 `1`）：Workers 部署步驟把它傳給 `scripts/deploy-cloudflare-workers.mjs`，由 `CreateHubWorkerSecrets` 以 `0`／`1` 寫入 Hub Worker 執行期設定。改值後要重新部署才生效。Pages 備援流程不傳這個開關。
 
 停用時，以下清單 API（包含 OPTIONS）一律回應 HTTP 404：
 
@@ -14,7 +14,7 @@
 
 既有遊戲啟動與紀錄保存維持可用，忽略 `planItemId`、`planFollowed`，不讀寫清單表、不回傳 `planSettings`、不在新 token 加入清單欄位。
 
-依 `AGENTS.md`，個別化使用在正式提供前，須先取得台灣醫療／醫材法規專業意見。本次依擁有者決定完成實作並保持停用；這不代表已完成法規審查。`0015_account_subject_ids.sql`、`0016_training_plans.sql` 會在 `main` 部署時由 `scripts/deploy-cloudflare-workers.mjs` 自動套用（已套用者不重跑）；建表不會開啟功能。正式開放前由擁有者確認法規意見與介面驗收，最後在 Hub Worker 的環境變數設定 `TRAINING_PLANS_ENABLED=1`。runner 不需要此開關或資料庫 binding。
+依 `AGENTS.md`，個別化使用在正式提供前，須先取得台灣醫療／醫材法規專業意見。2026-10-29 擁有者決定在正式站開啟；這個決定不代表已完成法規審查。`0015_account_subject_ids.sql`、`0016_training_plans.sql` 會在 `main` 部署時由 `scripts/deploy-cloudflare-workers.mjs` 自動套用（已套用者不重跑）；建表不會開啟功能。要關閉時把 repo variable 改成 `0`（`gh variable set TRAINING_PLANS_ENABLED --body 0`）再重新部署。runner 不需要此開關或資料庫 binding。
 
 測試環境也只有明確設定該字串才啟用。移除開關或改成 `'0'` 會立即停用後續 API、啟動綁定與進度累計，保留已存在的清單和進度資料。部署命令與正式環境操作由擁有者另行執行。
 

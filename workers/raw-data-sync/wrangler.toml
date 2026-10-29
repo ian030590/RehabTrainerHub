@@ -8,7 +8,7 @@ preview_urls = false
 crons = ["17 19 * * *"]
 
 [vars]
-PCLOUD_API_HOST = "api.pcloud.com"
+PCLOUD_WEBDAV_URL = "https://ewebdav.pcloud.com"
 PCLOUD_ROOT_FOLDER = "/RehabTrainerHub/raw-data"
 
 [[r2_buckets]]
@@ -19,4 +19,4 @@ bucket_name = "rehab-raw-data"
 binding = "OCULOMOTOR_DATA"
 bucket_name = "oculomotor-data"
 
-# Server-only secret: PCLOUD_ACCESS_TOKEN.
+# Server-only secrets: PCLOUD_WEBDAV_USERNAME (pCloud login email), PCLOUD_WEBDAV_PASSWORD.

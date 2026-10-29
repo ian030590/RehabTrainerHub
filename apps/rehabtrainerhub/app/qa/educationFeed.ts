@@ -1,17 +1,7 @@
-export const educationFeedUrl = 'https://ian.trainerhub.cc/rss.xml';
-
-// The personal site also publishes 數位學習／AI應用 posts; only these tags are 衛教.
+// The blog also publishes 數位學習／AI應用 posts; only these tags are 衛教.
 export const educationCategories = ['中風復健', '視覺復健', '動作復健', '認知復健'];
-
-const allowedArticleHosts = new Set(['ian.trainerhub.cc', 'ian030590.trainerhub.cc']);
-
-const xmlEntities: Record<string, string> = {
-  amp: '&',
-  apos: "'",
-  gt: '>',
-  lt: '<',
-  quot: '"',
-};
+export const educationFeedProxyPath = '/api/education-feed';
+const productionFeedUrl = 'https://trainerhub.cc/api/education-feed';
 
 export interface EducationLink {
   title: string;
@@ -22,89 +12,64 @@ export interface EducationLink {
   publishedAt: string;
 }
 
-function DecodeXmlText(value: string): string {
-  const cdata = /^\s*<!\[CDATA\[([\s\S]*)\]\]>\s*$/.exec(value);
-  if (cdata) return cdata[1].trim();
-  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, name: string) => {
-    if (name[0] !== '#') return xmlEntities[name.toLowerCase()] ?? entity;
-    const codePoint = name[1].toLowerCase() === 'x'
-      ? Number.parseInt(name.slice(2), 16)
-      : Number.parseInt(name.slice(1), 10);
-    return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
-  }).trim();
+function IsPlainText(value: unknown): value is string {
+  return typeof value === 'string' && value === value.replace(/\s+/g, ' ').trim()
+    && !/<\/?[a-z][^>]*>|<!--/i.test(value);
 }
 
-function ReadTags(block: string, name: string): string[] {
-  const pattern = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`, 'g');
-  return Array.from(block.matchAll(pattern), (match) => DecodeXmlText(match[1]));
-}
-
-function ReadArticleUrl(value: string): string | null {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' && allowedArticleHosts.has(url.hostname) ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
-function ReadPublishedAt(value: string): string {
-  const date = new Date(value);
-  return value && !Number.isNaN(date.getTime()) ? date.toISOString() : '';
-}
-
-export function ParseEducationFeed(xml: string): EducationLink[] {
+function ValidateEducationLinks(body: unknown): EducationLink[] {
+  if (!body || typeof body !== 'object' || Array.isArray(body)
+    || !('links' in body) || !Array.isArray(body.links)) throw new Error('Invalid education feed response');
   const links: EducationLink[] = [];
-  const seenUrls = new Set<string>();
-  for (const [, item] of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
-    const categories = ReadTags(item, 'category')
-      .filter((category) => educationCategories.includes(category));
-    if (categories.length === 0) continue;
-    const url = ReadArticleUrl(ReadTags(item, 'link')[0] ?? '');
-    const title = ReadTags(item, 'title')[0] ?? '';
-    if (!url || !title || seenUrls.has(url)) continue;
-    seenUrls.add(url);
-    // RSS 2.0 author is "email (display name)"; only the name is shown.
-    const author = /\(([^)\s]+)/.exec(ReadTags(item, 'author')[0] ?? '');
-    links.push({
-      title,
-      summary: ReadTags(item, 'description')[0] ?? '',
-      url,
-      categories,
-      authorName: author?.[1] ?? '',
-      publishedAt: ReadPublishedAt(ReadTags(item, 'pubDate')[0] ?? ''),
-    });
+  for (const item of body.links) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)
+      || !IsPlainText(item.title) || !item.title || !IsPlainText(item.summary)
+      || Array.from(item.summary).length > 160 || typeof item.authorName !== 'string'
+      || typeof item.publishedAt !== 'string' || typeof item.url !== 'string'
+      || !Array.isArray(item.categories) || !item.categories.every((category: unknown) => typeof category === 'string')) continue;
+    const categories = educationCategories.filter(category => item.categories.includes(category));
+    if (!categories.length) continue;
+    if (item.publishedAt) {
+      const date = new Date(item.publishedAt);
+      if (Number.isNaN(date.getTime()) || date.toISOString() !== item.publishedAt) continue;
+    }
+    try {
+      const url = new URL(item.url);
+      if (!['https:', 'http:'].includes(url.protocol) || url.host !== 'blog.trainerhub.cc'
+        || url.username || url.password) continue;
+      url.protocol = 'https:';
+      links.push({
+        title: item.title, summary: item.summary, url: url.href, categories,
+        authorName: item.authorName, publishedAt: item.publishedAt,
+      });
+    } catch {
+      continue;
+    }
   }
-  return links;
+  links.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  const seenUrls = new Set<string>();
+  return links.filter(link => {
+    if (seenUrls.has(link.url)) return false;
+    seenUrls.add(link.url);
+    return true;
+  });
 }
 
-// The personal site sends no CORS headers, so browsers read the feed through the Hub.
-export const educationFeedProxyPath = '/api/education-feed';
+async function ReadEducationLinks(url: string, signal?: AbortSignal): Promise<EducationLink[]> {
+  const response = await fetch(url, { headers: { Accept: 'application/json' }, signal });
+  if (!response.ok) throw new Error(`Education feed returned ${response.status}`);
+  return ValidateEducationLinks(await response.json());
+}
 
 export async function FetchEducationLinks(signal?: AbortSignal): Promise<EducationLink[]> {
-  const response = await fetch(educationFeedProxyPath, { headers: { Accept: 'application/json' }, signal });
-  if (!response.ok) throw new Error(`Education feed returned ${response.status}`);
-  const body: unknown = await response.json();
-  const xml = body && typeof body === 'object' ? (body as { xml?: unknown }).xml : undefined;
-  if (typeof xml !== 'string') throw new Error('Invalid education feed response');
-  return ParseEducationFeed(xml);
-}
-
-async function FetchEducationFeedDirectly(signal: AbortSignal): Promise<EducationLink[]> {
-  const response = await fetch(educationFeedUrl, {
-    headers: { Accept: 'application/rss+xml, application/xml' },
-    signal,
-  });
-  if (!response.ok) throw new Error(`Education feed returned ${response.status}`);
-  return ParseEducationFeed(await response.text());
+  return ReadEducationLinks(educationFeedProxyPath, signal);
 }
 
 export async function LoadEducationLinks(): Promise<EducationLink[]> {
   try {
-    return await FetchEducationFeedDirectly(AbortSignal.timeout(10_000));
+    return await ReadEducationLinks(productionFeedUrl, AbortSignal.timeout(10_000));
   } catch (error) {
-    // The rest of the static QA page remains available when the personal site
-    // is down; the browser retries the feed and build logs expose the gap.
+    // Builds have no Blogger key; the browser retries when production is unavailable or still serves RSS.
     console.warn('Could not prerender education links:', error);
     return [];
   }
