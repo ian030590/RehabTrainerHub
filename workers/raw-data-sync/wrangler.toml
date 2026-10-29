@@ -12,7 +12,7 @@ enabled = true
 
 [vars]
 PCLOUD_WEBDAV_URL = "https://ewebdav.pcloud.com"
-PCLOUD_ROOT_FOLDER = "/RehabTrainerHub/raw-data"
+PCLOUD_ROOT_FOLDER = "/4_RehabTrainerHubData"
 
 [[r2_buckets]]
 binding = "RAW_DATA"

@@ -3,11 +3,10 @@
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { EducationArticles } from './EducationArticles';
-import type { EducationLink } from './educationFeed';
 
 const personalWebsiteUrl = 'https://ian.trainerhub.cc/';
 
-export function QuestionsContent({ articles }: { articles: EducationLink[] }) {
+export function QuestionsContent() {
   const { language } = useHubLanguage();
   const copy = GetHubUiCopy(language).questions;
 
@@ -40,7 +39,7 @@ export function QuestionsContent({ articles }: { articles: EducationLink[] }) {
         </p>
       </section>
 
-      <EducationArticles initialArticles={articles} />
+      <EducationArticles />
     </main>
   );
 }

@@ -189,24 +189,8 @@ export const en = {
     educationArticles: {
       kicker: 'Educational information',
       title: 'Home Training Articles',
-      count: '{count} articles',
-      sourceNote: "These articles are published in Traditional Chinese on the author's blog. Selecting a title opens the full article in a new tab.",
-      loadErrorTitle: 'Education articles are unavailable right now',
-      loadErrorBody: 'Please try again later or reload this page.',
-      reload: 'Reload',
-      loading: 'Loading education articles…',
-      emptyTitle: 'Education articles are being prepared',
-      emptyBody: "Related articles will appear here after they are published on the author's blog.",
-      categories: {
-        中風復健: 'Stroke rehabilitation',
-        視覺復健: 'Vision rehabilitation',
-        動作復健: 'Motor rehabilitation',
-        認知復健: 'Cognitive rehabilitation',
-      },
-    },
-    educationArticle: {
-      author: 'By',
-      published: 'Published',
+      sourceNote: "Read educational articles in Traditional Chinese on the author's blog.",
+      blogLink: 'Visit the education blog',
       opensInNewTab: '(opens in a new tab)',
     },
     questions: {

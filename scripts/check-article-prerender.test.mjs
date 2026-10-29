@@ -119,56 +119,60 @@ test('prerender warns and returns an empty list for the old XML response, invali
   assert.ok(warnings.every(args => args[0] === 'Could not prerender education links:'));
 });
 
-test('education links render as outbound blog links before browser JavaScript', async () => {
-  const feed = await Load(feedPath, {});
-  const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
-    './educationFeed': feed,
-    '../i18n': { GetHubUiCopy: () => ({
-      educationArticles: { sourceNote: 'Source note', categories: { 視覺復健: 'Vision' } },
-      educationArticle: { author: 'By', published: 'Published', opensInNewTab: '(opens in a new tab)' },
-    }) },
-    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: (key) => key }) },
-  });
-  const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles: [expectedLink] }));
-  assert.match(html, /href="https:\/\/blog\.trainerhub\.cc\/2026\/09\/blog-post_164\.html"/);
-  assert.match(html, /target="_blank"/);
-  assert.match(html, /rel="noopener"/);
-  assert.match(html, /凝視穩定運動 &amp; 生活目標/);
-  assert.match(html, /頭動時的視覺困難 &lt;與練習&gt;/);
-  assert.match(html, /\(opens in a new tab\)/);
-  assert.match(html, />Vision</);
-  assert.match(html, />動作復健</);
-  assert.match(html, /href="#professional-background">蔡泓恩</);
-  assert.match(html, /dateTime="2026-10-15T00:00:00.000Z"/);
-  assert.match(html, /Source note/);
-  assert.doesNotMatch(html, /minimal-loading-spinner/);
-  assert.doesNotMatch(html, /<details/);
-});
-
-test('an empty build-time list shows loading instead of claiming there are no articles', async () => {
-  const feed = await Load(feedPath, {});
-  const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
-    './educationFeed': feed,
-    '../i18n': { GetHubUiCopy: () => ({
-      educationArticles: { sourceNote: 'Source note', loading: 'Loading articles', emptyTitle: 'No articles yet', categories: {} },
-      educationArticle: { author: 'By', published: 'Published', opensInNewTab: '(opens in a new tab)' },
-    }) },
-    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: (key) => key }) },
-  });
-  const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles: [] }));
-  assert.match(html, /role="status"[^>]*>.*Loading articles/);
-  assert.doesNotMatch(html, /No articles yet/);
-});
-
-test('both languages describe the article blog while the author website link stays separate', async () => {
+test('education shows one blog link without article previews or loading states in either language before JavaScript', async () => {
   const { zhTW } = await Load('apps/rehabtrainerhub/app/i18n/zh-TW.ts', {});
   const { en } = await Load('apps/rehabtrainerhub/app/i18n/en.ts', {});
-  assert.equal(zhTW.hubUi.educationArticles.sourceNote, '以下文章刊登在作者的部落格，點標題會在新分頁開啟全文。');
-  assert.equal(zhTW.hubUi.educationArticles.emptyBody, '作者部落格發布相關文章後，會列在這裡。');
-  assert.match(en.hubUi.educationArticles.sourceNote, /author's blog/);
-  assert.match(en.hubUi.educationArticles.emptyBody, /author's blog/);
-  const questions = await readFile(new URL('../apps/rehabtrainerhub/app/qa/QuestionsContent.tsx', import.meta.url), 'utf8');
-  assert.match(questions, /const personalWebsiteUrl = 'https:\/\/ian\.trainerhub\.cc\/'/);
+  for (const [language, dictionary] of [['zh', zhTW], ['en', en]]) {
+    const feed = await Load(feedPath, {});
+    const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
+      './educationFeed': feed,
+      '../i18n': { GetHubUiCopy: () => dictionary.hubUi },
+      '../i18n/HubLanguage': { useHubLanguage: () => ({ language, locale: language === 'zh' ? 'zh-TW' : 'en', t: (key) => key }) },
+    });
+    for (const initialArticles of [[], [expectedLink]]) {
+      const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles }));
+      assert.match(html, /href="https:\/\/ian\.trainerhub\.cc\/blog"/);
+      assert.equal((html.match(/<a\b/g) ?? []).length, 1);
+      assert.match(html, /target="_blank"/);
+      assert.match(html, /rel="noopener"/);
+      assert.ok(html.includes(dictionary.hubUi.educationArticles.blogLink));
+      assert.ok(html.includes(dictionary.hubUi.educationArticles.opensInNewTab));
+      assert.doesNotMatch(html, /education-article-list|education-article-summary|role="status"|role="alert"|<time\b|blog\.trainerhub\.cc/);
+      assert.doesNotMatch(html, /凝視穩定運動|頭動時的視覺困難/);
+    }
+  }
+});
+
+test('the FAQ renders the blog and separate author website links without loading an article feed', async () => {
+  const { zhTW } = await Load('apps/rehabtrainerhub/app/i18n/zh-TW.ts', {});
+  const imports = {
+    '../i18n': { GetHubUiCopy: () => zhTW.hubUi },
+    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'zh', locale: 'zh-TW', t: (key) => key }) },
+    './educationFeed': await Load(feedPath, {}),
+  };
+  const education = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', imports);
+  const questions = await Load('apps/rehabtrainerhub/app/qa/QuestionsContent.tsx', {
+    ...imports,
+    './EducationArticles': education,
+  });
+  const requests = [];
+  const { default: QuestionsPage } = await Load('apps/rehabtrainerhub/app/qa/page.tsx', {
+    './QuestionsContent': questions,
+    './educationFeed': { LoadEducationLinks: async () => { requests.push('/api/education-feed'); return [expectedLink]; } },
+    '../seo': {
+      CreateSeoMetadata: () => ({}),
+      CreatePageJsonLd: (value) => value,
+      maintainerPageJsonLd: {},
+      SerializeJsonLd: JSON.stringify,
+    },
+  });
+  const html = renderToStaticMarkup(await QuestionsPage());
+  assert.deepEqual(requests, []);
+  assert.match(html, /href="https:\/\/ian\.trainerhub\.cc\/blog"/);
+  assert.match(html, /href="https:\/\/ian\.trainerhub\.cc\/" rel="me"/);
+  assert.match(html, /id="professional-background"/);
+  assert.match(html, /<h1>常見問答<\/h1>/);
+  assert.doesNotMatch(html, /education-article-list|凝視穩定運動/);
 });
 
 test('the Hub no longer hosts its own article authoring', async () => {

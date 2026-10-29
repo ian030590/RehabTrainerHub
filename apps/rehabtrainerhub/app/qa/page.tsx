@@ -6,7 +6,6 @@ import {
   SerializeJsonLd,
 } from '../seo';
 import { QuestionsContent } from './QuestionsContent';
-import { LoadEducationLinks } from './educationFeed';
 
 const metadataTitle = '居家訓練衛教、常見問答與作者背景';
 const pageName = '常見問答';
@@ -18,8 +17,7 @@ export const metadata: Metadata = CreateSeoMetadata({
   path: '/qa',
 });
 
-export default async function QuestionsPage() {
-  const articles = await LoadEducationLinks();
+export default function QuestionsPage() {
   return (
     <>
       <script
@@ -38,7 +36,7 @@ export default async function QuestionsPage() {
           })),
         }}
       />
-      <QuestionsContent articles={articles} />
+      <QuestionsContent />
     </>
   );
 }

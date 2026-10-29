@@ -189,24 +189,8 @@ export const zhTW = {
     educationArticles: {
       kicker: '衛教資訊',
       title: '居家訓練衛教',
-      count: '{count} 篇文章',
-      sourceNote: '以下文章刊登在作者的部落格，點標題會在新分頁開啟全文。',
-      loadErrorTitle: '暫時無法載入衛教文章',
-      loadErrorBody: '請稍後再試，或重新整理這個頁面。',
-      reload: '重新載入',
-      loading: '正在載入衛教文章…',
-      emptyTitle: '衛教文章準備中',
-      emptyBody: '作者部落格發布相關文章後，會列在這裡。',
-      categories: {
-        中風復健: '中風復健',
-        視覺復健: '視覺復健',
-        動作復健: '動作復健',
-        認知復健: '認知復健',
-      },
-    },
-    educationArticle: {
-      author: '撰文',
-      published: '發布',
+      sourceNote: '衛教文章請至作者的部落格閱讀。',
+      blogLink: '前往衛教文章部落格',
       opensInNewTab: '（在新分頁開啟）',
     },
     questions: {
