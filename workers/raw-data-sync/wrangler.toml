@@ -1,4 +1,4 @@
-name = "rehab-raw-data-sync"
+name = "trainerhubsync"
 main = "index.js"
 compatibility_date = "2026-10-24"
 workers_dev = false

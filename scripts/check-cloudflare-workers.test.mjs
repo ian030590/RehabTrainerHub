@@ -71,6 +71,7 @@ test('binding drift from the Pages config is reported instead of creating empty 
 
 test('raw CSV sync is a separate daily cron with only its two private R2 buckets', () => {
   const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
+  assert.match(config, /^name = "trainerhubsync"$/m);
   assert.match(config, /^workers_dev = false$/m);
   assert.match(config, /^crons = \["17 19 \* \* \*"\]$/m);
   assert.match(config, /^PCLOUD_WEBDAV_URL = "https:\/\/ewebdav\.pcloud\.com"$/m);

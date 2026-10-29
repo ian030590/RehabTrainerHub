@@ -4,7 +4,7 @@
 
 ## 同步範圍與路徑
 
-獨立 Worker `rehab-raw-data-sync` 每天 19:17 UTC（臺灣隔天 03:17）執行。只綁定兩個私人 R2 bucket，沒有 D1、KV、Hub 認證或遊戲發布 bucket；不提供 HTTP 入口。Hub／runner 的既有部署命令不會部署此 Worker，runner 不取得這兩個 bucket。
+獨立 Worker `trainerhubsync` 每天 19:17 UTC（臺灣隔天 03:17）執行。只綁定兩個私人 R2 bucket，沒有 D1、KV、Hub 認證或遊戲發布 bucket；不提供 HTTP 入口。Hub／runner 的既有部署命令不會部署此 Worker，runner 不取得這兩個 bucket。
 
 | R2 來源 | pCloud 目的地（相對於根目錄） |
 | --- | --- |
@@ -68,7 +68,7 @@
    npx wrangler deploy --config workers/raw-data-sync/wrangler.toml
    ```
 
-   `scripts/deploy-cloudflare-workers.mjs` 只部署 `trainerhubgames` 與 `trainerhub`；目前 `.github/workflows/deploy-cloudflare-pages.yml` 透過該腳本部署這兩站，不會部署 `rehab-raw-data-sync`。CI 會執行相關測試，不能據此宣稱同步 Worker 已部署。確認它的 Cron 為 `17 19 * * *`。
+   `scripts/deploy-cloudflare-workers.mjs` 只部署 `trainerhubgames` 與 `trainerhub`；目前 `.github/workflows/deploy-cloudflare-pages.yml` 透過該腳本部署這兩站，不會部署 `trainerhubsync`。CI 會執行相關測試，不能據此宣稱同步 Worker 已部署。確認它的 Cron 為 `17 19 * * *`。
 
 [pCloud 官方 WebDAV 說明](https://help.pcloud.com/article/connect-to-pcloud-using-webdav-and-rsync)（2026-10-29 查閱）列出 EU／US 端點及登入 email／密碼。該頁說明 WebDAV 適合較小的傳輸，長時間的大型或頻繁備份可能中斷；本專案的 25 MiB 與每輪 200 檔是自身限制。本文不推定帳號方案或未實測的登入行為。
 
