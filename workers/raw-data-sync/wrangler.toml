@@ -7,6 +7,9 @@ preview_urls = false
 [triggers]
 crons = ["17 19 * * *"]
 
+[observability]
+enabled = true
+
 [vars]
 PCLOUD_WEBDAV_URL = "https://ewebdav.pcloud.com"
 PCLOUD_ROOT_FOLDER = "/RehabTrainerHub/raw-data"

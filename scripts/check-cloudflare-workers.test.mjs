@@ -73,6 +73,8 @@ test('raw CSV sync is a separate daily cron with only its two private R2 buckets
   const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
   assert.match(config, /^name = "trainerhubsync"$/m);
   assert.match(config, /^workers_dev = false$/m);
+  // Persisted logs show each run's counts; the sync tests keep secrets, keys and Subject IDs out of them.
+  assert.match(config, /^\[observability\]\r?\nenabled = true$/m);
   assert.match(config, /^crons = \["17 19 \* \* \*"\]$/m);
   assert.match(config, /^PCLOUD_WEBDAV_URL = "https:\/\/ewebdav\.pcloud\.com"$/m);
   assert.doesNotMatch(config, /PCLOUD_API_HOST/);

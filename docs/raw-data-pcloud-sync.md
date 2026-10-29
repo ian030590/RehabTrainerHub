@@ -88,7 +88,7 @@
 
 ## 查核日誌
 
-在排程執行前開啟 Cloudflare Worker 的即時日誌，或使用：
+2026-10-29 起 `wrangler.toml` 開啟 `[observability]`（Workers Logs），每輪日誌會保存，事後可在 Cloudflare 儀表板 Workers & Pages → `trainerhubsync` → Logs 查看，不必在排程時守著即時日誌。保存期間與每日額度依 Cloudflare 方案。即時查看仍可用：
 
 ```sh
 npx wrangler tail --config workers/raw-data-sync/wrangler.toml
