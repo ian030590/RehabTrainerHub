@@ -57,6 +57,9 @@ export function ProgressDashboard() {
   const [gazeCursor, setGazeCursor] = useState<string | null>(null);
   const [gazeOwnerId, setGazeOwnerId] = useState<string | null>(null);
   const [gazeError, setGazeError] = useState(false);
+  const [gazeArchived, setGazeArchived] = useState(false);
+  const [gazeLoading, setGazeLoading] = useState(false);
+  const [gazeBusy, setGazeBusy] = useState<string | null>(null);
   const copy = GetHubUiCopy(language).progress;
 
   useEffect(() => {
@@ -89,6 +92,7 @@ export function ProgressDashboard() {
     setGazeFiles([]);
     setGazeCursor(null);
     setGazeOwnerId(null);
+    setGazeArchived(false); setGazeBusy(null); setGazeLoading(Boolean(user));
     setGazeError(false);
     if (!user) {
       return;
@@ -106,15 +110,24 @@ export function ProgressDashboard() {
       setGazeCursor(cursor);
       setGazeOwnerId(user.id);
       setGazeError(false);
-    }).catch(() => { if (!controller.signal.aborted) setGazeError(true); });
+    }).catch(() => { if (!controller.signal.aborted) setGazeError(true); })
+      .finally(() => { if (!controller.signal.aborted) setGazeLoading(false); });
     return () => controller.abort();
   }, [user]);
 
   const downloadGazeCsv = async (recordId: string) => {
+    const token = GetAuthToken();
+    setGazeBusy(recordId);
     try {
       const response = await fetch(`/api/oculomotor-data?recordId=${encodeURIComponent(recordId)}`, {
         headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
       });
+      if (GetAuthToken() !== token) return;
+      if (response.status === 404) {
+        setGazeFiles(current => current.filter(file => file.recordId !== recordId));
+        setGazeArchived(true); setGazeError(false); setGazeBusy(null);
+        return;
+      }
       if (!response.ok) throw new Error(`Gaze CSV download failed (${response.status}).`);
       const url = URL.createObjectURL(await response.blob());
       const link = document.createElement('a');
@@ -124,13 +137,16 @@ export function ProgressDashboard() {
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setGazeError(false);
     } catch {
-      setGazeError(true);
+      if (GetAuthToken() === token) setGazeError(true);
     }
+    if (GetAuthToken() === token) setGazeBusy(null);
   };
 
   const loadMoreGazeFiles = async () => {
-    if (!gazeCursor) return;
+    if (!gazeCursor || gazeLoading) return;
+    setGazeLoading(true);
     try {
       const response = await fetch(`/api/oculomotor-data?cursor=${encodeURIComponent(gazeCursor)}`, {
         headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
@@ -143,6 +159,7 @@ export function ProgressDashboard() {
     } catch {
       setGazeError(true);
     }
+    setGazeLoading(false);
   };
 
   const achievements = progress?.achievements ?? emptyAchievements;
@@ -321,18 +338,20 @@ export function ProgressDashboard() {
             <h2 id="gaze-files-title">{language === 'en' ? 'Eye movement CSV records' : '眼動訓練逐筆座標 CSV'}</h2>
           </header>
           {gazeError && <p role="alert">{language === 'en' ? 'Unable to load or download CSV. Please try again.' : '無法載入或下載 CSV，請稍後重試。'}</p>}
-          {visibleGazeFiles.length === 0 && !gazeError && <p>{language === 'en' ? 'No saved gaze CSV yet.' : '目前沒有已儲存的逐筆座標 CSV。'}</p>}
+          {gazeLoading && <p role="status">{language === 'en' ? 'Loading CSV files…' : '正在載入 CSV 檔案…'}</p>}
+          {gazeArchived && <p role="status">{language === 'en' ? 'This per-sample file is no longer in site storage. Synced files are kept in the site archive; the session summary is still here.' : '此逐筆檔案已不在本站儲存區；同步的檔案保存在網站封存空間，當次摘要仍保留。'}</p>}
+          {visibleGazeFiles.length === 0 && !gazeError && !gazeLoading && <p>{language === 'en' ? 'No CSV files in site storage. Archived files are no longer listed here; session summaries remain.' : '本站儲存區目前沒有 CSV 檔案。已封存的檔案不再列於此處，當次摘要仍保留。'}</p>}
           <ul>
             {visibleGazeFiles.map((file) => (
               <li key={file.recordId}>
                 <time dateTime={file.uploadedAt}>{new Date(file.uploadedAt).toLocaleString(locale)}</time>{' '}
-                <button type="button" onClick={() => void downloadGazeCsv(file.recordId)}>
-                  {language === 'en' ? 'Download CSV' : '下載 CSV'}
+                <button type="button" disabled={gazeBusy !== null} onClick={() => void downloadGazeCsv(file.recordId)}>
+                  {gazeBusy === file.recordId ? (language === 'en' ? 'Downloading…' : '下載中…') : (language === 'en' ? 'Download CSV' : '下載 CSV')}
                 </button>
               </li>
             ))}
           </ul>
-          {visibleGazeCursor && <button type="button" onClick={() => void loadMoreGazeFiles()}>{language === 'en' ? 'Load more' : '載入更多'}</button>}
+          {visibleGazeCursor && <button type="button" disabled={gazeLoading} onClick={() => void loadMoreGazeFiles()}>{language === 'en' ? 'Load more' : '載入更多'}</button>}
         </section>
       )}
 

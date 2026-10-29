@@ -52,6 +52,7 @@ test('Workers use the owner-confirmed names and reuse every Pages binding unchan
   assert.deepEqual(hub.config.r2_buckets.map(({ binding, bucket_name: bucketName }) => [binding, bucketName]), [
     ['ASSET_BUCKET', 'rehab-storage'],
     ['OCULOMOTOR_DATA', 'oculomotor-data'],
+    ['RAW_DATA', 'rehab-raw-data'],
     ['GAME_QUARANTINE_BUCKET', 'rehab-game-quarantine'],
     ['GAME_RELEASE_BUCKET', 'rehab-game-releases'],
   ]);
@@ -68,6 +69,22 @@ test('binding drift from the Pages config is reported instead of creating empty 
   assert.match(FindWorkerConfigProblems([newDate, runner]).join('\n'), /compatibility_date must stay 2026-07-02/);
 });
 
+test('raw CSV sync is a separate daily cron with only its two private R2 buckets', () => {
+  const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
+  assert.match(config, /^workers_dev = false$/m);
+  assert.match(config, /^crons = \["17 19 \* \* \*"\]$/m);
+  assert.match(config, /^PCLOUD_API_HOST = "(?:api|eapi)\.pcloud\.com"$/m);
+  assert.match(config, /^PCLOUD_ROOT_FOLDER = "\/[^"\r\n]*"$/m);
+  const buckets = [...config.matchAll(/\[\[r2_buckets\]\]\s+binding = "([^"]+)"\s+bucket_name = "([^"]+)"/g)]
+    .map((match) => [match[1], match[2]]);
+  assert.deepEqual(buckets, [['RAW_DATA', 'rehab-raw-data'], ['OCULOMOTOR_DATA', 'oculomotor-data']]);
+  assert.equal((config.match(/\[\[r2_buckets\]\]/g) ?? []).length, 2);
+  assert.doesNotMatch(config, /\[\[(?:d1_databases|kv_namespaces|services)\]\]|GAME_RELEASE_BUCKET|AUTH_|^PCLOUD_ACCESS_TOKEN\s*=/m);
+  for (const path of ['apps/usergamerunner/wrangler.toml', 'apps/usergamerunner/wrangler.workers.jsonc']) {
+    assert.doesNotMatch(readFileSync(resolve(defaultRepoRoot, path), 'utf8'), /RAW_DATA|OCULOMOTOR_DATA|rehab-raw-data|oculomotor-data/);
+  }
+});
+
 test('the isolated runner never receives private bindings, variables or secrets', () => {
   const { hub, runner } = LoadApps();
   assert.deepEqual(runner.config.r2_buckets, [{ binding: 'GAME_RELEASE_BUCKET', bucket_name: 'rehab-game-releases' }]);
@@ -75,6 +92,7 @@ test('the isolated runner never receives private bindings, variables or secrets'
     ['D1', (config) => { config.d1_databases = [{ binding: 'REHAB_DB', database_name: 'rehab_db', database_id: 'x' }]; }],
     ['KV', (config) => { config.kv_namespaces = [{ binding: 'ARTICLE_CACHE', id: 'x' }]; }],
     ['private R2', (config) => { config.r2_buckets.push({ binding: 'OCULOMOTOR_DATA', bucket_name: 'oculomotor-data' }); }],
+    ['raw CSV R2', (config) => { config.r2_buckets.push({ binding: 'RAW_DATA', bucket_name: 'rehab-raw-data' }); }],
     ['vars', (config) => { config.vars = { AUTH_BASE_URL: 'https://trainerhub.cc' }; }],
     ['service', (config) => { config.services = [{ binding: 'HUB', service: 'trainerhub' }]; }],
     ['cron', (config) => { config.triggers = { crons: ['* * * * *'] }; }],
@@ -420,6 +438,7 @@ function CreateDeployFixture(context) {
     'apps/rehabtrainerhub/wrangler.toml': [
       'name = "rehabtrainerhub"', 'compatibility_date = "2026-07-02"', 'pages_build_output_dir = "out"', '',
       '[[d1_databases]]', 'binding = "REHAB_DB"', 'database_name = "rehab_db"', 'database_id = "db-id"', 'migrations_dir = "migrations"', '',
+      '[[r2_buckets]]', 'binding = "RAW_DATA"', 'bucket_name = "rehab-raw-data"', '',
       '[[r2_buckets]]', 'binding = "GAME_RELEASE_BUCKET"', 'bucket_name = "rehab-game-releases"', '',
     ].join('\n'),
     'apps/rehabtrainerhub/wrangler.workers.jsonc': `// fixture\n${JSON.stringify({
@@ -427,7 +446,7 @@ function CreateDeployFixture(context) {
       routes: [{ pattern: 'trainerhub.cc/*', zone_name: 'trainerhub.cc' }],
       assets: { directory: 'out', binding: 'ASSETS', run_worker_first: true, not_found_handling: '404-page', html_handling: 'auto-trailing-slash' },
       d1_databases: [{ binding: 'REHAB_DB', database_name: 'rehab_db', database_id: 'db-id', migrations_dir: 'migrations' }],
-      r2_buckets: [{ binding: 'GAME_RELEASE_BUCKET', bucket_name: 'rehab-game-releases' }],
+      r2_buckets: [{ binding: 'RAW_DATA', bucket_name: 'rehab-raw-data' }, { binding: 'GAME_RELEASE_BUCKET', bucket_name: 'rehab-game-releases' }],
     }, null, 2)}\n`,
     'apps/rehabtrainerhub/worker/index.js': "import pagesFunctions from '../.worker/functions/index.js';\n",
     'apps/usergamerunner/package.json': JSON.stringify({ name: 'runner', homepage: runnerOrigin,

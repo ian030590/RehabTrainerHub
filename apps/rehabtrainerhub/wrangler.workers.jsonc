@@ -45,6 +45,11 @@
       "binding": "OCULOMOTOR_DATA",
       "bucket_name": "oculomotor-data"
     },
+    // Private trial rows and reviewed proxy coordinates. Never bind this bucket to trainerhubgames.
+    {
+      "binding": "RAW_DATA",
+      "bucket_name": "rehab-raw-data"
+    },
     // Developer uploads stay private until scanning and an admin review approve the digest.
     {
       "binding": "GAME_QUARANTINE_BUCKET",

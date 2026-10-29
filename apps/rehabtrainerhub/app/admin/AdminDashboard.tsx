@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useCallback,
   useEffect,
   useState,
   type FormEvent,
@@ -9,16 +10,20 @@ import {
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { useHubAuth } from '../HubNavigation';
 import { GameReleaseManager } from './GameReleaseManager';
+import { PracticePlanManager } from './PracticePlanManager';
+import { GetHubUiCopy } from '../i18n';
+import { useHubLanguage } from '../i18n/HubLanguage';
 import {
   FetchAdminOverview,
   FetchAdminRecords,
   FetchAdminRecordsCsv,
+  ProbePracticePlans,
   type AdminOverviewResponse,
   type AdminRecordFilters,
   type AdminRecordsResponse,
 } from './adminApi';
 
-type AdminTab = 'overview' | 'records' | 'games';
+type AdminTab = 'overview' | 'records' | 'games' | 'plans';
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 type StaffRole = 'therapist' | 'admin';
 
@@ -124,8 +129,27 @@ export function AdminDashboard() {
   const { user } = useHubAuth();
   const role = GetUserRole(user);
   const isStaff = IsStaffRole(role);
-  const availableTabItems = role === 'admin' ? [...tabItems, gameReviewTab] : tabItems;
+  const { language } = useHubLanguage();
+  const copy = GetHubUiCopy(language).practicePlans;
+  const [plansProbe, setPlansProbe] = useState<{ userId?: string; status: 'loading' | 'enabled' | 'disabled' | 'error' }>({ status: 'loading' });
+  const [plansProbeKey, setPlansProbeKey] = useState(0);
+  const plansAvailability = plansProbe.userId === user?.id ? plansProbe.status : 'loading';
+  const staffTabItems = plansAvailability === 'enabled'
+    ? [...tabItems, { id: 'plans' as const, label: copy.heading, icon: 'checklist' }] : tabItems;
+  const availableTabItems = role === 'admin' ? [...staffTabItems, gameReviewTab] : staffTabItems;
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const plansUnavailable = useCallback(() => {
+    setPlansProbe({ userId: user?.id, status: 'disabled' });
+    setActiveTab(tab => tab === 'plans' ? 'overview' : tab);
+  }, [user?.id]);
+  useEffect(() => {
+    if (!isStaff) return;
+    const controller = new AbortController();
+    void ProbePracticePlans(controller.signal).then(enabled => {
+      if (!controller.signal.aborted) setPlansProbe({ userId: user?.id, status: enabled ? 'enabled' : 'disabled' });
+    }).catch(() => { if (!controller.signal.aborted) setPlansProbe({ userId: user?.id, status: 'error' }); });
+    return () => controller.abort();
+  }, [isStaff, user?.id, plansProbeKey]);
   useEffect(() => {
     if (role === 'admin' && new URLSearchParams(window.location.search).has('release')) setActiveTab('games');
   }, [role]);
@@ -157,6 +181,7 @@ export function AdminDashboard() {
     setOverviewError('');
     void FetchAdminOverview(controller.signal)
       .then((nextOverview) => {
+        if (controller.signal.aborted) return;
         setOverview(nextOverview);
         setOverviewStatus('ready');
       })
@@ -167,7 +192,7 @@ export function AdminDashboard() {
         setOverviewStatus('error');
       });
     return () => controller.abort();
-  }, [isStaff, overviewKey]);
+  }, [isStaff, overviewKey, user?.id, role]);
 
   useEffect(() => {
     if (!isStaff || activeTab !== 'records') return;
@@ -293,6 +318,15 @@ export function AdminDashboard() {
           </button>
         ))}
       </div>
+
+      {plansAvailability === 'disabled' && <p role="status">{copy.unavailable}</p>}
+      {plansAvailability === 'error' && <div role="alert"><p>{copy.loadError}</p>
+        <button className="admin-button admin-button-secondary" type="button" onClick={() => setPlansProbeKey(value => value + 1)}>{copy.retry}</button></div>}
+      {plansAvailability === 'enabled' && <section className="admin-tab-panel" role="tabpanel" tabIndex={0}
+        id="admin-panel-plans" aria-labelledby="admin-tab-plans" hidden={activeTab !== 'plans'}>
+        <PracticePlanManager key={user?.id} role={role} patients={patients} patientsStatus={overviewStatus}
+          patientsTruncated={overview?.patientsTruncated} onRetryPatients={() => setOverviewKey(value => value + 1)} onUnavailable={plansUnavailable} />
+      </section>}
 
       <section
         aria-labelledby="admin-tab-overview"

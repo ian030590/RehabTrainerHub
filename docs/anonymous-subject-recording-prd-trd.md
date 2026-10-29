@@ -21,6 +21,8 @@
 
 guest 紀錄使用同一瀏覽器內的穩定假名 ID；登入紀錄則使用另一個帳號範圍 ID，兩個 namespace 不在伺服器端互用。隱私權政策必須揭露這項處理；不得以「使用者看不到 ID」取代告知或必要的法規審查。
 
+**2026-10-24 更新（擁有者要求「有登入的話，不同裝置之間的 subject ID 要一致」）：** 帳號範圍 Subject ID 改由後端指定並存在 `app_users.subject_id`（migration `0015_account_subject_ids.sql`），不再由每台裝置各自產生。`functions/_lib/subjects.js` 的 `EnsureAccountSubjectId` 在帳號第一次需要時以 `crypto.randomUUID()` 建立（條件式 UPDATE，並發請求只會留下一組），同一批次把該帳號既有的登入紀錄（`training_records`、`game_run_sessions`、`game_runs` 中 `user_id` 相符的列）改標為這組 ID；guest 列不動。登入狀態下，`/api/official-game-sessions`、`/api/game-run-sessions`、`/api/records`、`/api/game-runs`、`/api/oculomotor-data` 一律使用帳號的 Subject ID，前端送來的值只檢查格式、不採用。為了讓裝置把帳號 ID 存進 `localStorage`（`rehabtrainerhub.auth-subject-id.v1.<userId>`），只有該帳號本人的登入／`/api/auth/me` 回應與官方／第三方工作階段回應會帶 `subjectId`；這是對上方「不出現在一般 API response」的明確例外，畫面、URL、下載檔與 log 仍不顯示。guest ID（`rehabtrainerhub.subject-id.v1`）照舊每台裝置一組，登入不會沿用或合併 guest ID；登出時只清除帳號 ID 的快取，保留 guest ID。
+
 ## 2. 背景與現況
 
 目前流程有兩個阻擋匿名 D1 紀錄的條件：
@@ -51,7 +53,7 @@ guest 紀錄使用同一瀏覽器內的穩定假名 ID；登入紀錄則使用�
 ### 3.2 名詞
 
 - **guest Subject ID**：未登入時由瀏覽器以 CSPRNG 產生的 UUID v4，作為同一個網站 origin 內的假名化關聯值。
-- **authenticated Subject ID**：登入時依帳號範圍在瀏覽器產生並沿用的另一組 UUID v4；不得與 guest Subject ID 交叉使用。
+- **authenticated Subject ID**：帳號專屬的另一組 UUID v4，自 2026-10-24 起由後端指定、跨裝置相同（見第 1 節更新）；不得與 guest Subject ID 交叉使用。
 - **帳號 ID / `user_id`**：由後端驗證登入 session 後取得的 `app_users.id`。
 - **匿名紀錄**：`subject_id` 有值、`user_id` 為 `NULL` 的資料列。
 - **登入紀錄**：`subject_id` 與 `user_id` 都有值的資料列。

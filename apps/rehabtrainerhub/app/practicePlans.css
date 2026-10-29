@@ -1,0 +1,151 @@
+.practice-plan,
+.practice-plan-manager {
+  min-width: 0;
+  color: var(--text);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.practice-plan {
+  padding: 24px;
+  margin-block: 0 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.practice-plan-manager {
+  display: grid;
+  gap: 24px;
+}
+
+.practice-plan-manager .practice-plan {
+  margin: 0;
+}
+
+.practice-plan h2,
+.practice-plan h3,
+.practice-plan-manager h2,
+.practice-plan-manager h3 {
+  margin-block: 0 8px;
+  color: var(--heading);
+}
+
+.practice-plan p,
+.practice-plan-manager p {
+  margin-block: 8px;
+}
+
+.practice-plan-items {
+  padding: 0;
+  margin-block: 16px;
+  list-style: none;
+}
+
+.practice-plan-items > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.practice-plan-items > li > div {
+  min-width: 0;
+}
+
+.practice-plan-note {
+  white-space: pre-wrap;
+}
+
+.practice-plan-summary {
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.practice-plan-done,
+.practice-plan-badge {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.practice-plan-manager form,
+.practice-plan-manager fieldset {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+
+.practice-plan-manager fieldset {
+  padding: 0;
+  border: 0;
+}
+
+.practice-plan-manager .admin-field,
+.practice-plan-manager .admin-field small,
+.practice-plan-manager .admin-button,
+.practice-plan .admin-button,
+.practice-capture-notice .admin-button {
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+.practice-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.practice-plan-actions > .admin-field {
+  flex: 1 1 200px;
+}
+
+.practice-plan-manager .practice-plan-items > li {
+  display: block;
+}
+
+.practice-plan-manager .practice-plan-items .admin-field {
+  max-width: 24rem;
+  margin-block: 16px;
+}
+
+.practice-plan button:focus-visible,
+.practice-plan-manager :is(button, input, select, textarea):focus-visible,
+.practice-capture-notice button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.practice-plan button,
+.practice-plan-manager button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.practice-capture-notice {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.practice-capture-notice p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .practice-plan { padding: 16px; }
+  .practice-plan-items > li { flex-direction: column; align-items: flex-start; }
+  .practice-capture-notice { align-items: start; }
+}

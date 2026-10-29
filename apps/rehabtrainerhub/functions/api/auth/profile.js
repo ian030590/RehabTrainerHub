@@ -8,6 +8,7 @@ import {
   RequireSession,
   ToPublicUser,
 } from '../../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../../_lib/subjects.js';
 
 const chronicDiagnosisValues = new Set([
   'centralNervousSystem',
@@ -76,7 +77,7 @@ export async function onRequestPut({ request, env }) {
     .run();
 
   const user = await GetUserById(env, session.sub);
-  return JsonResponse(request, env, { user: ToPublicUser(user) });
+  return JsonResponse(request, env, { user: ToPublicUser(user, await EnsureAccountSubjectId(RequireDatabase(env), user.id)) });
 }
 
 function NormalizeProfile(input) {

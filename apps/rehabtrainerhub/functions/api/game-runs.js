@@ -19,6 +19,7 @@ import {
   IsGameRunSessionToken,
 } from '../_lib/gameRuns.js';
 import { ReadJsonBody } from '../_lib/request.js';
+import { EnsureAccountSubjectId } from '../_lib/subjects.js';
 import { ParseThirdPartyScore, ProjectThirdPartyScore } from '../_lib/thirdPartyScore.js';
 
 const sensitiveKeyPattern = /(auth|birthday|cookie|credential|dob|email|jwt|name|participant|password|phone|secret|session|token|user)/i;
@@ -51,6 +52,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const db = RequireDatabase(env);
+    const subjectId = user ? await EnsureAccountSubjectId(db, user.id) : null;
     const tokenSha256 = await HashGameRunSessionToken(body.value.runSessionToken);
     const tokenRateLimitError = await RateLimitResponse(request, env, 'game-result-token', {
       identity: tokenSha256,
@@ -65,6 +67,7 @@ export async function onRequestPost({ request, env }) {
       user?.id || null,
       body.value.releaseId,
       body.value.clientRunId,
+      subjectId,
     );
     if (existing) {
       return JsonResponse(request, env, {
@@ -85,7 +88,12 @@ export async function onRequestPost({ request, env }) {
       let definition;
       try { definition = ParseThirdPartyScore(JSON.parse(await object.text()), release.slug); }
       catch { return ErrorResponse(request, env, 'Native score definition invalid.', 400); }
-      try { storedResult = { ...result, scoreProjection: ProjectThirdPartyScore(definition, result.details, result.detailRows) }; }
+      try {
+        const projection = ProjectThirdPartyScore(definition, result.details, result.detailRows);
+        // shortcut: third-party trial rows are not archived; add CSV export when run sessions support raw files.
+        storedResult = { ...result, detailRows: [], scoreRoundCount: projection.rounds.length,
+          scoreProjection: { ...projection, rounds: [] } };
+      }
       catch { return ErrorResponse(request, env, 'Game score exceeds supported limits.', 400); }
     }
     let inserted;
@@ -116,6 +124,7 @@ export async function onRequestPost({ request, env }) {
           AND game_releases.status = 'approved'
           AND (game_releases.jspsych_version != 'none' OR ? = '1')
           AND developer_games.status = 'published'
+          AND (game_run_sessions.user_id IS NULL OR game_run_sessions.subject_id = ?)
           AND NOT EXISTS (
             SELECT 1 FROM game_runs consumed_run
             WHERE consumed_run.run_session_id = game_run_sessions.id
@@ -135,6 +144,7 @@ export async function onRequestPost({ request, env }) {
           Math.floor(Date.now() / 1000),
           env.ANONYMOUS_RECORDS_ENABLED || '0',
           result.details ? '1' : '0',
+          subjectId,
         )
         .run();
     } catch (error) {
@@ -145,6 +155,7 @@ export async function onRequestPost({ request, env }) {
         user?.id || null,
         body.value.releaseId,
         body.value.clientRunId,
+        subjectId,
       );
       if (!racedExisting) throw error;
       return JsonResponse(request, env, {
@@ -158,6 +169,7 @@ export async function onRequestPost({ request, env }) {
         user?.id || null,
         body.value.releaseId,
         body.value.clientRunId,
+        subjectId,
       );
       if (racedExisting) {
         return JsonResponse(request, env, {
@@ -222,7 +234,7 @@ function IsPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-async function FindExistingGameRun(db, tokenSha256, userId, releaseId, clientRunId) {
+async function FindExistingGameRun(db, tokenSha256, userId, releaseId, clientRunId, subjectId) {
   return db
     .prepare(`
       SELECT game_runs.id
@@ -233,8 +245,10 @@ async function FindExistingGameRun(db, tokenSha256, userId, releaseId, clientRun
         AND (game_run_sessions.user_id IS NULL OR game_run_sessions.user_id = ?)
         AND game_run_sessions.release_id = ?
         AND game_run_sessions.client_run_id = ?
+        AND (game_run_sessions.user_id IS NULL OR game_run_sessions.subject_id = ?)
+        AND game_runs.subject_id IS game_run_sessions.subject_id
       LIMIT 1
     `)
-    .bind(tokenSha256, userId, releaseId, clientRunId)
+    .bind(tokenSha256, userId, releaseId, clientRunId, subjectId)
     .first();
 }

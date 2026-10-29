@@ -5,14 +5,18 @@ import {
   OptionsResponse,
   RateLimitResponse,
   RejectDisallowedOrigin,
+  RequireDatabase,
   RequireSession,
   SecurityHeaders,
   TransientRateLimitResponse,
 } from '../_lib/auth.js';
 import { IsSubjectId } from '../_lib/gameRuns.js';
+import { EnsureAccountSubjectId } from '../_lib/subjects.js';
 import { ReadJsonBody } from '../_lib/request.js';
 import { IsTurnstileConfigured, VerifyTurnstileToken } from '../_lib/turnstile.js';
-import { VerifyOfficialGameSession } from '../_lib/officialGames.js';
+import { ReadVerifiedOfficialGameSession } from '../_lib/officialGames.js';
+import { OfficialRecordedDate, StoreImmutableCsv } from '../_lib/rawData.js';
+import { GetServerDate } from '../_lib/progress.js';
 import { IsOculomotorCsvPayload } from '../../../../packages/ui/src/oculomotorCsv.js';
 
 const columns = [
@@ -55,12 +59,19 @@ export async function onRequestPost({ request, env }) {
     ? 'Oculomotor data is too large.' : 'Invalid JSON payload.', parsed.reason === 'too-large' ? 413 : 400);
   const input = parsed.value;
   if (!IsValidUpload(input)) return ErrorResponse(request, env, 'Invalid oculomotor data.', 400);
+  if (session?.sub) {
+    try { input.subjectId = await EnsureAccountSubjectId(RequireDatabase(env), session.sub); }
+    catch { return ErrorResponse(request, env, 'Account subject is temporarily unavailable.', 503); }
+  }
   const official = input.officialGameVersion !== undefined || input.runSessionToken !== undefined;
+  let recordedDate = GetServerDate(new Date(), 'Asia/Taipei');
   if (official) {
     try {
-      if (!await VerifyOfficialGameSession({ officialGameVersion: input.officialGameVersion, runSessionToken: input.runSessionToken,
-        record: { id: input.recordId, gameId: 'oculomotor-training', moduleId: 'oculomotor-training' } }, env, session?.sub, input.subjectId))
+      const verified = await ReadVerifiedOfficialGameSession({ officialGameVersion: input.officialGameVersion, runSessionToken: input.runSessionToken,
+        record: { id: input.recordId, gameId: 'oculomotor-training', moduleId: 'oculomotor-training' } }, env, session?.sub, input.subjectId);
+      if (!verified)
         return ErrorResponse(request, env, 'Invalid official eye session.', 400);
+      recordedDate = OfficialRecordedDate(verified.claims);
     } catch { return ErrorResponse(request, env, 'Game release verification is temporarily unavailable.', 503); }
   }
 
@@ -84,22 +95,14 @@ export async function onRequestPost({ request, env }) {
   const key = `${prefix}${input.recordId}.csv`;
   const csv = BuildCsv(input);
   try {
-    const written = await env.OCULOMOTOR_DATA.put(key, csv, {
-      onlyIf: { etagDoesNotMatch: '*' },
-      httpMetadata: { contentType: 'text/csv; charset=utf-8' },
-      customMetadata: {
+    const sha256 = await StoreImmutableCsv(env.OCULOMOTOR_DATA, key, csv, {
         uploadedAt: new Date().toISOString(),
+        subjectId: input.subjectId,
+        recordedDate,
         ...(official ? { officialGameVersion: input.officialGameVersion, gazeSampleCount: String(input.records.length) } : {}),
         ...Object.fromEntries(Object.entries(input.metadata).map(([key, value]) => [key, String(value)])),
-      },
     });
-    if (!written) {
-      const existing = await env.OCULOMOTOR_DATA.get(key);
-      if (!existing || await existing.text() !== csv || (official && (existing.customMetadata?.officialGameVersion !== input.officialGameVersion
-        || existing.customMetadata?.gazeSampleCount !== String(input.records.length)))) {
-        return ErrorResponse(request, env, 'Oculomotor record id already exists.', 409);
-      }
-    }
+    if (!sha256) return ErrorResponse(request, env, 'Oculomotor record id already exists.', 409);
   } catch (error) {
     console.error('Unable to store oculomotor CSV.', error);
     return ErrorResponse(request, env, 'Unable to store oculomotor CSV.', 503);

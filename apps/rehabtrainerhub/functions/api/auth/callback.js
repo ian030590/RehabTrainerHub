@@ -15,6 +15,7 @@ import {
   VerifySignedValue,
   oauthNonceCookieName,
 } from '../../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../../_lib/subjects.js';
 
 export async function onRequestGet({ request, env }) {
   let response;
@@ -149,7 +150,7 @@ async function HandleCallback(request, env) {
   if (!userRow) throw new Error('User row was not found after OAuth login.');
 
   const token = await CreateSessionForUser(env, userRow);
-  return AuthPopupHtml(state.returnTo, token, ToPublicUser(userRow), {
+  return AuthPopupHtml(state.returnTo, token, ToPublicUser(userRow, await EnsureAccountSubjectId(RequireDatabase(env), userRow.id)), {
     headers: {
       'Set-Cookie': CreateSessionCookie(request, token),
     },

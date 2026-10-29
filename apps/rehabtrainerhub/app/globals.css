@@ -1296,6 +1296,121 @@ html:has(dialog.training-overlay[open]) {
   font-variant-numeric: tabular-nums;
 }
 
+.lobby-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.lobby-filter-chip,
+.lobby-clear-filters {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--primary-hover);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.lobby-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  text-align: left;
+  color: var(--trainer-color-dark, var(--primary-hover));
+  background: var(--trainer-surface, var(--primary-soft));
+  border-color: var(--trainer-color-dark, var(--primary-hover));
+}
+
+.lobby-filter-chip span:first-child {
+  min-width: 0;
+}
+
+.lobby-filter-chip .material-symbols-outlined {
+  flex-shrink: 0;
+}
+
+.lobby-clear-filters {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lobby-filter-chip:hover,
+.lobby-clear-filters:hover {
+  background: var(--surface-muted);
+}
+
+#result-title {
+  scroll-margin-top: 24px;
+}
+
+#result-title:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.lobby-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.lobby-page-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.lobby-pagination button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--primary-hover);
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lobby-pagination button:hover:not(:disabled):not([aria-current="page"]) {
+  background: var(--primary-soft);
+}
+
+.lobby-pagination button[aria-current="page"] {
+  color: var(--text-on-accent);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.lobby-pagination button:disabled {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .lobby-pagination > button {
+    flex: 1;
+  }
+
+  .lobby-page-numbers {
+    order: 1;
+    flex-basis: 100%;
+  }
+}
+
 .module-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2012,7 +2127,7 @@ html:has(dialog.training-overlay[open]) {
 }
 
 .education-articles-state button {
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 14px;
   margin-left: 12px;
   border: 1px solid currentColor;

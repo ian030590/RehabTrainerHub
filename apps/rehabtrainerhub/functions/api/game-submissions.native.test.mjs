@@ -122,7 +122,9 @@ test('owner submits a native package, then records one result after approval', a
     assert.equal(row.completed, 1);
     assert.equal(row.result_source, 'sandbox_client_reported');
     assert.deepEqual(JSON.parse(row.result_json).scoreProjection,
-      { schema: score.schema, gameId, rounds: [{ correct: 1 }], summary: { accuracy: 100 } });
+      { schema: score.schema, gameId, rounds: [], summary: { accuracy: 100 } });
+    assert.deepEqual(JSON.parse(row.result_json).detailRows, []);
+    assert.equal(JSON.parse(row.result_json).scoreRoundCount, 1);
     const retry = await saveRun({ request: post('/api/game-runs', resultInput, ownerCookie), env });
     assert.equal(retry.status, 200);
     assert.equal((await retry.json()).run.duplicate, true);

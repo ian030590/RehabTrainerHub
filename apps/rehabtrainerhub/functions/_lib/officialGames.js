@@ -4,6 +4,10 @@ import { ReadOfficialGameRelease } from '../../../usergamerunner/functions/_lib/
 export { releases as officialGameReleases };
 
 export async function VerifyOfficialGameSession(input, env, userId, subjectId) {
+  return Boolean(await ReadVerifiedOfficialGameSession(input, env, userId, subjectId));
+}
+
+export async function ReadVerifiedOfficialGameSession(input, env, userId, subjectId) {
   let claims;
   try {
     if (typeof input.runSessionToken !== 'string' || input.runSessionToken.length > 2048
@@ -16,5 +20,6 @@ export async function VerifyOfficialGameSession(input, env, userId, subjectId) {
     || claims.version !== input.officialGameVersion || claims.recordId !== record.id
     || claims.userId !== (userId || null) || claims.subjectId !== subjectId) return false;
   const release = await ReadOfficialGameRelease(env.GAME_RELEASE_BUCKET, claims.gameId, claims.version);
-  return Boolean(release && (claims.contentSha256 === undefined || claims.contentSha256 === release.contentSha256));
+  return release && (claims.contentSha256 === undefined || claims.contentSha256 === release.contentSha256)
+    ? { claims, release } : null;
 }

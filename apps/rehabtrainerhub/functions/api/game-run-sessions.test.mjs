@@ -91,7 +91,7 @@ test('atomically consumes one session and makes a network retry idempotent', asy
   assert.equal(db.runs.length, 1);
 });
 
-test('stores an aborted native run with score.json projection and rejects undeclared fields', async () => {
+test('stores only an aborted native run summary and rejects undeclared fields', async () => {
   const db = CreateGameRunDb();
   db.releases.get(releaseId).jspsych_version = 'none';
   const definition = { schema: 'rehab-trainer.game-score/v1', gameId: 'sample-game',
@@ -103,11 +103,15 @@ test('stores an aborted native run with score.json projection and rejects undecl
   } };
   const { runSession } = await (await IssueSession(env)).json();
   const input = { releaseId, clientRunId, runSessionToken: runSession.token,
-    result: { status: 'aborted', durationMs: 1200, details: { accuracy: 50 }, detailRows: [{ correct: true }] } };
+    result: { status: 'aborted', score: 7, durationMs: 1200, trialCount: 2, metrics: { accuracy: 0.5 },
+      details: { accuracy: 50 }, detailRows: [{ correct: true }, { correct: null }] } };
   const response = await saveGameRun({ request: AuthorizedJsonRequest('/api/game-runs', input), env });
   assert.equal(response.status, 201);
-  assert.deepEqual(JSON.parse(db.runs[0].resultJson).scoreProjection,
-    { schema: definition.schema, gameId: 'sample-game', rounds: [{ correct: 1 }], summary: { accuracy: 50 } });
+  assert.deepEqual(JSON.parse(db.runs[0].resultJson), {
+    status: 'aborted', score: 7, durationMs: 1200, trialCount: 2, metrics: { accuracy: 0.5 },
+    details: { accuracy: 50 }, detailRows: [], scoreRoundCount: 2,
+    scoreProjection: { schema: definition.schema, gameId: 'sample-game', rounds: [], summary: { accuracy: 50 } },
+  });
   assert.equal(db.runs[0].completed, 0);
 
   const second = await IssueSession(env);
@@ -377,6 +381,7 @@ function CreateBoundaryResultPayload(finalMetricKeyLength) {
 function CreateGameRunDb() {
   const db = {
     activeReleaseId: releaseId,
+    subjects: new Map([...users.keys()].map(id => [id, crypto.randomUUID()])),
     releases: new Map([
       [releaseId, { id: releaseId, game_id: 'game_12345678', status: 'approved' }],
       [secondReleaseId, { id: secondReleaseId, game_id: 'game_12345678', status: 'approved' }],
@@ -397,7 +402,8 @@ function CreateStatement(db, sql, args = []) {
     },
     async first() {
       if (/FROM app_users\s+WHERE id = \?/i.test(sql)) {
-        return users.get(args[0]) ?? null;
+        const account = users.get(args[0]);
+        return account ? { ...account, subject_id: db.subjects.get(account.id) } : null;
       }
       if (/RETURNING count, reset_at/i.test(sql)) {
         return { count: 1, reset_at: Math.floor(Date.now() / 1000) + 3600 };
@@ -413,17 +419,18 @@ function CreateStatement(db, sql, args = []) {
         return release ? { version: '1.0.0', jspsych_version: release.jspsych_version, slug: 'sample-game' } : null;
       }
       if (/FROM game_runs[\s\S]+INNER JOIN game_run_sessions/i.test(sql)) {
-        const [tokenSha256, userId, requestedReleaseId, requestedClientRunId] = args;
+        const [tokenSha256, userId, requestedReleaseId, requestedClientRunId, subjectId] = args;
         const session = db.sessions.find((candidate) => (
           candidate.tokenSha256 === tokenSha256
           && (candidate.userId === null || candidate.userId === userId)
           && candidate.releaseId === requestedReleaseId
           && candidate.clientRunId === requestedClientRunId
+          && (candidate.userId === null || candidate.subjectId === subjectId)
         ));
         const run = session
           ? db.runs.find((candidate) => candidate.runSessionId === session.id)
           : null;
-        return run ? { id: run.id } : null;
+        return run && run.subjectId === session.subjectId ? { id: run.id } : null;
       }
       return null;
     },
@@ -447,12 +454,13 @@ function CreateStatement(db, sql, args = []) {
       if (/INSERT INTO game_runs/i.test(sql)) {
         const [id, completed, score, durationMs, resultJson, createdAt,
           tokenSha256, userId, requestedReleaseId, requestedClientRunId, nowSeconds,
-          anonymousRecordsEnabled, nativeDetailsFlag] = args;
+          anonymousRecordsEnabled, nativeDetailsFlag, subjectId] = args;
         const session = db.sessions.find((candidate) => (
           candidate.tokenSha256 === tokenSha256
           && (candidate.userId === null || candidate.userId === userId)
           && candidate.releaseId === requestedReleaseId
           && candidate.clientRunId === requestedClientRunId
+          && (candidate.userId === null || candidate.subjectId === subjectId)
           && candidate.expiresAt > nowSeconds
           && (candidate.userId !== null || anonymousRecordsEnabled === '1')
           && (!sql.includes('developer_games.active_release_id = game_run_sessions.release_id') || candidate.releaseId === db.activeReleaseId)

@@ -5,8 +5,10 @@ import {
   JsonResponse,
   OptionsResponse,
   RejectDisallowedOrigin,
+  RequireDatabase,
   ToPublicUser,
 } from '../../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../../_lib/subjects.js';
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -24,6 +26,6 @@ export async function onRequestGet({ request, env }) {
 
   return JsonResponse(request, env, {
     token: session.token,
-    user: ToPublicUser(user),
+    user: ToPublicUser(user, await EnsureAccountSubjectId(RequireDatabase(env), user.id)),
   });
 }

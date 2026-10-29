@@ -5,9 +5,11 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { GameOverlay } from './train/GameOverlay';
+import { AssignedPracticePlan } from './AssignedPracticePlan';
 import { BuildHubGameCatalog, type HubGame } from './gameCatalog';
 import {
   BuildTrainingModuleHref,
@@ -31,6 +33,7 @@ import {
   type PublishedGame,
 } from './publishedGames';
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
+import { BuildLobbyFilterChips, BuildLobbyPageNumbers, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
 
 const prefetchedTrainingUrls = new Set<string>();
 
@@ -94,6 +97,10 @@ function TrainingThemeBadge({
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
+  const [page, setPage] = useState(1);
+  const resultTitleRef = useRef<HTMLHeadingElement>(null);
+  const activeFiltersRef = useRef<HTMLDivElement>(null);
+  const pendingFilterFocus = useRef<number | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const dismissFilters = useCallback(() => setIsMobileFilterOpen(false), []);
   const { dialogRef, isMobile, isExpanded, toggleDetent } = useBottomSheet(isMobileFilterOpen, dismissFilters);
@@ -152,6 +159,26 @@ export function TrainingLobby() {
       && (selectedPurposes.length === 0 || (game.purpose !== null && selectedPurposes.includes(game.purpose)));
   }), [games, locale, normalizedQuery, selectedPurposes]);
 
+  const activeFilters = useMemo(() => BuildLobbyFilterChips(selectedPurposes, query, categorySubcategories), [selectedPurposes, query]);
+  const pagination = PaginateLobbyGames(visibleGames, page);
+  const pageNumbers = BuildLobbyPageNumbers(pagination.page, pagination.totalPages);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, selectedPurposes]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, pagination.totalPages));
+  }, [pagination.totalPages]);
+
+  useEffect(() => {
+    const index = pendingFilterFocus.current;
+    if (index === null) return;
+    pendingFilterFocus.current = null;
+    const buttons = activeFiltersRef.current?.querySelectorAll<HTMLButtonElement>('button');
+    (buttons?.[index] ?? resultTitleRef.current)?.focus();
+  }, [activeFilters]);
+
   useEffect(() => {
     const controller = new AbortController();
     setPublishedGamesError(false);
@@ -204,8 +231,21 @@ export function TrainingLobby() {
   };
 
   const clearFilters = () => {
+    if (activeFiltersRef.current?.contains(document.activeElement)) pendingFilterFocus.current = 0;
     setQuery('');
     setSelectedPurposes([]);
+  };
+
+  const removeFilter = (chip: LobbyFilterChip, index: number) => {
+    pendingFilterFocus.current = index;
+    if (chip.kind === 'search') setQuery('');
+    else setSelectedPurposes((current) => current.filter((id) => !chip.purposeIds.includes(id)));
+  };
+
+  const changePage = (nextPage: number) => {
+    setPage(nextPage);
+    resultTitleRef.current?.focus({ preventScroll: true });
+    resultTitleRef.current?.scrollIntoView({ block: 'start' });
   };
 
   const totalVisibleCount = visibleGames.length;
@@ -237,7 +277,7 @@ export function TrainingLobby() {
           />
         </label>
       </section>
-
+      <AssignedPracticePlan />
       <div className="lobby-layout">
         <div className="mobile-filter-bar">
           <button
@@ -370,9 +410,38 @@ export function TrainingLobby() {
 
         <section className="module-results" aria-labelledby="result-title">
           <div className="result-header">
-            <h2 id="result-title">{copy.allModules}</h2>
-            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleGames.length })}</p>
+            <h2 id="result-title" ref={resultTitleRef} tabIndex={-1}>{copy.allModules}</h2>
+            <p aria-live="polite">
+              {t('lobby.moduleCount', { count: visibleGames.length })}
+              {visibleGames.length > 0 && t('lobby.moduleRange', { start: pagination.start, end: pagination.end })}
+            </p>
           </div>
+
+          {activeFilters.length > 0 && (
+            <div className="lobby-active-filters" ref={activeFiltersRef} role="group" aria-label={copy.activeFilters}>
+              {activeFilters.map((chip, index) => {
+                const theme = chip.kind === 'category' ? GetTrainerCategoryTheme(chip.id)
+                  : chip.kind === 'purpose' ? trainingThemes[chip.id] : null;
+                const label = chip.kind === 'search' ? t('lobby.searchFilter', { query: chip.query })
+                  : chip.kind === 'category' ? trainerCategoryTags.find((category) => category.id === chip.id)!.label[locale]
+                    : trainingThemes[chip.id].label[locale];
+                return (
+                  <button
+                    aria-label={t('lobby.removeFilter', { filter: label })}
+                    className="lobby-filter-chip"
+                    key={chip.key}
+                    onClick={() => removeFilter(chip, index)}
+                    style={theme ? BuildTrainingThemeStyle(theme) : undefined}
+                    type="button"
+                  >
+                    <span>{label}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                  </button>
+                );
+              })}
+              <button className="lobby-clear-filters" onClick={clearFilters} type="button">{copy.clearAllFilters}</button>
+            </div>
+          )}
 
           {publishedGamesError && (
             <p className="catalog-load-notice" role="status">
@@ -381,7 +450,7 @@ export function TrainingLobby() {
           )}
 
           <div className="module-grid">
-            {visibleGames.map((game) => {
+            {pagination.items.map((game) => {
               const preload = () => {
                 if (game.launch.contract === 'catalog-v1') PreloadTrainingModule(game.launch.module);
               };
@@ -443,6 +512,32 @@ export function TrainingLobby() {
               );
             })}
           </div>
+
+          {pagination.totalPages > 1 && (
+            <nav className="lobby-pagination" aria-label={copy.paginationLabel}>
+              <button disabled={pagination.page === 1} onClick={() => changePage(pagination.page - 1)} type="button">
+                {copy.previousPage}
+              </button>
+              <div className="lobby-page-numbers">
+                {pageNumbers.map((number, index) => number === 'ellipsis' ? (
+                  <span aria-hidden="true" key={`gap-${index}`}>...</span>
+                ) : (
+                  <button
+                    aria-current={number === pagination.page ? 'page' : undefined}
+                    aria-label={t('lobby.pageNumber', { page: number })}
+                    key={number}
+                    onClick={() => changePage(number)}
+                    type="button"
+                  >
+                    {number}
+                  </button>
+                ))}
+              </div>
+              <button disabled={pagination.page === pagination.totalPages} onClick={() => changePage(pagination.page + 1)} type="button">
+                {copy.nextPage}
+              </button>
+            </nav>
+          )}
 
           {visibleGames.length === 0 && (
             <div className="empty-results">

@@ -41,7 +41,7 @@ const env = {
         bind() {
           return {
             async first() {
-              return sql.includes('app_users') ? user : null;
+              return sql.includes('app_users') ? { ...user, subject_id: '11111111-1111-4111-8111-111111111111' } : null;
             },
             async all() {
               return { results: [{ payload_json: JSON.stringify(record) }] };

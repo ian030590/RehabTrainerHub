@@ -20,6 +20,7 @@ import {
   IsSubjectId,
 } from '../_lib/gameRuns.js';
 import { ReadJsonBody } from '../_lib/request.js';
+import { EnsureAccountSubjectId } from '../_lib/subjects.js';
 import {
   IsTurnstileConfigured,
   VerifyTurnstileToken,
@@ -47,10 +48,8 @@ export async function onRequestPost({ request, env }) {
     if (!body.ok || !IsGameRunSessionInput(body.value)) {
       return ErrorResponse(request, env, 'Invalid game run session payload.', 400);
     }
-    const subjectId = body.value.subjectId === undefined && user
-      ? crypto.randomUUID()
-      : body.value.subjectId;
-    if (!IsSubjectId(subjectId)) {
+    let subjectId = body.value.subjectId;
+    if ((!user || subjectId !== undefined) && !IsSubjectId(subjectId)) {
       return ErrorResponse(request, env, 'Invalid subject identifier.', 400);
     }
     if (env.TURNSTILE_RECORDS_REQUIRED === '1') {
@@ -76,6 +75,7 @@ export async function onRequestPost({ request, env }) {
     if (rateLimitError) return rateLimitError;
 
     const db = RequireDatabase(env);
+    if (user) subjectId = await EnsureAccountSubjectId(db, user.id);
     const release = await db
       .prepare(`
         SELECT game_releases.id, game_releases.game_id
@@ -120,6 +120,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     return JsonResponse(request, env, {
+      subjectId,
       runSession: {
         token,
         expiresAt: new Date(expiresAtSeconds * 1000).toISOString(),

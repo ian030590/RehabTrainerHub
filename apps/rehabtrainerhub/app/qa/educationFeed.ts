@@ -78,7 +78,19 @@ export function ParseEducationFeed(xml: string): EducationLink[] {
   return links;
 }
 
+// The personal site sends no CORS headers, so browsers read the feed through the Hub.
+export const educationFeedProxyPath = '/api/education-feed';
+
 export async function FetchEducationLinks(signal?: AbortSignal): Promise<EducationLink[]> {
+  const response = await fetch(educationFeedProxyPath, { headers: { Accept: 'application/json' }, signal });
+  if (!response.ok) throw new Error(`Education feed returned ${response.status}`);
+  const body: unknown = await response.json();
+  const xml = body && typeof body === 'object' ? (body as { xml?: unknown }).xml : undefined;
+  if (typeof xml !== 'string') throw new Error('Invalid education feed response');
+  return ParseEducationFeed(xml);
+}
+
+async function FetchEducationFeedDirectly(signal: AbortSignal): Promise<EducationLink[]> {
   const response = await fetch(educationFeedUrl, {
     headers: { Accept: 'application/rss+xml, application/xml' },
     signal,
@@ -89,7 +101,7 @@ export async function FetchEducationLinks(signal?: AbortSignal): Promise<Educati
 
 export async function LoadEducationLinks(): Promise<EducationLink[]> {
   try {
-    return await FetchEducationLinks(AbortSignal.timeout(10_000));
+    return await FetchEducationFeedDirectly(AbortSignal.timeout(10_000));
   } catch (error) {
     // The rest of the static QA page remains available when the personal site
     // is down; the browser retries the feed and build logs expose the gap.

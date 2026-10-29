@@ -21,7 +21,7 @@ import {
   GetAuthUserIdFromToken,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
-import { GetOrCreateSubjectIdForUser } from '@rehab-trainer/ui/storage/subjectId';
+import { GetOrCreateSubjectIdForUser, IsSubjectId, SetAccountSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
@@ -35,6 +35,8 @@ interface PackageGameOverlayProps {
   onClose: () => void;
 }
 
+type RunSession = { token: string; subjectId: string };
+
 export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const { language } = useHubLanguage();
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -45,7 +47,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const saveInFlightRef = useRef(false);
   const runSessionRequestRef = useRef<{
     key: string;
-    request: Promise<string>;
+    request: Promise<RunSession>;
   } | null>(null);
   const runnerSessionIdRef = useRef<string | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -132,11 +134,11 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     pendingResultRef.current = result;
     setSaveState('saving');
     try {
-      const runSessionToken = await ensureRunSession();
+      const runSession = await ensureRunSession();
       setSaveState(await SaveGameResult(
         game.release.id,
         sessionNonce,
-        runSessionToken,
+        runSession,
         result,
       ));
     } catch {
@@ -360,7 +362,7 @@ function CreateSessionNonce(): string {
 async function SaveGameResult(
   releaseId: string,
   clientRunId: string,
-  runSessionToken: string,
+  runSession: RunSession,
   result: GamePlatformResultPayload,
 ): Promise<'saved'> {
   const token = GetAuthToken();
@@ -371,7 +373,7 @@ async function SaveGameResult(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ releaseId, clientRunId, runSessionToken, result }),
+    body: JSON.stringify({ releaseId, clientRunId, runSessionToken: runSession.token, subjectId: runSession.subjectId, result }),
   });
   if (!response.ok) throw new Error(`Unable to save game result. Status ${response.status}`);
   return 'saved';
@@ -380,7 +382,7 @@ async function SaveGameResult(
 async function CreateGameRunSession(
   releaseId: string,
   clientRunId: string,
-): Promise<string> {
+): Promise<RunSession> {
   const token = GetAuthToken();
   const userId = GetAuthUserIdFromToken(token);
   const turnstileToken = await CreateRemoteTrainingRecordVerificationToken();
@@ -400,16 +402,19 @@ async function CreateGameRunSession(
   });
   if (!response.ok) throw new Error(`Unable to create game run session. Status ${response.status}`);
   const payload: unknown = await response.json();
-  if (!IsGameRunSessionResponse(payload)) {
+  if (!IsGameRunSessionResponse(payload) || GetAuthToken() !== token) {
     throw new Error('Invalid game run session response.');
   }
-  return payload.runSession.token;
+  if (userId) SetAccountSubjectId(userId, payload.subjectId);
+  return { token: payload.runSession.token, subjectId: payload.subjectId };
 }
 
 function IsGameRunSessionResponse(value: unknown): value is {
+  subjectId: string;
   runSession: { token: string; expiresAt: string };
 } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (!IsSubjectId((value as { subjectId?: unknown }).subjectId)) return false;
   const runSession = (value as { runSession?: unknown }).runSession;
   if (!runSession || typeof runSession !== 'object' || Array.isArray(runSession)) return false;
   const { token, expiresAt } = runSession as { token?: unknown; expiresAt?: unknown };

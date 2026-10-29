@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   CreateCloudflareDeploymentEnvironment,
@@ -13,6 +14,11 @@ import {
 } from './pages-apps.mjs';
 
 const pagesApps = DiscoverPagesApps();
+for (const app of pagesApps) {
+  const config = readFileSync(resolve(app.appPath, 'wrangler.toml'), 'utf8');
+  if (app.role === 'hub') assert.match(config, /binding = "RAW_DATA"\s+bucket_name = "rehab-raw-data"/);
+  else assert.doesNotMatch(config, /RAW_DATA|rehab-raw-data|OCULOMOTOR_DATA|oculomotor-data/);
+}
 const deployScript = resolve(defaultRepoRoot, 'scripts/deploy-cloudflare-pages.mjs');
 
 const result = spawnSync(

@@ -6,6 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readdir, readFile } from 'node:fs/promises';
 import { onRequestPost as createSession } from './official-game-sessions.js';
 import { onRequestPost as saveRecord } from './records.js';
+import { CreateMemoryBucket } from '../_lib/rawDataTestFixtures.mjs';
 
 const env = { AUTH_SESSION_SECRET: 'official-game-test-secret-abcdefghijklmnopqrstuvwxyz' };
 const version = '2.0.2';
@@ -91,7 +92,11 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     let recordReads = 0;
     let releaseRace;
     const race = new Promise(resolve => { releaseRace = resolve; });
-    const database = { prepare: sql => {
+    const database = { batch: async statements => {
+      sqlite.exec("BEGIN");
+      try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec("COMMIT"); return results; }
+      catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+    }, prepare: sql => {
       const statement = sqlite.prepare(sql);
       let bindings = [];
       const wrapper = {
@@ -110,7 +115,7 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
       return wrapper;
     } };
     const fixture = CreateOfficialBucket(gameId);
-    const environment = { ...env, REHAB_DB: database, ANONYMOUS_RECORDS_ENABLED: '1', GAME_RELEASE_BUCKET: fixture.bucket };
+    const environment = { ...env, RAW_DATA: CreateMemoryBucket(), REHAB_DB: database, ANONYMOUS_RECORDS_ENABLED: '1', GAME_RELEASE_BUCKET: fixture.bucket };
     const subjectId = crypto.randomUUID();
     const request = (path, body, authToken) => new Request(`https://trainerhub.cc/api/${path}`, {
       method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': `127.0.0.${['driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].indexOf(gameId) + 9}`, ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
@@ -180,7 +185,8 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     assert.equal((await saveRecord({ request: request('records', accountPayload, accountToken), env: environment })).status, 201);
     const accountRow = sqlite.prepare('SELECT subject_id,user_id FROM training_records WHERE id = ?').get(accountSession.recordId);
     assert.equal(accountRow.user_id, userId);
-    assert.equal(accountRow.subject_id, accountSubject);
+    assert.equal(accountRow.subject_id, accountSession.subjectId);
+    assert.notEqual(accountRow.subject_id, accountSubject);
   } finally { sqlite.close(); }
 });
 

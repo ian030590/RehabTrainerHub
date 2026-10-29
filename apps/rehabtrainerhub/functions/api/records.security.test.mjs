@@ -285,8 +285,13 @@ const detailedEyeTrackingRecords = await onRequestGet({
 });
 assert.equal(detailedEyeTrackingRecords.status, 200);
 const detailedEyeTrackingPayload = await detailedEyeTrackingRecords.json();
-assert.equal(detailedEyeTrackingPayload.records[0].results[0].gaze_samples.length, 3000);
-assert.equal(detailedEyeTrackingPayload.records[0].results[0].webgazer_data.length, 3000);
+assert.equal(detailedEyeTrackingPayload.records[0].results[0].gaze_samples, undefined);
+assert.equal(detailedEyeTrackingPayload.records[0].results[0].gaze_sample_count, 3000);
+assert.equal(detailedEyeTrackingPayload.records[0].results[0].webgazer_data, undefined);
+assert.equal(detailedEyeTrackingPayload.records[0].results[0].webgazer_sample_count, 3000);
+const storedEyeRecord = env.REHAB_DB.rows.get('eye-tracking-record-id');
+assert.equal(storedEyeRecord.payload_json, storedEyeRecord.summary_json);
+assert.equal(JSON.parse(storedEyeRecord.payload_json).results[0].gaze_samples, undefined);
 
 const excessiveDetailedPageSize = await onRequestGet({
   request: new Request(
@@ -359,8 +364,7 @@ const summarizedNonCanonicalRecord = summarizedNonCanonicalPayload.records.find(
 assert.ok(summarizedNonCanonicalRecord);
 assert.equal(summarizedNonCanonicalRecord.results[0].gaze_samples, undefined);
 assert.equal(summarizedNonCanonicalRecord.results[0].gaze_samples_omitted, true);
-assert.equal(summarizedNonCanonicalRecord.results[0].nested.gaze_samples, undefined);
-assert.equal(summarizedNonCanonicalRecord.results[0].nested.gaze_samples_omitted, true);
+assert.equal(summarizedNonCanonicalRecord.results[0].nested, undefined);
 
 const oversizedNonEyeTrackingRecord = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
@@ -853,6 +857,11 @@ function CreateTrainingRecordsDb(initialRows) {
               return { results: [] };
             },
             async first() {
+              if (/SELECT subject_id FROM app_users/i.test(sql)) {
+                if (args[0] === attacker.id) return { subject_id: signedSubjectId };
+                if (args[0] === victim.id) return { subject_id: '22222222-2222-4222-8222-222222222222' };
+                return null;
+              }
               if (/INSERT INTO rate_limits/i.test(sql)) {
                 const [key, resetAt] = args;
                 const current = rateLimits.get(key);

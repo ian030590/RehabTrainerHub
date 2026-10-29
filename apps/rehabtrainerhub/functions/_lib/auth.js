@@ -417,9 +417,10 @@ export function IsSafeReturnTo(returnTo, env, request) {
   }
 }
 
-export function ToPublicUser(row) {
+export function ToPublicUser(row, subjectId) {
   return {
     id: row.id,
+    subjectId,
     displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
     email: row.email || undefined,
     avatarUrl: row.avatar_url || undefined,

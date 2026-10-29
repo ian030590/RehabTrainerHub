@@ -3,6 +3,7 @@ export const subjectIdStorageKey = 'rehabtrainerhub.subject-id.v1';
 const subjectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const authenticatedSubjectIdStoragePrefix = 'rehabtrainerhub.auth-subject-id.v1.';
 const memorySubjectIds = new Map<string, string>();
+const accountSubjectIds = new Map<string, string>();
 
 export function IsSubjectId(value: unknown): value is string {
   return typeof value === 'string' && subjectIdPattern.test(value);
@@ -15,7 +16,7 @@ export function GetOrCreateSubjectId(): string {
 export function GetOrCreateAuthenticatedSubjectId(userId: string): string {
   const normalizedUserId = userId.trim();
   if (!normalizedUserId) return GetOrCreateSubjectId();
-  return GetOrCreateStoredSubjectId(
+  return accountSubjectIds.get(normalizedUserId) ?? GetOrCreateStoredSubjectId(
     `${authenticatedSubjectIdStoragePrefix}${encodeURIComponent(normalizedUserId)}`,
     `authenticated:${normalizedUserId}`,
   );
@@ -23,6 +24,32 @@ export function GetOrCreateAuthenticatedSubjectId(userId: string): string {
 
 export function GetOrCreateSubjectIdForUser(userId: string | null | undefined): string {
   return userId ? GetOrCreateAuthenticatedSubjectId(userId) : GetOrCreateSubjectId();
+}
+
+export function SetAccountSubjectId(userId: string, subjectId: string): void {
+  const normalizedUserId = userId.trim();
+  if (!normalizedUserId || !IsSubjectId(subjectId)) throw new Error('Invalid account subject identifier.');
+  accountSubjectIds.set(normalizedUserId, subjectId);
+  try {
+    window.localStorage.setItem(`${authenticatedSubjectIdStoragePrefix}${encodeURIComponent(normalizedUserId)}`, subjectId);
+  } catch {
+    // Keep the server identity available when browser storage is blocked.
+  }
+}
+
+export function ClearAccountSubjectIds(): void {
+  accountSubjectIds.clear();
+  for (const key of memorySubjectIds.keys()) {
+    if (key.startsWith('authenticated:')) memorySubjectIds.delete(key);
+  }
+  try {
+    const keys = Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index));
+    for (const key of keys) {
+      if (key?.startsWith(authenticatedSubjectIdStoragePrefix)) window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Logout must remain usable when browser storage is blocked.
+  }
 }
 
 function GetOrCreateStoredSubjectId(storageKey: string, memoryKey: string): string {

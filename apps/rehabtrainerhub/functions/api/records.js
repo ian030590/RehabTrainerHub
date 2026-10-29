@@ -17,7 +17,12 @@ import {
   VerifyTurnstileToken,
 } from '../_lib/turnstile.js';
 import { IsSubjectId } from '../_lib/gameRuns.js';
-import { officialGameReleases, VerifyOfficialGameSession } from '../_lib/officialGames.js';
+import { EnsureAccountSubjectId } from '../_lib/subjects.js';
+import { officialGameReleases, ReadVerifiedOfficialGameSession } from '../_lib/officialGames.js';
+import { RecordTrainingPlanCompletion } from '../_lib/trainingPlans.js';
+import {
+  BuildRoundsCsv, CsvSha256, OfficialRecordedDate, rawCoordinateKinds, RawCoordinateKindAllowed, RawDataKey, StoreImmutableCsv,
+} from '../_lib/rawData.js';
 
 const appIds = new Set(['rehabtrainerhub']);
 const runtimeIds = new Set(['hub', 'motor', 'vision', 'brain', 'mouth']);
@@ -60,6 +65,13 @@ const defaultReadPageSize = 100;
 const maximumReadPageSize = 100;
 const maximumRawEyeTrackingReadPageSize = 5;
 const anonymousSensitiveKeyPattern = /(auth|birthday|cookie|credential|dob|email|jwt|name|participant|password|patient|phone|secret|session|token|user)/i;
+const legacySummaryFields = new Set([
+  'trial_type', 'score', 'total_score', 'accuracy', 'total', 'correct', 'incorrect', 'trial_count', 'duration_ms',
+  'mean_rt', 'mode', 'pattern', 'gaze_coordinate_source', 'mean_target_distance_px', 'target_distance_sd_px',
+  'time_to_first_fixation_ms', 'average_pupil_size_px', 'pupil_size_sd_px', 'blink_count', 'gaze_sample_count',
+  'webgazer_sample_count', 'webgazer_data_consumed', 'gaze_samples_omitted', 'webgazer_data_omitted',
+  'aoi_score', 'valid_gaze_ms', 'in_threshold_ms', 'sampling_hz', 'fixation_count',
+]);
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -192,17 +204,27 @@ export async function onRequestPost({ request, env }) {
   }
 
   const input = parsedBody.value;
-  const subjectId = input?.subjectId === undefined && session?.sub
+  const clientSubjectId = input?.subjectId === undefined && session?.sub
     ? null
     : input?.subjectId;
-  if (subjectId !== null && !IsSubjectId(subjectId)) {
+  if (clientSubjectId !== null && !IsSubjectId(clientSubjectId)) {
     return ErrorResponse(request, env, 'Invalid subject identifier.', 400);
   }
+  let subjectId = clientSubjectId;
+  if (session?.sub) {
+    try { subjectId = await EnsureAccountSubjectId(RequireDatabase(env), session.sub); }
+    catch { return ErrorResponse(request, env, 'Account subject is temporarily unavailable.', 503); }
+  }
   const officialGame = Object.hasOwn(officialGameReleases, input?.record?.gameId ?? '');
+  let officialSession;
   if (officialGame) {
+    if (env.TRAINING_PLANS_ENABLED === '1' && input.planFollowed !== undefined && typeof input.planFollowed !== 'boolean') {
+      return ErrorResponse(request, env, 'Invalid training plan completion.', 400);
+    }
     if (!IsBoundedGameScoreRecord(input)) return ErrorResponse(request, env, 'Invalid official game result.', 400);
     try {
-      if (!await VerifyOfficialGameSession(input, env, session?.sub, subjectId)) {
+      officialSession = await ReadVerifiedOfficialGameSession(input, env, session?.sub, subjectId);
+      if (!officialSession) {
         return ErrorResponse(request, env, 'Invalid official game session or result.', 400);
       }
     } catch {
@@ -212,7 +234,8 @@ export async function onRequestPost({ request, env }) {
       if (!env.OCULOMOTOR_DATA) return ErrorResponse(request, env, 'Oculomotor storage is unavailable.', 503);
       try {
         const prefix = session?.sub ? `users/${encodeURIComponent(session.sub)}/` : `guests/${subjectId}/`;
-        const csv = await env.OCULOMOTOR_DATA.get(`${prefix}${input.record.id}.csv`);
+        const key = `${prefix}${input.record.id}.csv`;
+        const csv = await env.OCULOMOTOR_DATA.get(key) ?? await env.OCULOMOTOR_DATA.get(`receipts/${key}`);
         if (csv?.customMetadata?.officialGameVersion !== input.officialGameVersion
           || csv?.customMetadata?.gazeSampleCount !== String(input.record.score.summary.samples))
           return ErrorResponse(request, env, 'Save the matching private gaze CSV before this result.', 409);
@@ -242,7 +265,7 @@ export async function onRequestPost({ request, env }) {
   const now = new Date();
   const serverTimestamp = now.toISOString();
   const timeZone = env.REHAB_TIME_ZONE || defaultRehabTimeZone;
-  const verifiedTrainingDate = GetServerDate(now, timeZone);
+  const verifiedTrainingDate = officialSession ? OfficialRecordedDate(officialSession.claims, timeZone) : GetServerDate(now, timeZone);
   const payload = NormalizeRecordPayload(
     input,
     subjectId,
@@ -252,6 +275,16 @@ export async function onRequestPost({ request, env }) {
   );
   if (!payload) return ErrorResponse(request, env, 'Invalid training record payload.', 400);
 
+  const rounds = payload.record.score?.rounds ?? [];
+  const roundsCsv = officialGame && rounds.length ? BuildRoundsCsv(rounds) : null;
+  const roundFile = roundsCsv ? { kind: 'rounds',
+    key: RawDataKey('rounds', payload.record.gameId, subjectId, verifiedTrainingDate, payload.record.id),
+    rows: rounds.length, sha256: await CsvSha256(roundsCsv) } : null;
+  payload.record = SummaryOnlyRecord(RemoveGazeSamples(payload.record));
+  if (payload.record.score) payload.record = { ...payload.record,
+    score: { ...payload.record.score, rounds: [] }, scoreRoundCount: rounds.length,
+    rawFiles: roundFile ? [roundFile] : [] };
+
   const db = RequireDatabase(env);
   const existingOfficialResult = async () => {
     const existing = await db.prepare('SELECT payload_json, user_id, subject_id FROM training_records WHERE id = ?')
@@ -260,7 +293,9 @@ export async function onRequestPost({ request, env }) {
       const stored = SafeJsonParse(existing.payload_json);
       if (existing.user_id !== (session?.sub || null) || existing.subject_id !== subjectId
         || stored?.gameId !== payload.record.gameId
-        || JSON.stringify(stored.score) !== JSON.stringify(payload.record.score)
+        || JSON.stringify(stored?.score && { ...stored.score, rounds: [] }) !== JSON.stringify(payload.record.score)
+        || (stored?.rawFiles?.find(file => file.kind === 'rounds')?.sha256
+          ?? (stored?.score?.rounds?.length ? await CsvSha256(BuildRoundsCsv(stored.score.rounds)) : null)) !== (roundFile?.sha256 ?? null)
         || JSON.stringify(stored.config) !== JSON.stringify(payload.record.config)) {
         return ErrorResponse(request, env, 'Official game session already consumed.', 409);
       }
@@ -272,13 +307,31 @@ export async function onRequestPost({ request, env }) {
     const duplicate = await existingOfficialResult();
     if (duplicate) return duplicate;
   }
+  if (roundFile) {
+    try {
+      const stored = await StoreImmutableCsv(env.RAW_DATA, roundFile.key, roundsCsv, { kind: 'rounds',
+        gameId: payload.record.gameId, version: input.officialGameVersion, recordId: payload.record.id,
+        subjectId, recordedDate: verifiedTrainingDate, rows: String(roundFile.rows) });
+      if (!stored) return ErrorResponse(request, env, 'Raw record id already exists.', 409);
+    } catch { return ErrorResponse(request, env, 'Raw storage is unavailable.', 503); }
+  }
+  if (officialSession && env.RAW_DATA?.get) {
+    try {
+      const { capabilities } = officialSession.release;
+      for (const kind of rawCoordinateKinds.filter((name) => RawCoordinateKindAllowed(payload.record.gameId, capabilities, name))) {
+        const key = RawDataKey(kind, payload.record.gameId, subjectId, verifiedTrainingDate, payload.record.id);
+        const object = await env.RAW_DATA.get(`receipts/${key}`) ?? await env.RAW_DATA.get(key);
+        const metadata = object?.customMetadata;
+        if (metadata?.kind === kind && metadata.gameId === payload.record.gameId && metadata.version === input.officialGameVersion
+          && metadata.subjectId === subjectId && metadata.recordId === payload.record.id
+          && /^[0-9a-f]{64}$/.test(metadata.sha256) && /^\d+$/.test(metadata.rows)) {
+          payload.record.rawFiles.push({ kind, key, rows: Number(metadata.rows), sha256: metadata.sha256 });
+        }
+      }
+    } catch { return ErrorResponse(request, env, 'Raw storage is unavailable.', 503); }
+  }
   const payloadJson = JSON.stringify(payload.record);
-  const summaryJson = payload.record.score
-    ? JSON.stringify({ ...payload.record, score: { ...payload.record.score, rounds: [] }, scoreRoundCount: payload.record.score.rounds.length })
-    : payload.runtimeId === 'vision'
-    && payload.record.moduleId === 'oculomotor-training'
-    ? JSON.stringify(PrepareRecordForRead(payload.record, false))
-    : null;
+  const summaryJson = payloadJson;
   const result = await db
     .prepare(`
       INSERT INTO training_records (
@@ -328,6 +381,13 @@ export async function onRequestPost({ request, env }) {
     return ErrorResponse(request, env, 'Training record id belongs to a different record scope.', 409);
   }
 
+  if (officialSession && input.planFollowed === true) {
+    try {
+      await RecordTrainingPlanCompletion(env, officialSession.claims, session?.sub, verifiedTrainingDate, serverTimestamp);
+    } catch (error) {
+      console.error('Unable to update training plan progress.', error);
+    }
+  }
   return JsonResponse(request, env, { ok: true, recordId: payload.record.id }, { status: 201 });
 }
 
@@ -501,6 +561,17 @@ function RemoveGazeSamples(value) {
     entries.push(['webgazer_data_omitted', true]);
   }
   return Object.fromEntries(entries);
+}
+
+function SummaryOnlyRecord(value, key = '') {
+  if (Array.isArray(value)) {
+    // Legacy clients wrap their summary in results; only known summary fields survive this envelope.
+    return key === 'results' && value.length === 1 && IsPlainObject(value[0]) && !Object.hasOwn(value[0], 'trial_index')
+      ? [Object.fromEntries(Object.entries(value[0]).filter(([field, item]) => legacySummaryFields.has(field)
+        && (item === null || ['number', 'boolean', 'string'].includes(typeof item))))] : [];
+  }
+  if (!IsPlainObject(value)) return value;
+  return Object.fromEntries(Object.entries(value).map(([field, item]) => [field, SummaryOnlyRecord(item, field)]));
 }
 
 function NormalizeRecordPayload(

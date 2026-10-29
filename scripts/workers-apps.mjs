@@ -71,6 +71,9 @@ export function FindWorkerConfigProblems(apps) {
     }
 
     if (app.role === 'hub') {
+      if (!config.r2_buckets?.some(bucket => bucket.binding === 'RAW_DATA' && bucket.bucket_name === 'rehab-raw-data')) {
+        problems.push(`${label}: private RAW_DATA must bind rehab-raw-data.`);
+      }
       if (config.workers_dev !== false) problems.push(`${label}: workers_dev must be false; only approved hostnames serve the Hub.`);
       // Pages generated the route "/*" because functions/_middleware.js sits at the root.
       if (assets.run_worker_first !== true) problems.push(`${label}: assets.run_worker_first must be true so _middleware.js runs before assets.`);

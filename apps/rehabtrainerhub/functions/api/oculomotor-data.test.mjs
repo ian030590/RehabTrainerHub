@@ -3,6 +3,9 @@ import test from 'node:test';
 import { CreateSessionForUser } from '../_lib/auth.js';
 import { onRequestGet, onRequestPost } from './oculomotor-data.js';
 import { BuildOculomotorCsvRows } from '../../games/oculomotor-training/oculomotorCsvRows.ts';
+import { CreateRawDataEnvironment, CreateMemoryBucket } from '../_lib/rawDataTestFixtures.mjs';
+import { VerifySignedValue, GetSessionSecret } from '../_lib/auth.js';
+import { GetServerDate } from '../_lib/progress.js';
 
 const id = '11111111-1111-4111-8111-111111111111';
 const subjectId = '22222222-2222-4222-8222-222222222222';
@@ -29,6 +32,7 @@ function CreateEnv() {
             return {
               async run() { return { success: true }; },
               async first() {
+                if (/SELECT subject_id FROM app_users/i.test(sql)) return { subject_id: '33333333-3333-4333-8333-333333333333' };
                 if (!/INSERT INTO rate_limits/i.test(sql)) return null;
                 const [key, resetAt] = args;
                 const count = (limits.get(key) || 0) + 1;
@@ -48,7 +52,7 @@ function CreateEnv() {
       },
       async get(key) {
         const value = objects.get(key);
-        return value && { body: new Response(value.csv).body, text: async () => value.csv };
+        return value && { body: new Response(value.csv).body, text: async () => value.csv, customMetadata: value.options.customMetadata };
       },
       async list({ prefix }) {
         return {
@@ -94,16 +98,18 @@ test('private R2 CSV stores canonical rows and only the owner can list or read i
   assert.equal((await Post(valid, owner, env)).status, 201);
   const key = `users/owner/${id}.csv`;
   const csv = env.objects.get(key).csv;
-  assert.match(csv, /^\uFEFF# subject_id,22222222-2222-4222-8222-222222222222\r\n/);
+  assert.match(csv, /^\uFEFF# subject_id,33333333-3333-4333-8333-333333333333\r\n/);
   assert.match(csv, /# mode,pursuit\r\n# pattern,horizontalSweep\r\n# screen_width_px,1920\r\n# duration_ms,15000\r\n/);
   assert.doesNotMatch(csv, /aoi_score|valid_gaze_ms|in_threshold_ms|# score/);
   assert.match(csv, /sample_index,trial_time_ms,device_timestamp_us,delta_t_ms,instant_hz,gaze_valid,gaze_x_px,gaze_y_px,stimulus_x_px,stimulus_y_px,distance_error_px,distance_error_deg,is_within_threshold,phase,direction\r\n/);
   assert.match(csv, /1,10,,10,100,1,320,240,330,245,11\.18,0\.2,1,training,right\r\n$/);
   assert.equal(env.objects.get(key).options.httpMetadata.contentType, 'text/csv; charset=utf-8');
   assert.equal(env.objects.get(key).options.customMetadata.pattern, 'horizontalSweep');
+  assert.equal(env.objects.get(key).options.customMetadata.subjectId, '33333333-3333-4333-8333-333333333333');
+  assert.match(env.objects.get(key).options.customMetadata.recordedDate, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(env.objects.get(key).options.customMetadata.screen_width_px, '1920');
   assert.equal((await Post(valid, owner, env)).status, 201);
-  assert.equal(env.objects.size, 1);
+  assert.equal([...env.objects.keys()].filter(key => key.startsWith('users/')).length, 1);
   assert.equal((await Post({ ...valid, records: [[1, 10, null, 10, 100, 1, 320, 240, 330, 245, 12, 0.2, 1, 'training', 'right']] }, owner, env)).status, 409);
   assert.equal(env.objects.get(key).csv, csv);
   assert.equal((await Get('', owner, env)).status, 200);
@@ -224,6 +230,22 @@ test('R2 read failures return a retryable status without exposing CSV data', asy
   env.OCULOMOTOR_DATA.list = async () => { throw new Error('R2 list unavailable'); };
   assert.equal((await Get(`?recordId=${id}`, owner, env)).status, 503);
   assert.equal((await Get('', owner, env)).status, 503);
+});
+
+test('official eye CSV metadata uses the signed issue date and a missing archived file returns 404', async () => {
+  const fixture = CreateRawDataEnvironment('oculomotor-training', ['eye-tracking']);
+  try {
+    fixture.env.OCULOMOTOR_DATA = CreateMemoryBucket();
+    const session = await fixture.session();
+    const claims = await VerifySignedValue(session.token, GetSessionSecret(fixture.env));
+    assert.equal((await Post({ ...valid, recordId: session.recordId, subjectId: session.subjectId,
+      officialGameVersion: session.version, runSessionToken: session.token }, null, fixture.env)).status, 201);
+    const object = fixture.env.OCULOMOTOR_DATA.objects.get(`guests/${session.subjectId}/${session.recordId}.csv`);
+    assert.equal(object.customMetadata.subjectId, session.subjectId);
+    assert.equal(object.customMetadata.recordedDate, GetServerDate(new Date(claims.iat * 1000), 'Asia/Taipei'));
+    const auth = await CreateSessionForUser(fixture.env, { id: 'archive-reader' });
+    assert.equal((await Get(`?recordId=${id}`, auth, fixture.env)).status, 404);
+  } finally { fixture.sqlite.close(); }
 });
 
 test('maximum five-minute run survives CSV generation without dropping samples', async () => {

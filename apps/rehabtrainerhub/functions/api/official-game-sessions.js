@@ -1,10 +1,12 @@
 import { CreateSignedValue, ErrorResponse, GetBearerToken, GetSessionSecret, JsonResponse,
-  OptionsResponse, RateLimitResponse, RejectDisallowedOrigin, RequireSession } from '../_lib/auth.js';
+  OptionsResponse, RateLimitResponse, RejectDisallowedOrigin, RequireDatabase, RequireSession } from '../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../_lib/subjects.js';
 import { IsExactObject, IsSubjectId } from '../_lib/gameRuns.js';
 import { ReadJsonBody } from '../_lib/request.js';
 import { officialGameReleases } from '../_lib/officialGames.js';
 import { ReadOfficialGameRelease } from '../../../usergamerunner/functions/_lib/officialCatalog.js';
 import { IsValidVersion } from '../../../usergamerunner/functions/_lib/release.js';
+import { ReadTrainingPlanLaunch } from '../_lib/trainingPlans.js';
 
 export function onRequestOptions({ request, env }) { return OptionsResponse(request, env); }
 export async function onRequestPost({ request, env }) {
@@ -18,19 +20,27 @@ export async function onRequestPost({ request, env }) {
     if (limit) return limit;
     const body = await ReadJsonBody(request, 4096);
     const input = body.value;
-    if (!body.ok || !IsExactObject(input, ['gameId', 'subjectId'], ['version'])
+    if (!body.ok || !IsExactObject(input, ['gameId', 'subjectId'], ['version', 'planItemId'])
       || !Object.hasOwn(officialGameReleases, input.gameId)
       || (input.version !== undefined && !IsValidVersion(input.version)) || !IsSubjectId(input.subjectId)) {
       return ErrorResponse(request, env, 'Invalid official game session.', 400);
+    }
+    let planItem;
+    if (env.TRAINING_PLANS_ENABLED === '1' && Object.hasOwn(input, 'planItemId')) {
+      planItem = await ReadTrainingPlanLaunch(env, session?.sub, input.gameId, input.planItemId);
+      if (!planItem) return ErrorResponse(request, env, 'Invalid training plan item.', 400);
     }
     const release = await ReadOfficialGameRelease(env.GAME_RELEASE_BUCKET, input.gameId, input.version);
     if (!release) {
       return ErrorResponse(request, env, 'Game release unavailable.', 503);
     }
     const recordId = crypto.randomUUID();
+    const subjectId = session?.sub ? await EnsureAccountSubjectId(RequireDatabase(env), session.sub) : input.subjectId;
     const token = await CreateSignedValue({ purpose: 'official-game-result', gameId: input.gameId,
-      version: release.version, contentSha256: release.contentSha256, recordId, subjectId: input.subjectId, userId: session?.sub || null }, GetSessionSecret(env), 86400);
-    return JsonResponse(request, env, { recordId, token, version: release.version, contentSha256: release.contentSha256, capabilities: release.capabilities },
+      version: release.version, contentSha256: release.contentSha256, recordId, subjectId, userId: session?.sub || null,
+      ...(planItem ? { planItemId: planItem.id } : {}) }, GetSessionSecret(env), 86400);
+    return JsonResponse(request, env, { recordId, token, subjectId, version: release.version, contentSha256: release.contentSha256,
+      capabilities: release.capabilities, ...(planItem ? { planSettings: planItem.settings } : {}) },
       { status: 201, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Unable to create official game session.', error);

@@ -11,9 +11,11 @@ import {
   OptionsResponse,
   RateLimitResponse,
   RejectDisallowedOrigin,
+  RequireDatabase,
   ToPublicUser,
   TransientRateLimitResponse,
 } from '../../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../../_lib/subjects.js';
 import { VerifyTurnstileToken } from '../../_lib/turnstile.js';
 
 const providers = {
@@ -63,7 +65,7 @@ async function StartOAuth(request, env) {
     if (existingSession?.payload?.sub) {
       const existingUser = await GetUserById(env, existingSession.payload.sub);
       if (existingUser) {
-        return AuthPopupHtml(returnTo, existingSession.token, ToPublicUser(existingUser));
+        return AuthPopupHtml(returnTo, existingSession.token, ToPublicUser(existingUser, await EnsureAccountSubjectId(RequireDatabase(env), existingUser.id)));
       }
     }
   } catch (error) {

@@ -72,10 +72,11 @@ test('the Hub overlay wires sensor games through the host, consent copy, preview
   assert.match(overlay, /CreateSensorInputHost\(/);
   assert.match(overlay, /LoadSensorInput\(release\.origin, input\)/);
   assert.match(overlay, /className="training-input-preview"/);
-  assert.match(overlay, /遊戲只收到雙手與髖、膝的座標/);
+  assert.match(overlay, /遊戲收到的雙手與髖、膝座標/);
   assert.match(overlay, /遊戲只收到音量與高低頻比例/);
-  assert.match(overlay, /遊戲只收到嘴部位置與舌頭方向/);
-  assert.match(overlay, /遊戲只收到頭部轉動角度/);
+  assert.match(overlay, /遊戲收到的嘴部位置、舌頭方向與信心值/);
+  assert.match(overlay, /遊戲收到的頭部轉動角度與臉部是否出現/);
+  assert.match(overlay, /也會以匿名識別碼儲存於當次活動/);
   assert.match(overlay, /\(\['pose', 'microphone', 'tongue', 'head'\] as const\)\.filter\(input => SensorAllowed\(state, input\)\)/);
   assert.match(overlay, /\(\['pose', 'tongue', 'head'\] as const\)\.some\(input => SensorAllowed/, 'The head game gets the container preview.');
   assert.match(overlay, /sandbox="allow-scripts"/);

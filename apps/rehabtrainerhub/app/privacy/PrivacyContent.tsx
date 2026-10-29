@@ -30,6 +30,11 @@ export function PrivacyContent() {
       </section>
 
       <section>
+        <h2>{copy.rawStorage}</h2>
+        <p>{copy.rawStorageBody}</p>
+      </section>
+
+      <section>
         <h2>{copy.access}</h2>
         <p>{copy.accessBody}</p>
       </section>

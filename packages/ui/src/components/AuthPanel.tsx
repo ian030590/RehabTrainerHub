@@ -361,7 +361,7 @@ export function AuthPanel({
     const handleMessage = (event: MessageEvent) => {
       if (authOrigin && event.origin !== authOrigin) return;
       if (!IsAuthSessionMessage(event.data)) return;
-      SetAuthToken(event.data.token);
+      SetAuthToken(event.data.token, true, event.data.user);
       cancelLoadUser();
       applyLoadedUser(event.data.user);
     };

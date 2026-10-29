@@ -5,7 +5,7 @@ import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { FetchEducationLinks, type EducationLink } from './educationFeed';
 
-type LoadStatus = 'ready' | 'error';
+type LoadStatus = 'loading' | 'ready' | 'error';
 
 function FormatPublishedDate(value: string, locale: 'zh-TW' | 'en'): string {
   const date = new Date(value);
@@ -22,7 +22,7 @@ function FormatPublishedDate(value: string, locale: 'zh-TW' | 'en'): string {
 export function EducationArticles({ initialArticles }: { initialArticles: EducationLink[] }) {
   const { language, t } = useHubLanguage();
   const [articles, setArticles] = useState(initialArticles);
-  const [status, setStatus] = useState<LoadStatus>('ready');
+  const [status, setStatus] = useState<LoadStatus>(initialArticles.length > 0 ? 'ready' : 'loading');
   const [requestKey, setRequestKey] = useState(0);
   const copy = GetHubUiCopy(language).educationArticles;
 
@@ -60,9 +60,22 @@ export function EducationArticles({ initialArticles }: { initialArticles: Educat
             <h3>{copy.loadErrorTitle}</h3>
             <p>{copy.loadErrorBody}</p>
           </div>
-          <button onClick={() => setRequestKey((current) => current + 1)} type="button">
+          <button
+            onClick={() => {
+              setStatus('loading');
+              setRequestKey((current) => current + 1);
+            }}
+            type="button"
+          >
             {copy.reload}
           </button>
+        </div>
+      )}
+
+      {status === 'loading' && (
+        <div className="education-articles-state" role="status">
+          <span className="material-symbols-outlined" aria-hidden="true">hourglass_top</span>
+          <p>{copy.loading}</p>
         </div>
       )}
 

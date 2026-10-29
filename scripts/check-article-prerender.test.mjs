@@ -103,6 +103,23 @@ test('build-time loader reads the personal-site feed and survives an outage', as
   }
 });
 
+test('the browser refreshes the list through the Hub instead of a cross-site request', async () => {
+  // The personal site sends no CORS headers, so a direct browser fetch of its rss.xml always fails.
+  const requests = [];
+  const feed = await Load(feedPath, {}, async (url) => {
+    requests.push(String(url));
+    return Response.json({ xml: feedXml });
+  });
+  assert.equal(feed.educationFeedProxyPath, '/api/education-feed');
+  assert.deepEqual((await feed.FetchEducationLinks())[0], expectedLink);
+  assert.deepEqual(requests, ['/api/education-feed']);
+
+  const failing = await Load(feedPath, {}, async () => Response.json({ error: 'x' }, { status: 502 }));
+  await assert.rejects(failing.FetchEducationLinks(), /502/);
+  const malformed = await Load(feedPath, {}, async () => Response.json({ xml: 42 }));
+  await assert.rejects(malformed.FetchEducationLinks(), /Invalid/);
+});
+
 test('education links render as outbound personal-site links before browser JavaScript', async () => {
   const feed = await Load(feedPath, {});
   const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
@@ -127,6 +144,21 @@ test('education links render as outbound personal-site links before browser Java
   assert.match(html, /Source note/);
   assert.doesNotMatch(html, /minimal-loading-spinner/);
   assert.doesNotMatch(html, /<details/);
+});
+
+test('an empty build-time list shows loading instead of claiming there are no articles', async () => {
+  const feed = await Load(feedPath, {});
+  const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
+    './educationFeed': feed,
+    '../i18n': { GetHubUiCopy: () => ({
+      educationArticles: { sourceNote: 'Source note', loading: 'Loading articles', emptyTitle: 'No articles yet', categories: {} },
+      educationArticle: { author: 'By', published: 'Published', opensInNewTab: '(opens in a new tab)' },
+    }) },
+    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: (key) => key }) },
+  });
+  const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles: [] }));
+  assert.match(html, /role="status"[^>]*>.*Loading articles/);
+  assert.doesNotMatch(html, /No articles yet/);
 });
 
 test('the Hub no longer hosts its own article authoring', async () => {

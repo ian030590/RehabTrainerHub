@@ -1,6 +1,6 @@
 import { ExecuteTurnstileChallenge } from '../turnstileClient';
 import { CreateRuntimeStorageNamespace } from '../storage/runtimeNamespace';
-import { GetOrCreateSubjectId, GetOrCreateSubjectIdForUser } from '../storage/subjectId';
+import { ClearAccountSubjectIds, GetOrCreateSubjectId, GetOrCreateSubjectIdForUser, IsSubjectId, SetAccountSubjectId } from '../storage/subjectId';
 import {
   DeletePendingRemoteTrainingRecord,
   PutPendingRemoteTrainingRecord,
@@ -78,6 +78,7 @@ export interface RehabProfile {
 
 export interface AuthUser {
   id: string;
+  subjectId?: string;
   displayName: string;
   email?: string;
   avatarUrl?: string;
@@ -133,6 +134,8 @@ export interface RemoteTrainingRecordPayload {
   record: RemoteTrainingRecord;
   officialGameVersion?: string;
   runSessionToken?: string;
+  planFollowed?: boolean;
+  subjectId?: string;
 }
 
 export function ConfigureRemoteTrainingRecordVerification(options: {
@@ -201,7 +204,8 @@ export function GetAuthToken(): string | null {
   }
 }
 
-export function SetAuthToken(token: string, dispatchEvent = true): void {
+export function SetAuthToken(token: string, dispatchEvent = true, user?: AuthUser): void {
+  CacheAccountSubjectId(user);
   try {
     window.localStorage.setItem(authTokenKey, token);
   } catch {
@@ -342,6 +346,7 @@ export async function FetchCurrentAuthUser(
   }
 
   const payload = await response.json() as { user?: AuthUser };
+  CacheAccountSubjectId(payload.user);
   return payload.user ?? null;
 }
 
@@ -361,6 +366,7 @@ export async function FetchSharedAuthSession(
   }
 
   const payload = await response.json() as Partial<SharedAuthSession>;
+  CacheAccountSubjectId(payload.user);
   return payload.token && payload.user ? { token: payload.token, user: payload.user } : null;
 }
 
@@ -377,6 +383,7 @@ export async function LogoutAuthSession(apiBase?: string): Promise<void> {
 }
 
 export async function ClearLocalTrainerData(): Promise<void> {
+  ClearAccountSubjectIds();
   if (typeof window === 'undefined') return;
 
   try {
@@ -419,6 +426,7 @@ async function ParseAuthSessionResponse(response: Response, fallbackMessage: str
     throw new Error(`${fallbackMessage}. Missing session payload.`);
   }
 
+  CacheAccountSubjectId(payload.user);
   return { token: payload.token, user: payload.user };
 }
 
@@ -438,6 +446,8 @@ export async function RegisterPasswordAccount(
   if (!response.ok) {
     throw new Error(`Unable to create account. Status ${response.status}`);
   }
+  const result = await response.json() as { user?: AuthUser };
+  CacheAccountSubjectId(result.user);
 }
 
 export async function LoginPasswordAccount(
@@ -474,6 +484,7 @@ export async function SaveAuthProfile(apiBase: string | undefined, profile: Reha
   }
 
   const payload = await response.json() as { user: AuthUser };
+  CacheAccountSubjectId(payload.user);
   return payload.user;
 }
 
@@ -483,7 +494,7 @@ export async function SaveRemoteTrainingRecord(
 ): Promise<boolean> {
   const token = GetAuthToken();
   let userId = GetAuthUserIdFromToken(token);
-  let subjectId = GetOrCreateSubjectIdForUser(userId);
+  let subjectId = payload.subjectId ?? GetOrCreateSubjectIdForUser(userId);
   try {
     const response = await PostRemoteTrainingRecord(apiBase, payload, subjectId, token);
     if (response.status === 401 && token) {
@@ -590,6 +601,11 @@ export function GetAuthUserIdFromToken(token: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function CacheAccountSubjectId(user?: AuthUser): void {
+  // A malformed value must never block sign-in; the server re-issues the ID on the next request.
+  if (user?.id && IsSubjectId(user.subjectId)) SetAccountSubjectId(user.id, user.subjectId);
 }
 
 function CreateRemoteRecordSaveError(status: number): Error & { status: number } {

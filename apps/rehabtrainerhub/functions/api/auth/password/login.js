@@ -13,6 +13,7 @@ import {
   TransientRateLimitResponse,
   VerifyPassword,
 } from '../../../_lib/auth.js';
+import { EnsureAccountSubjectId } from '../../../_lib/subjects.js';
 import { ReadJsonBody } from '../../../_lib/request.js';
 import { VerifyTurnstileToken } from '../../../_lib/turnstile.js';
 
@@ -98,7 +99,7 @@ export async function onRequestPost({ request, env }) {
     const token = await CreateSessionForUser(env, account);
     return JsonResponse(request, env, {
       token,
-      user: ToPublicUser(account),
+      user: ToPublicUser(account, await EnsureAccountSubjectId(RequireDatabase(env), account.id)),
     }, {
       headers: {
         'Set-Cookie': CreateSessionCookie(request, token),

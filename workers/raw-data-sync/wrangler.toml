@@ -1,0 +1,22 @@
+name = "rehab-raw-data-sync"
+main = "index.js"
+compatibility_date = "2026-10-24"
+workers_dev = false
+preview_urls = false
+
+[triggers]
+crons = ["17 19 * * *"]
+
+[vars]
+PCLOUD_API_HOST = "api.pcloud.com"
+PCLOUD_ROOT_FOLDER = "/RehabTrainerHub/raw-data"
+
+[[r2_buckets]]
+binding = "RAW_DATA"
+bucket_name = "rehab-raw-data"
+
+[[r2_buckets]]
+binding = "OCULOMOTOR_DATA"
+bucket_name = "oculomotor-data"
+
+# Server-only secret: PCLOUD_ACCESS_TOKEN.

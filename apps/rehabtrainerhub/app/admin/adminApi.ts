@@ -2,6 +2,7 @@ import {
   BuildApiUrl,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
+import type { PracticePlan, PracticeSettings } from '../practicePlans';
 
 export interface AdminOverviewSummary {
   patientCount: number;
@@ -163,6 +164,44 @@ export async function FetchAdminOverview(signal?: AbortSignal): Promise<AdminOve
   return ReadJson<AdminOverviewResponse>(
     await AdminFetch('/api/admin/overview', { signal }),
   );
+}
+
+export function IsPracticePlansDisabled(error: unknown): boolean {
+  return error instanceof AdminApiError && error.status === 404 && error.message === 'Training plans are not enabled.';
+}
+
+export async function ProbePracticePlans(signal?: AbortSignal): Promise<boolean> {
+  try {
+    await AdminFetch('/api/admin/training-plans', { method: 'OPTIONS', cache: 'no-store', signal });
+    return true;
+  } catch (error) {
+    if (IsPracticePlansDisabled(error)) return false;
+    throw error;
+  }
+}
+
+export async function FetchAdminPracticePlan(patientId: string, signal?: AbortSignal): Promise<PracticePlan | null> {
+  const payload = await ReadJson<{ plan: PracticePlan | null }>(
+    await AdminFetch('/api/admin/training-plans', { cache: 'no-store', signal }, { patientId }),
+  );
+  return payload.plan;
+}
+
+export async function CreateAdminPracticePlan(input: {
+  patientId: string; title: string; note: string;
+  items: { gameId: string; weeklyTarget: number; settings: PracticeSettings | null }[];
+}, signal?: AbortSignal): Promise<PracticePlan> {
+  const payload = await ReadJson<{ plan: PracticePlan }>(await AdminFetch('/api/admin/training-plans', {
+    method: 'POST', cache: 'no-store', signal,
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+  }));
+  return payload.plan;
+}
+
+export async function ArchiveAdminPracticePlan(planId: string, signal?: AbortSignal): Promise<void> {
+  await AdminFetch(`/api/admin/training-plans/${encodeURIComponent(planId)}/archive`, {
+    method: 'POST', cache: 'no-store', signal,
+  });
 }
 
 export async function FetchAdminRecords(
