@@ -1,10 +1,29 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
+import './game-preview-capture.test.mjs';
 
 const gameRoot = new URL('../apps/rehabtrainerhub/games/drawing-defense/', import.meta.url);
 
-test('drawing-defense owns its upper-limb tags, localized copy and original preview', async () => {
+test('every official Hub preview has a matching gameplay capture', async () => {
+  const registry = JSON.parse(await readFile(new URL('../packages/ui/src/officialGameReleases.json', import.meta.url), 'utf8'));
+  const captures = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8'));
+  assert.deepEqual(captures.map(capture => capture.gameId).sort(), Object.keys(registry).sort());
+  for (const capture of captures) {
+    assert.match(capture.phase, /^(gameplay|playing|combat|go|answer)/, capture.gameId);
+    assert.match(capture.screenshotSha256, /^[a-f0-9]{64}$/, capture.gameId);
+    assert.equal(capture.screenshotWidth, 1280, capture.gameId);
+    assert.equal(capture.screenshotHeight, 720, capture.gameId);
+    const preview = await readFile(new URL(`../apps/rehabtrainerhub/games/${capture.gameId}/public/preview.webp`, import.meta.url));
+    assert.equal(createHash('sha256').update(preview).digest('hex'), capture.previewSha256, capture.gameId);
+    const metadata = await sharp(preview).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [640, 360], capture.gameId);
+  }
+});
+
+test('drawing-defense owns its upper-limb tags, localized copy and gameplay preview', async () => {
   const metadata = JSON.parse(await readFile(new URL('public/game.json', gameRoot), 'utf8'));
   assert.equal(metadata.gameId, 'drawing-defense');
   assert.equal(metadata.trainer, 'motor');

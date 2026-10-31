@@ -1,0 +1,461 @@
+[
+  {
+    "gameId": "antisaccade",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "02d9a992c42dd46838e0adf912c8d7a38d96d7e7858d1e7768bc24843741d1e2",
+    "previewSha256": "e6c6d9203019802a9473b1b6e50faae2b8b09eed85c9694ea6196efa07c05e2e"
+  },
+  {
+    "gameId": "asteroid-shield",
+    "version": "2.0.12",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "430de7623cce883ccc79cd943037d2c2a9f0553538e93e61f2299bdab33c8ed4",
+    "previewSha256": "3c66acc0b921a879499def6d8614bce9c5c95897872d14a50ddbd8c728d5037e"
+  },
+  {
+    "gameId": "attention-network-task",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "3fca6eec42c0f0544721b564eb71c343d554f1314ea8425362b012d7b364aa63",
+    "previewSha256": "770ea5153e816b4e97836a92ca02343c022e07d5c450060fc8aef22fc9e06b1e"
+  },
+  {
+    "gameId": "attentional-blink",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "c8cdf0e0fc4cbb02d116edcb6ebd239dc43edcab4b524ab47dc948e76bcc7ded",
+    "previewSha256": "8f1360eddeb3583c89b60ba63c8c3e6b4563bacf15fad8e3ba754bb98a7aa8ea"
+  },
+  {
+    "gameId": "card-sorting",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "581ff1cd2cb61c927db93385b3f04c9586aaff445fa12766fc20e5f886a8e14e",
+    "previewSha256": "cf1f7052ca71ef1f07c42d669d62d2eaef11ab2ea4489a429f8f2ea7f629b189"
+  },
+  {
+    "gameId": "connect4",
+    "version": "2.0.1",
+    "phase": "gameplay-progress",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "20f524a5286c636f01225081b476cf7db3d192765f24f69c34aaa41112af10af",
+    "previewSha256": "f14cc8a2f8fb6e38df6b026587b7da551c807e836180445f533c133327d59263"
+  },
+  {
+    "gameId": "continuous-performance",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "73b3ded002e8c7a13ae15d394d219ad621830374b6fe4c1d532af81e38cc58d1",
+    "previewSha256": "2ba8573dae73d19cf9cb7dcb3dd7db00739724bc9c003b0042d9a836e61ca3cb"
+  },
+  {
+    "gameId": "digit-span",
+    "version": "2.0.2",
+    "phase": "answer",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "94a85a5bc93d56b5f1c8efc7a246d8d231ff14f8c3125b2c3807751cd97a8a16",
+    "previewSha256": "7797433c14aa808e267be7556e35abfff4b70fa4008e8359c70c0fa072ee78d6"
+  },
+  {
+    "gameId": "divided-attention",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "b9d0211b789a0f65e3264a76dd0a8e1a255291f3ca7d675b1d424c659ef5bebf",
+    "previewSha256": "7d9ca3045af18e7f1e8a4da98f84d3ead7bff2d94fb0f6be6b8a836790c0f5d8"
+  },
+  {
+    "gameId": "dots-and-boxes",
+    "version": "2.0.1",
+    "phase": "gameplay-progress",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "b4e1031e2d747e8df94ab6d413bc975e5f5590d7ad7ed61ae87df35c7d8141ea",
+    "previewSha256": "0365fe3b81a1560fe0ce4be0ce40184c5ec13a697fcfaad474733aa751f6a4d9"
+  },
+  {
+    "gameId": "drawing-defense",
+    "version": "2.0.9",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "69b76d2a171f25cf094b24bc79996cb17fdd38b7d1a8745e74714904165f799e",
+    "previewSha256": "10b2f50fb9d4e23008038b5d33da93c6f1dd1a923541e3d0b9ffd44ab9dcdc9b"
+  },
+  {
+    "gameId": "driving-rehab",
+    "version": "2.1.2",
+    "phase": "gameplay-moving",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "9e0e634901af0204c4c0b0ffd498cbc81a8106d4a7a115a776c97f9bb6c6dec7",
+    "previewSha256": "1822387a884043b3b4dd942f5f6b6a415a3a7add7ffa3753223ce754a05fbbd3"
+  },
+  {
+    "gameId": "every-ball-response",
+    "version": "2.0.1",
+    "phase": "playing",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "ce71d2e13802fdcd94d2d2a4e8424a938dc0749fddf2580c4ecaccc8a1cc5b96",
+    "previewSha256": "3c1d6d76a5d49ca37673a009688c4bbe74f8e604664ce77a2b9d9ccee2bdb399"
+  },
+  {
+    "gameId": "flanker",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "2e4b85d5388758b7a277667bbc8f14e41a4a14d886a6d1962cee84663e8711f4",
+    "previewSha256": "737b31525edbdff8e597dd14568213e709e84dab56e5e13268e99ba7cc2455de"
+  },
+  {
+    "gameId": "gabor-patching",
+    "version": "2.0.4",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "0b76f4635a4e2adf935185801f77b4aa29b20adc57dc6eeb0a469dfd542851a6",
+    "previewSha256": "7ea179f798e7ab61008284107fe990ce487280885af3065f759eabb7a6459c9c"
+  },
+  {
+    "gameId": "gesture-battler",
+    "version": "2.0.7",
+    "phase": "combat",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "454ddd053418321cebb6f71514621be27437227d418752fbc93950e52accf6c2",
+    "previewSha256": "28c25fdd914a8baf1d66e39c3a84fff62e1a48920e35b59274d65ebdcfa3fd84"
+  },
+  {
+    "gameId": "go-nogo",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "eb4ae05cba99c72d806ae3260370bfbcb2b4c7858434cf0e9365731660c0fed0",
+    "previewSha256": "749f4e20c6b47a1a34d04d79a51a7fe2587fbf96dd2cde3fb58395b9a1bfc904"
+  },
+  {
+    "gameId": "hart-chart",
+    "version": "2.0.5",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "3e00d2a92765063464eeed58b1937f1cf6e5317bc2b8bcf6ed5f220b3de0f175",
+    "previewSha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b"
+  },
+  {
+    "gameId": "hex",
+    "version": "2.0.1",
+    "phase": "gameplay-progress",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "dc931cd5ee7d966846dd51c630e975f40885abe288a6d085bc989365f2518627",
+    "previewSha256": "5fa834b98e982bff8de1517bcd788fd906402ad18795709385fe525e07c04d15"
+  },
+  {
+    "gameId": "hex-schulte",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "ae7644156b42f824f724c268d2547b0150c8cf048227d0b072492fc5ca053261",
+    "previewSha256": "20c800de019c3922d67d40149814324aee5699fd996b486c202407a0b00b5143"
+  },
+  {
+    "gameId": "keep-track",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "91843d0fefa89ce89f11cd5fd0af7c6a04c30b358b999d9cdd4e7c5e9925af12",
+    "previewSha256": "ff1cdb14923aff009bc411fe8f7222b2a0062ac45139a2ae0e2cd38b29f4d143"
+  },
+  {
+    "gameId": "letter-memory",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "95c207105de306ad57b2d27243ef260f49138f917a04af834219921ee98affcd",
+    "previewSha256": "bdcd684cc622e588e44d203b144fb72fa8fda021975822ebe1db32113c5441b9"
+  },
+  {
+    "gameId": "lights-out",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "6dbdb2f9f186e7b759949276b7e743be7c204722f1fab71ce13f98c5a672e02e",
+    "previewSha256": "ad43e95f15ebcb1ea4e6447243e2bdbc2b85e64e8037ce5ee32a7e6ed21da3b8"
+  },
+  {
+    "gameId": "maze",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "a924bfe1bf9390c9f862e9079963e0a7580b51edcf97572bac7d0422381f17e5",
+    "previewSha256": "5888cc0f73c6df498de31788a11f6ce7f4683b5d42df69ee77fd91399ca8e000"
+  },
+  {
+    "gameId": "memory-match",
+    "version": "2.0.1",
+    "phase": "gameplay-progress",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "501762076468f9ecc7ae2a97903a81c969daab250f069f819bcc09cf8d01363f",
+    "previewSha256": "2cba97d3eddc961ca9fba420ca2c8203ae64293acedf2253123f7668349c41fd"
+  },
+  {
+    "gameId": "minesweeper",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "eccaf1f6c9302574111a3b5b8ee91e1ca875717187d5a0f467d65ee697cff4a9",
+    "previewSha256": "356c758bc2e54b10e03106e5152907c3f0ffc8a555f07762c599985372a3b69f"
+  },
+  {
+    "gameId": "motor-cortex-rehab",
+    "version": "2.0.5",
+    "phase": "playing",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "fdca897e9ac1875388393b42ebd974e947d3d1866f8892bdf49a7fbfbc52acb1",
+    "previewSha256": "3cdfc7354e3b746aef70faf455d5d99c4d53b832345fae810efa278df82bce79"
+  },
+  {
+    "gameId": "moving-card",
+    "version": "2.0.5",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "d01e9f2f7bb7c21d4397b1f62c101b52ec1005d3c6f9aa66f640801aa00af7e4",
+    "previewSha256": "224f2e5f7277268978afed4abe10ea7205ec75b8017eded87dfca0cf0ce24e86"
+  },
+  {
+    "gameId": "n-back",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "6736078272a226eb3816887e294271661d169244a89a3a1a854531a4629cb3dd",
+    "previewSha256": "432f42dfa622d8ba91f4367a49a8a2098942e98d59362c6469ce5f3609371dea"
+  },
+  {
+    "gameId": "number-letter",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "b2a90db01c1b71d4e6ce5bc6ca99ff62a0d4af0d17e507425722c2cd1735a26e",
+    "previewSha256": "cef66ebb99be2133173b0bf4952f742ea8e736def50737c6797540ae4144918e"
+  },
+  {
+    "gameId": "oculomotor-training",
+    "version": "2.1.4",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "dad9d14e3a94ed8e3492c13bce1680977076634090f1a8f3027a55055591fc20",
+    "previewSha256": "34116606f63739b73f1c90102dda414899c1a2ac4cf124b9cb9538b5d53dd3a2"
+  },
+  {
+    "gameId": "pattern-memory",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "31117e3e158766c1db885698f5679f6c5b3e06222ccb801d69ba90553aa7e80c",
+    "previewSha256": "13080dd37e7bd2cbef2c16eebb928acbb9648698905597d447043eca8657aa30"
+  },
+  {
+    "gameId": "plus-minus",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "9e0c4b6baa21921740590fba1ebaf6ca3fd255e9dc5168ab810fa4db8f09c59d",
+    "previewSha256": "bb8112488a9c3d2fdbe25ce6463dae5d7b292acd2c3f460b7db04ce0f75c3c94"
+  },
+  {
+    "gameId": "reaction-time",
+    "version": "2.0.2",
+    "phase": "go",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "9bacd5761f4f954ca4eb0553615bfae5fe7ab3bdf16f4f09f648cc8a0fb69cf0",
+    "previewSha256": "0aaeb80fa29f8dd95bf5425296a51eb6476ce42c5009f96959cdc752dea4285f"
+  },
+  {
+    "gameId": "reading-training",
+    "version": "2.0.3",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "8329baa7b8c70c42f979a17e1449d56a283a10ab5c491e2ce9d7bb064544acba",
+    "previewSha256": "b61a74dcba26f8fe0435f91ad53e735351d07c5fbc45f13b2cdd0575b50673a9"
+  },
+  {
+    "gameId": "sart",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "99136b150e8f661361dd55d73138c9d94a63754ad74d93a519619b7900a69ece",
+    "previewSha256": "dea12c40c04896fd56078d30d0ad4d38435f6ccf269759406689a9c7db6d5597"
+  },
+  {
+    "gameId": "schulte-grid",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "298c7f557e62ba58f8f892371437d7648b467278c3da297a25e38916c8f2e8ce",
+    "previewSha256": "7022aa8e4a0343f74dceecd4699efdce4ddbe23c43315931bde746a51970290a"
+  },
+  {
+    "gameId": "seagull-flight",
+    "version": "1.0.1",
+    "phase": "playing",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "d55055a26057f10b4ca1aef91e21196c50e4d97766179129c153eee715b5e16d",
+    "previewSha256": "6a315c768079165416f816359e4f80b03496fb748c941dde358fbb1161f061a6"
+  },
+  {
+    "gameId": "simon-says",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "3606563ac3c9e99db091d1148eeac562a1597964b2721e438b651f82da126c73",
+    "previewSha256": "cb4954afdb7f786b71ee96b3d87ca4db0a800460ae33ebd9c9eadf9ad5f6fd44"
+  },
+  {
+    "gameId": "simon-task",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "0b601d1b340721893e68d358155fd3828e94284edb6ae02f3cfc99a1799a568c",
+    "previewSha256": "cce4a6636f6f0e5547bb438706c792c5188c232500d60791805b42852d2397d6"
+  },
+  {
+    "gameId": "sliding-puzzle",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "b6783564ef9ced4110d4d4c250d011c53fbaf105d5ab02750b28307123f32e63",
+    "previewSha256": "7b1f717a0970c5235a82308925bd9b6bea2b99f8ae39210835bc9685c033c826"
+  },
+  {
+    "gameId": "spatial-span",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "7b10ac525c3a7676c3eece6cad32d3ad495fe4050389ee14a89014bb4ffd80f0",
+    "previewSha256": "c22cf665ce790e3471785f13595641b2622836d1d2d7dcb8b5d3817a01c13321"
+  },
+  {
+    "gameId": "stop-signal",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "a9f904a978adeef5ac6fb2cef5d1a023f23ec50d9c92c087f0e7a9431b7dfbac",
+    "previewSha256": "859e0f3e3b927d71f73d61bc07fd800ccc99408e031c858ef87b15cc06002e17"
+  },
+  {
+    "gameId": "stroop",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "c033403abc366a5d74ade131cbca1ba74c623d2490296a63cd15300d9ad54b71",
+    "previewSha256": "06f7720988dbf4dcd9f801344348d1ce7d82f4b6e6c7ecae6cb1e1e94c935c01"
+  },
+  {
+    "gameId": "sudoku",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "a76d6fa380a05212ff6c7c06d03d5581b488fbd89c1e73eacf4a9fe430725a3c",
+    "previewSha256": "e717f6446c92bdbe7fc00911ff4d6669191ab63664bf7f2ea21a9b7047efe73a"
+  },
+  {
+    "gameId": "tic-tac-toe",
+    "version": "2.0.1",
+    "phase": "gameplay-progress",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "39bb8909288247014cb12747ae01cd9c21ca5185da7908865b8c85ef1d10d7cc",
+    "previewSha256": "20a0246c7a6a0a22d9ad6fc5e3b93797aa4b7318348fd6d9217b1eeef2bbb857"
+  },
+  {
+    "gameId": "time-perception",
+    "version": "1.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "57794818e7286afe96afdf07166be8acb9358765f8425f3c0431b6bbb180903c",
+    "previewSha256": "b65eab407462c2655c528bb7421380e92d582a614babe82c552f58833e7bb429"
+  },
+  {
+    "gameId": "tongue-catch",
+    "version": "2.0.1",
+    "phase": "playing",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "dae906851f43530de4c0ff07022383c495febc594f64c308641432a99099cf48",
+    "previewSha256": "13b1927cc94888b62b8de0f88caac833d5305f29e40ecdf829cacfa69794071d"
+  },
+  {
+    "gameId": "tower-of-london",
+    "version": "2.0.2",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "2c964a7100ce56eb6c62d91d3d5f2aa160cf394b36fe6de97662eacefaf459e6",
+    "previewSha256": "c4a041d34f3829aca0e0cf111a3d9ee7911906b8361ca6722c7a5cc7e4fcac51"
+  },
+  {
+    "gameId": "ufov",
+    "version": "2.0.1",
+    "phase": "gameplay-answer",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "033a6773f483060caab20dad3e6d05748a097711b060b2b797f90e891e91dd84",
+    "previewSha256": "aef910ff70bc46c34c0ebbc93d0c8a24352676f1d71fa630ce983a42476a5816"
+  },
+  {
+    "gameId": "whack-a-mole",
+    "version": "2.0.1",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "506b6cb2a08b01ed13fe89d93b935c8b502b42ff01feebabd92f33dc90a11c60",
+    "previewSha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526"
+  }
+]

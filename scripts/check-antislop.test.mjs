@@ -45,6 +45,13 @@ function CssRules(css) {
   return rules;
 }
 
+test('Hub cards show the whole gameplay screenshot without cropping its controls', () => {
+  const rules = CssRules(read('apps/rehabtrainerhub/app/globals.css'));
+  const image = rules.filter(rule => rule.selector === '.module-card-visual .card-image-placeholder').at(-1);
+  assert.ok(image, 'Lobby previews have an image sizing rule.');
+  assert.match(image.body, /object-fit\s*:\s*contain\s*;/);
+});
+
 test('source text has no em dash outside vendored third-party files', () => {
   const offenders = [];
   for (const top of ['apps', 'packages', 'scripts', 'workers']) {

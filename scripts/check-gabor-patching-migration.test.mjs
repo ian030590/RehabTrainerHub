@@ -72,15 +72,15 @@ test('Gabor owns UI, dependencies, metadata and the exact original preview; the 
   }
   for (const file of ['settings.json', 'score.json', 'results/GaborResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.3');
+  assert.equal(pkg.version, '2.0.4');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.equal(metadata.trainer, 'vision'); assert.equal(metadata.category, 'vision');
   assert.equal(metadata.copy['zh-TW'].title, '蓋伯斑塊練習');
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'),
-    'b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8');
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
 async function LoadPlugin(deferred = false) {

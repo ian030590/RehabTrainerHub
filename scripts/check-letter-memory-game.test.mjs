@@ -83,7 +83,7 @@ test('Letter Memory rows keep the original columns, include practice and save th
 });
 
 test('Letter Memory owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.0.0' });
+  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.0.1' });
 });
 
 test('Letter Memory private bridge accepts only its own parent and replays settings and language', async () => {

@@ -1091,6 +1091,10 @@ export const brainGameSpecs = {
       await until(() => game(`Boolean(document.querySelector('.blink-running .blink-stimulus'))`), 'stream element');
       await game(`(() => { window.blinkSeen = []; const target = document.querySelector('.blink-running .blink-stimulus');
         new MutationObserver(() => window.blinkSeen.push(target.textContent)).observe(target, { childList: true, characterData: true, subtree: true }); })()`);
+      if (process.argv.includes('--capture-preview')) {
+        await until(() => game(`/^\\d$/.test(document.querySelector('.blink-running .blink-stimulus').textContent)`), 'a real digit in the stream');
+        await capture('gameplay');
+      }
       const plan = { digits: [], wrongFirst: 0 };
       const answer = digit => mobile ? tap(`.blink-key:nth-child(${digit - 1})`) : press(String(digit), `Digit${digit}`, 48 + digit);
       for (let round = 1; round <= 24; round++) {
@@ -1138,6 +1142,10 @@ export const brainGameSpecs = {
         await until(async () => await game(`Boolean(document.querySelector('.time-intro-start'))`) || ['hold', 'choose'].includes(await step()), `trial ${trial}`, 30000);
         if (await game(`Boolean(document.querySelector('.time-intro-start'))`)) {
           await tap('.time-intro-start');
+          if (process.argv.includes('--capture-preview')) {
+            await until(() => game(`document.querySelector('.time-running .time-lamp').dataset.on === 'true'`), 'the timed sample is lit');
+            await capture('gameplay');
+          }
           await until(async () => ['hold', 'choose'].includes(await step()), `trial ${trial} after intro`, 30000);
         }
         if (trial === 1) await capture('gameplay');

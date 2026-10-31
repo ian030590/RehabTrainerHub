@@ -75,7 +75,8 @@ test('the candidate owns UI and assets, retains vendor bytes, and exposes no cam
   assert.equal(metadata.copy['zh-TW'].title, '眼動練習');
   assert.equal(metadata.author, '居家訓練網');
   assert.equal(metadata.copy['zh-TW'].description, '選擇中央目標辨識、平滑追蹤、跳視或凝視，依設定進行目標活動。');
-  assert.equal(createHash('sha256').update(await readFile(new URL('public/' + metadata.preview, base))).digest('hex'), legacy.previewSha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(new URL('public/' + metadata.preview, base))).digest('hex'), capture.previewSha256);
   assert.equal(createHash('sha256').update(await readFile(new URL('public/reference/jspsych.js', base))).digest('hex'), '0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c');
   assert.doesNotMatch(await read('public/reference/index.html'), /webgazer\.js|allow-same-origin|camera/);
   assert.doesNotMatch(await read('public/reference/experiment.js'), /window\.parent\.document|window\.parent\.postMessage|navigator\.mediaDevices/);

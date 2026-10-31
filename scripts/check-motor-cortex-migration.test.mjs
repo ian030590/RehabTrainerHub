@@ -74,7 +74,7 @@ test('tracking configuration retains presets, bounds and hand selection', async 
 
 test('tracking is self-contained with private input, own modal and real-scene spotlight, full results and original preview', async () => {
   const packageJson = JSON.parse(await readFile(resolve(gameRoot,'package.json'),'utf8'));
-  assert.equal(packageJson.version,'2.0.4');
+  assert.equal(packageJson.version,'2.0.5');
   assert.deepEqual(Object.keys(packageJson.dependencies).sort(),['jspsych','react','react-dom','tone']);
   assert.ok(packageJson.rehabTrainer.capabilities.includes('hand-tracking'));
   for (const file of (await readdir(gameRoot,{recursive:true})).filter(file=>/\.(tsx?|css)$/.test(file)&&!file.startsWith('dist'))) {
@@ -88,7 +88,8 @@ test('tracking is self-contained with private input, own modal and real-scene sp
   const metadata = JSON.parse(await readFile(resolve(gameRoot,'public/game.json'),'utf8'));
   assert.equal(metadata.category,'upper-limb'); assert.equal(metadata.copy['zh-TW'].title,'手部目標追蹤練習');
   const preview = await readFile(resolve(gameRoot,'public/preview.webp'));
-  assert.equal(createHash('sha256').update(preview).digest('hex'),createHash('sha256').update(await readFile(resolve(root,'apps/rehabtrainerhub/public/assets/training-modules/motor-cortex-rehab.webp'))).digest('hex'));
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(preview).digest('hex'), capture.previewSha256);
 });
 
 test('numeric results retain all events and outcomes without identity or missing values becoming zero', async () => {

@@ -1,0 +1,2774 @@
+{
+  "status": "candidate-not-published",
+  "date": "2026-10-31",
+  "approvalRequired": "Exact gameId/version/contentSha256 for all listed games; owner executes R2 publication.",
+  "games": [
+    {
+      "gameId": "antisaccade",
+      "title": "反向眼跳抑制（Antisaccade）",
+      "version": "2.0.1",
+      "contentSha256": "872f205d5d245a7e1ca266ddeb8140100454d24b9d7585cdfdb72520bfa0c73a",
+      "fileCount": 5,
+      "totalBytes": 592771,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Cisd3tyv.js",
+          "size": 569179,
+          "sha256": "5cc4ab625b6b36064033d0ec6ecef0671345781b59a0792468a603afa7380766",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Bur1aF_R.css",
+          "size": 19441,
+          "sha256": "f7d96b3973e76052ec1412c4e80f099de64256e29729f759b52489413feb77d5",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 638,
+          "sha256": "b69e19c181355e457ff7bac56f6914ccb8524b8fa4e5766c7c56f7ceb3d4fb56",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 425,
+          "sha256": "2f69544dc1515b51eeeedc194d2c483029fb4294fdcab47f14112d24251abe48",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 3088,
+          "sha256": "e6c6d9203019802a9473b1b6e50faae2b8b09eed85c9694ea6196efa07c05e2e",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc"
+      }
+    },
+    {
+      "gameId": "asteroid-shield",
+      "title": "小行星護盾防衛",
+      "version": "2.0.12",
+      "contentSha256": "5f9a2ef41a12e3c4f00f3ede21343d9c120e5782ccb27a32dc846114e8574ca6",
+      "fileCount": 12,
+      "totalBytes": 1772783,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/asteroid-blue-CY-_A_BJ.png",
+          "size": 14034,
+          "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/asteroid-dark-CW7iRJ5o.png",
+          "size": 11856,
+          "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/asteroid-green-1XKYeWRA.png",
+          "size": 9693,
+          "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/background-NBhu4YAc.png",
+          "size": 83041,
+          "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/energy-rock-CT8hMT01.png",
+          "size": 1792,
+          "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/index-DF09Pj3_.js",
+          "size": 1337459,
+          "sha256": "dbe52f502bf15d5e38d057f6769bf9ef795d444262ad04ce0f343532d25ad7fa",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/shield-complete-B5wkC1qZ.png",
+          "size": 198696,
+          "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/ship-CrsWCvcK.png",
+          "size": 78990,
+          "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/style-Cx7NeduB.css",
+          "size": 17130,
+          "sha256": "c0b709f665ae447343a68be6ae722801071ddd00c261219d036394da50940c3a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 471,
+          "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 411,
+          "sha256": "74f3ab8d831e95494e6b5b01af95d30f38b50de4cbaead8d4599b063a9e67231",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 19210,
+          "sha256": "3c66acc0b921a879499def6d8614bce9c5c95897872d14a50ddbd8c728d5037e",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      }
+    },
+    {
+      "gameId": "attention-network-task",
+      "title": "注意力網絡練習（ANT）",
+      "version": "2.0.2",
+      "contentSha256": "7215baad4bb7dfa474bbed22fb1ebd889f7fc8afca34940f2853dc9b31df5960",
+      "fileCount": 5,
+      "totalBytes": 599028,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CrYDJv8o.js",
+          "size": 573540,
+          "sha256": "2d88afda26eb47d0f302c121df39c135b24ac78cf85aaf31725ea5f8aa5d6fb7",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CzxxYYin.css",
+          "size": 19966,
+          "sha256": "43b4fabc06e1d542ca42dde05544733400199f23360d156cfd461f0204653c67",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 610,
+          "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 420,
+          "sha256": "3b883604843d09d1ca83d5cff68b8521da3aca39b66ae6bdd4c17e3fade4f84c",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4492,
+          "sha256": "770ea5153e816b4e97836a92ca02343c022e07d5c450060fc8aef22fc9e06b1e",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392"
+      }
+    },
+    {
+      "gameId": "attentional-blink",
+      "title": "注意力眨眼",
+      "version": "1.0.2",
+      "contentSha256": "c8c5245c74474b41af89e12b24d5a29c81f9e25c4da8b4d0953e401191bcf29b",
+      "fileCount": 5,
+      "totalBytes": 588840,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-B8abX0sX.js",
+          "size": 565125,
+          "sha256": "9e3995ace17da958833805438d22ff2265333dcaa5791261fdeab422dcef0336",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Cu7JQawe.css",
+          "size": 18753,
+          "sha256": "5d531cc68fff2f938e69352bb7bad10bf7134efe643f9fedd0681dda12111b0d",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 547,
+          "sha256": "f8874096cff1c3446d605da319ba6ded9417e74dc4f3afc375d35edbf3f4b99a",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 405,
+          "sha256": "e63f7ee47d1c938862ab04ab7e6558bc982414890a19b44843e1edbed63f6105",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4010,
+          "sha256": "8f1360eddeb3583c89b60ba63c8c3e6b4563bacf15fad8e3ba754bb98a7aa8ea",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "94a03d3e36d8d8ea816a8f5e79f243e368f8144d4ae2ff57c064ed3f5def4f5a"
+      }
+    },
+    {
+      "gameId": "card-sorting",
+      "title": "卡片規則分類",
+      "version": "1.0.2",
+      "contentSha256": "9c64660b271a73a1e15db4ba97caffc18589bf500a75ee340e4d18e2cb9c1d58",
+      "fileCount": 5,
+      "totalBytes": 593012,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-gh6JBC_K.js",
+          "size": 566532,
+          "sha256": "9bd2bcbcd016271de80125bc1f8e9dfd1a435561a93582491ae4180b12ee2c5d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DGOxQBJL.css",
+          "size": 18858,
+          "sha256": "5c7073681ad67fe9af7beeff4385c18982f237beaa781ea0e5d367dbe0445cbc",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 574,
+          "sha256": "6222f2bbc552f6c4cec7bb98e8d291604d4e3d011e6ab162653c18bf7e8e302d",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "0770b867a71561adb95978db1c8e9e580a50d2554f3b297ead3bec54cddcffaf",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6640,
+          "sha256": "cf1f7052ca71ef1f07c42d669d62d2eaef11ab2ea4489a429f8f2ea7f629b189",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82"
+      }
+    },
+    {
+      "gameId": "connect4",
+      "title": "四子棋",
+      "version": "2.0.1",
+      "contentSha256": "98c7ed0b5683ba59bcf117c22526a61f5b53beabbb00fd1c18ec3b814b9a2108",
+      "fileCount": 5,
+      "totalBytes": 609609,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CzsLpS3z.js",
+          "size": 566774,
+          "sha256": "e0d6bca9bdc01749c34ec1524d0d4b48bd0a82bbd440c01cd71c149008c4099c",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CUXrj17K.css",
+          "size": 19542,
+          "sha256": "ec955bfc34730835781c33cfc9cc3c7dddf50fb08717f8db72c92cb20e4b1a3e",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 464,
+          "sha256": "514fa4fe265306ade8b3e3c7a4fb77e5136415fd2b7bc6b63740fe06570420ad",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 399,
+          "sha256": "b97ba0ef5ecd55c578a9c58e91f3cd0e062f6a7872dc6404fccee374d5662081",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 22430,
+          "sha256": "f14cc8a2f8fb6e38df6b026587b7da551c807e836180445f533c133327d59263",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "2950b0abd9198304bcb58e90b5a2ece1b73691400cd03a2ae34e6e0096b14587"
+      }
+    },
+    {
+      "gameId": "continuous-performance",
+      "title": "連續表現作業（CPT）",
+      "version": "1.0.2",
+      "contentSha256": "ab2479e8cd105dd052212ba6587120c42afac10b5df5844f5c2bc080c707fd93",
+      "fileCount": 5,
+      "totalBytes": 591136,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-C4ozbgqG.js",
+          "size": 568148,
+          "sha256": "4b16324d1651c4edd95c98b8336d48298e66460a80c93338dafa8824d2a59ef2",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-AIUcKusi.css",
+          "size": 18525,
+          "sha256": "95a460ab04a7e2da5bb2d079199eb7b58f80ff5b0b30e1e97a0a6813b71e57e9",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 566,
+          "sha256": "b8c6849897c5a570d16f020579e70ad850c5a7e12a81934478dc9ec54b5454d3",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 417,
+          "sha256": "10697457a35bc804a9df03893ff26fd82e70ca0fdafa300bd6e87b2abf4b934b",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 3480,
+          "sha256": "2ba8573dae73d19cf9cb7dcb3dd7db00739724bc9c003b0042d9a836e61ca3cb",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "1db5f8fb99b374b05eb6273953723bcc2f79d396dc0fbe992ca61c2487454455"
+      }
+    },
+    {
+      "gameId": "digit-span",
+      "title": "數字廣度記憶（Digit Span）",
+      "version": "2.0.2",
+      "contentSha256": "150ecb6539e4cd0ce0061296eba19efe11430f4765c7ad70c99b966f8d0fdf58",
+      "fileCount": 5,
+      "totalBytes": 598840,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-C8UcjgqA.js",
+          "size": 571924,
+          "sha256": "4cb07866cbabae0e6f6d37d9cc18faa4b49267fb032bfa318b6553f2ac681649",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-D2l--6S2.css",
+          "size": 20004,
+          "sha256": "02e37c49982a48a25e45f31f40375ce0138bcf2d82850d63ddfc2d05eeef3837",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 576,
+          "sha256": "485444d345e6054f0d4b96d24c79cf2c6d2f61b4eb66fcb269238832ba03e2bc",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 424,
+          "sha256": "1efc7e4f6344d242fc4d1a2941e45acfc77db612188cc1eaeeb591b637c2050a",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5912,
+          "sha256": "7797433c14aa808e267be7556e35abfff4b70fa4008e8359c70c0fa072ee78d6",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "d17ebf1d77325824bfece5ddefc14fcadcf71d7fbba4eb9101f4c9a885d81921"
+      }
+    },
+    {
+      "gameId": "divided-attention",
+      "title": "分配注意力",
+      "version": "1.0.2",
+      "contentSha256": "5daa444f9f2923657f987c40b8d70bcc6d33598a5133b25687ed4859af7a358c",
+      "fileCount": 5,
+      "totalBytes": 595128,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DxaJfiJF.js",
+          "size": 569683,
+          "sha256": "731a44d4b26cc7a58bdf7a08036781cdd4e2e31c47ce5436b56f3b2c075aec92",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CajF1fCX.css",
+          "size": 19853,
+          "sha256": "9d4f0cefff6d101485dfc1a7a7d6a808c41f963bcb4adfa4daf2099248430baf",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 567,
+          "sha256": "0b94c75f8294919487293a6e204ac3f6b230099e563f760cb5945ea709d21a77",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 405,
+          "sha256": "fafd8b1193649c122202337127cb3855faf2a008c81ce5ded2c49877059f99de",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4620,
+          "sha256": "7d9ca3045af18e7f1e8a4da98f84d3ead7bff2d94fb0f6be6b8a836790c0f5d8",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18"
+      }
+    },
+    {
+      "gameId": "dots-and-boxes",
+      "title": "點格成盒",
+      "version": "2.0.1",
+      "contentSha256": "2382a729dcbb6ec302c8826116f64dd35c4873f5e694fa2e217d632ce98dc63f",
+      "fileCount": 5,
+      "totalBytes": 598821,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Bef3Uhbn.js",
+          "size": 569857,
+          "sha256": "04c7998695f07aeaa303e9299cf0b35dd3874d5edb47c80efe59335c75d0cc23",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CuUAXP8c.css",
+          "size": 20271,
+          "sha256": "42a9268ce34fa50bb172144f1450e721977a9188730a39e1ccd4a91be5b5805a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 525,
+          "sha256": "44ab76e2b3994952b18c828290b8feb9815b767308ebe57bf41230a56d9effa3",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "fe0a5bb5af77c124008dceb5ed1be9a7e846f45839c9a2de0b486fb581562e7a",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 7766,
+          "sha256": "0365fe3b81a1560fe0ce4be0ce40184c5ec13a697fcfaad474733aa751f6a4d9",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278"
+      }
+    },
+    {
+      "gameId": "drawing-defense",
+      "title": "畫畫塔防",
+      "version": "2.0.9",
+      "contentSha256": "b5f5b09055014462bfe288e3df2f6c81e12d79c70618e38e6a253568921ed3ef",
+      "fileCount": 6,
+      "totalBytes": 5882035,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/StarSky-COfhhfcH.png",
+          "size": 4650499,
+          "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/index-DqcZKbeM.js",
+          "size": 1149025,
+          "sha256": "b200e205a4e21daaa4c90298c726e264bf85ab802a99d7d017c9034aa420aa72",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BGtIGjE0.css",
+          "size": 15752,
+          "sha256": "774fb35afa668f1046d6bcfda2983dcdde84cfb1d11ec4736d2de8015538c1b0",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 489,
+          "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "e14e7dde868199148af99e32ae352f1e985ef88bbe0c8b51009e10ef7eb5b6ce",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 65868,
+          "sha256": "10b2f50fb9d4e23008038b5d33da93c6f1dd1a923541e3d0b9ffd44ab9dcdc9b",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      }
+    },
+    {
+      "gameId": "driving-rehab",
+      "title": "駕駛注意力模擬練習",
+      "version": "2.1.2",
+      "contentSha256": "b7ea1e97dc76174c993e8b3a22d4bd4cda7df7409616e7ddea73707906b881e8",
+      "fileCount": 8,
+      "totalBytes": 1299280,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "gamepad",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/car-pedals-BXQENW7T.svg",
+          "size": 198908,
+          "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+          "contentType": "image/svg+xml"
+        },
+        {
+          "path": "assets/driving-sprites-BiQdvI-R.png",
+          "size": 318396,
+          "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/index-B9CIWg-d.js",
+          "size": 729498,
+          "sha256": "07b7203c6c2575c2b246d85d5d4e9c27459efc13d8cb49aca882d85e27a96d83",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/steering-wheel-CU-EYMyz.svg",
+          "size": 3334,
+          "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+          "contentType": "image/svg+xml"
+        },
+        {
+          "path": "assets/style-R6ztmDRb.css",
+          "size": 18569,
+          "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 552,
+          "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 417,
+          "sha256": "640bcbcb268d924c10aeaeacbca8eb8a4ba364dd4226bb0f13015964b915cfd8",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 29606,
+          "sha256": "1822387a884043b3b4dd942f5f6b6a415a3a7add7ffa3753223ce754a05fbbd3",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.1.1",
+        "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec"
+      }
+    },
+    {
+      "gameId": "every-ball-response",
+      "title": "有球必應",
+      "version": "2.0.1",
+      "contentSha256": "235d76152812b09617763819f32d0696bfb1325e1f9d80658cfa234d59cd6b3e",
+      "fileCount": 5,
+      "totalBytes": 1176051,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "microphone-level",
+        "pointer",
+        "pose-tracking",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BbAb6-9T.js",
+          "size": 1138781,
+          "sha256": "d36b2928e72404d07352191bacf5c24ec06e8bb7d426aebb5ae8415381aed04a",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CNRzKos3.css",
+          "size": 26973,
+          "sha256": "dbe0bfec23a7ead0361479e9540bc3f5e9ef3f5af38e401c4e5eb1c758555243",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 491,
+          "sha256": "c8a87cb214223cd56b938cb4d78134c1aadcb6a311c7b8368db441c61491fba6",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "51d5455d6c8c409cf78077dba7a36f089c0e7dacf856c3ec772dab63fb7a675c",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 9404,
+          "sha256": "3c1d6d76a5d49ca37673a009688c4bbe74f8e604664ce77a2b9d9ccee2bdb399",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "25e7c6527d1041109eca10a1b9fcfdc6e0210f8d8dae7e34973a39a68cf7a915"
+      }
+    },
+    {
+      "gameId": "flanker",
+      "title": "側翼干擾選擇（Flanker）",
+      "version": "2.0.2",
+      "contentSha256": "ac6e39bd0772796b7f108271f6d9d3c278a39396ced498eefd2ea9d3487a54d7",
+      "fileCount": 5,
+      "totalBytes": 595884,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DKQvrhmz.js",
+          "size": 570859,
+          "sha256": "0b79d045f6646aac3e3197a36396053f7a49632f41e9f55fcf02065b81e0aa13",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BJb3aB8U.css",
+          "size": 19685,
+          "sha256": "68687e78c19705e332cf4f55c107cd86f79ebb8ade53f6bf18550375d697ff7f",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 525,
+          "sha256": "ac359b5beaa3ed464d35f5e19d1992f5c45870d0a3d7b50b01aaf69cf3696373",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 421,
+          "sha256": "13487599ad605a779821bfa0b4e660f27aa82fe44c66f82a06e90e721ad6dff8",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4394,
+          "sha256": "737b31525edbdff8e597dd14568213e709e84dab56e5e13268e99ba7cc2455de",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604"
+      }
+    },
+    {
+      "gameId": "gabor-patching",
+      "title": "蓋伯斑塊練習",
+      "version": "2.0.4",
+      "contentSha256": "bdaf7851c7bcee033027b3a6a042510a2b83091a8cb74344de4414e2a1ea5f4d",
+      "fileCount": 5,
+      "totalBytes": 1158455,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-lkU2T8Gg.js",
+          "size": 1138670,
+          "sha256": "392b2e929bea4b3d5c235a63a578c110e16bd5ea64956641207d7bb1ea453c3c",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DbNRPcIJ.css",
+          "size": 17221,
+          "sha256": "391915b7a613d691ee63ac4a57cd311d82dcfeb990037f058b9c7f6fc226e7bf",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 490,
+          "sha256": "2cfec8a94ab9533a115c5e1e0ad67aae11717760ae199762fd4d34b21cc2e45e",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "d7f71a90fe3c6a08c23871d04d6277ac197ed4ffe1e2164b082b16d5c22cc22b",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 1666,
+          "sha256": "7ea179f798e7ab61008284107fe990ce487280885af3065f759eabb7a6459c9c",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      }
+    },
+    {
+      "gameId": "gesture-battler",
+      "title": "手勢指令對戰",
+      "version": "2.0.7",
+      "contentSha256": "3fc39c45214f3b5f0d188476139905a18b2b95c6f922d97698a31b144bf6105f",
+      "fileCount": 5,
+      "totalBytes": 1145200,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "hand-tracking",
+        "settings-storage"
+      ],
+      "files": [
+        {
+          "path": "assets/index-D5NN721W.js",
+          "size": 1116573,
+          "sha256": "99dea08d66da170916f63f2acaf7ca8508c01f85ee5232d3a61f54b8af897caa",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Oh-vT-n5.css",
+          "size": 19174,
+          "sha256": "88e24a1243f0dabde5fad274b7aa3d2a4c17cb0c993a5fd5703c2bb2a494db64",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 477,
+          "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "67ac25fb05a27ebfe273b9b14022d4fc2f7cf4ec3543f0937a7a30a2ba425f7a",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 8568,
+          "sha256": "28c25fdd914a8baf1d66e39c3a84fff62e1a48920e35b59274d65ebdcfa3fd84",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      }
+    },
+    {
+      "gameId": "go-nogo",
+      "title": "通行與抑制反應（Go/No-go）",
+      "version": "2.0.2",
+      "contentSha256": "04c9312cf439df9cdf2f931f692ce738fd02eb37ea4a7cb80fd61e4950b7f170",
+      "fileCount": 5,
+      "totalBytes": 592139,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CDULszN8.js",
+          "size": 568563,
+          "sha256": "a7cde7fd5b45e45dfa24da033a81e31048dac44f232469318195be32fd2e9ade",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BKXdiHKB.css",
+          "size": 19285,
+          "sha256": "ba902b9b2e8e112173989e45423b95c46574ace64d93f5affd809b4ad7a6125b",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 548,
+          "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 425,
+          "sha256": "41211c486a51941a80d27a2f93be77856c9e9131f10fbb4fb1ffde8b3bf38ee5",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 3318,
+          "sha256": "749f4e20c6b47a1a34d04d79a51a7fe2587fbf96dd2cde3fb58395b9a1bfc904",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0"
+      }
+    },
+    {
+      "gameId": "hart-chart",
+      "title": "哈特圖訓練",
+      "version": "2.0.5",
+      "contentSha256": "e8ed81d90b4898499bd7a46b41bf11a76f4468419b6767f3837ada880f835688",
+      "fileCount": 5,
+      "totalBytes": 672571,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-C6t-f3q1.js",
+          "size": 611307,
+          "sha256": "74b16581957e017c0ba510e894980468dd5915ceccefaaf10bff53190f45a95a",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DaPXwONC.css",
+          "size": 31081,
+          "sha256": "a81692bf2c892178696bf9d9431ed75c68be476fa397e55eae6aaee3bbbaeb32",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 458,
+          "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 405,
+          "sha256": "32a9abdfc77da0ef6c1fbc51158103eef7fb6bbd79b3c895691e57919e5d08c4",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 29320,
+          "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.4",
+        "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+      }
+    },
+    {
+      "gameId": "hex",
+      "title": "Hex 連線棋",
+      "version": "2.0.1",
+      "contentSha256": "2d96810cad5289ca48fb3b401f63237fd228fd8e940b0484c9fe33da54b26390",
+      "fileCount": 5,
+      "totalBytes": 603243,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DvjQDXJy.js",
+          "size": 566767,
+          "sha256": "91be04c16aed264763d487472be49409c411b6a62da21c586628aa6ef924d5cb",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CIE5Zz3H.css",
+          "size": 19956,
+          "sha256": "fd4f187e409c7b50128ea68019b4415efb580bb0d8683f4e4d905f1ed54fda4d",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 481,
+          "sha256": "89f3432f64a7471f8786bae8db1dfe9e9a3865f3b19b74a803c878e44ec1dde8",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 403,
+          "sha256": "778be0084eee45c50e7a9a0f6e4bbceb661aa895fd607ef7ec8b918b4519bd67",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 15636,
+          "sha256": "5fa834b98e982bff8de1517bcd788fd906402ad18795709385fe525e07c04d15",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17"
+      }
+    },
+    {
+      "gameId": "hex-schulte",
+      "title": "六角舒爾特方格",
+      "version": "1.0.2",
+      "contentSha256": "a5c60d1ab3f6df10877de8d3a761a42c24dc4a1a878828e88e00c2bb38b9a813",
+      "fileCount": 5,
+      "totalBytes": 604090,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-2rL6wTL0.js",
+          "size": 567676,
+          "sha256": "f5594f8e92ec11687b7b0121e5247b1528c4cc8ec98064726d9ca8c0b437767a",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-xxbgyhRb.css",
+          "size": 19930,
+          "sha256": "4dad896827d7d43b17e9e143bff14015195d60800f2bf07f97597545ec883b91",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 553,
+          "sha256": "5bc0a64b6a7ac19826f59ce7857564c7d7a287ba44ee910c7efb3a0d192285ec",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 411,
+          "sha256": "868fa4bf3eee6c3f83a2b140ba20f9a63c1f9602764f89166b400584747fc220",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 15520,
+          "sha256": "20c800de019c3922d67d40149814324aee5699fd996b486c202407a0b00b5143",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0"
+      }
+    },
+    {
+      "gameId": "keep-track",
+      "title": "類別記憶追蹤（Keep Track）",
+      "version": "2.0.1",
+      "contentSha256": "2243052ea3cb893094e2185ac6ef8bae21894bb9d5365a99ba9608aa094dd3be",
+      "fileCount": 5,
+      "totalBytes": 599636,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Cz71g1HD.js",
+          "size": 570798,
+          "sha256": "c6858acb3aa3059bc5f2d62874b34ed6cf774e4d5887eedc551f0c5e324848a6",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DOmimTW-.css",
+          "size": 19766,
+          "sha256": "ad478a8263d5c2b1ff6e70f6869ab1856e0cab9a43c4f135c484af56e55d70de",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 592,
+          "sha256": "47cd04b1e0ad4fc682b720922445ab92320f71686943145f1fe49591a0b16135",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 424,
+          "sha256": "210122642a7f8c50ac90e43dca529adda5850a98550a2231f9f4dddd8ec867b8",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 8056,
+          "sha256": "ff1cdb14923aff009bc411fe8f7222b2a0062ac45139a2ae0e2cd38b29f4d143",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847"
+      }
+    },
+    {
+      "gameId": "letter-memory",
+      "title": "字母記憶更新（Letter Memory）",
+      "version": "2.0.1",
+      "contentSha256": "f2767d2f3234830d9e013adaa14a6215b0e7db0aa7afb8f78b5ecd629efafdd0",
+      "fileCount": 5,
+      "totalBytes": 596559,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-GLRH8KhZ.js",
+          "size": 568956,
+          "sha256": "75b02307b92a384f664e5a617ff76cbb7f1391cefba3127d5a564815610e0277",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DJqFBLMN.css",
+          "size": 19269,
+          "sha256": "f054f0a96d171163650c34ae9758fcfbd4fce15abcb318288da0c659a16b0919",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 625,
+          "sha256": "f5fd75a609e8a98a9f322cfeecfa1413ef8c99dec0567a1b74e27b33f4330ccb",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 427,
+          "sha256": "9f97e68add068b6b23d2dcc70926975eb7a8d32934a3fcd022f865155ed7015c",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 7282,
+          "sha256": "bdcd684cc622e588e44d203b144fb72fa8fda021975822ebe1db32113c5441b9",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563"
+      }
+    },
+    {
+      "gameId": "lights-out",
+      "title": "熄燈解題",
+      "version": "2.0.1",
+      "contentSha256": "f75eaadce9efd7c17a0e773fa122cf9a03fb52c8850229f9859c2a0748547d51",
+      "fileCount": 5,
+      "totalBytes": 593408,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-EZV6I12L.js",
+          "size": 565888,
+          "sha256": "6feb9157c0298ae724f51bd235a292ee51294b13e46b8508ebee38b024f794ed",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BZFY5Q79.css",
+          "size": 19116,
+          "sha256": "4ee20f6d3b0ad352b3cdffba79574bad90e717a96e1e8f62c5680207d30ab2e4",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 472,
+          "sha256": "41128f02b256af24d1308529af278662878c81f8b246596843d85d907a693f8d",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "f1b66d17af0be809234bf72364a85ecfaa125cc351e026fdf3a0f027a3596781",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 7530,
+          "sha256": "ad43e95f15ebcb1ea4e6447243e2bdbc2b85e64e8037ce5ee32a7e6ed21da3b8",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "0e81b9ffb30ca5536a630e5de8e635e90958fa185529e9b253a5522cbcb1beea"
+      }
+    },
+    {
+      "gameId": "maze",
+      "title": "迷宮",
+      "version": "2.0.1",
+      "contentSha256": "d4c194037eb56af6109d5c45b12b43fe1730ea1f4c3b112e0fbfdafad74f72ca",
+      "fileCount": 5,
+      "totalBytes": 595405,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-fP-tAs6h.js",
+          "size": 569419,
+          "sha256": "ffad85ce2882628eaef0863fea6ef27adad55d02791183b5b2479ca56c429370",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DTEyTkCV.css",
+          "size": 19628,
+          "sha256": "627906c81e0a6ca32aebf9d8bba378fafce22ae4a13abacbfe33bd38729cf367",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 454,
+          "sha256": "1c124c206f2226a549e7cf16c5553b643b0b1c219f4e2adc3bdc0d8461ef0e53",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 396,
+          "sha256": "69c85a22c31956972890edc00963a3f2d15602371cb7202374ea3255ff85d88e",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5508,
+          "sha256": "5888cc0f73c6df498de31788a11f6ce7f4683b5d42df69ee77fd91399ca8e000",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "72eca38e7ec1b1693bf956f967a23195e03742312cb9ee902733a69810b7350c"
+      }
+    },
+    {
+      "gameId": "memory-match",
+      "title": "記憶配對",
+      "version": "2.0.1",
+      "contentSha256": "3ce521f693cea64b5e76cd811c231782f0be3792ba3e97ad6a596776729ace03",
+      "fileCount": 5,
+      "totalBytes": 599508,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CTxFMvhb.js",
+          "size": 567663,
+          "sha256": "e02eaad3a4b39c358158d99e8aa41381ce949e26815493d452c36ff4d6a25ca6",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-WlGyec35.css",
+          "size": 20038,
+          "sha256": "34c49cb886ab49c87ec13b5e654fd0593f4c8fca12f9693e0faaa3876b5ee699",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 447,
+          "sha256": "bf73efcbdc0990d427aaed928ec6f2e65421c9d9501f2d80b2a3228af9731bd6",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "876127b749a3a699eed27e59f7df30c200f37a5d91adb267510a402d23ec9b1b",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 10958,
+          "sha256": "2cba97d3eddc961ca9fba420ca2c8203ae64293acedf2253123f7668349c41fd",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "a2647930d57893ecdb7da8d01f91ccd43dad97e947ec89119b5c8abd20e91e27"
+      }
+    },
+    {
+      "gameId": "minesweeper",
+      "title": "踩地雷",
+      "version": "2.0.1",
+      "contentSha256": "b930f20d9edb39f11c787fd0492aa0df9f7d8f1cfeafd9fe52d2c34224f5edb9",
+      "fileCount": 5,
+      "totalBytes": 602480,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BbMm7NxE.js",
+          "size": 573161,
+          "sha256": "14dda691d995b0036bd6edfcc494d6f48f50203e567453c119f65807ea3d4488",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-C51sOyFh.css",
+          "size": 19938,
+          "sha256": "80994eace1647c6584fd8d0fc5703150bb68dc6aaab3cb0e8442d42105c2a24a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 528,
+          "sha256": "dfe80539e28f4105f6bb43a7a2031b5f0769078d24bc049c934c3d67b045b13e",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 399,
+          "sha256": "bca416a56978f6012fcd08312ceb71ad4609ed4c886a25619573bd4978ae07dc",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 8454,
+          "sha256": "356c758bc2e54b10e03106e5152907c3f0ffc8a555f07762c599985372a3b69f",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "b08efef066b9ab67eb06bf91cc202cab99f8ed33ca5ef536e0d16130dc585c58"
+      }
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "title": "手部目標追蹤練習",
+      "version": "2.0.5",
+      "contentSha256": "f1bda3ca4077aae9861b4bfcd0d640829c1553a4533a88240f2d7b2ec5ce6439",
+      "fileCount": 5,
+      "totalBytes": 617246,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "hand-tracking",
+        "settings-storage"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DAP2AvKY.js",
+          "size": 590031,
+          "sha256": "a9c4ab3db7dc4c7a6c1eb4b12cde3df307a3166fecf0097691a992659fc0853d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-MHjCLB8w.css",
+          "size": 18945,
+          "sha256": "79c853606889087859689970e51bd70f7b8690fd7245d18ef11cf6d8f373d5ff",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 522,
+          "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 414,
+          "sha256": "f782ad8d4f0bb19e9e77c4b65db87dfba3c1a58be2e3b5d3dbb4cabe561f4bdb",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 7334,
+          "sha256": "3cdfc7354e3b746aef70faf455d5d99c4d53b832345fae810efa278df82bce79",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      }
+    },
+    {
+      "gameId": "moving-card",
+      "title": "移動卡片訓練",
+      "version": "2.0.5",
+      "contentSha256": "6815422821c154c665c4a3d49758a005504f63f31eb029ba37c00adc34517a87",
+      "fileCount": 5,
+      "totalBytes": 1177100,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-C-Ky0Tzo.js",
+          "size": 1143685,
+          "sha256": "9e0f0508b4d3290fe5c760ad03b5ce46e3e0e4dafc1651281fff861edab8569d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-RbsTYcfC.css",
+          "size": 17866,
+          "sha256": "c96d63437117026ebd35d20e03dc12f82a37132c025d568aa6de354ed922a2b9",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 489,
+          "sha256": "6a39e23445ed2a2165694ed64adc6283e9ae1d0901938dcb811bbafc03fb040c",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "7f40c461ea537005a4ba61deb1340e522355a11425bab3c166a30ce7c6549b8d",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 14652,
+          "sha256": "224f2e5f7277268978afed4abe10ea7205ec75b8017eded87dfca0cf0ce24e86",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      }
+    },
+    {
+      "gameId": "n-back",
+      "title": "工作記憶更新（N-back）",
+      "version": "2.0.2",
+      "contentSha256": "4d4c4e2021aa6038091a83de76137e2c8cef302ebe75bf674a4eb6a7c0567bf6",
+      "fileCount": 5,
+      "totalBytes": 596269,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CbXFXbz9.js",
+          "size": 572198,
+          "sha256": "0348878d5797d55ca38616bd30bd56cd368fd5ada3a7e1d38b05b53de84a47b2",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Im2z79e-.css",
+          "size": 18820,
+          "sha256": "56ae1f88f6cebc24ac5c6a4fd6c15fd49a1cbd0020e5b03ffdfa4d6c758720a2",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 579,
+          "sha256": "9cfa69f3bc431d2a540d773080cbcade992cf2a89787afcca5866aae6964239f",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 420,
+          "sha256": "a42deb45dd0324860e059d3cd317b4d0784e730799f39f5c69880aad8b99837c",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4252,
+          "sha256": "432f42dfa622d8ba91f4367a49a8a2098942e98d59362c6469ce5f3609371dea",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "a7fbdb7a7bbb0d8232721023a54c3141660459ad66894eed47c20ef01205053d"
+      }
+    },
+    {
+      "gameId": "number-letter",
+      "title": "數字字母切換（Number-Letter）",
+      "version": "2.0.2",
+      "contentSha256": "515904d440646e757e8935235214064881d5bd5bf07ee14d1fead439f6ec29ff",
+      "fileCount": 5,
+      "totalBytes": 602914,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BYEzmMOS.js",
+          "size": 576104,
+          "sha256": "5db86048cf36c7b98aa94988f033e33a016f954dab409075423c2258d9afa159",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Wwji_8d6.css",
+          "size": 20240,
+          "sha256": "3094e12ecfe5ac9752b518859c4ee1bb4f2f724c700e74bc69c1ddf498d08c65",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 685,
+          "sha256": "70f331b743aed78632f930899422073605878a9c316da7ccf90578405853ea3f",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 427,
+          "sha256": "1bbf2abc99c4a6406d754e016a6787cdd995927bc97f4cde9582018fcd4821a0",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5458,
+          "sha256": "cef66ebb99be2133173b0bf4952f742ea8e736def50737c6797540ae4144918e",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9"
+      }
+    },
+    {
+      "gameId": "oculomotor-training",
+      "title": "眼動練習",
+      "version": "2.1.4",
+      "contentSha256": "b2314202c9d7aa1bf48e658b4fc77dafe223e8e6e57e543d363de07b5445e64c",
+      "fileCount": 11,
+      "totalBytes": 769054,
+      "capabilities": [
+        "audio",
+        "eye-tracking",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-C3iCQLta.css",
+          "size": 21576,
+          "sha256": "775d7512d0e8a7c2b1c0c5119e1c096dace09888939af3911b7c32bb120bb6be",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "assets/index-O_NaDeZ7.js",
+          "size": 493571,
+          "sha256": "7acc660fd84664b8f004a2b0ae88335a9cd46265c2962c144da52bf3b97a7999",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 530,
+          "sha256": "4e671b0605775be540c9149b655d8b71608367e53246265b92f5eee2f669f45a",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 585,
+          "sha256": "4ac4ee3fd084f0f8b2d78bef035bc473ca013f6469bb93ec585dcdab67497103",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 626,
+          "sha256": "34116606f63739b73f1c90102dda414899c1a2ac4cf124b9cb9538b5d53dd3a2",
+          "contentType": "image/webp"
+        },
+        {
+          "path": "reference/LICENSE-OcuTrain.txt",
+          "size": 34523,
+          "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+          "contentType": "text/plain; charset=utf-8"
+        },
+        {
+          "path": "reference/experiment.js",
+          "size": 100983,
+          "sha256": "92d211cc2186c7c2b066ab4c0c976dfb763aaa925de0b0d94bb455e720f09e31",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/gazeAdapter.js",
+          "size": 3763,
+          "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/index.html",
+          "size": 570,
+          "sha256": "490807650509a1b05d9e9ac52da5f80ec0a0d8ef0f8cb072ed828a4a451f07d3",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "reference/jspsych.js",
+          "size": 80994,
+          "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/style.css",
+          "size": 31333,
+          "sha256": "2d99973ceb1ddbf9970bd653d585ead6f1c80b78db3fabfb9d81e478d66da1f8",
+          "contentType": "text/css; charset=utf-8"
+        }
+      ],
+      "previous": {
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      }
+    },
+    {
+      "gameId": "pattern-memory",
+      "title": "圖形記憶",
+      "version": "1.0.2",
+      "contentSha256": "b9a9377416aeceaa7e83e659093623f6564f3edf94de29e18fa0d39bd2235e24",
+      "fileCount": 5,
+      "totalBytes": 594104,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BTGFkcne.js",
+          "size": 568344,
+          "sha256": "3cc4a1096d000b0089d0abb68e2fd2c8a943fe7a105530efee69f0e862537290",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-YU1eUndA.css",
+          "size": 19436,
+          "sha256": "6daed77c188fea082ee5798d48e385472ded220727bca0a9a2e4220adea51bd9",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 566,
+          "sha256": "bdb2bcbb7b3f84af27ab881fe318688e8cec7630212c9e79321d7dac373cbf32",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "3f32c063df66e4e54c3a0d2306854742dc9b2317d52adf861368f7a55712b017",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5356,
+          "sha256": "13080dd37e7bd2cbef2c16eebb928acbb9648698905597d447043eca8657aa30",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "4a9466256ab9c2472b40708d5896c87337f8f0842b7af48a266624b760fe2cfa"
+      }
+    },
+    {
+      "gameId": "plus-minus",
+      "title": "心算加減切換（Plus-Minus）",
+      "version": "2.0.1",
+      "contentSha256": "2ee4627176ffd0efa9c7340b1d1dba236871510cefa325a54fe72bde20b52fea",
+      "fileCount": 5,
+      "totalBytes": 595549,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-D8BNB1rN.js",
+          "size": 568327,
+          "sha256": "d59ed86b626d32ac351cba10e0ffc4bbcff7cc3c39d2bb4c9671e491674a285d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-UjBCqltY.css",
+          "size": 19745,
+          "sha256": "4770ddcb55977a2956cdb537818a63f869217956d037884af98c1272a3a03b57",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 617,
+          "sha256": "89a8935438d59832f6696cf89a6ebe3297a6cb36188c0c3b7a6ccbc97f26e6d6",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 424,
+          "sha256": "6926c942bd1fc8f2df39ee5144bf3cde546ad2c47da102f8fe4236688e6971f6",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6436,
+          "sha256": "bb8112488a9c3d2fdbe25ce6463dae5d7b292acd2c3f460b7db04ce0f75c3c94",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "7cdc052aa180b2aa7bcdba3224b7cd6278534d7fcba844644f9698a4e6f1c6df"
+      }
+    },
+    {
+      "gameId": "reaction-time",
+      "title": "反應時間",
+      "version": "2.0.2",
+      "contentSha256": "02d1c37da66d634f898494b4e6623d61e5bdf42da21c86126a96695b8486aa75",
+      "fileCount": 5,
+      "totalBytes": 590495,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BOVRfTRe.js",
+          "size": 568005,
+          "sha256": "78e2ea12421d04bb348b851fa67281e42d3e46fe3cbc1749f206de0b00c81414",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style--b68W-Fr.css",
+          "size": 18801,
+          "sha256": "bbecea882b22878741f61578fa71f9ce713683da4a98611da70cae8e45df0500",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 459,
+          "sha256": "2c3e1e994422f5741387c478ea90d43485cd78ac0d0b692cdd6a3aba2006f935",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "900983843383f9a26b41c7356c7641dcbe902148ba09fa240d00b05ed5d9d0ca",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 2828,
+          "sha256": "0aaeb80fa29f8dd95bf5425296a51eb6476ce42c5009f96959cdc752dea4285f",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "d76fedf1660188caa997d9c0eb58b512436b8f5fc6105fe5b7eec3d00c8c2bf9"
+      }
+    },
+    {
+      "gameId": "reading-training",
+      "title": "閱讀訓練（RSVP）",
+      "version": "2.0.3",
+      "contentSha256": "57a43b226ee7cf8d90b850200b294d3a8cccb3f023041f7169dd1920acfdf4d5",
+      "fileCount": 5,
+      "totalBytes": 1207088,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DOVHslQ1.js",
+          "size": 1184703,
+          "sha256": "6a84f9e73d61586ae2788e176a13e09a583127c9e5e3cf2d78002f6ad058458d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BS_nbMed.css",
+          "size": 19484,
+          "sha256": "650c3184f86a3342fdc3882282e742f17cc5b45e1b8be0271f8b1c3fea4e1baa",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 499,
+          "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 412,
+          "sha256": "38ea3bfff69dbd00db8bbfdfac5e9e19396082e30fcacf9f324b7fbac8f5e4d2",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 1990,
+          "sha256": "b61a74dcba26f8fe0435f91ad53e735351d07c5fbc45f13b2cdd0575b50673a9",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    },
+    {
+      "gameId": "sart",
+      "title": "持續注意反應（SART）",
+      "version": "1.0.2",
+      "contentSha256": "3a450bb427daa5f94ce35a7091d20f016a0dd71ca8e3aa69e59c6cb7cbd8bda9",
+      "fileCount": 5,
+      "totalBytes": 587995,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DSeyJgsW.js",
+          "size": 565552,
+          "sha256": "b4de35823f6f144603f6bb6cf50d4b943b9128cae14b9e6016470db0af7cc970",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-B_XSTcVQ.css",
+          "size": 18716,
+          "sha256": "ac736ef5854d85239ea4ae418737ea33c846426f565929c873b73178a575ffe8",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 557,
+          "sha256": "06a9ba2691902de3a981fc7367dde60576e3fd979a73331ba06c9928e5a0ed5e",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 418,
+          "sha256": "4d9ebdb2558726b5227dd167006aae10e27e6b2b5aa6a8ececcd00fbe670e300",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 2752,
+          "sha256": "dea12c40c04896fd56078d30d0ad4d38435f6ccf269759406689a9c7db6d5597",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "78f0a0d925f5654443ec20a99fc836ee37b50e63c39abc48116dfd0f32407d5d"
+      }
+    },
+    {
+      "gameId": "schulte-grid",
+      "title": "舒爾特方格",
+      "version": "1.0.2",
+      "contentSha256": "0d457b5c18a5a297be7cfc4101bc208bb3d46a77fc5a8b1908c9f4a2053df3ed",
+      "fileCount": 5,
+      "totalBytes": 591375,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CrP9Eqvm.js",
+          "size": 565222,
+          "sha256": "beee4693b4c66620cccabe908bc3745eeaf60973973013edc1d9b7834338b1fb",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BUrKiDKe.css",
+          "size": 18667,
+          "sha256": "3392e8b4c4946e417b99cc9398aa71c2bb825bdf3a37b0af0002aa5efe13c531",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 465,
+          "sha256": "10c0474d455a1d9c3826638a89ee022aff293a6b8f4e830e3bc3fe935062e2a2",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 405,
+          "sha256": "dddc3d7b117c3c84967f2592c58eff3dff29bd2496718157b35131fc2654e928",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6616,
+          "sha256": "7022aa8e4a0343f74dceecd4699efdce4ddbe23c43315931bde746a51970290a",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc"
+      }
+    },
+    {
+      "gameId": "seagull-flight",
+      "title": "海鷗飛行",
+      "version": "1.0.1",
+      "contentSha256": "5bb97277503f9126cbd070c78853c4b14afe37c18c9366395d8a9c08d5550b56",
+      "fileCount": 6,
+      "totalBytes": 1132557,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "head-tracking",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "THIRD-PARTY-NOTICES.txt",
+          "size": 3682,
+          "sha256": "56cc5314d707dcf05d7d14996b8a098cf1fdbc53f19169d66a8dff2208ad7078",
+          "contentType": "text/plain; charset=utf-8"
+        },
+        {
+          "path": "assets/index-CiaMj1rJ.js",
+          "size": 1096543,
+          "sha256": "c7816fd3c5df67b76fd941a9c0cc89f1d53ac125f719b0c0b91e5d55a684e4e4",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DJ-HvYHD.css",
+          "size": 22987,
+          "sha256": "44f9ea2237c7e8382625cff401ce94b3a5031a8ac796f4924b020f61cac6fb3a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 515,
+          "sha256": "3aeae7d6b42e0fc876276617404235505ec2ecfd9d0040b107fb9d05d2c691ba",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 382,
+          "sha256": "286e666ea5f3781685ea2b5bf72e824dafc507ca22ed17840c1aaf2fb19cd0d5",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 8448,
+          "sha256": "6a315c768079165416f816359e4f80b03496fb748c941dde358fbb1161f061a6",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.0",
+        "contentSha256": "6ea8bd539a640995c35256415d689d88a2696c46ea48ff70854a4cbe621abfb7"
+      }
+    },
+    {
+      "gameId": "simon-says",
+      "title": "順序記憶",
+      "version": "2.0.1",
+      "contentSha256": "3977f6728de1844d6c1fb5488de12d33e5489e56804b0a3d923bd92a02aba963",
+      "fileCount": 5,
+      "totalBytes": 594499,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BZThQ-5t.js",
+          "size": 566739,
+          "sha256": "437ca4b11e5f18d6e06c9bb9c1139ca06060005ce34d68b14912b748a4fb1cfa",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-KiacnFB4.css",
+          "size": 20363,
+          "sha256": "9993314a882f541a53574b9c0f5b07fafc852a881abc6a22bd07fb1a4ecd7f9c",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 497,
+          "sha256": "bce5dec392eb284f77d67ceab447e5b7b8eafb9baa9271876f12bd44cc4f739f",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "592b2aa97411ac1cfa3641233a653b864cf0b0c85038c61c829c041e0024e383",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6498,
+          "sha256": "cb4954afdb7f786b71ee96b3d87ca4db0a800460ae33ebd9c9eadf9ad5f6fd44",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a"
+      }
+    },
+    {
+      "gameId": "simon-task",
+      "title": "Simon 作業",
+      "version": "1.0.2",
+      "contentSha256": "80312ee74ff356a2030329dccf4b7a7bbf2ba39faec077b6f249d2d27ea7c79a",
+      "fileCount": 5,
+      "totalBytes": 590112,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BCdggjv2.js",
+          "size": 566208,
+          "sha256": "bb7719c0fa2a563ff81d0d1da17a8ebb6b81bf40193f565df747b8b1955f0441",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-D8SdVMqu.css",
+          "size": 19118,
+          "sha256": "dcc15acf6ba5fb202b152231d9c8b8db2e50e75ce924379c49dcfa726b4c9058",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 496,
+          "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "1f2d46f02486cc3a675ded17de547ba03c0777cad01988b32ace0fb18da3f7c6",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 3888,
+          "sha256": "cce4a6636f6f0e5547bb438706c792c5188c232500d60791805b42852d2397d6",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a"
+      }
+    },
+    {
+      "gameId": "sliding-puzzle",
+      "title": "滑塊拼圖",
+      "version": "2.0.1",
+      "contentSha256": "ecfc2814403642050c17d4309376e94089619804905e75aef73619f6e7e0408a",
+      "fileCount": 5,
+      "totalBytes": 593710,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BT0X3PzE.js",
+          "size": 567171,
+          "sha256": "148a3fd67020486765964ce802c5c157fe06db1f9d56ff4bb73d9088933081bb",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CqeYZiwE.css",
+          "size": 18705,
+          "sha256": "8061b5f0e7d79db0a177b118b3d9f80025154d3e3e06edc3723d41634cf97784",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 464,
+          "sha256": "80d209e3af3e8a4d4c9b2a08572a489bf5977b641a361b7a597ae3217376543e",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "598e651e9c0ff009570e0f83403dcb603409c93d7eb5aecc90795b3434efce5e",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6968,
+          "sha256": "7b1f717a0970c5235a82308925bd9b6bea2b99f8ae39210835bc9685c033c826",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "755feb1080ab8f58a4cda4264697f7d39e174fefdb3ac63c7798ab40b7e1498e"
+      }
+    },
+    {
+      "gameId": "spatial-span",
+      "title": "空間廣度記憶（Spatial Span）",
+      "version": "2.0.2",
+      "contentSha256": "977f2d08b65ce6ea546e869c3da742104d27b352ae60dd0c6f602f96a8c9a9b0",
+      "fileCount": 5,
+      "totalBytes": 601933,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-DzzyU-Ee.js",
+          "size": 573534,
+          "sha256": "48e460df5f5ab59a700d7f8a6bd501babef37f048c43e0eff0213ea9504e1338",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BkiK0ykl.css",
+          "size": 19809,
+          "sha256": "60e97f6ee6229e5ee2aeee03518a30c25f5bab76202daa67aa5123c639073134",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 590,
+          "sha256": "3225ff6c471b2d53ebe5e8eafbe87bcb169c19c6a43e1bf9fe493005881719ef",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 426,
+          "sha256": "8d8bb6346b4a515b0a57c5111dd92491af4e5dfdde3b0fa143e15338699eb860",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 7574,
+          "sha256": "c22cf665ce790e3471785f13595641b2622836d1d2d7dcb8b5d3817a01c13321",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "a5da104e65e7fbbce0a8bf9b9bf7fd6f8fa120930e8b33a236c2c6df22b33a3a"
+      }
+    },
+    {
+      "gameId": "stop-signal",
+      "title": "煞車抑制反應（Stop-Signal）",
+      "version": "2.0.2",
+      "contentSha256": "dfd5eadc5f6f7f0fde451eb18d19bfa1090f364ff73556a9ec092b3fc6d749fe",
+      "fileCount": 5,
+      "totalBytes": 601854,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-D9lziGsY.js",
+          "size": 577772,
+          "sha256": "6a2c3cfa20e8f3937d7419b5e27e52f22dc7fc6acd9c806c02944ad6067112c2",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-iiLU9Gmv.css",
+          "size": 20017,
+          "sha256": "0b26167204b43060bf23a2a5dfe85427057915f61214ade7aff80f6c967614ce",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 600,
+          "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 425,
+          "sha256": "935eb2be61498aa8cb50498c996b4c7d73cb05050414ffbec821b61c8bc1fcc2",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 3040,
+          "sha256": "859e0f3e3b927d71f73d61bc07fd800ccc99408e031c858ef87b15cc06002e17",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "efb5c06f3cf11651b33a4417353751de607d2268de4d196d68c52b0948efddb0"
+      }
+    },
+    {
+      "gameId": "stroop",
+      "title": "色彩干擾抑制（Stroop）",
+      "version": "2.0.2",
+      "contentSha256": "34dfcc62e652daeb8e5a8e6ccb33070439e1067e9d06bad0e0c84fc50b9b130a",
+      "fileCount": 5,
+      "totalBytes": 594452,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CfV2TzbE.js",
+          "size": 568729,
+          "sha256": "4361a9e911de577f8f952edc60ef22a40aef98f85ca876b939f0e276318b9ba7",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-B9dhWLhg.css",
+          "size": 19639,
+          "sha256": "68274ec41397b717f8054d16a1d5f89f59d17081c9e13f3ba19e34a451f5d666",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 526,
+          "sha256": "fdf2a32a88965e37a8005047b4215bdc25750596536ca2d028e85cda2e54f05b",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 420,
+          "sha256": "d7f3e7c132e46e42b0a292ff24fe6520797b1fceb0acfada8fb1451ec4d7672d",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5138,
+          "sha256": "06f7720988dbf4dcd9f801344348d1ce7d82f4b6e6c7ecae6cb1e1e94c935c01",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "ccd5153667e0af27fd9db0c5ab748e48b05881c8adfed6e3c0ab7a7496f6853d"
+      }
+    },
+    {
+      "gameId": "sudoku",
+      "title": "數獨",
+      "version": "2.0.1",
+      "contentSha256": "2b52175e87d98c6394b70a599cc4a3920a42289f5502c3b02c5bd4c1808685d7",
+      "fileCount": 5,
+      "totalBytes": 593559,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Bb5bEwGc.js",
+          "size": 568969,
+          "sha256": "fd312dfeb3924bf774af796ab3e83b910118264cadae27a553eb7675b869f3c5",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CjEJItwg.css",
+          "size": 18692,
+          "sha256": "692a86d6fd16559f18c9fbadb30773213a87642f11f82372cc9ca96d70949dde",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 506,
+          "sha256": "9de6d72ddd29797b748d705162a3c63854a5a9839b25878d15cd576d256c69c8",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 396,
+          "sha256": "9abfc33c22d5e4a5b4f6a92c29e69ddf97855f898dd01a53680b5c9652be21a8",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4996,
+          "sha256": "e717f6446c92bdbe7fc00911ff4d6669191ab63664bf7f2ea21a9b7047efe73a",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439"
+      }
+    },
+    {
+      "gameId": "tic-tac-toe",
+      "title": "圈圈叉叉",
+      "version": "2.0.1",
+      "contentSha256": "5b375264537a4b6a733014e51e356953f7c041d2f9b69e4a2738727b7f7b6b17",
+      "fileCount": 5,
+      "totalBytes": 591854,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Dyc3UP9H.js",
+          "size": 566243,
+          "sha256": "1dfe7f03bd093fb32724cf29af85c087842c77eef5f2f202f67f0031f06a51d9",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DtdUovyt.css",
+          "size": 18384,
+          "sha256": "5d0a568f4b6b1d91cb61f3ed5c5cd29c425712bbe98b989b80c1674ca7ac1132",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 465,
+          "sha256": "9ecf9bd7fa4d8955b70f93bd5c7f446605defe97ab96a065bddb08fcae84ef06",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "62b83181c16ef32ac431731847a77ff9bdecce72e4e2469a7aa1536eba553c70",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6360,
+          "sha256": "20a0246c7a6a0a22d9ad6fc5e3b93797aa4b7318348fd6d9217b1eeef2bbb857",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "41a28238bb03254060a1dee9519256c2a9e4b4c5962246534d8249ffdbb787d7"
+      }
+    },
+    {
+      "gameId": "time-perception",
+      "title": "時間感知",
+      "version": "1.0.2",
+      "contentSha256": "94052ec65a3bc05454427826e7269ce63cc26f74067a04700a666b5386c6fa4d",
+      "fileCount": 5,
+      "totalBytes": 594778,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-BHbcDDKx.js",
+          "size": 570365,
+          "sha256": "3855db3ce98ea71e9aa365f1ce62c08c87b652b7ee5e08e16718269abd0e6c0c",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BTFBStxe.css",
+          "size": 19060,
+          "sha256": "3d367a0ce49a0944c814b1d747cf632c93358fb52281945cad7f012d083561bf",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 519,
+          "sha256": "19edd1ee6f9f313cd19936bd23e908289946de4a547b38d2be72fc47f2db6efa",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "09aa88175cd80f4a345dd383a15b0b47d9f6e742db95a7fbe76b27528e602abc",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4432,
+          "sha256": "b65eab407462c2655c528bb7421380e92d582a614babe82c552f58833e7bb429",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "1.0.1",
+        "contentSha256": "362631b27ae5981042c86a04484d8e4c89539d96e02b34fe3000d463eac735f8"
+      }
+    },
+    {
+      "gameId": "tongue-catch",
+      "title": "舌頭動作訓練",
+      "version": "2.0.1",
+      "contentSha256": "9a502560949a407c6fc432138c5ba82e66d2a7871ad7c8f6542d15a970765a59",
+      "fileCount": 6,
+      "totalBytes": 1140435,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "tongue-tracking",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/apple-DdAGs30N.svg",
+          "size": 393,
+          "sha256": "4b84afa7aa9f1753fe876cf4d1ab4c34e1c46fec650c195c39f96c01b0e9916b",
+          "contentType": "image/svg+xml"
+        },
+        {
+          "path": "assets/index-I9_epMfH.js",
+          "size": 1109645,
+          "sha256": "3a74f40164d65a3acf007fd1818cc12655f4f0f9297e87ffe3436bebf5fe5160",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-66EMWJom.css",
+          "size": 26523,
+          "sha256": "6f20dfc4245a2acf420b70e600e92f799c6b637efa548a5e1f46cf02f7ef487f",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 474,
+          "sha256": "6fd022ae09f9e4139121c668789766e93523addec08d15004789871f87ae1812",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "4b86f737d29c28b8718cb099ddf2c9c644aa0e1ef333829e661a8b90ecbe5217",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 2992,
+          "sha256": "13b1927cc94888b62b8de0f88caac833d5305f29e40ecdf829cacfa69794071d",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "690f776372713c4d1bd993692f36f5107a6a2f7fa817357462b003c111d89061"
+      }
+    },
+    {
+      "gameId": "tower-of-london",
+      "title": "倫敦塔規劃（Tower of London）",
+      "version": "2.0.2",
+      "contentSha256": "6c0a4af8eb746a73c7dba1e4615e4dc97d0ac046862a5f387b8dac0bc38f9e1d",
+      "fileCount": 5,
+      "totalBytes": 607557,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-WmAZOXk-.js",
+          "size": 572488,
+          "sha256": "0d8eaf87a6764691ae1d27a7c1992cb3b819467060e843a4faf68ad2a03e027d",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CycIc4DR.css",
+          "size": 21234,
+          "sha256": "399fdafa4ed4fb71e945277b47961fe5ab5137e618b10c02340a5134f6c0780d",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 589,
+          "sha256": "ae6f3014e08b1aea3c3e9ce76f479881821708cbf36749bf345ca1183dd9c8c4",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 426,
+          "sha256": "f359ded13c7e6f21903e174e8cfadcdfa3f70fd8f6a3f0ef2491f006183ace3f",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 12820,
+          "sha256": "c4a041d34f3829aca0e0cf111a3d9ee7911906b8361ca6722c7a5cc7e4fcac51",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.1",
+        "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049"
+      }
+    },
+    {
+      "gameId": "ufov",
+      "title": "周邊視野訓練",
+      "version": "2.0.1",
+      "contentSha256": "3eb4b584bdd752f8ea5e4f6001b0b1f4bf992d680ae98ade5142c2dbc2ce86b0",
+      "fileCount": 5,
+      "totalBytes": 631812,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "result-files",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-Di-ao12d.js",
+          "size": 604991,
+          "sha256": "476d2655ccfd3fd5901477388aa6736f604f69c3a38dc8f21b56f7a8d2f86e12",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CfLyi458.css",
+          "size": 21559,
+          "sha256": "2861c1fadac30b8e7117122af0f5fdc081b2f6986160e891725173b1c448f3ff",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 620,
+          "sha256": "28490f6082430516399f4a5685ce912c470c2a648b73bb283e33df5930942b76",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "4e7afeb88f79b8333f0d2e2616df62133dbb186f953aae64949444da415bd1a2",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 4234,
+          "sha256": "aef910ff70bc46c34c0ebbc93d0c8a24352676f1d71fa630ce983a42476a5816",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5"
+      }
+    },
+    {
+      "gameId": "whack-a-mole",
+      "title": "目標點擊",
+      "version": "2.0.1",
+      "contentSha256": "2675e67edbec052982d093355249955487931f00cb96af79112fd782a4dd0a29",
+      "fileCount": 5,
+      "totalBytes": 594013,
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "files": [
+        {
+          "path": "assets/index-CkfSsWFv.js",
+          "size": 567633,
+          "sha256": "af2ffc521875e7dad0ef36f70db63b4bf87dc609ae1279bda31aa95fce2a51cf",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-CqP5aNV2.css",
+          "size": 19225,
+          "sha256": "4f4f832d2b17d5e75091a1b858c9cbb57918a9653bbfeb34c0dfdd60daef955b",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 445,
+          "sha256": "5c1edcf5ff1e932c9c85feac0bd8b5c04cc1da5fd280edc8ed3f84ecd28c7982",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "9be0509eb506a41744de8c087154a559ee8f6a9151a2742c735cceac5ec8aa59",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 6308,
+          "sha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526",
+          "contentType": "image/webp"
+        }
+      ],
+      "previous": {
+        "version": "2.0.0",
+        "contentSha256": "d1f899cf2042b290814921902688491637683a7bb9659e48b177094d74e11135"
+      }
+    }
+  ]
+}

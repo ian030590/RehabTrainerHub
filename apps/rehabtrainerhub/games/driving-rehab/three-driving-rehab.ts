@@ -916,9 +916,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   // Number of game pixels on screen; CSS scales them up without smoothing.
   private getPixelBudget(): number {
-    if (this.renderQuality.level === 'low') return 64_000;
-    if (this.renderQuality.level === 'medium') return 96_000;
-    return 129_600;
+    if (this.renderQuality.level === 'low') return 129_600;
+    if (this.renderQuality.level === 'medium') return 230_400;
+    return 518_400;
   }
 
   private getMainDrawDistance(): number {

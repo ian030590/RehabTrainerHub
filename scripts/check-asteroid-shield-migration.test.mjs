@@ -7,7 +7,6 @@ import ts from 'typescript';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/asteroid-shield');
-const originalPreviewSha256 = '48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98';
 
 // Execute the game's renderer and input code with lightweight Pixi objects; keep physics out of fixtures.
 async function LoadAsteroidGameplay() {
@@ -210,7 +209,7 @@ test('asteroid settings preserve the old defaults, presets, boundaries and runti
   }
 });
 
-test('asteroid release owns UI, dependencies, metadata and the exact original preview', async () => {
+test('asteroid release owns UI, dependencies, metadata and the captured gameplay preview', async () => {
   const files = await readdir(gameRoot, { recursive: true });
   for (const file of files.filter(file => /\.(?:tsx?|css|js)$/.test(file) && !/^(?:dist|node_modules)[\\/]/.test(file))) {
     const source = await readFile(resolve(gameRoot, file), 'utf8');
@@ -218,7 +217,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.11');
+  assert.equal(pkg.version, '2.0.12');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -228,7 +227,8 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   assert.equal(metadata.category, 'upper-limb');
   assert.equal(metadata.copy['zh-TW'].title, '小行星護盾防衛');
   const preview = await readFile(resolve(gameRoot, 'public', metadata.preview));
-  assert.equal(createHash('sha256').update(preview).digest('hex'), originalPreviewSha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(preview).digest('hex'), capture.previewSha256);
   const catalog = await readFile(resolve(gameRoot, '../catalog.ts'), 'utf8');
   assert.match(catalog, /asteroidShieldCatalog\.category/);
   assert.match(catalog, /asteroidShieldCatalog\.preview/);

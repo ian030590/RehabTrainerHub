@@ -115,7 +115,7 @@ test('a found pair and a wrong pair each play their own sound, as in the origina
 });
 
 test('Memory Match owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'MemoryMatchGame', category: 'memory', version: '2.0.0' });
+  await CheckGamePackaging(gameId, { component: 'MemoryMatchGame', category: 'memory', version: '2.0.1' });
 });
 
 test('Memory Match private bridge accepts only its own parent and replays settings and language', async () => {

@@ -7,7 +7,6 @@ import ts from 'typescript';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/moving-card');
-const originalPreviewSha256 = 'e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6';
 
 test('moving-card releases a failed renderer and can retry initialization', async () => {
   const applications = [];
@@ -73,13 +72,13 @@ test('moving card saves the complete original numeric trial fields and distingui
   assert.equal(CalculateScoreStatistics([0]).sampleSd, null);
 });
 
-test('moving card owns dependencies, UI and exact original preview and is excluded from the Hub bundle', async () => {
+test('moving card owns dependencies, UI and captured gameplay preview and is excluded from the Hub bundle', async () => {
   for (const file of (await readdir(gameRoot, { recursive: true })).filter(file => /\.(?:tsx?|css|js)$/.test(file) && !/^(?:dist|node_modules)[\\/]/.test(file))) {
     assert.doesNotMatch(await readFile(resolve(gameRoot, file), 'utf8'), /@rehab-trainer\/|packages\/ui|SaveTrainingRecord|GetHostedGameSetting/, file);
   }
   for (const file of ['settings.json', 'score.json', 'exportCsv.ts', 'results/DefaultTrainingResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.4');
+  assert.equal(pkg.version, '2.0.5');
   assert.deepEqual(pkg.rehabTrainer?.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -87,7 +86,8 @@ test('moving card owns dependencies, UI and exact original preview and is exclud
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.equal(metadata.trainer, 'vision'); assert.equal(metadata.category, 'vision');
   assert.equal(metadata.copy['zh-TW'].title, '移動卡片訓練');
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), originalPreviewSha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
 async function LoadPlugin(width = 390, height = 844) {

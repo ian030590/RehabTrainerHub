@@ -37,9 +37,9 @@ export function FaceFixtureScript(portraitDataUrl) {
       context.fillStyle = 'white';
       context.fillRect(0, 0, canvas.width, canvas.height);
       const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
-      context.drawImage(image, (canvas.width - image.width * scale) / 2, (canvas.height - image.height * scale) / 2, image.width * scale, image.height * scale);
+      if (!window.tongueFixture.hidePortrait) context.drawImage(image, (canvas.width - image.width * scale) / 2, (canvas.height - image.height * scale) / 2, image.width * scale, image.height * scale);
       const { mode, mouth } = window.tongueFixture;
-      if (mode === 'Rest' || !mouth) return;
+      if (window.tongueFixture.hidePortrait || mode === 'Rest' || !mouth) return;
       // The camera image is not mirrored, so the person's left is the image's right.
       const side = mode === 'Tongue_Left' ? 1 : -1;
       context.fillStyle = 'rgb(225, 29, 72)';
@@ -235,6 +235,10 @@ export async function CheckTongueCatch({ game, evaluate, send, until, standalone
   await until(() => previewMatches(null), 'the camera image is behind the whole game again during play');
   await until(async () => await fieldOpacity() === '0.22', 'the field thins out again during play');
   await until(async () => (await game('window.__tongueCheckFrame'))?.label === 'Tongue_Right', 'the classifier recognizes the held right movement', 10000);
+  if (process.argv.includes('--capture-preview')) {
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    await evaluate('window.tongueFixture.hidePortrait = true; new Promise(resolve => setTimeout(resolve, 150))');
+  }
   await capture('playing');
 
   if (process.argv.includes('--stop') || process.argv.includes('--sensor-disconnect')) {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
 export async function CheckDrivingRehab({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
+  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure, rawCsvObjects }) {
   const pointerSession = gameContext.session || session;
   const mobile = process.argv.includes('--mobile') || process.argv.includes('--tablet');
   const press = async (code, key, type = 'keyDown') => send('Input.dispatchKeyEvent', { type, code, key, windowsVirtualKeyCode: key.length === 1 ? key.toUpperCase().charCodeAt(0) : ({ ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 }[code] ?? 32) }, pointerSession);
@@ -107,9 +107,12 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   const layout = await game(`(() => { const canvas=document.querySelector('.driving-rehab-root canvas').getBoundingClientRect();const root=document.documentElement;return {left:canvas.left,right:canvas.right,top:canvas.top,bottom:canvas.bottom,width:innerWidth,height:innerHeight,overflowX:root.scrollWidth-root.clientWidth,overflowY:root.scrollHeight-root.clientHeight}; })()`);
   assert.equal(layout.left,0); assert.equal(layout.top,0); assert.equal(layout.right,layout.width); assert.equal(layout.bottom,layout.height); assert.equal(layout.overflowX,0); assert.equal(layout.overflowY,0);
   console.log('Driving viewport:',JSON.stringify(layout));
-  const view = await game(`(() => { const root=document.querySelector('.driving-rehab-root');const canvas=root.querySelector('canvas');return {renderer:root.dataset.drivingRenderer,imageRendering:getComputedStyle(canvas).imageRendering,width:canvas.width,cssWidth:canvas.getBoundingClientRect().width,cockpit:root.dataset.drivingCockpit}; })()`);
+  const view = await game(`(() => { const root=document.querySelector('.driving-rehab-root');const canvas=root.querySelector('canvas');const rect=canvas.getBoundingClientRect();return {renderer:root.dataset.drivingRenderer,imageRendering:getComputedStyle(canvas).imageRendering,width:canvas.width,height:canvas.height,cssWidth:rect.width,cssHeight:rect.height,cockpit:root.dataset.drivingCockpit}; })()`);
   assert.equal(view.renderer,'canvas-2d-pixel');assert.equal(view.imageRendering,'pixelated');
-  assert.ok(view.width < view.cssWidth, 'The view is drawn at a low resolution and scaled up as pixel art.');
+  assert.ok(view.width <= view.cssWidth, 'Pixel art uses up to the available viewport pixels.');
+  const minimumPixels = { high: 259_200, medium: 115_200, low: 64_800 }[quality];
+  assert.ok(view.width * view.height >= Math.min(view.cssWidth * view.cssHeight, minimumPixels), `${quality}: road and mirrors retain their increased resolution.`);
+  if (process.argv.includes('--full-hd')) assert.deepEqual([view.width, view.height], { low: [480, 270], medium: [640, 360], high: [960, 540] }[quality]);
   assert.equal(view.cockpit,'left-hand-drive','Play starts in the left-hand-drive cockpit.');
   // Door mirrors start at 52% of the height; the interior mirror spans 52% to 72% of the width.
   const map = await game(`(() => { const box=document.querySelector('[data-minimap-dir]').parentElement.getBoundingClientRect();return {left:box.left,right:box.right,bottom:box.bottom}; })()`);
@@ -174,8 +177,14 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
     assert.equal(rows[0].user_id??null,accountId);if(accountId)assert.notEqual(rows[0].subject_id,guestSubjectId);else assert.equal(rows[0].subject_id,guestSubjectId);
     const saved=JSON.parse(rows[0].payload_json);assert.deepEqual(saved.config,selected);assert.equal(saved.gameId,'driving-rehab');
     assert.ok(saved.score.summary.durationMs>0);assert.ok(saved.score.summary.fps>0);
-    assert.equal(saved.score.rounds.length,saved.score.summary.rounds);
-    assert.ok(saved.score.rounds.every(row=>row.rt===null||row.rt>=0));
+    assert.deepEqual(saved.score.rounds, [], 'D1 retains the summary; individual rounds stay in private R2.');
+    const roundFile = saved.rawFiles.find(file => file.kind === 'rounds');
+    assert.ok(roundFile, 'The saved summary points to the immutable round CSV.');
+    const [headers, ...rounds] = rawCsvObjects.get(roundFile.key).csv.trimEnd().split('\n').map(line => line.split(','));
+    assert.equal(rounds.length, saved.score.summary.rounds);
+    const reactionColumn = headers.indexOf('rt');
+    assert.ok(reactionColumn >= 0);
+    assert.ok(rounds.every(row => row[reactionColumn] === '' || Number(row[reactionColumn]) >= 0));
   }
   assert.deepEqual(errors,[]);assert.equal(requests.some(url=>/driving-rehab.*(?:settings|score)\.json/.test(url)),false);
   await game(`document.querySelector('.score-return-button').click()`);

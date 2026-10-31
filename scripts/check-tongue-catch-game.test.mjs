@@ -401,7 +401,7 @@ test('the apple picture loads through an image element, because the runner block
 test('Tongue Catch owns its runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-tongue-catch');
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, capabilities);
@@ -422,7 +422,8 @@ test('Tongue Catch owns its runtime, catalogue entry and results without Hub, ca
   assert.deepEqual([metadata.gameId, metadata.trainer, metadata.category], ['tongue-catch', legacy.catalog.trainer, legacy.catalog.category]);
   assert.equal(metadata.copy['zh-TW'].title, legacy.catalog['zh-TW'][0]);
   assert.equal(metadata.copy.en.title, legacy.catalog.en[0]);
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), legacy.preview.sha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
   for (const copy of Object.values(metadata.copy)) assert.doesNotMatch(`${copy.title} ${copy.description}`, /治療|診斷|療效|改善|評估|測驗|treat|diagnos|improve|assess|practise/i);
   const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
   assert.match(css, /color-scheme: light/, 'The transparent camera area needs the same color scheme as the container.');

@@ -186,7 +186,7 @@ test('UFOV hands its result files to the container before the result and asks fo
 test('UFOV owns its runtime, catalogue entry and results without Hub dependencies', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-ufov');
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   for (const capability of ['result-files', 'settings-storage', 'pointer', 'fullscreen']) assert.ok(pkg.rehabTrainer.capabilities.includes(capability), capability);
@@ -206,7 +206,8 @@ test('UFOV owns its runtime, catalogue entry and results without Hub dependencie
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.deepEqual([metadata.gameId, metadata.trainer, metadata.category], ['ufov', 'brain', 'attention']);
   assert.equal(metadata.copy['zh-TW'].title, '周邊視野訓練');
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), legacy.previewSha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
   for (const copy of Object.values(metadata.copy)) assert.doesNotMatch(`${copy.title} ${copy.description}`, /治療|診斷|療效|改善|評估|測驗|treat|diagnos|improve|assess/i);
   const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
   for (const token of ['--ufov-stimulus', '--ufov-field']) assert.match(css, new RegExp(`${token}:`), token);

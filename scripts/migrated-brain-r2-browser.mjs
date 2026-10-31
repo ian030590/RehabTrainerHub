@@ -267,6 +267,7 @@ export const migratedBrainGameSpecs = {
           plan.filledTaps++;
           continue;
         }
+        if (plan.moves === 2) await capture('gameplay-progress');
         const index = PickLineMove(state.marks, 3, 3);
         if (plan.moves === 2) {
           await game(`document.querySelector('${cell(index)}').focus()`);
@@ -320,6 +321,7 @@ export const migratedBrainGameSpecs = {
           await until(async () => (await read()).turn !== 'computer', 'computer move', 5000);
           continue;
         }
+        if (plan.moves === 4) await capture('gameplay-progress');
         const open = [3, 2, 4, 1, 5, 6, 0].filter(col => C4DropRow(state.marks, col) !== null);
         if (C4DropRow(state.marks, 0) === null && !plan.filledTaps) {
           await capture('full-column');
@@ -395,6 +397,7 @@ export const migratedBrainGameSpecs = {
           plan.filledTaps++;
           continue;
         }
+        if (plan.moves === 4) await capture('gameplay-progress');
         const index = PickHexMove(state.marks, n);
         if (plan.moves === 2) {
           // Walk the roving focus to the chosen cell with the arrow keys, then claim it with Enter.
@@ -464,6 +467,7 @@ export const migratedBrainGameSpecs = {
           plan.filledTaps++;
           continue;
         }
+        if (plan.moves === 6) await capture('gameplay-progress');
         const target = PickDotsLine(new Set(state.drawn), n);
         if (plan.moves === 2) {
           // Walk the roving focus through the lines in reading order with the arrow keys, then draw with Enter.
@@ -829,6 +833,7 @@ export const migratedBrainGameSpecs = {
         }
         await flip(b);
         plan.moves++;
+        if (plan.moves === 1) await capture('gameplay-progress');
         if (seen.get(a) === seen.get(b)) { matched.add(a); matched.add(b); continue; }
         plan.mismatches++;
         const state = await read();

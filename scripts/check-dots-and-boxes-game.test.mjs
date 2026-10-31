@@ -131,7 +131,7 @@ test('Dots and Boxes results save one numeric row per line through the private c
 });
 
 test('Dots and Boxes owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'DotsAndBoxesGame', category: 'higher-cognition', version: '2.0.0' });
+  await CheckGamePackaging(gameId, { component: 'DotsAndBoxesGame', category: 'higher-cognition', version: '2.0.1' });
 });
 
 test('Dots and Boxes private bridge accepts only its own parent and replays settings and language', async () => {

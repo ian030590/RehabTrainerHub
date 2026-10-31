@@ -32,6 +32,7 @@ import { CheckTongueCatch, FaceFixtureScript } from './tongue-catch-browser.mjs'
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
+import { CreateGameCapture, PreviewCaptured } from './game-preview-capture.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
 assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'every-ball-response', 'tongue-catch', 'seagull-flight', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
@@ -48,6 +49,9 @@ const root = resolve(import.meta.dirname, '..');
 const productionRunnerOrigin = new URL(JSON.parse(await readFile(resolve(root, 'apps/usergamerunner/package.json'), 'utf8')).homepage).origin;
 const productionHub = process.argv.includes('--production-hub');
 const remote = process.argv.includes('--remote') || productionHub;
+const capturePreview = process.argv.includes('--capture-preview');
+assert.ok(!capturePreview || !remote, 'Capture local candidates before requesting an immutable release.');
+assert.ok(!capturePreview || !['--mobile', '--tablet', '--wide', '--full-hd', '--screen-3-2', '--windowed'].some(flag => process.argv.includes(flag)), 'Game previews use the desktop 16:9 viewport.');
 const standalone = process.argv.includes('--standalone');
 const lobby = process.argv.includes('--lobby');
 const sessionFailure = process.argv.includes('--session-failure');
@@ -73,6 +77,7 @@ const browserPath = process.env.BRAVE_BIN || [
 assert.ok(browserPath, 'Install Brave or set BRAVE_BIN.');
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
+const gameCatalog = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/games', gameId, 'public/game.json'), 'utf8'));
 const handFixtures = handGame || sensorGame ? await LoadGestureCameraFixtures(root) : new Map();
 if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
 const facePortrait = tongueGame ? `data:image/jpeg;base64,${(await LoadEyeCameraFixture(root)).toString('base64')}` : null;
@@ -112,6 +117,11 @@ let saveAttempts = 0; let csvAttempts = 0; const csvObjects = new Map();
 environment.OCULOMOTOR_DATA = {
  put: async (key,csv,options) => { if (csvObjects.has(key)) return null; csvObjects.set(key,{csv,customMetadata:options.customMetadata});return {key}; },
  get: async key => {const value=csvObjects.get(key);return value && {...value,text:async()=>value.csv};}
+};
+const rawCsvObjects = new Map();
+environment.RAW_DATA = {
+  put: async (key, csv, options) => { if (rawCsvObjects.has(key)) return null; rawCsvObjects.set(key, { csv, customMetadata: options.customMetadata }); return { key }; },
+  get: async key => { const value = rawCsvObjects.get(key); return value && { ...value, text: async () => value.csv }; },
 };
 let sessionAttempts = 0;
 let runnerOrigin;
@@ -355,9 +365,10 @@ try {
     }
   ` }, session);
   // Use a fixed eye-game display: browser chrome must not turn the windowed viewport into a false monitor measurement.
-  if (gameId === 'oculomotor-training' && !['--wide', '--mobile', '--tablet', '--screen-3-2'].some(flag => process.argv.includes(flag)))
+  if ((capturePreview || gameId === 'oculomotor-training') && !['--wide', '--mobile', '--tablet', '--screen-3-2'].some(flag => process.argv.includes(flag)))
     await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, screenWidth: 1280, screenHeight: 720, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--wide')) await send('Emulation.setDeviceMetricsOverride', { width: 1320, height: 713, deviceScaleFactor: 1, mobile: false }, session);
+  if (process.argv.includes('--full-hd')) await send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, screenWidth: 1920, screenHeight: 1080, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--screen-3-2')) await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 960, screenWidth: 1440, screenHeight: 960, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
@@ -393,12 +404,21 @@ try {
     throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
   let lobbyScrollState;
+  const selectLobbyGame = async (minimumCatalogRequests = 1) => {
+    await until(() => evaluate('Boolean(document.querySelector(".module-search input"))'), 'lobby search ready');
+    await until(async () => requests.filter(url => new URL(url).pathname === '/api/games').length >= minimumCatalogRequests, 'the hydrated lobby requests its catalog');
+    const title = gameCatalog.copy[english ? 'en' : 'zh-TW'].title;
+    await evaluate(`(() => {const input=document.querySelector('.module-search input');input.focus();input.select();})()`);
+    await send('Input.insertText', { text: title }, session);
+    await until(() => evaluate(`(() => {const card=document.querySelector('.module-card[data-runtime-id=${gameId}]');return card && !card.querySelector('button').disabled && card.querySelector('img')?.src.includes('/games/${gameId}/${manifest.version}/package/preview.webp');})()`), 'search finds the approved game in the paginated lobby');
+  };
   if (lobby && !standalone) {
-    await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
+    await selectLobbyGame();
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
     assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.module-card[data-runtime-id=${gameId}] img')).objectFit`), 'contain', 'The Hub shows the entire gameplay screenshot, including edge controls.');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
       `/games/${gameId}/${manifest.version}/package/preview.webp`);
     if (gameId === 'moving-card') {
@@ -479,10 +499,12 @@ try {
     assert.ok(Object.values(stored).map(String).includes(chosen), `Stored settings include the chosen value ${chosen}: ${JSON.stringify(stored)}`);
     assert.equal(await evaluate('(() => { try { localStorage.length; return "available"; } catch { return "blocked"; } })()', gameContext), 'blocked',
       'The sandboxed game itself has no storage access.');
+    const catalogRequestsBeforeReload = requests.filter(url => new URL(url).pathname === '/api/games').length;
     await send('Page.reload', { ignoreCache: true }, session);
     gameContext = null;
     await wait(500);
     if (lobby && !standalone) {
+      await selectLobbyGame(catalogRequestsBeforeReload + 1);
       await until(() => evaluate(`(() => {const button=document.querySelector('.module-card[data-runtime-id=${gameId}] button');const image=document.querySelector('.module-card[data-runtime-id=${gameId}] img');return button && !button.disabled && image?.src.includes('/games/${gameId}/${manifest.version}/package/preview.webp');})()`), 'approved lobby card after reload');
       await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     }
@@ -496,6 +518,16 @@ try {
     catalog.currentVersion = '9.0.0';
   }
   const game = expression => evaluate(expression, gameContext);
+  const previewFolder = resolve(root, '.tmp/game-preview-captures', gameId);
+  if (capturePreview) await mkdir(previewFolder, { recursive: true });
+  const previewPhase = process.argv.includes('--preview-phase') ? process.argv[process.argv.indexOf('--preview-phase') + 1]
+    : ({ 'gesture-battler': 'combat', 'driving-rehab': 'gameplay-moving', 'motor-cortex-rehab': 'playing',
+      'every-ball-response': 'playing', 'tongue-catch': 'playing', 'seagull-flight': 'playing', 'ufov': 'gameplay-answer', 'reaction-time': 'go',
+      'tic-tac-toe': 'gameplay-progress', connect4: 'gameplay-progress', hex: 'gameplay-progress', 'dots-and-boxes': 'gameplay-progress',
+      'memory-match': 'gameplay-progress', 'digit-span': 'answer' }[gameId] ?? 'gameplay');
+  const makeCapture = folder => CreateGameCapture({ folder: capturePreview ? previewFolder : folder, send, session, frameSession: gameContext.session, game,
+    preview: capturePreview ? { gameId, version: manifest.version, phase: previewPhase,
+      output: resolve(root, 'apps/rehabtrainerhub/games', gameId, 'public/preview.webp') } : undefined });
   assert.equal(await game('document.fullscreenElement'), null, 'Settings must remain outside fullscreen for every R2 game.');
   await CheckSettingsPresentation(game);
   const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
@@ -530,83 +562,80 @@ try {
   } else if (gameId === 'driving-rehab') {
     const screenshots = resolve(root, '.tmp/driving-rehab-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckDrivingRehab({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
-      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure, rawCsvObjects });
   } else if (gameId === 'seagull-flight') {
     const screenshots = resolve(root, '.tmp/seagull-flight-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckSeagullFlight({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, touch: viewportMode !== 'desktop' });
   } else if (tongueGame) {
     const screenshots = resolve(root, '.tmp/tongue-catch-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckTongueCatch({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (sensorGame) {
     const screenshots = resolve(root, '.tmp/every-ball-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--microphone') ? 'microphone' : 'camera'}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckEveryBall({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (brainGame) {
     const screenshots = resolve(root, `.tmp/${gameId}-validation`, `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckBrainGame(gameId, { game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'hart-chart') {
     const screenshots = resolve(root, '.tmp/hart-chart-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckHartChart({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'reading-training') {
     const screenshots = resolve(root, '.tmp/reading-training-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckReadingTraining({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'gabor-patching') {
     const screenshots = resolve(root, '.tmp/gabor-patching-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy'}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckGaborPatching({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'oculomotor-training') {
     const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}${process.argv.includes('--incorrect-screen-height')?'-incorrect-screen-height':''}${process.argv.includes('--screen-3-2')?'-screen-3-2':''}${process.argv.includes('--measurements-16-9')?'-measurements-16-9':''}`);
     await mkdir(screenshots,{recursive:true});
-    const capture=async name=>{const shot=await send('Page.captureScreenshot',{format:'png'},session);await writeFile(resolve(screenshots,name+'.png'),Buffer.from(shot.data,'base64'));};
+    const capture = makeCapture(screenshots);
     await CheckOculomotor({game,evaluate,send,until,standalone,english,capture,checkSpotlight,sqlite,gameContext,session,getSaveAttempts:()=>saveAttempts,getCsvAttempts:()=>csvAttempts,csvObjects,accountId,guestSubjectId,version:manifest.version,revokeRelease:()=>{revoked=true;},findEyeContext:async()=>{for(const context of contexts.filter(c=>c.auxData?.isDefault)){try{if(await evaluate("document.title==='WebGazer camera'",context))return context;}catch{}}return null;}});
   } else if (gameId === 'moving-card') {
     const screenshots = movingCardScreenshots;
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckMovingCard({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'motor-cortex-rehab') {
     const screenshots = resolve(root, '.tmp/motor-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckMotorCortex({ game, evaluate, until, standalone, english, capture, checkSpotlight, sqlite,
       getSaveAttempts: () => saveAttempts, getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId,
       revokeRelease: () => { revoked = true; } });
   } else if (gameId === 'gesture-battler') {
     const screenshots = resolve(root, '.tmp/gesture-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    const capture = makeCapture(screenshots);
     await CheckGestureBattler({ game, evaluate, send, until, gameContext, session, standalone, english,
       mobile: process.argv.includes('--mobile'), capture, sqlite, getSaveAttempts: () => saveAttempts,
       getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'asteroid-shield') {
     const screenshots = resolve(root, '.tmp/asteroid-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
-    const capture = async name => {
-      const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
-      await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64'));
-    };
+    const capture = makeCapture(screenshots);
     await CheckAsteroidShield({game, evaluate, send, until, gameContext, session, version: manifest.version, standalone,
       sqlite, requests, errors, saveAttempts: () => saveAttempts, sessionAttempts: () => sessionAttempts, sessionFailure, capture, accountId, guestSubjectId});
   } else {
@@ -619,11 +648,20 @@ try {
   await game(`document.querySelector('[name=customGameDurationSec]').focus()`);
   await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, session);
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, session);
-  await send('Input.insertText', { text: '5' }, session);
+  const drawingDuration = capturePreview ? '30' : '5';
+  await send('Input.insertText', { text: drawingDuration }, session);
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' }, session);
   await wait(150);
-  assert.equal(await game('document.querySelector("[name=customGameDurationSec]").value'), '5');
+  assert.equal(await game('document.querySelector("[name=customGameDurationSec]").value'), drawingDuration);
   assert.equal(await game('document.querySelector("[name=gameDuration]").value'), 'custom', 'Duration selection shows that the custom value is used.');
+  if (capturePreview) await game(`(() => {
+    const difficulty=document.querySelector('form select');
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(difficulty,'Advanced');
+    difficulty.dispatchEvent(new Event('change',{bubbles:true}));
+    const speed=document.querySelector('form input[type=range]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(speed,'20');
+    speed.dispatchEvent(new Event('input',{bubbles:true}));
+  })()`);
   await game('document.querySelector("form .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'tutorial');
   const firstStep = await checkSpotlight('.mock-enemy');
@@ -665,7 +703,7 @@ try {
   await game('document.querySelector(".game-tour button:last-child").click()');
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false, 'Skipping the tutorial must remove its spotlight.');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-tutorial .ui-button-primary"))'), 'start button');
-  assert.ok(await game('document.querySelector(".drawing-defense-tutorial").textContent.includes("5s")'));
+  assert.ok(await game(`document.querySelector('.drawing-defense-tutorial').textContent.includes('${drawingDuration}s')`));
   await CheckConfirmationPresentation(game);
   assert.equal(await game('document.fullscreenElement'), null, 'Drawing tutorial and confirmation remain windowed.');
   const confirmationScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
@@ -677,6 +715,7 @@ try {
   const viewport = await game('(() => { const canvas=document.querySelector("canvas").getBoundingClientRect(); return [Math.round(canvas.width),Math.round(canvas.height),innerWidth,innerHeight]; })()');
   assert.equal(viewport[0], viewport[2]);
   assert.equal(viewport[1], viewport[3]);
+  if (capturePreview) await wait(12000);
   const pointerSession = gameContext.session || session;
   await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 150, y: 200, button: 'left', clickCount: 1 }, pointerSession);
   for (let point = 1; point <= 8; point++) await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 150 + point * 10, y: 200 + point * 10, button: 'left', buttons: 1 }, pointerSession);
@@ -686,6 +725,7 @@ try {
     for (let point = 1; point <= 8; point++) await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 160 + point * 10, y: 230 }] }, pointerSession);
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, pointerSession);
   }
+  await makeCapture(profile)('gameplay');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-results"))'), 'game-owned results');
   const resultScreenshots = resolve(root, '.tmp/drawing-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}`);
   await mkdir(resultScreenshots, { recursive: true });
@@ -728,6 +768,10 @@ try {
     assert.ok(Math.abs(restored.top - lobbyScrollState.top) <= 1, 'Returning preserves the original lobby scroll position.');
     console.log(`Lobby scrolling restored: ${JSON.stringify(restored)}`);
   }
+} catch (error) {
+  if (!(error instanceof PreviewCaptured)) throw error;
+  assert.deepEqual(errors, [], 'Preview capture must not conceal browser errors.');
+  console.log(error.message);
 } finally {
   ws?.close();
   browser?.kill();

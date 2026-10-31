@@ -100,7 +100,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.1');
+  assert.equal(pkg.version, '2.1.2');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('gamepad'));
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
@@ -112,7 +112,8 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   assert.equal(metadata.gameId, 'driving-rehab');
   assert.equal(metadata.trainer, 'vision');
   assert.equal(metadata.category, 'vision');
-  assert.deepEqual(await readFile(resolve(gameRoot, 'public', metadata.preview)), await readFile(resolve(root, 'apps/rehabtrainerhub/public/assets/training-modules/driving-rehab.webp')));
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
   const runtime = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
   assert.doesNotMatch(runtime, /fetch\(|loader\.load\(|VITE_AI_ASSET/);
   assert.match(runtime, /driving-sprites\.png', import\.meta\.url/);

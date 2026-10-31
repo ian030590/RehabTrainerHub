@@ -215,6 +215,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.ok(initialDefense.shipWidth > initialDefense.width * 0.5);
   assert.ok(initialDefense.shipBottom >= initialDefense.height * 0.95 && initialDefense.shipBottom <= initialDefense.height);
   assert.equal(initialDefense.shieldRotation, 0);
+  if (process.argv.includes('--capture-preview')) await new Promise(resolve => setTimeout(resolve, 4000));
   await capture('gameplay');
   const pointerSession = gameContext.session || session;
   await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 100, y: 300 }, pointerSession);

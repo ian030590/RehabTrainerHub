@@ -516,7 +516,7 @@ test('the ball sits where the legacy stage put it on wide, tall and short screen
 test('Every Ball owns its runtime, catalogue entry and results without Hub or camera code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-every-ball-response');
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'microphone-level', 'pointer', 'pose-tracking', 'settings-storage', 'touch']);
@@ -537,7 +537,8 @@ test('Every Ball owns its runtime, catalogue entry and results without Hub or ca
   assert.deepEqual([metadata.gameId, metadata.trainer, metadata.category], ['every-ball-response', 'brain', 'attention']);
   assert.equal(metadata.copy['zh-TW'].title, '有球必應');
   assert.equal(metadata.copy.en.title, 'Every Ball Gets a Response');
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), legacy.previewSha256);
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
   for (const copy of Object.values(metadata.copy)) assert.doesNotMatch(`${copy.title} ${copy.description}`, /治療|診斷|療效|改善|評估|測驗|treat|diagnos|improve|assess/i);
   const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
   assert.match(css, /color-scheme: light/, 'The transparent camera window needs the same color scheme as the container.');

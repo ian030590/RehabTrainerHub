@@ -104,6 +104,31 @@ const pixelCamera = await OptionalGameModule('pixel/pixelCamera.ts');
 const cockpit = await OptionalGameModule('pixel/pixelCockpit.ts');
 const traffic = await OptionalGameModule('traffic/drivingTraffic.ts');
 
+test('quality settings give the road and mirrors enough pixels on desktop and retain mobile proportions', async () => {
+  const runtimeType = await LoadRuntimeMethods(['getPixelBudget']);
+  const runtime = new runtimeType();
+  const source = await readFile(resolve(gameRoot, 'pixel/pixelRenderer.ts'), 'utf8');
+  const ast = ts.createSourceFile('renderer.ts', source, ts.ScriptTarget.Latest, true);
+  const sizing = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'CalculatePixelCanvasSize');
+  const compiled = ts.transpileModule(sizing.getText(ast).replace('export ', ''), { compilerOptions }).outputText;
+  const calculate = new Function(`${compiled}; return CalculatePixelCanvasSize;`)();
+  const expected = { low: [480, 270], medium: [640, 360], high: [960, 540] };
+  for (const [level, [width, height]] of Object.entries(expected)) {
+    runtime.renderQuality = { level };
+    const budget = runtime.getPixelBudget();
+    const size = calculate(1920, 1080, 1, budget);
+    assert.deepEqual(size, { width, height }, `${level}: actual canvas pixels at Full HD`);
+    const layout = cockpit.CalculateCockpitLayout(size.width, size.height);
+    assert.ok(layout.mirrors.center.w >= width * 0.19, 'The rearview image gets the same increase in detail.');
+    for (const [cssWidth, cssHeight, dpr] of [[390, 844, 1], [844, 390, 2], [1440, 960, 1.5], [3840, 2160, 1]]) {
+      const resized = calculate(cssWidth, cssHeight, dpr, budget);
+      assert.ok(resized.width > 0 && resized.width <= cssWidth * dpr);
+      assert.ok(resized.height > 0 && resized.height <= cssHeight * dpr);
+      assert.ok(Math.abs(resized.width / resized.height - cssWidth / cssHeight) < 0.01, 'Resizing keeps the scene proportions.');
+    }
+  }
+});
+
 test('the driving view is a pixelated 2D canvas with no three.js or WebGL', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.dependencies.three, undefined, 'The game no longer depends on three.');

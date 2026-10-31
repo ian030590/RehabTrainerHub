@@ -537,7 +537,7 @@ test('head control turns the camera on windowed, then a fresh Start click enters
 test('Seagull Flight owns its 3D runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-seagull-flight');
-  assert.equal(pkg.version, '1.0.0');
+  assert.equal(pkg.version, '1.0.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'three', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.devDependencies['@types/three']);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);

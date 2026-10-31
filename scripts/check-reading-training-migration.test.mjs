@@ -155,7 +155,7 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   }
   for (const file of ['settings.json', 'score.json', 'results/ReadingResults.tsx', 'exportCsv.ts']) await assert.rejects(access(resolve(gameRoot, file)), file);
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.2');
+  assert.equal(pkg.version, '2.0.3');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', '@jspsych/plugin-html-button-response', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -170,8 +170,8 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
     'zh-TW': { title: '閱讀訓練（RSVP）', description: '使用快速連續視覺呈現練習閱讀速度與文章理解。' },
     en: { title: 'Reading Training (RSVP)', description: 'Use rapid serial visual presentation to practise reading speed and comprehension.' },
   });
-  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'),
-    'a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4');
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
 async function LoadPlugin({ deferred = false } = {}) {

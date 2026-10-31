@@ -103,7 +103,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.4');
+  assert.equal(pkg.version, '2.0.5');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {
@@ -117,7 +117,8 @@ test('Hart owns its runtime, catalogue, settings and full results and is exclude
   assert.equal(hub.dependencies[pkg.name], undefined);
   const metadata = JSON.parse(await readFile(resolve(gameRoot, 'public/game.json'), 'utf8'));
   assert.equal(metadata.trainer, 'vision'); assert.equal(metadata.category, 'vision');
-  assert.deepEqual(await readFile(resolve(gameRoot, 'public', metadata.preview)), await readFile(resolve(root, 'apps/rehabtrainerhub/public/assets/training-modules/hart-chart.webp')));
+  const capture = JSON.parse(await readFile(new URL('../docs/game-preview-captures.json', import.meta.url), 'utf8')).find(item => item.gameId === metadata.gameId);
+  assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
 test('Hart private bridge rejects forged initialization and replays settings and language from the valid parent only', async () => {
