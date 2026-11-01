@@ -1,0 +1,2 @@
+#!/bin/sh
+exec npm run test:ci </dev/null

@@ -38,48 +38,8 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: node scripts/pages-deployment-scope.mjs
 
-  verify:
-    name: Verify (${{ matrix.name }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: naming
-            command: npm run test:naming
-          - name: pwa
-            command: npm run test:pwa
-          - name: game-architecture
-            command: npm run test:game-architecture
-          - name: hub-functions
-            command: npm run test:hub-functions
-          - name: gamerunner
-            command: npm run test:gamerunner
-          - name: trainer-entrypoints
-            command: npm run test:entrypoints
-          - name: cloudflare-deploy
-            command: npm run test:cloudflare-deploy
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --workspaces --include-workspace-root
-
-      - name: Run verification
-        run: ${{ matrix.command }}
-
   deploy:
-    needs: [verify, deployment_scope]
+    needs: [deployment_scope]
     if: ${{ needs.deployment_scope.outputs.pages_required == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20

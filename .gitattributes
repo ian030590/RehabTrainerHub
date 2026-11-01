@@ -4,3 +4,5 @@ apps/usergamerunner/runtime/WEBGAZER-SOURCE.txt -text
 
 # The released legacy bridge has one immutable byte sequence on every OS.
 apps/usergamerunner/runtime/gameBridge-1.0.0.js text eol=lf
+
+.githooks/* text eol=lf

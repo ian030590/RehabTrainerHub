@@ -55,6 +55,10 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 npm install
 ```
 
+安裝完成後會自動啟用 `.githooks/pre-push`，每次 `git push` 前執行原 CI 的七組測試；任何一組失敗就停止推送。已有相依套件的工作目錄可執行 `npm run prepare` 啟用，或用 `npm run test:ci` 手動執行相同檢查。GitHub Actions 保留建置與部署，不再重跑這些測試。
+
+Dependency installation enables `.githooks/pre-push`. Every push runs all seven former CI gates and stops on failure. Run `npm run prepare` to enable it in an existing checkout, or `npm run test:ci` to run the same checks manually. GitHub Actions handles builds and deployment.
+
 > [!NOTE]
 > **雲端硬碟 / 無 Symlink 支援環境注意事項（例如 Windows pCloud、網路磁碟等）**：
 > 在虛擬檔案系統中，npm 預設嘗試建立符號連結（symlinks）會引發 `EISDIR` 或 `EPERM` 錯誤。專案根目錄已提供 `.npmrc`（設定 `workspaces=false`），執行 `npm install` 時會自動採用無 symlink 的相依模式；亦可手動透過以下指令安裝：
@@ -78,6 +82,7 @@ npm install
 
 | 測試指令 / Command | 驗證項目 |
 | --- | --- |
+| `npm run test:ci` | 執行 pre-push 的完整七組測試：命名、PWA、遊戲架構、Hub Functions、runner、入口流程及部署檢查 |
 | `npm run test:entrypoints` | 驗證入口流程、白畫面防護、訓練流程、jsPsych 生命週期與 i18n 字典完整性 |
 | `npm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
 | `npm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |

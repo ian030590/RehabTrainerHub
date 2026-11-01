@@ -12,6 +12,8 @@
     "apps/rehabtrainerhub/games/*"
   ],
   "scripts": {
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "test:ci": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && npm run test:cloudflare-deploy",
     "build": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && node scripts/build-apps.mjs",
     "build:cloudflare": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && npm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
     "build:cloudflare:only": "node scripts/build-apps.mjs --cloudflare-pages",
@@ -31,7 +33,7 @@
     "test:i18n": "node scripts/check-i18n.mjs",
     "test:driving-rehab": "node --test scripts/check-driving-rehab-core.test.mjs",
     "test:driving-rehab-browser": "node scripts/check-driving-rehab-browser.mjs",
-    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs scripts/pages-deployment-scope.test.mjs scripts/check-cloudflare-workers.test.mjs scripts/cleanup-d1-raw-records.test.mjs scripts/cleanup-oculomotor-csv.test.mjs",
+    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs scripts/pages-deployment-scope.test.mjs scripts/check-cloudflare-workers.test.mjs scripts/cleanup-d1-raw-records.test.mjs scripts/cleanup-oculomotor-csv.test.mjs scripts/check-git-hooks.test.mjs",
     "test:workers-local": "node scripts/check-workers-local.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs apps/usergamerunner/tests/gameBridge.test.mjs packages/game-settings/src/index.test.mjs",

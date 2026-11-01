@@ -2,11 +2,11 @@ import { globSync, existsSync, readFileSync } from 'node:fs';
 import { posix, resolve } from 'node:path';
 import ts from 'typescript';
 
-// Repository-relative files that one workflow's verification matrix runs: the files and globs that
-// `node --test` receives (or the script a plain `node` command starts) in the npm scripts the matrix names,
+// Repository-relative files that the pre-push CI command runs: the files and globs that
+// `node --test` receives (or the script a plain `node` command starts) in the npm scripts it names,
 // following nested `npm run`, plus every relative module those files import. A command shape this does not
 // read leaves its files out, so a suite it misses fails the coverage check instead of passing unseen.
-export function FindCiTestFiles(root, workflowPath) {
+export function FindCiTestFiles(root, scriptName = 'test:ci') {
   const scripts = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).scripts ?? {};
   const entries = new Set();
   const expanded = new Set();
@@ -14,7 +14,7 @@ export function FindCiTestFiles(root, workflowPath) {
   function ExpandScript(name) {
     if (expanded.has(name)) return;
     expanded.add(name);
-    if (!Object.hasOwn(scripts, name)) throw new Error(`${workflowPath} runs a missing npm script: ${name}`);
+    if (!Object.hasOwn(scripts, name)) throw new Error(`${scriptName} runs a missing npm script: ${name}`);
     for (const command of scripts[name].split('&&').map(part => part.trim())) {
       const nested = command.match(/^npm run ([\w:-]+)$/);
       if (nested) {
@@ -37,8 +37,7 @@ export function FindCiTestFiles(root, workflowPath) {
     }
   }
 
-  const workflow = readFileSync(resolve(root, workflowPath), 'utf8');
-  for (const [, name] of workflow.matchAll(/^[ \t]*command: npm run ([\w:-]+)[ \t]*$/gm)) ExpandScript(name);
+  ExpandScript(scriptName);
 
   const reached = new Set();
   function Visit(path) {

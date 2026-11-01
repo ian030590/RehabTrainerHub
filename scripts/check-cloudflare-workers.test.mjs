@@ -407,7 +407,6 @@ test('the real repository dry run deploys both Workers in order', () => {
 
 test('the deploy workflow deploys Workers by default and Pages only when the repository variable asks for it', () => {
   const deploy = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
-  const ci = readFileSync(resolve(defaultRepoRoot, '.github/workflows/ci.yml'), 'utf8').replaceAll('\r\n', '\n');
   const pagesStep = StepBlock(deploy, 'Ensure and deploy Cloudflare Pages projects');
   const workersStep = StepBlock(deploy, 'Deploy Cloudflare Workers');
   // The Pages projects were deleted; removing the variable must not recreate them.
@@ -420,7 +419,7 @@ test('the deploy workflow deploys Workers by default and Pages only when the rep
     'ANONYMOUS_RECORDS_ENABLED', 'TRAINING_PLANS_ENABLED']) {
     assert.match(workersStep, new RegExp(`${name}: \\$\\{\\{ (?:secrets|vars)\\.${name} \\}\\}`), name);
   }
-  assert.deepEqual(MatrixCommands(deploy), MatrixCommands(ci));
+  assert.doesNotMatch(deploy, /^  verify:|matrix\.command/m);
 });
 
 function StepBlock(workflow, name) {
@@ -428,10 +427,6 @@ function StepBlock(workflow, name) {
   assert.ok(start >= 0, `missing workflow step ${name}`);
   const next = workflow.indexOf('\n      - name: ', start + 1);
   return workflow.slice(start, next < 0 ? undefined : next + 1);
-}
-
-function MatrixCommands(workflow) {
-  return [...workflow.matchAll(/^\s+command: (.+)$/gm)].map((match) => match[1]);
 }
 
 function CreateDeployFixture(context) {

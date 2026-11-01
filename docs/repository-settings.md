@@ -3,11 +3,16 @@
 ## GitHub
 
 - Default branch: `main`
-- CI: `.github/workflows/ci.yml`
+- Pre-push CI: `.githooks/pre-push` 執行 `npm run test:ci`，涵蓋原 CI 的七組測試；失敗即阻擋推送
+- Hook setup: `npm install` 自動啟用；既有工作目錄執行 `npm run prepare`。只設定此 checkout 的 `core.hooksPath`，CI 與沒有 `.git` 的來源封存包略過安裝
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
 - Package manager: root `package.json` 指定的 npm
 - Validation: `npm run build`
 - Cloudflare build: `npm run build:cloudflare`
+
+GitHub Actions 只保留部署範圍判斷、建置與部署，不再執行測試 matrix。GitHub 網頁提交及 `git push --no-verify` 不會執行本機 hook。
+
+驗收：先新增 hook 回歸測試，確認因缺少 `test:ci` 與安裝程式失敗，再補上實作。`scripts/check-git-hooks.test.mjs` 以臨時本機 bare remote 驗證七組檢查全部執行、失敗後停止後續檢查且遠端 ref 不變；另驗 CI 與來源封存包略過安裝。測試涵蓋範圍與每款 R2 遊戲的檢查仍由 `check-game-directory-architecture.test.mjs` 驗證，改追蹤 `test:ci` 的呼叫鏈。
 
 ## Cloudflare Pages
 

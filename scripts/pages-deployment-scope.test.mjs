@@ -24,11 +24,11 @@ test('R2 content and version metadata skip Pages while platform and legacy games
   assert.equal(NeedsPagesDeployment(['package-lock.json'], { migratedIds, readJson: () => { throw new Error('Missing'); } }), true);
 });
 
-test('Cloudflare build excludes migrated R2 bundles and workflow gates deployment after verification', async () => {
+test('Cloudflare build excludes migrated R2 bundles and workflow gates deployment by scope', async () => {
   const result = spawnSync(process.execPath, ['scripts/build-apps.mjs', '--cloudflare-pages', '--dry-run'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /--filter=!@rehab-trainer\/game-drawing-defense/);
   const workflow = await readFile(new URL('../.github/workflows/deploy-cloudflare-pages.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /needs: \[verify, deployment_scope\]/);
+  assert.match(workflow, /needs: \[deployment_scope\]/);
   assert.match(workflow, /needs\.deployment_scope\.outputs\.pages_required == 'true'/);
 });
