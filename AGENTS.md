@@ -1,5 +1,11 @@
 # 倉庫指引
 
+## 推送前測試規則
+
+- 每次 `git push` 必須透過 `.githooks/pre-push` 執行 `npm run test:ci` 的全部七項 gate；任何失敗都必須阻止推送。測試入口以 root `package.json` 為準，下文提及兩份 workflow／CI matrix 的舊紀錄不再作為新增測試的接線位置。
+- 新增或修改自動化測試時，必須確認它會由 `test:ci` 直接或間接執行；未被既有探索規則納入時，同一筆變更必須更新測試入口。需要瀏覽器或硬體而無法納入一般 gate 的測試，須明列執行方式與限制，並接入適用的本機推送前檢查。
+- 每個 checkout 執行 `npm run prepare`（`npm install`／`npm ci` 也會自動安裝 hook），確認 `git config --local core.hooksPath` 為 `.githooks`。不得使用 `--no-verify`、停用 hook 或略過失敗測試來推送。本機測試不得執行正式環境部署、發布遊戲或寫入正式資料。
+
 ## 測試先行與最小實作（TDD）
 
 - 所有功能開發與重構，先寫可執行、能反映使用者行為的測試，確認測試因尚未實作的需求而失敗，再修改產品程式碼。
