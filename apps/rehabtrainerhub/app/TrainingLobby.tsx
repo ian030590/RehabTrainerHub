@@ -98,6 +98,7 @@ export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
   const [page, setPage] = useState(1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const resultTitleRef = useRef<HTMLHeadingElement>(null);
   const activeFiltersRef = useRef<HTMLDivElement>(null);
   const pendingFilterFocus = useRef<number | null>(null);
@@ -257,25 +258,55 @@ export function TrainingLobby() {
     )}
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
-        <div>
+        <div className="lobby-welcome">
           <p className="page-kicker">{copy.kicker}</p>
           <h1 id="lobby-title">
             <span className="sr-only">{copy.kicker} </span>
             {copy.title}
           </h1>
-          <p>{copy.intro}</p>
+          <p className="lobby-description">{copy.description}</p>
+          <a className="lobby-guide-link" href="#lobby-guide">
+            <span className="material-symbols-outlined" aria-hidden="true">help</span>
+            {copy.beforeStarting}
+          </a>
         </div>
 
-        <label className="module-search">
-          <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          <span className="sr-only">{copy.searchLabel}</span>
-          <input
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={copy.searchPlaceholder}
-            type="search"
-            value={query}
-          />
-        </label>
+        <aside className="lobby-start-note" aria-label={copy.practiceNote}>
+          <span className="material-symbols-outlined" aria-hidden="true">self_improvement</span>
+          <div>
+            <strong>{copy.practiceNote}</strong>
+            <p>{copy.intro}</p>
+          </div>
+        </aside>
+
+        <div className="lobby-search-row">
+          <div className="module-search">
+            <label htmlFor="module-search-input" className="sr-only">{copy.searchLabel}</label>
+            <span className="material-symbols-outlined" aria-hidden="true">search</span>
+            <input
+              id="module-search-input"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={copy.searchPlaceholder}
+              ref={searchInputRef}
+              type="search"
+              value={query}
+            />
+            {query && (
+              <button
+                aria-label={copy.clearSearch}
+                className="module-search-clear"
+                onClick={() => {
+                  setQuery('');
+                  searchInputRef.current?.focus();
+                }}
+                type="button"
+              >
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            )}
+          </div>
+          <p className="lobby-search-hint">{copy.searchHint}</p>
+        </div>
       </section>
       <AssignedPracticePlan />
       <div className="lobby-layout">
@@ -323,7 +354,7 @@ export function TrainingLobby() {
           />
 
           <div className="filter-header" data-bottom-sheet-drag-region>
-            <h2 id="filter-title">{copy.filters}</h2>
+            <h2 id="filter-title">{copy.purposeLegend}</h2>
             <div className="filter-header-actions">
               {(selectedPurposes.length > 0 || query) && (
                 <button onClick={clearFilters} type="button">{copy.clear}</button>
@@ -549,7 +580,7 @@ export function TrainingLobby() {
         </section>
       </div>
 
-      <section className="lobby-guide" aria-labelledby="lobby-guide-title">
+      <section className="lobby-guide" id="lobby-guide" aria-labelledby="lobby-guide-title">
         <header>
           <p className="page-kicker">{copy.guide.kicker}</p>
           <h2 id="lobby-guide-title">{copy.guide.title}</h2>

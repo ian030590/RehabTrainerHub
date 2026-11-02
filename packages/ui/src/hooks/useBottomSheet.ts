@@ -12,7 +12,7 @@ export function useBottomSheet(open: boolean, onDismiss: () => void) {
 
   useEffect(() => { onDismissRef.current = onDismiss; }, [onDismiss]);
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 720px)');
+    const media = window.matchMedia('(max-width: 1023px)');
     const update = () => setIsMobile(media.matches);
     update();
     media.addEventListener('change', update);

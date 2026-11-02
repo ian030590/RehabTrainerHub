@@ -27,7 +27,7 @@ test('Brave smoke rejects asynchronous assertion failures', async context => {
   assert.match(result.stderr, /Browser assertion failed: Error: Rejected sheet assertion/);
 });
 
-test('Brave mobile filters resize, dismiss, preserve values and restore modal focus and scroll', async context => {
+test('Brave phone and tablet filters resize, dismiss, preserve values and restore modal focus and scroll', async context => {
   assert.ok(bravePath, 'Brave is required for mobile filter checks.');
   const server = createServer((request, response) => {
     if (request.url === '/api/games') {
@@ -38,7 +38,7 @@ test('Brave mobile filters resize, dismiss, preserve values and restore modal fo
   });
   await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
   context.after(() => new Promise(resolveClose => server.close(resolveClose)));
-  for (const [width, height, reducedMotion] of [[600, 844, false], [390, 844, false], [390, 844, true], [820, 844, false], [390, 390, false]]) {
+  for (const [width, height, reducedMotion] of [[600, 844, false], [390, 844, false], [390, 844, true], [820, 844, false], [1024, 844, false], [390, 390, false]]) {
     const result = await Run(process.execPath, [browserSmokeScript,
       '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
       '--viewportWidth', String(width), '--viewportHeight', String(height), '--viewportBeforeClick', 'true',
@@ -53,13 +53,13 @@ test('Brave mobile filters resize, dismiss, preserve values and restore modal fo
         const content = document.querySelector('.filter-category-groups');
         const input = content.querySelector('input');
         const fullCount = document.querySelectorAll('.module-card').length;
-        check(innerWidth <= 720 || ${width} > 720, 'Mobile viewport does not expand horizontally');
+        check(innerWidth <= ${width}, 'Viewport does not expand horizontally');
         check(matchMedia('(prefers-reduced-motion: reduce)').matches === ${reducedMotion}, 'Motion preference is applied');
-        if (innerWidth > 720) {
-          check(panel.open && !panel.matches(':modal'), 'Tablet keeps the inline filter');
+        if (innerWidth > 1023) {
+          check(panel.open && !panel.matches(':modal'), 'Desktop keeps the inline filter');
           input.click(); await wait();
-          check(document.querySelectorAll('.module-card').length < fullCount, 'Tablet filters still work');
-          check(document.documentElement.scrollWidth <= innerWidth, 'Tablet has no horizontal overflow');
+          check(document.querySelectorAll('.module-card').length < fullCount, 'Desktop filters still work');
+          check(document.documentElement.scrollWidth <= innerWidth, 'Desktop has no horizontal overflow');
           return true;
         }
         const open = async () => { trigger.focus({ preventScroll: true }); trigger.click(); await wait(); };
@@ -148,6 +148,7 @@ test('Brave mobile filters resize, dismiss, preserve values and restore modal fo
 
 test('Brave presents reviewed releases and all existing games in one grid on desktop and mobile', async context => {
   assert.ok(bravePath, 'Brave is required for local Hub UI browser checks.');
+  const officialCount = Object.keys(JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'))).length;
   const game = { id: 'reviewed-game', slug: 'reviewed-game', title: 'Reviewed game', summary: 'A practice activity.',
     trainer: 'brain', category: 'attention', developerName: 'Sample studio', updatedAt: '2026-10-08',
     release: { id: 'reviewed-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['keyboard'],
@@ -170,13 +171,14 @@ test('Brave presents reviewed releases and all existing games in one grid on des
     const result = await Run(process.execPath, [browserSmokeScript,
       '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
       '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
-      '--allSelectors', '.module-grid,.module-card[data-runtime-id="reviewed-game"]',
-      '--browserAssertion', `(() => {
+      '--allSelectors', '.module-grid,.lobby-pagination',
+      '--browserAssertion', `(async () => {
         const drawing = document.querySelector('.module-card[data-runtime-id="drawing-defense"]');
         drawing?.scrollIntoView();
         const preview = drawing?.querySelector('img');
-        return document.querySelectorAll('.module-grid').length === 1
-        && document.querySelectorAll('.module-grid .module-card').length === 51
+        const catalogIntact = document.querySelectorAll('.module-grid').length === 1
+        && document.querySelectorAll('.module-grid .module-card').length === 12
+        && document.querySelector('.result-header p').textContent.includes('${officialCount + 1}')
         && !!document.querySelector('.module-card[data-runtime-id="asteroid-shield"]')
         && !document.querySelector('.module-card[data-runtime-id="moving-card"]').textContent.includes('Collision sample')
         && !document.querySelector('.module-card[data-runtime-id="drawing-defense"]').textContent.includes('Obsolete settings shell')
@@ -184,6 +186,19 @@ test('Brave presents reviewed releases and all existing games in one grid on des
         && preview?.complete && preview.naturalWidth > 0
         && new URL(preview.src).pathname === '/assets/game-previews/drawing-defense/preview.webp'
         && document.documentElement.scrollWidth <= innerWidth + 1;
+        if (!catalogIntact) throw new Error('Official previews, collision protection, counts or paginated layout changed.');
+        const search = document.querySelector('.module-search input');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(search, 'Reviewed game');
+        search.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise(resolveWait => setTimeout(resolveWait, 300));
+        const reviewed = document.querySelector('.module-card[data-runtime-id="reviewed-game"]');
+        if (!reviewed || document.querySelectorAll('.module-card').length !== 1
+          || reviewed.querySelector('.official-game-actions a').href !== '${game.release.installUrl}') {
+          throw new Error('Reviewed games remain searchable with their own install destination.');
+        }
+        document.querySelector('.module-search-clear').click();
+        await new Promise(resolveWait => setTimeout(resolveWait, 300));
+        return document.querySelectorAll('.module-card').length === 12 && document.activeElement === search;
       })()`,
       '--timeoutMs', '5000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });

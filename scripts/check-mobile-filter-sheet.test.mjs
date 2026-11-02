@@ -13,6 +13,15 @@ const enPath = resolve(repoRoot, 'apps/rehabtrainerhub/app/i18n/en.ts');
 
 const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/u;
 
+test('phones and tablets share a modal filter sheet so the activity grid retains its width', async () => {
+  const hook = await readFile(resolve(repoRoot, 'packages/ui/src/hooks/useBottomSheet.ts'), 'utf8');
+  const sheet = await readFile(sheetCssPath, 'utf8');
+  const css = await readFile(cssPath, 'utf8');
+  assert.match(hook, /matchMedia\('\(max-width: 1023px\)'\)/);
+  assert.match(sheet, /@media \(max-width: 1023px\)/);
+  assert.match(css, /@media \(max-width: 1023px\)\s*\{\s*\.lobby-layout\s*\{\s*display: block/);
+});
+
 test('TrainingLobby implements accessible mobile bottom sheet filter interaction', async () => {
   const lobbySource = await readFile(lobbyPath, 'utf8');
 
@@ -157,7 +166,7 @@ test('globals.css provides high-taste bottom sheet layout and touch-ergonomic ta
   );
 
   // Fixed bottom positioning on mobile
-  const mobileSheetRule = css.match(/@media[^{]*(?:max-width:\s*(?:720px|768px))[^{]*\{[\s\S]*?\.filter-panel\s*\{([\s\S]*?)\}/);
+  const mobileSheetRule = css.match(/@media[^{]*(?:max-width:\s*(?:720px|768px|1023px))[^{]*\{[\s\S]*?\.filter-panel\s*\{([\s\S]*?)\}/);
   assert.ok(mobileSheetRule, 'globals.css must define mobile .filter-panel styles within mobile @media query.');
   const sheetStyles = mobileSheetRule[1];
   assert.ok(sheetStyles.includes('position: fixed'), 'Mobile .filter-panel must use position: fixed.');
@@ -169,7 +178,7 @@ test('globals.css provides high-taste bottom sheet layout and touch-ergonomic ta
   );
 
   // Elimination of double horizontal scroll trap in mobile filter groups
-  const mobileCategoryGroups = css.match(/@media[^{]*(?:max-width:\s*(?:720px|768px))[^{]*\{[\s\S]*?\.filter-subcategory-list\s*\{([\s\S]*?)\}/);
+  const mobileCategoryGroups = css.match(/@media[^{]*(?:max-width:\s*(?:720px|768px|1023px))[^{]*\{[\s\S]*?\.filter-subcategory-list\s*\{([\s\S]*?)\}/);
   assert.ok(
     mobileCategoryGroups,
     'globals.css must define wrap or column styles for mobile .filter-subcategory-list without nested horizontal overflow.',

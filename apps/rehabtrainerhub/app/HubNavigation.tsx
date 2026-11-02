@@ -191,6 +191,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
                     className="account-avatar"
                     fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
                   />
+                  <span className="account-button-label">{user ? user.displayName : copy.signIn}</span>
                 </button>
 
                 <div

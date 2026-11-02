@@ -5,7 +5,7 @@
   color: inherit;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1023px) {
   body:has([data-bottom-sheet]:modal) {
     background: var(--heading);
   }
@@ -20,7 +20,7 @@
   [data-bottom-sheet]:modal {
     top: auto;
     bottom: var(--sheet-bottom, 0px);
-    width: 100%;
+    width: min(100%, 680px);
     height: var(--sheet-height, 55dvh);
     max-height: none;
     transform: translate3d(0, var(--sheet-offset, 0px), 0);
