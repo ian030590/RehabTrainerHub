@@ -1,0 +1,90 @@
+Hub 文字配色與寬螢幕排版修正（2026-11-02）
+
+需求與實作
+擁有者要求修正螢幕仍寬、文字卻擠在左側的問題，並將 Hub 綠色文字改為沉穩黑色。
+方向：居家使用者的淺色閱讀介面；ENERGY 1 / RHYTHM 2 / MOTION 1。
+標題 #171717、內文及一般操作 #262626、次要文字 #525252；以明度和字重區分層次。
+分類標籤、篩選、安裝連結和最近活動連結採中性色；分類圖示、遊戲預覽與狀態色保留用途。
+移除指南、關於頁介紹、衛教摘要及開發者文件中額外的 px/ch 欄寬上限。
+標題自然換行，不再以 balance 提早斷行；整頁最大寬度及置中的政策閱讀欄保留。
+導覽圖示限制為一個字元寬，避免外連字型未載入時，圖示名稱撐出英文平板版導覽列。
+字型、內容、路由、遊戲程式、帳號與紀錄邏輯均沿用；不新增依賴。
+DESIGN.md 同步記錄擁有者的配色與排版要求。
+
+TDD 與測試接線
+scripts/check-hub-presentation.test.mjs 新增五項回歸，沿既有 test:entrypoints 納入 test:ci。
+RED：中性色測試因原有文字 RGB 通道不同而失敗；寬度測試抓到指南 max-width: 960px。
+RED：標題測試抓到 text-wrap: balance；分類與最近活動連結仍使用 trainer 色。
+RED：圖示缺少固定字元寬；本機 Brave 768px 英文版實際捲動寬度為 796px。
+GREEN：該測試檔 13/13 通過，包含原有搜尋、篩選、指南、SEO 問答與 overlay 往返測試。
+PASS：npm run prepare；git config --local core.hooksPath 為 .githooks。
+PASS：npm run test:ci，全部七項 gate，包含全部遊戲 TypeScript 與 test:entrypoints。
+第一次沙盒內測試因 esbuild 無法讀取父目錄失敗；取得環境權限後以原命令完整通過，沒有跳過測試。
+PASS：npm run build:hub，包含靜態輸出、遊戲隔離架構與 SEO 檢查。
+PASS：npm run test:seo，八項測試與輸出檢查。
+PASS：node --test --test-name-pattern='Brave Hub header|Brave keeps one Hub' scripts/check-game-architecture-browser.test.mjs，2/2。
+PASS：Brave 320、390、768、1024、1440、1920px，中英文，共 72 組版面檢查。
+十二組大廳檢查包含中性色、指南寬度、零水平溢出、Enter/Space/點擊展開收合、可見焦點及 200% 指南文字。
+另外六十組涵蓋關於、衛教、開發者、進度與下載頁，確認語言、頁面呈現、無額外窄欄與零水平溢出。
+PASS：五個文字 token 對四種實際表面的二十組對比檢查，最低 6.5:1。
+PASS：git diff --check。
+本機量測與截圖位於 .tmp/hub-text-final/，對比與 gate log 位於 .tmp/hub-text-review/ 及 .tmp/hub-text-*.log。
+
+antislop Delivery Gate（本次修改範圍）
+R-02 PASS：新增內容無 em dash，既有 antislop gate 通過。
+R-03 PASS：六寬度乘雙語的 72 組檢查無頁面水平溢出；指南文字與控制未越界。
+R-17 PASS：未新增統計宣稱，目錄仍使用既有資料。
+R-18 PASS：未新增人物或見證。
+R-23 PASS：依明確要求修改既有文字及版面，未建立視覺資產或新導覽。
+R-24 PASS：既有四主路由導覽瀏覽器測試通過，指南三個連結實際導向成功。
+R-25 PASS：二十組文字與表面對比最低 6.5:1。
+R-26 PASS：指南展開、語言切換、導覽及原有大廳行為測試通過。
+R-27 PASS：原有載入、空白與錯誤流程保留，test:entrypoints 通過。
+R-28 PASS：指南問題及回答未變，雙語與 SEO 對照測試通過。
+R-32 PASS：指南 Enter、Space 與焦點環通過，導覽鍵盤測試通過。
+R-33 PASS：功能直接修改 globals.css，未加入執行期來源改寫工具。
+R-34 PASS：保留既有淺色主題，未新增主題切換。
+R-35 PASS：Hub 實際建置，修改相關控制完成本機點擊與鍵盤驗證。
+R-36 PASS：未新增安全、療效或效能宣稱。
+R-37 PASS：方向依擁有者的沉穩黑色要求及既有 DESIGN.md，同步記錄。
+R-38 PASS：未新增虛構功能、人物或資料。
+R-01 PASS：中性色表達主次；分類辨識色仍限於分類圖示與表面。
+R-04 PASS：保留既有有用途的圖示，固定導覽圖示寬度以避免載入時擠壓文字。
+R-06 PASS：沿用繁中文字型及字級；調整換行與欄寬以使用可用空間。
+R-07 PASS：未新增背景圖樣。
+R-08 PASS：未新增裝飾箭頭。
+R-09 PASS：未新增徽章。
+R-10 PASS：未新增玻璃效果。
+R-12 PASS：未新增陰影。
+R-13 PASS：未新增發光。
+R-14 PASS：未新增卡片或改動內容層級。
+R-19 PASS：未新增動畫。
+R-22 PASS：未新增插畫。
+Dials PASS：ENERGY 1 / RHYTHM 2 / MOTION 1，沿用安靜、可讀的既有結構。
+Focal point PASS：標題層級保留，主要標題採近黑色。
+Whitespace PASS：指南及文件使用可用欄寬，保留外側間距與手機單欄。
+Accent PASS：分類圖示及遊戲操作表面仍以原分類色輔助辨識。
+Identity PASS：保留品牌、繁中文字型、遊戲素材與分類結構。
+C-1 PASS：黑灰色依擁有者要求，移除窄欄與平衡斷行以改善寬螢幕閱讀。
+C-2 PASS：修改相關互動與既有大廳行為通過測試。
+C-3 PASS：未新增模板區塊。
+C-4 PASS：六種寬度、雙語、鍵盤與文字放大檢查通過。
+C-5 PASS：未新增內容宣稱。
+R-05 PASS：保留既有大廳、指南和文件結構。
+R-11 PASS：未改動圓角系統。
+R-15 PASS：既有具體操作名稱保留。
+R-16 PASS：未新增行銷詞語。
+R-20 PASS：保留居家練習品牌及既有分類用途。
+R-21 PASS：維持既有淺色主題。
+R-29 PASS：一般文字及操作收斂為黑灰色系。
+R-30 PASS：未複製其他產品外觀。
+R-31 PASS：配色、欄寬、換行與圖示寬度各自對應本次需求或實際重現的溢出問題。
+
+本機人工複驗
+執行 npm run build:hub，再以 npm --prefix apps/rehabtrainerhub run preview 開啟本機輸出。
+在上述六種寬度切換中英文；檢查大廳指南、關於、衛教及開發者文件是否使用所在欄位的可用寬度。
+Tab 到指南 summary，以 Enter 展開、Space 收合；放大指南文字 200%，確認仍可讀且無水平捲動。
+在 768px 英文版確認四個導覽項目留在畫面內；即使圖示字型尚未載入也不可撐寬頁面。
+執行上述兩項 Brave 導覽測試，複驗四主路由、帳號／語言操作及 44px 目標。
+限制：Windows Brave 本機驗收；未實測 Safari／iOS、實體觸控或正式站部署。
+這次沒有 commit、push、部署、遊戲發布或正式資料寫入。

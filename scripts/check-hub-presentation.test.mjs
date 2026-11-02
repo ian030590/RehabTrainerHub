@@ -5,6 +5,73 @@ import ts from 'typescript';
 import * as results from '../apps/rehabtrainerhub/app/lobbyResults.js';
 
 const appRoot = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
+
+function StyleRules(css, selector) {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selectors]) => selectors.split(',').some(value => value.trim() === selector))
+    .map(([, , declarations]) => declarations);
+}
+
+test('Hub headings, body, secondary text and ordinary links use neutral dark colors', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const root = css.match(/:root\s*\{([^}]*)\}/)[1];
+  for (const token of ['text', 'text-muted', 'heading', 'primary', 'primary-hover']) {
+    const hex = root.match(new RegExp(`--${token}:\\s*#([a-f0-9]{6});`, 'i'))?.[1];
+    assert.ok(hex, `${token} must define the Hub text color`);
+    const channels = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16));
+    assert.equal(channels[0], channels[1], `${token} must not tint text green`);
+    assert.equal(channels[1], channels[2], `${token} must be neutral`);
+    assert.ok(channels[0] <= 96, `${token} must keep secondary text readable`);
+  }
+  for (const rule of StyleRules(css, '.hub-nav a')) {
+    assert.doesNotMatch(rule, /(?:^|;)\s*color:\s*#[a-f0-9]+;/i,
+      'Phone and desktop navigation must follow the same neutral text tokens');
+  }
+});
+
+test('Hub descriptions and guide content can use their available column width', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of [
+    '.lobby-guide', '.lobby-guide > header', '.lobby-guide-details p',
+    '.about-site-section p:last-child', '.about-page .page-heading > p:last-child',
+    '.education-articles-source', '.education-article-summary',
+    '.developer-hero h1', '.developer-hero > div > p:last-child',
+    '.developer-doc-section > header', '.developer-doc-section > header h2',
+    '.developer-docs-lead', '.developer-check-list',
+  ]) {
+    for (const rule of StyleRules(css, selector)) {
+      assert.doesNotMatch(rule, /max-width:\s*[\d.]+(?:px|ch|rem)/,
+        `${selector} must not leave unused space to the right inside its column`);
+    }
+  }
+});
+
+test('Hub headings wrap at the available edge instead of balancing into short lines', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  assert.match(StyleRules(css, 'h1').join('\n'), /text-wrap:\s*wrap;/);
+  for (const selector of ['h1', 'h2', 'h3', '.developer-hero h1', '.developer-doc-section > header h2']) {
+    assert.doesNotMatch(StyleRules(css, selector).join('\n'), /text-wrap:\s*balance;/, selector);
+  }
+});
+
+test('category labels and selected filters keep neutral text while icons retain category colors', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of [
+    '.module-category-tag', '.module-theme-badge', '.lobby-filter-chip', '.filter-option:hover',
+    '.recent-module-card a',
+  ]) {
+    assert.match(StyleRules(css, selector).join('\n'), /(?:^|;)\s*color:\s*var\(--(?:text|heading)\);/, selector);
+  }
+  assert.match(StyleRules(css, '.module-card-meta .module-card-theme-icon').join('\n'), /color:\s*var\(--trainer-color-dark\)/);
+});
+
+test('navigation icons keep one glyph of space while the webfont loads', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const rules = StyleRules(css, '.hub-nav-icon').join('\n');
+  assert.match(rules, /width:\s*1em;/);
+  assert.match(rules, /overflow:\s*hidden;/);
+});
+
 const games = Array.from({ length: 14 }, (_, index) => ({
   id: `game-${index}`, title: `Activity ${index}`, summary: 'Practice at home', author: 'Hub',
   purpose: index < 4 ? 'attention' : 'memory', theme: { icon: { type: 'symbol', value: 'grid_view' } },
