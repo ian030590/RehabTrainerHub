@@ -3,6 +3,7 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
+import '../apps/rehabtrainerhub/games/gesture-battler/fx/battleFeedback.test.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/gesture-battler');

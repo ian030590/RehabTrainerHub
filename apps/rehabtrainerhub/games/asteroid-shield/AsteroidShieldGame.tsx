@@ -12,6 +12,7 @@ import { Clamp, FormatTestDate } from './gameUtils';
 import { AsteroidShieldTutorial } from './rules/AsteroidShieldTutorial';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
+import { AsteroidEffects, type AsteroidEffectEvent } from './fx/AsteroidEffects';
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
@@ -289,6 +290,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const labels = copy[lang];
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
+    const effectsCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const effectsRef = useRef<AsteroidEffects | null>(null);
+    const finishAnchorRef = useRef<HTMLSpanElement | null>(null);
     const settingsDialogRef = useRef<HTMLDialogElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const texturesRef = useRef<AssetTextures | null>(null);
@@ -339,9 +343,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         { label: labels.controlMode, value: labels.mouseControl },
     ], [controlMode, difficulty, durationSec, labels, maxHp, shieldSizePercent]);
     const setPhase = useCallback((nextPhase: GamePhase) => {
+        effectsRef.current?.clear();
         phaseRef.current = nextPhase;
         setPhaseState(nextPhase);
     }, []);
+    useEffect(() => {
+        if (phase !== 'results' || !finishAnchorRef.current) return;
+        const rect = finishAnchorRef.current.getBoundingClientRect();
+        effectsRef.current?.finish({ x: rect.left, y: rect.top, width: rect.width, height: rect.height });
+    }, [phase]);
     const showConfiguration = useCallback(() => setPhase('menu'), [setPhase]);
     useEffect(() => OnSavedSettings(saved => {
         const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
@@ -373,6 +383,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         if (!mountedRef.current || phaseRef.current === 'results' || phaseRef.current === 'menu')
             return;
         const metrics = metricsRef.current;
+        effectsRef.current?.clear();
         const config = configRef.current;
         const participantId = 'Guest';
         const totalDuration = Number((metrics.elapsedMs / 1000).toFixed(1));
@@ -442,6 +453,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         showConfiguration();
     }, [showConfiguration]);
     const exitGame = useCallback(() => {
+        effectsRef.current?.clear();
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
         onExit();
     }, [onExit]);
@@ -453,6 +465,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         let cancelled = false;
         const app = new Application();
         const host = pixiHostRef.current;
+        const effects = effectsCanvasRef.current ? new AsteroidEffects(effectsCanvasRef.current) : null;
+        effectsRef.current = effects;
         const initialize = async () => {
             if (!host)
                 return;
@@ -476,9 +490,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             onResize();
             setRendererReady(true);
             app.ticker.add((ticker: Ticker) => {
-                if (phaseRef.current !== 'playing')
-                    return;
-                UpdateAsteroidGame({
+                if (phaseRef.current === 'playing') UpdateAsteroidGame({
                     app,
                     ticker,
                     sceneRef,
@@ -490,9 +502,18 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     onFailure: () => PlayFailureSound(jsPsychRef),
                     onFall: PlayAsteroidFallSound,
                     onComplete: finishGame,
+                    onEffect: event => effectsRef.current?.emit(event),
                     onProgress: (hp, remainingSec) => setHud(previous => previous.hp === hp && previous.remainingSec === remainingSec
                         ? previous : { hp, remainingSec }),
                 });
+                if (effectsRef.current?.activeCount) {
+                    const scene = sceneRef.current;
+                    const protectedRects = phaseRef.current === 'playing' && scene
+                        ? [scene.ship, scene.shield, ...scene.threats.map(threat => threat.sprite)]
+                            .map(sprite => ({ x: sprite.x - sprite.width / 2, y: sprite.y - sprite.height / 2, width: sprite.width, height: sprite.height }))
+                        : [];
+                    effectsRef.current?.update(ticker.deltaMS / 1000, protectedRects);
+                }
             });
         };
         void initialize().catch(error => {
@@ -506,6 +527,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             if (!currentApp || !scene)
                 return;
             ResizePixiAppToElement(currentApp, host);
+            effectsRef.current?.resize(currentApp.screen.width, currentApp.screen.height);
             UpdateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldPositionRef.current);
         };
         const resizeObserver = host && typeof ResizeObserver !== 'undefined'
@@ -518,6 +540,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             resizeObserver.observe(host);
         return () => {
             cancelled = true;
+            effects?.dispose();
+            effectsRef.current = null;
             window.removeEventListener('resize', onResize);
             window.visualViewport?.removeEventListener('resize', onResize);
             document.removeEventListener('fullscreenchange', onResize);
@@ -550,6 +574,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} className="asteroid-shield-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
+      <canvas ref={effectsCanvasRef} className="asteroid-fx" aria-hidden="true"/>
       {phase === 'playing' && <section className="asteroid-hud" aria-label={lang === 'en' ? 'Training status' : '訓練狀態'}>
         <p>{labels.hp} <output>{hud.hp} / {maxHp}</output></p>
         <div className="asteroid-health-bar" role="progressbar" aria-label={labels.hp} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hud.hp}>
@@ -603,7 +628,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       {phase !== 'menu' && rendererErrorNotice}
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
-            <h1>{labels.resultTitle}</h1>
+            <header className="asteroid-result-heading"><h1>{labels.resultTitle}</h1><span ref={finishAnchorRef} className="asteroid-finish-anchor" aria-hidden="true"/></header>
             <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
             <section className="score-priority" aria-labelledby="score-priority-title">
               <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
@@ -703,7 +728,7 @@ function ClearAsteroidScene(scene: AsteroidScene | null): void {
     });
     scene.threats = [];
 }
-function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onFall, onComplete, onProgress, }: {
+function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onFall, onComplete, onProgress, onEffect, }: {
     app: Application;
     ticker: Ticker;
     sceneRef: {
@@ -732,6 +757,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     onFall: () => void;
     onComplete: (result: GameResult) => void;
     onProgress: (hp: number, remainingSec: number) => void;
+    onEffect?: (event: AsteroidEffectEvent) => void;
 }): void {
     const scene = sceneRef.current;
     if (!scene)
@@ -786,6 +812,8 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
             metrics.score += threat.score;
             metrics.speedLevel = 1 + Math.floor(metrics.blocked / speedLevelStep);
             RecordThreatOutcome(threat, 'shielded', metrics, resultRecordsRef.current, 0);
+            onEffect?.({ kind: 'block', x: threat.x, y: layout.shieldY - layout.shieldHeight / 2, size: threat.size });
+            onEffect?.({ kind: 'break', x: threat.x, y: layout.shieldY - layout.shieldHeight / 2 - threat.radius, size: threat.size });
             RemoveThreat(scene, threat);
             onSuccess();
             continue;
@@ -803,6 +831,8 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
                 metrics.hits += 1;
                 metrics.hp = threat.kind === 'lethal' ? 0 : Math.max(0, metrics.hp - damage);
                 RecordThreatOutcome(threat, 'hit', metrics, resultRecordsRef.current, damage);
+                onEffect?.({ kind: 'damage', x: threat.x, y: layout.shipY - layout.shipHeight / 2, size: threat.size });
+                onEffect?.({ kind: 'break', x: threat.x, y: layout.shipY - layout.shipHeight / 2 - threat.radius, size: threat.size });
                 onFailure();
             }
             RemoveThreat(scene, threat);

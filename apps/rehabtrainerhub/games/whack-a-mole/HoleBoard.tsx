@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import type { CSSProperties, KeyboardEvent, ReactNode, Ref } from 'react';
 
 // Sessions run up to 5 minutes, so the countdown reads as m:ss.
 export function FormatRemaining(ms: number, en: boolean) {
@@ -37,12 +37,15 @@ export function HoleContents({ flash }: { flash?: 'hit' | 'wrong' }) {
   </>;
 }
 
-export function HoleBoard({ size, state, label, onKeyDown, children }: {
+export function HoleBoard({ size, state, label, onKeyDown, effectsRef, children }: {
   size: number; state?: 'running' | 'over'; label?: string;
+  effectsRef?: Ref<HTMLCanvasElement>;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void; children: ReactNode;
 }) {
   return <div className="wm-board-area">
     <div className="wm-board" role={label ? 'group' : undefined} aria-label={label} data-state={state}
-      style={{ '--n': size } as CSSProperties} onKeyDown={onKeyDown}>{children}</div>
+      style={{ '--n': size } as CSSProperties} onKeyDown={onKeyDown}>
+      {effectsRef && <canvas ref={effectsRef} className="wm-fx" aria-hidden="true" />}
+      {children}</div>
   </div>;
 }

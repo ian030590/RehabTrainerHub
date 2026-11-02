@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
@@ -175,6 +177,28 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await CheckConfirmationPresentation(game);
   await capture('confirmation');
   await until(() => game('!document.querySelector(".asteroid-shield-tutorial .ui-button-primary").disabled'), 'Pixi textures ready');
+  console.log('Asteroid effect environment:', await game(`({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, hidden: document.hidden, focused: document.hasFocus() })`));
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, gameContext.session || session);
+  await game(`(() => {
+    const canvas = document.querySelector('.asteroid-fx');
+    if (!canvas) return;
+    window.asteroidFxProbe = { times: [], stamps: 0, draws: 0, maxStamps: 0, start: 0 };
+    const nativeDraw = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function(...args) {
+      if (this.canvas === canvas) { window.asteroidFxProbe.draws++; window.asteroidFxProbe.stamps++; }
+      return nativeDraw.apply(this, args);
+    };
+    window.asteroidPixiApp.ticker.add(() => {
+      window.asteroidFxProbe.start = performance.now(); window.asteroidFxProbe.stamps = 0;
+    }, undefined, 100);
+    window.asteroidPixiApp.ticker.add(() => {
+      const probe = window.asteroidFxProbe;
+      if (document.querySelector('.asteroid-shield-phase-playing')) {
+        probe.times.push(performance.now() - probe.start);
+        probe.maxStamps = Math.max(probe.maxStamps, probe.stamps);
+      }
+    }, undefined, -100);
+  })()`);
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');
   assert.equal(await game('document.querySelector(".asteroid-shield-tutorial, dialog.game-settings-dialog")'), null);
@@ -247,13 +271,69 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.ok(animation.trailCount >= 4, 'Falling objects must have animated trails.');
   await until(() => game('window.asteroidAnimationSample.sprite.y >= innerHeight * 0.25'), 'falling animation visible on screen');
   await capture('falling-animation');
+  const hasPixelFx = await game('Boolean(window.asteroidFxProbe)');
+  let capturedFx = false;
+  if (hasPixelFx) {
+    const overlay = await game(`(() => {
+      const canvas = document.querySelector('.asteroid-fx');
+      return { hidden: canvas.getAttribute('aria-hidden'), pointer: getComputedStyle(canvas).pointerEvents,
+        z: Number(getComputedStyle(canvas).zIndex), hudZ: Number(getComputedStyle(document.querySelector('.asteroid-hud')).zIndex) };
+    })()`);
+    assert.equal(overlay.hidden, 'true'); assert.equal(overlay.pointer, 'none'); assert.ok(overlay.z < overlay.hudZ);
+    // Use the real pointer path to intercept incoming threats for the full 30 seconds.
+    await game(`window.asteroidFxPilot = setInterval(() => {
+      const app = window.asteroidPixiApp, host = document.querySelector('.asteroid-shield-stage');
+      if (!document.querySelector('.asteroid-shield-phase-playing')) { clearInterval(window.asteroidFxPilot); return; }
+      const shield = app.stage.children[3], previous = window.asteroidFxPilotPrevious ?? new Map();
+      const now = performance.now(), incoming = app.stage.children[1].children.filter(sprite => sprite.alpha > 0.7 && sprite.y < shield.y);
+      const threats = incoming.map(sprite => {
+        const before = previous.get(sprite), speed = before ? Math.max(0.01, (sprite.y - before.y) / (now - before.time)) : 0.1;
+        previous.set(sprite, { y: sprite.y, time: now });
+        return { sprite, arrival: (shield.y - shield.height / 2 - sprite.y - sprite.height / 2) / speed };
+      }).sort((a, b) => a.arrival - b.arrival);
+      window.asteroidFxPilotPrevious = new Map(incoming.map(sprite => [sprite, previous.get(sprite)]));
+      const rect = host.getBoundingClientRect();
+      if (threats[0]) host.dispatchEvent(new PointerEvent('pointermove', { clientX: rect.left + threats[0].sprite.x, clientY: rect.top, bubbles: true }));
+    }, 16)`);
+  }
   assert.ok((await readHud()).remaining < initialHud.remaining, 'The visible countdown advances with gameplay.');
   // Real-time gameplay can finish after 30 seconds, or earlier if durability reaches zero.
   const deadline = Date.now() + 45000;
   while (Date.now() < deadline && !await game('Boolean(document.querySelector(".asteroid-shield-phase-results"))')) {
+    if (hasPixelFx && !capturedFx && await game('window.asteroidFxProbe.draws > 0')) {
+      await capture('pixelfx-event'); capturedFx = true;
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }, pointerSession);
+      const before = await game('window.asteroidFxProbe.draws');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      assert.equal(await game('window.asteroidFxProbe.draws'), before, 'Reduced motion stops real canvas playback.');
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, pointerSession);
+      await game("window.dispatchEvent(new Event('blur'))");
+      const blurred = await game('window.asteroidFxProbe.draws');
+      await new Promise(resolve => setTimeout(resolve, 250));
+      assert.equal(await game('window.asteroidFxProbe.draws'), blurred, 'Blur stops real canvas playback.');
+      await game("window.dispatchEvent(new Event('focus'))");
+    }
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   assert.equal(await game('Boolean(document.querySelector(".asteroid-shield-phase-results"))'), true);
+  if (hasPixelFx) {
+    await capture('pixelfx-finish');
+    const metrics = await game(`(() => {
+      clearInterval(window.asteroidFxPilot);
+      const probe = window.asteroidFxProbe, times = [...probe.times].sort((a,b) => a-b);
+      return { frames: times.length, maxStamps: probe.maxStamps, draws: probe.draws,
+        meanMs: times.reduce((sum,value) => sum+value,0)/times.length,
+        p95Ms: times[Math.floor(times.length*.95)], maxMs: times.at(-1) };
+    })()`);
+    console.log('Asteroid effect measurements:', metrics, await game(`({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, hidden: document.hidden, focused: document.hasFocus() })`), errors);
+    assert.ok(metrics.frames > 300); assert.ok(metrics.draws > 0); assert.ok(metrics.maxStamps <= 8);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    assert.equal(await game(`document.querySelector('.asteroid-fx').getContext('2d').getImageData(0,0,innerWidth,innerHeight).data.some((value,index) => index%4===3 && value>0)`), false, 'Completion leaves a transparent overlay.');
+    const directory = resolve(import.meta.dirname, '../.tmp/fx-shots/asteroid-shield', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}`);
+    await mkdir(directory, { recursive: true });
+    await writeFile(resolve(directory, 'performance.json'), JSON.stringify(metrics, null, 2) + '\n');
+    console.log('Asteroid pixelfx real gameplay:', JSON.stringify(metrics));
+  }
   assert.equal(await game('document.querySelector(".asteroid-hud")'), null, 'Remove gameplay HUD at completion.');
   assert.equal(await game('window.asteroidSoundCount > 0'), soundOn, 'The sound checkbox must control real WebAudio output.');
   assert.ok(await game('document.querySelectorAll(".results-table tbody tr").length > 0'));
@@ -293,8 +373,13 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
     const record = JSON.parse(rows[0].payload_json);
     assert.deepEqual(record.config, { difficulty: 'easy', durationSec: 30, sensitivity: 1, soundEnabled: soundOn });
     assert.ok(record.score.summary.spawned >= 1);
-    assert.ok(record.score.rounds.length >= 1);
-    assert.equal(record.score.rounds.length, await game('document.querySelectorAll(".results-table tbody tr").length'));
+    assert.deepEqual(record.score.rounds, []);
+    assert.ok(record.scoreRoundCount >= 1);
+    assert.equal(record.scoreRoundCount, await game('document.querySelectorAll(".results-table tbody tr").length'));
+    const roundFile = record.rawFiles.find(file => file.kind === 'rounds');
+    assert.equal(roundFile.rows, record.scoreRoundCount);
+    assert.match(roundFile.sha256, /^[a-f0-9]{64}$/);
+    assert.ok(roundFile.key.includes('asteroid-shield'));
     assert.equal(sessionAttempts(), sessionFailure ? 2 : 1);
     assert.ok(saveAttempts() >= 2);
   }

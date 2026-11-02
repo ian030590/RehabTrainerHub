@@ -13,6 +13,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { CreateHoleEffects } from './fx/holeEffects';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Flash = { index: number; kind: 'hit' | 'wrong' } | null;
@@ -45,6 +46,11 @@ export function WhackAMoleGame() {
   const jsPsychHostRef = useRef<HTMLDivElement>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const matchRef = useRef<WhackMatch | null>(null);
+  const holeEffectsRef = useRef<ReturnType<typeof CreateHoleEffects> | null>(null);
+  const attachEffects = useCallback((canvas: HTMLCanvasElement | null) => {
+    holeEffectsRef.current?.dispose();
+    holeEffectsRef.current = canvas ? CreateHoleEffects(canvas) : null;
+  }, []);
   const startedAtRef = useRef(0);
   const endedAtRef = useRef<number | null>(null);
   const timerRef = useRef(0);
@@ -60,6 +66,7 @@ export function WhackAMoleGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    holeEffectsRef.current?.clear();
     generationRef.current++;
     matchRef.current = null;
     window.clearTimeout(timerRef.current);
@@ -108,6 +115,7 @@ export function WhackAMoleGame() {
   // A mole still up when time runs out counts as ducked, as in the original game; the board then stays briefly.
   const end = useCallback((match: WhackMatch) => {
     endedAtRef.current = performance.now();
+    holeEffectsRef.current?.clear();
     window.clearTimeout(moleTimerRef.current);
     match.expire(endedAtRef.current);
     PlayGameEndSound(match.hits > 0 ? 'Victory' : 'Defeat');
@@ -133,6 +141,7 @@ export function WhackAMoleGame() {
       match.stampOnset(performance.now());
       moleTimerRef.current = window.setTimeout(() => {
         if (!live() || match.shown !== shown || !match.expire(performance.now())) return;
+        holeEffectsRef.current?.resetStreak();
         PlayFailureSound();
         setVersion(version => version + 1);
         schedule(match, match.nextDelay());
@@ -193,6 +202,7 @@ export function WhackAMoleGame() {
     showFlash(index, tap.outcome);
     setVersion(version => version + 1);
     schedule(match, match.nextDelay());
+    holeEffectsRef.current?.play(index, tap.outcome);
   };
 
   const confirmSettings = () => {
@@ -273,7 +283,7 @@ export function WhackAMoleGame() {
       <p className={`wm-feedback${over ? ' wm-outcome' : ''}`} role="status">
         {over && match ? (en ? `Time is up: ${match.hits} hit${match.hits === 1 ? '' : 's'}` : `時間到，打中 ${match.hits} 隻`) : ''}</p>
       {match && <div className="wm-board-slot">
-        <HoleBoard size={match.gridSize} state={over ? 'over' : 'running'} label={en ? 'Holes' : '地洞'}
+        <HoleBoard size={match.gridSize} state={over ? 'over' : 'running'} label={en ? 'Holes' : '地洞'} effectsRef={attachEffects}
           onKeyDown={event => MoveHoleFocus(event, match.gridSize)}>
           {Array.from({ length: match.gridSize * match.gridSize }, (_, index) => <button type="button" key={index} className="wm-hole" data-index={index}
             data-up={match.active === index ? 'true' : undefined} tabIndex={index === focusHole ? 0 : -1} onFocus={() => setFocusHole(index)}

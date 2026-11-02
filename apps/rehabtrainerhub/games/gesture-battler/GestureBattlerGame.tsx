@@ -13,6 +13,7 @@ import { GestureBattlerTutorial } from './rules/GestureBattlerTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
+import { CreateBattleFeedback } from './fx/battleFeedback';
 type GestureId = 1 | 2 | 3 | 4 | 5;
 type TargetMode = 'free' | 'directed';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'combat' | 'results';
@@ -141,6 +142,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         try { await fullscreenRootRef.current?.requestFullscreen?.(); } catch { /* Windowed input remains available. */ }
     }, []);
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
+    const feedbackCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const battleFeedbackRef = useRef<ReturnType<typeof CreateBattleFeedback> | null>(null);
     const handCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const sceneRef = useRef<BattleScene | null>(null);
@@ -206,9 +209,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const [combatGesture, setCombatGesture] = useState<GestureId | null>(null);
     const [combatHoldProgress, setCombatHoldProgress] = useState(0);
     const setPhase = useCallback((nextPhase: GamePhase) => {
+        if (nextPhase !== 'combat') battleFeedbackRef.current?.clear();
         phaseRef.current = nextPhase;
         setPhaseState(nextPhase);
     }, []);
+    useEffect(() => {
+        if (phase !== 'combat' || !feedbackCanvasRef.current || !pixiHostRef.current) return;
+        const feedback = CreateBattleFeedback(feedbackCanvasRef.current, pixiHostRef.current);
+        battleFeedbackRef.current = feedback;
+        return () => { feedback.dispose(); battleFeedbackRef.current = null; };
+    }, [phase]);
     const showConfiguration = useCallback(() => { setPhase('menu'); }, [setPhase]);
     useEffect(() => OnSavedSettings(saved => {
         const restored = RestoreSettings(saved, defaultGestureConfig, IsGestureConfig);
@@ -253,6 +263,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
     }, []);
     const stopVision = useCallback(() => {
+        battleFeedbackRef.current?.clear();
         inputGenerationRef.current++;
         StopHandInput();
         clearHandCanvas();
@@ -264,6 +275,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const resetHold = useCallback((countInterruption: boolean) => {
         const current = holdRef.current;
         if (countInterruption && current.gesture && current.progressMs >= 120) {
+            battleFeedbackRef.current?.play('interrupted', sceneRef.current);
             metricsRef.current.interruptedHolds += 1;
             metricsRef.current.stats[current.gesture].interruptions += 1;
         }
@@ -324,7 +336,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         attackActiveRef.current = true;
         const targetAtCast = configRef.current.targetMode === 'directed' ? targetGestureRef.current : null;
         PlaySuccessSound(jsPsychRef);
-        await AnimateAttack(appRef.current, sceneRef.current, gesture);
+        await AnimateAttack(appRef.current, sceneRef.current, gesture, () => battleFeedbackRef.current?.play(gesture, sceneRef.current));
         if (!mountedRef.current || phaseRef.current !== 'combat') {
             attackActiveRef.current = false;
             return;
@@ -345,6 +357,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         });
         resetHold(false);
         if (nextHp <= 0) {
+            battleFeedbackRef.current?.play('defeated', sceneRef.current);
             window.setTimeout(() => completeSession(performance.now()), 650);
             return;
         }
@@ -706,6 +719,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     return (<div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={jsPsychHostRef} className="gesture-battler-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="gesture-battler-stage"/>
+      <canvas ref={feedbackCanvasRef} className="gesture-battle-feedback" aria-hidden="true"/>
 
       <button className="gesture-mobile-back" type="button" onClick={exitGame} aria-label={t('gesture.mobile.backLobby')} title={t('gesture.mobile.backLobby')}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1113,7 +1127,7 @@ function CreatePixelHero(): Container {
     hero.addChild(body);
     return hero;
 }
-function AnimateAttack(app: Application | null, scene: BattleScene | null, gesture: GestureId): Promise<void> {
+function AnimateAttack(app: Application | null, scene: BattleScene | null, gesture: GestureId, onImpact: () => void): Promise<void> {
     if (!app || !scene)
         return Promise.resolve();
     const color = moveColors[gesture - 1];
@@ -1141,6 +1155,7 @@ function AnimateAttack(app: Application | null, scene: BattleScene | null, gestu
                 return;
             app.ticker.remove(tick);
             projectile.destroy();
+            onImpact();
             const burst = new Graphics();
             for (let index = 0; index < 10; index += 1) {
                 const angle = (Math.PI * 2 * index) / 10;

@@ -36,7 +36,7 @@ async function Version(gameId) {
   return JSON.parse(await readFile(resolve(gamesRoot, gameId, 'package.json'), 'utf8')).version;
 }
 
-for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.0.4'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.0.12']]) {
+for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.0.4'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.0.13']]) {
   test(`${gameId}: difficulty options lead with a plain name and keep the parameters as detail`, async () => {
     const { source } = await Load(gameId, file);
     assert.equal(await Version(gameId), version);
@@ -51,7 +51,7 @@ for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx
 
 test('gesture-battler: strictness and hold time are sliders that show their value', async () => {
   const { input, attribute, label } = await Load('gesture-battler', 'GestureBattlerGame.tsx');
-  assert.equal(await Version('gesture-battler'), '2.0.7');
+  assert.equal(await Version('gesture-battler'), '2.0.8');
   for (const [name, range] of [['strictnessPercent', ['"50"', '"90"', '"5"']], ['holdDurationSec', ['"0.5"', '"10"', '"0.5"']]]) {
     const control = input(name);
     assert.equal(attribute(control, 'type'), '"range"', name);

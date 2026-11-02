@@ -22,6 +22,7 @@ import {
   SetInputCapture, SetInputPreview, StartSensorInput, StopSensorInput, ToPreviewRect,
 } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { CreateTongueFeedback, EmitTongueFeedback, ReadTongueProtectedRects } from './fx/feedback';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'playing' | 'results';
 type Hud = { timeLeft: number; caught: number; missed: number };
@@ -72,6 +73,8 @@ export function TongueCatchGame() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const canvasHostRef = useRef<HTMLDivElement>(null);
+  const feedbackCanvasRef = useRef<HTMLCanvasElement>(null);
+  const feedbackRef = useRef<ReturnType<typeof CreateTongueFeedback> | null>(null);
   const cameraSpaceRef = useRef<HTMLDivElement>(null);
   const jsPsychHostRef = useRef<HTMLDivElement>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
@@ -107,6 +110,7 @@ export function TongueCatchGame() {
     setFaceVisible(value);
   }, []);
   const clearPlay = useCallback(() => {
+    feedbackRef.current?.Clear();
     sessionRef.current = null;
     recognitionRef.current = restingRecognition;
     mouthRef.current = null;
@@ -160,6 +164,31 @@ export function TongueCatchGame() {
     };
   }, [showConfiguration, stopRun]);
 
+  useEffect(() => {
+    const canvas = feedbackCanvasRef.current;
+    if (!canvas) return;
+    const readView = () => {
+      const app = appRef.current;
+      return app ? { width: app.screen.width, height: app.screen.height, rect: app.canvas.getBoundingClientRect() } : null;
+    };
+    const feedback = CreateTongueFeedback(canvas, readView, () => {
+      const rects = ReadTongueProtectedRects(document, phaseRef.current === 'results');
+      const view = readView();
+      const session = sessionRef.current;
+      if (view && session) {
+        const protect = (x: number, y: number, width: number, height: number) => rects.push({
+          left: view.rect.left + x * view.rect.width / view.width, top: view.rect.top + y * view.rect.height / view.height,
+          width: width * view.rect.width / view.width, height: height * view.rect.height / view.height,
+        });
+        protect(session.mouthX - 60, session.mouthY - 60, 120, 120);
+        for (const apple of session.apples) protect(apple.x - apple.size / 2, apple.y - apple.size / 2, apple.size, apple.size);
+      }
+      return rects;
+    });
+    feedbackRef.current = feedback;
+    return () => { feedback.Dispose(); feedbackRef.current = null; };
+  }, []);
+
   // The Pixi ticker runs the legacy update loop; React only shows the HUD numbers when they change.
   useEffect(() => {
     const host = canvasHostRef.current;
@@ -172,10 +201,13 @@ export function TongueCatchGame() {
       const scene = sceneRef.current;
       if (phaseRef.current !== 'playing' || !session || !scene) return;
       const config = ToPlayConfig(settingsRef.current);
+      const apples = session.apples.slice();
+      const previousHold = session.holdDirection;
       const events = StepTongueSession(session, {
         dtMs: ticker.deltaMS, now: performance.now(), width: app.screen.width, height: app.screen.height,
         mouth: mouthRef.current, recognition: recognitionRef.current, random: Math.random,
       }, config);
+      EmitTongueFeedback(feedbackRef.current, apples, previousHold, session, events);
       if (events.caught.length) PlaySuccessSound();
       if (events.missed.length) PlayFailureSound();
       DrawTongueScene(scene, session);
@@ -207,6 +239,7 @@ export function TongueCatchGame() {
   }, []);
 
   const beginPlay = useCallback(() => {
+    feedbackRef.current?.Clear();
     const app = appRef.current;
     sessionRef.current = CreateTongueSession(app?.screen.width ?? window.innerWidth, app?.screen.height ?? window.innerHeight);
     recognitionRef.current = restingRecognition;
@@ -306,6 +339,11 @@ export function TongueCatchGame() {
   }, [clearPlay, setPhase, stopSensor]);
   finishRef.current = finish;
 
+  useEffect(() => {
+    if (phase === 'results') feedbackRef.current?.Play('complete');
+    return () => feedbackRef.current?.Clear();
+  }, [phase]);
+
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
     SaveGameSettings(settings);
@@ -376,6 +414,7 @@ export function TongueCatchGame() {
   const step = calibrationSteps[Math.min(calibration.index, calibrationSteps.length - 1)];
   const stepCopy = labels.calibration[step];
   return <div className={`tongue-root tongue-catch-phase-${phase}${sensorReady ? ' is-camera' : ''}`}>
+    <canvas ref={feedbackCanvasRef} className="tongue-feedback" aria-hidden="true" />
     <div className="tongue-field" aria-hidden="true" />
     <div ref={jsPsychHostRef} className="tongue-jspsych-host" aria-hidden="true" />
     <main className="tongue-stage" aria-label={title}>

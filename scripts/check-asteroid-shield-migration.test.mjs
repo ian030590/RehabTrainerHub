@@ -37,9 +37,11 @@ async function LoadAsteroidGameplay() {
   const records = [];
   const progress = [];
   const falls = [];
+  const effects = [];
   const options = { app, sceneRef: { current: scene }, metricsRef, configRef, shieldPositionRef,
     resultRecordsRef: { current: records }, onSuccess: () => {}, onFailure: () => {}, onComplete: () => {},
-    onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }), onFall: () => falls.push(metricsRef.current.elapsedMs) };
+    onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }), onFall: () => falls.push(metricsRef.current.elapsedMs),
+    onEffect: event => effects.push(event) };
   let pointerDeclaration;
   const findPointer = node => {
     if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === 'updateFromPointer') pointerDeclaration = node.getText(syntax);
@@ -61,9 +63,136 @@ async function LoadAsteroidGameplay() {
     } finally { Math.random = originalRandom; }
     return scene.threats.at(-1);
   };
-  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, falls, pointer, layout, spawn,
-    tick: (deltaMS = 16) => runtime.UpdateAsteroidGame({ ...options, ticker: { deltaMS } }) };
+  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, falls, effects, pointer, layout, spawn,
+    tick: (deltaMS = 16, visuals = true) => runtime.UpdateAsteroidGame({ ...options, onEffect: visuals ? options.onEffect : undefined, ticker: { deltaMS } }) };
 }
+
+test('interceptions and ship damage emit positioned feedback without changing records or gameplay randomness', async () => {
+  for (const kind of ['normal', 'heavy', 'lethal', 'energy']) {
+    for (const shielded of [true, false]) {
+      const games = await Promise.all([LoadAsteroidGameplay(), LoadAsteroidGameplay()]);
+      const randomCounts = [];
+      for (const [index, game] of games.entries()) {
+        game.layout();
+        const target = shielded ? game.scene.shield : game.scene.ship;
+        const threat = game.spawn(kind);
+        threat.x = shielded ? target.x : target.x - target.width / 2 + 5;
+        threat.y = target.y - target.height / 2 - threat.radius - 1;
+        threat.vy = 20000;
+        let calls = 0;
+        const random = Math.random;
+        Math.random = () => { calls++; return 0.5; };
+        try { game.tick(50, index === 0); } finally { Math.random = random; }
+        randomCounts.push(calls);
+      }
+      assert.deepEqual(games[0].records, games[1].records);
+      assert.deepEqual(games[0].metricsRef.current, games[1].metricsRef.current);
+      assert.equal(randomCounts[0], randomCounts[1]);
+      const events = games[0].effects;
+      assert.deepEqual(events.map(event => event.kind), kind === 'energy' ? [] : shielded ? ['block', 'break'] : ['damage', 'break']);
+      for (const event of events) {
+        assert.ok(Number.isFinite(event.x) && Number.isFinite(event.y));
+        assert.ok(event.size > 0);
+      }
+    }
+  }
+});
+
+async function LoadEffectHarness(reduced = false) {
+  const { AsteroidEffects } = await import('../apps/rehabtrainerhub/games/asteroid-shield/fx/AsteroidEffects.ts');
+  const media = new EventTarget(); media.matches = reduced;
+  const view = new EventTarget();
+  view.matchMedia = () => media;
+  view.getComputedStyle = () => ({ getPropertyValue: name => ({ '--primary': '#005eb8', '--primary-hover': '#00478d', '--primary-soft': '#e8f2fc', '--text-on-accent': '#ffffff', '--hud-health': '#49e78c' })[name] });
+  const document = new EventTarget(); document.defaultView = view; document.hidden = false;
+  const draws = []; const clears = []; const images = [];
+  const context = { clearRect: (...args) => clears.push(args), drawImage: (...args) => draws.push(args),
+    createImageData: (width, height) => ({ data: new Uint8ClampedArray(width * height * 4), width, height }),
+    putImageData: image => images.push(image), save() {}, restore() {}, beginPath() {}, rect() {}, clip() {} };
+  document.createElement = () => ({ width: 0, height: 0, getContext: () => context });
+  const canvas = { width: 1000, height: 700, ownerDocument: document, getContext: () => context };
+  const effects = new AsteroidEffects(canvas);
+  return { effects, media, view, document, canvas, draws, clears, images };
+}
+
+test('pixel feedback respects reduced motion at entry and immediately when the preference changes', async () => {
+  const h = await LoadEffectHarness(true);
+  h.effects.emit({ kind: 'block', x: 400, y: 500, size: 40 });
+  h.effects.finish({ x: 500, y: 40, width: 64, height: 48 });
+  h.effects.update(1 / 30);
+  assert.equal(h.effects.activeCount, 0); assert.equal(h.draws.length, 0);
+  h.media.matches = false; h.media.dispatchEvent(new Event('change'));
+  h.effects.emit({ kind: 'break', x: 400, y: 500, size: 70 });
+  h.effects.update(1 / 30);
+  assert.equal(h.effects.activeCount, 1); assert.ok(h.draws.length > 0);
+  h.media.matches = true; h.media.dispatchEvent(new Event('change'));
+  assert.equal(h.effects.activeCount, 0);
+  h.effects.dispose();
+});
+
+test('feedback is capped at eight, scales with asteroid size, protects targets and finishes within a second', async () => {
+  const h = await LoadEffectHarness();
+  const random = Math.random;
+  Math.random = () => { throw new Error('Effects must use their own seed'); };
+  try {
+    for (const size of [30, 70]) h.effects.emit({ kind: 'break', x: 400, y: 500, size });
+    h.effects.update(1 / 30, [{ x: 10, y: 20, width: 40, height: 60 }]);
+    assert.equal(h.draws.length, 2);
+    assert.ok(h.draws[1][3] > h.draws[0][3]);
+    assert.ok(h.images.some(image => image.data.some((value, index) => index % 4 === 3 && value > 0)), 'Render actual pixelfx pixels');
+    assert.ok(h.clears.some(rect => rect.join() === '10,20,40,60'));
+    for (let i = 0; i < 30; i++) h.effects.emit({ kind: 'block', x: 400, y: 500, size: 40 });
+    assert.equal(h.effects.activeCount, 8);
+    for (let i = 0; i < 31; i++) h.effects.update(1 / 30);
+    assert.equal(h.effects.activeCount, 0);
+    const idleDraws = h.draws.length;
+    h.effects.update(1 / 30); assert.equal(h.draws.length, idleDraws);
+    h.effects.finish({ x: 500, y: 40, width: 64, height: 48 });
+    assert.equal(h.effects.activeCount, 1);
+    for (let i = 0; i < 31; i++) h.effects.update(1 / 30);
+    assert.equal(h.effects.activeCount, 0);
+  } finally { Math.random = random; h.effects.dispose(); }
+});
+
+test('blur, hidden documents, pause, resize and disposal discard all feedback and prevent stale playback', async () => {
+  const h = await LoadEffectHarness();
+  const emit = () => h.effects.emit({ kind: 'damage', x: 400, y: 500, size: 40 });
+  for (const event of ['blur', 'pagehide', 'game:pause']) {
+    emit(); assert.equal(h.effects.activeCount, 1);
+    h.view.dispatchEvent(new Event(event));
+    assert.equal(h.effects.activeCount, 0);
+    emit(); assert.equal(h.effects.activeCount, 0);
+    h.view.dispatchEvent(new Event('focus'));
+  }
+  emit(); h.document.hidden = true; h.document.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(h.effects.activeCount, 0); emit(); assert.equal(h.effects.activeCount, 0);
+  h.document.hidden = false; h.document.dispatchEvent(new Event('visibilitychange'));
+  emit(); h.effects.resize(390, 844); assert.equal(h.effects.activeCount, 0);
+  assert.equal(h.canvas.width, 390); assert.equal(h.canvas.height, 844);
+  emit(); h.effects.clear(); assert.equal(h.effects.activeCount, 0);
+  emit(); h.document.dispatchEvent(new Event('scroll')); assert.equal(h.effects.activeCount, 0);
+  emit(); h.effects.dispose(); assert.equal(h.effects.activeCount, 0);
+  const clearCount = h.clears.length;
+  for (const event of ['blur', 'focus', 'pagehide', 'game:pause']) h.view.dispatchEvent(new Event(event));
+  h.media.dispatchEvent(new Event('change')); h.document.dispatchEvent(new Event('visibilitychange'));
+  emit(); h.effects.update(1 / 30);
+  assert.equal(h.effects.activeCount, 0); assert.equal(h.clears.length, clearCount);
+});
+
+test('the decorative overlay ignores input and assistive technology, stays below HUD and uses the existing ticker', async () => {
+  const source = await readFile(resolve(gameRoot, 'AsteroidShieldGame.tsx'), 'utf8');
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  assert.match(source, /<canvas[^>]+className="asteroid-fx"[^>]+aria-hidden="true"/);
+  assert.match(css, /\.asteroid-fx\s*\{[^}]*pointer-events:\s*none/);
+  assert.match(css, /\.asteroid-fx\s*\{[^}]*image-rendering:\s*pixelated/);
+  const effects = await readFile(resolve(gameRoot, 'fx/AsteroidEffects.ts'), 'utf8');
+  assert.doesNotMatch(effects, /requestAnimationFrame|setInterval|Math\.random/);
+  assert.match(source, /effectsRef\.current\?\.update/);
+  assert.match(source, /effectsRef\.current\?\.clear/);
+  const config = await readFile(resolve(gameRoot, 'vite.config.ts'), 'utf8');
+  assert.match(config, /LICENSE-pixelfx\.md/);
+  assert.match(config, /emitFile/);
+});
 
 test('asteroid ship spans most of the bottom edge on desktop, tablet and phone', async () => {
   const game = await LoadAsteroidGameplay();
@@ -217,7 +346,7 @@ test('asteroid release owns UI, dependencies, metadata and the captured gameplay
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.12');
+  assert.equal(pkg.version, '2.0.13');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);

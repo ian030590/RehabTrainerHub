@@ -401,7 +401,7 @@ test('the apple picture loads through an image element, because the runner block
 test('Tongue Catch owns its runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-tongue-catch');
-  assert.equal(pkg.version, '2.0.1');
+  assert.equal(pkg.version, '2.0.2');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, capabilities);
@@ -447,5 +447,171 @@ test('spotlights cover calibration, the mouth and tongue, the apples and the pro
     assert.deepEqual(steps.map(step => step.target), ['.tongue-preview-calibration', '.tongue-preview-mouth', '.tongue-preview-apples', '.tongue-hud']);
     assert.equal(new Set(steps.map(step => step.text)).size, steps.length);
     assert.ok(steps.every(step => step.title && step.text && step.place));
+  }
+});
+
+async function FeedbackHarness(reduced = false) {
+  const module = { exports: {} };
+  const frames = new Map();
+  const listeners = new Map();
+  const calls = { effects: [], painted: 0, visible: 0, drawn: 0, cleared: 0, masks: [], scaled: [] };
+  let now = 0;
+  let nextFrame = 0;
+  const motion = { matches: reduced, addEventListener: (name, callback) => listeners.set(`motion:${name}`, callback),
+    removeEventListener: name => listeners.delete(`motion:${name}`) };
+  const context = { drawImage: (_canvas, ...rect) => calls.scaled.push(rect), clearRect: (...rect) => { calls.cleared++; calls.masks.push(rect); }, putImageData: pixels => {
+    calls.painted++;
+    for (let index = 3; index < pixels.data.length; index += 4) if (pixels.data[index]) calls.visible++;
+  } };
+  const canvas = { width: 0, height: 0, getContext: () => context,
+    getBoundingClientRect: () => ({ left: 20, top: 30, width: 500, height: 300 }) };
+  const document = { hidden: false, hasFocus: () => true, documentElement: {}, createElement: () => ({ width: 0, height: 0, getContext: () => context }),
+    addEventListener: (name, callback) => listeners.set(name, callback), removeEventListener: name => listeners.delete(name) };
+  const window = { addEventListener: (name, callback) => listeners.set(name, callback), removeEventListener: name => listeners.delete(name), matchMedia: () => motion };
+  const core = await import('../apps/rehabtrainerhub/games/tongue-catch/fx/core/index.js');
+  const effects = await import('../apps/rehabtrainerhub/games/tongue-catch/fx/effects/index.js');
+  const dependencies = { './core/index.js': { ...core, CreateFx: (effect, options) => {
+    calls.effects.push({ effect, options });
+    const instance = core.CreateFx(effect, options);
+    return { ...instance, draw: (...args) => { calls.drawn++; return instance.draw(...args); } };
+  } }, './effects/index.js': effects };
+  const code = ts.transpileModule(await readFile(resolve(gameRoot, 'fx/feedback.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  runInNewContext(code, { module, exports: module.exports, require: name => {
+    assert.ok(name in dependencies, name); return dependencies[name];
+  }, document, window, performance: { now: () => now },
+  getComputedStyle: () => ({ getPropertyValue: name => ({ '--tongue-rope-edge': '#9f1239', '--tongue-rope-dark': '#e11d48',
+    '--tongue-rope-light': '#fda4af', '--tongue-cue-glow': '#ffe4e6', '--surface': '#fff' })[name] ?? '' }),
+  requestAnimationFrame: callback => { frames.set(++nextFrame, callback); return nextFrame; }, cancelAnimationFrame: id => frames.delete(id),
+  ImageData: class { constructor(width, height) { this.data = new Uint8ClampedArray(width * height * 4); } } });
+  const view = { width: 1000, height: 600, rect: { left: 20, top: 30, width: 500, height: 300 } };
+  const protectedRects = [{ left: 40, top: 50, width: 60, height: 40 }];
+  const feedback = module.exports.CreateTongueFeedback(canvas, () => view, () => protectedRects);
+  return { ...module.exports, feedback, calls, frames, listeners, motion, document, effects,
+    tick: milliseconds => { now += milliseconds; const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(now)); } };
+}
+
+test('Tongue Catch feedback is silent under reduced motion and cancels immediately when the preference changes', async () => {
+  const check = await FeedbackHarness(true);
+  check.feedback.Play('collect', { x: 500, y: 300 });
+  check.feedback.Play('movement', { x: 500, y: 300 });
+  check.feedback.Play('complete');
+  assert.equal(check.calls.effects.length, 0);
+  assert.equal(check.frames.size, 0);
+  check.motion.matches = false;
+  check.feedback.Play('collect', { x: 500, y: 300 });
+  check.tick(16);
+  assert.ok(check.calls.painted > 0);
+  check.motion.matches = true;
+  check.listeners.get('motion:change')();
+  assert.equal(check.frames.size, 0);
+  assert.ok(check.calls.cleared > 0);
+  check.feedback.Dispose();
+});
+
+test('feedback maps scene positions through the CSS canvas size, protects content, and ends every effect within one second', async () => {
+  const check = await FeedbackHarness();
+  assert.deepEqual({ ...check.StagePointToCanvas({ x: 500, y: 300 },
+    { width: 1000, height: 600, rect: { left: 30, top: 40, width: 500, height: 300 } },
+    { left: 20, top: 30, width: 500, height: 300 }) }, { x: 130, y: 80 });
+  for (const kind of ['collect', 'movement', 'complete']) {
+    check.feedback.Play(kind, { x: 500, y: 300 });
+    check.tick(16);
+    assert.ok(check.calls.painted > 0);
+    assert.ok(check.calls.visible > 0, `${kind} draws real nontransparent pixelfx pixels`);
+    for (let index = 0; index < 65; index++) check.tick(16);
+    assert.equal(check.frames.size, 0, `${kind} leaves no idle animation loop`);
+  }
+  assert.ok(check.calls.masks.some(rect => rect.join(',') === '10,10,30,20'), 'Content is erased from the overlay, not merely drawn underneath it.');
+  assert.ok(check.calls.scaled.length > 0, 'Completion fits its whole composition into the result header instead of clipping at phone edges.');
+  assert.ok(check.calls.scaled.every(([x, y, width, height]) => x >= 0 && y >= 0 && x + width <= 250 && y + height <= 64));
+  check.feedback.Dispose();
+});
+
+test('blur, hidden pages, stop, and disposal discard feedback without replaying it', async () => {
+  const check = await FeedbackHarness();
+  for (const reason of ['blur', 'visibilitychange', 'pagehide']) {
+    check.feedback.Play('collect', { x: 500, y: 300 });
+    assert.equal(check.frames.size, 1, `${reason} starts with an active effect`);
+    check.listeners.get(reason)();
+    assert.equal(check.frames.size, 0, reason);
+    check.listeners.get('focus')();
+  }
+  check.document.hidden = true;
+  check.feedback.Play('collect', { x: 500, y: 300 });
+  assert.equal(check.frames.size, 0);
+  check.document.hidden = false;
+  check.feedback.Play('collect', { x: 500, y: 300 });
+  check.feedback.Clear();
+  assert.equal(check.frames.size, 0);
+  check.feedback.Play('complete');
+  check.feedback.Dispose();
+  assert.equal(check.frames.size, 0);
+  assert.equal(check.listeners.size, 0);
+  check.feedback.Play('complete');
+  assert.equal(check.frames.size, 0, 'Disposed layers cannot restart.');
+});
+
+test('completion protects result text while ignoring the gameplay HUD hidden behind the result page', async () => {
+  const check = await FeedbackHarness();
+  const hud = { left: 10, top: 10, width: 370, height: 104 };
+  const results = { left: 17, top: 128, width: 356, height: 300 };
+  const elements = { '.tongue-hud': hud, '.score-priority': results };
+  const document = { querySelectorAll: selector => selector.split(',').map(item => elements[item.trim()]).filter(Boolean)
+    .map(rect => ({ getBoundingClientRect: () => rect })) };
+  assert.deepEqual(Array.from(check.ReadTongueProtectedRects(document, false)), [hud]);
+  assert.deepEqual(Array.from(check.ReadTongueProtectedRects(document, true)), [results]);
+  check.feedback.Dispose();
+});
+
+test('accepted movement transitions and caught apples trigger distinct feedback without changing the session', async () => {
+  const check = await FeedbackHarness();
+  const { logic, config } = await LoadPlay();
+  const session = logic.CreateTongueSession(1000, 600);
+  session.spawnElapsed = config.spawnIntervalSec;
+  Step(session, logic, { dtMs: 0, random: Sequence([0.9, 0.9, 0.6, 0, 0, 0, 0]) }, config);
+  session.apples[0].y = session.mouthY;
+  session.tongueLength = 100;
+  const apples = session.apples.slice();
+  const events = Step(session, logic, { recognition: Recognition('Tongue_Right') }, config);
+  assert.equal(events.caught.length, 1);
+  const before = JSON.stringify(session);
+  const played = [];
+  const feedback = { Play: (kind, point) => played.push({ kind, point }) };
+  check.EmitTongueFeedback(feedback, apples, null, session, events);
+  assert.deepEqual(played.map(item => item.kind), ['collect', 'movement']);
+  assert.deepEqual({ ...played[0].point }, { x: apples[0].x, y: apples[0].y });
+  check.EmitTongueFeedback(feedback, [], session.holdDirection, session, { caught: [], missed: [2] });
+  assert.equal(played.length, 2, 'A held direction and misses do not repeat success feedback.');
+  assert.equal(JSON.stringify(session), before);
+  const count = check.calls.effects.length;
+  for (let index = 0; index < 20; index++) check.feedback.Play('movement', { x: 500, y: 300 });
+  assert.equal(check.calls.effects.length, count + 1, 'Classifier changes cannot flood the screen with movement sparks.');
+  for (let index = 0; index < 20; index++) check.feedback.Play('collect', { x: 500, y: 300 });
+  check.tick(16);
+  assert.equal(check.calls.drawn, 12, 'At most six effects are drawn, each with its back and front layer.');
+  const ramp = check.calls.effects.at(-1).options.palette;
+  assert.deepEqual(Array.from(ramp), ['#9f1239', '#e11d48', '#fda4af', '#ffe4e6', '#fff']);
+  check.feedback.Dispose();
+});
+
+test('feedback stays decorative, local, licensed, and wired to existing stop and completion paths', async () => {
+  const source = await readFile(resolve(gameRoot, 'TongueCatchGame.tsx'), 'utf8');
+  assert.match(source, /<canvas[^>]*className="tongue-feedback"[^>]*aria-hidden="true"/);
+  assert.match(source, /EmitTongueFeedback\(/);
+  assert.match(source, /feedbackRef\.current\?\.Play\('complete'\)/);
+  assert.match(source, /feedbackRef\.current\?\.Clear\(\)/);
+  assert.match(source, /feedback\.Dispose\(\)/);
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  assert.match(css, /\.tongue-feedback\s*\{[^}]*pointer-events:\s*none[^}]*image-rendering:\s*pixelated/);
+  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.tongue-feedback\s*\{\s*display:\s*none/);
+  const license = await readFile(resolve(gameRoot, 'fx/LICENSE-pixelfx.md'), 'utf8');
+  for (const notice of ['MIT License', '2026 Patch', '2026 Hugo Duprez', 'Sprite Fusion']) assert.ok(license.includes(notice), notice);
+  assert.equal(await readFile(resolve(gameRoot, 'public/LICENSE-pixelfx.txt'), 'utf8'), license, 'The Vite package carries the required license and attribution.');
+  for (const file of await readdir(resolve(gameRoot, 'fx'), { recursive: true })) {
+    if (!/\.[jt]s$/.test(file)) continue;
+    const content = await readFile(resolve(gameRoot, 'fx', file), 'utf8');
+    assert.doesNotMatch(content, /Math\.random\(|@rehab-trainer\/|packages\/|fetch\(|setInterval\(/, file);
   }
 });

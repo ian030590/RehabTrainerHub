@@ -15,8 +15,8 @@ const games = {
   'driving-rehab': { version: '2.1.2', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.0.3', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
   'gabor-patching': { version: '2.0.4', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
-  'asteroid-shield': { version: '2.0.12', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
-  'gesture-battler': { version: '2.0.7', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
+  'asteroid-shield': { version: '2.0.13', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
+  'gesture-battler': { version: '2.0.8', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
   'motor-cortex-rehab': { version: '2.0.5', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
   'drawing-defense': { version: '2.0.9', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },
   'moving-card': { version: '2.0.5', file: 'MovingCardGame.tsx', settings: 'settings.ts' },
@@ -52,7 +52,7 @@ const games = {
   sudoku: { version: '2.0.1', file: 'SudokuGame.tsx', settings: 'settings.ts' },
   'memory-match': { version: '2.0.1', file: 'MemoryMatchGame.tsx', settings: 'settings.ts' },
   'simon-says': { version: '2.0.1', file: 'SimonSaysGame.tsx', settings: 'settings.ts' },
-  'whack-a-mole': { version: '2.0.1', file: 'WhackAMoleGame.tsx', settings: 'settings.ts' },
+  'whack-a-mole': { version: '2.0.2', file: 'WhackAMoleGame.tsx', settings: 'settings.ts' },
   minesweeper: { version: '2.0.1', file: 'MinesweeperGame.tsx', settings: 'settings.ts' },
   antisaccade: { version: '2.0.1', file: 'AntisaccadeGame.tsx', settings: 'settings.ts' },
   'keep-track': { version: '2.0.1', file: 'KeepTrackRecall.tsx', settings: 'settings.ts' },
@@ -60,7 +60,7 @@ const games = {
   'plus-minus': { version: '2.0.1', file: 'PlusMinusSwitch.tsx', settings: 'settings.ts' },
   ufov: { version: '2.0.1', file: 'UfovGame.tsx', settings: 'settings.ts' },
   'every-ball-response': { version: '2.0.1', file: 'EveryBallGame.tsx', settings: 'settings.ts' },
-  'tongue-catch': { version: '2.0.1', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
+  'tongue-catch': { version: '2.0.2', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
 };
 const registeredGameIds = Object.keys(JSON.parse(await readFile(resolve(import.meta.dirname, '../packages/ui/src/officialGameReleases.json'), 'utf8'))).sort();
 
