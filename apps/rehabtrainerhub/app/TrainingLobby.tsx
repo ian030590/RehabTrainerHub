@@ -585,33 +585,34 @@ export function TrainingLobby() {
           <p className="page-kicker">{copy.guide.kicker}</p>
           <h2 id="lobby-guide-title">{copy.guide.title}</h2>
           <p>{copy.guide.definition}</p>
-          <p className="lobby-guide-updated">{copy.guide.updated}</p>
         </header>
-        <div className="lobby-guide-sections">
-          <section>
+        <ol className="lobby-guide-steps">
+          <li>
             <h3>{copy.guide.chooseTitle}</h3>
             <p>{copy.guide.chooseBody}</p>
-          </section>
-          <section>
+          </li>
+          <li>
             <h3>{copy.guide.prepareTitle}</h3>
             <p>{copy.guide.prepareBody}</p>
-          </section>
-          <section>
-            <h3>{copy.guide.recordsTitle}</h3>
+          </li>
+        </ol>
+        <aside className="lobby-guide-note" aria-labelledby="lobby-guide-limits-title">
+          <h3 id="lobby-guide-limits-title">{copy.guide.limitsTitle}</h3>
+          <p>{copy.guide.limitsBody}</p>
+        </aside>
+        <div className="lobby-guide-details">
+          <details>
+            <summary><h3>{copy.guide.recordsTitle}</h3></summary>
             <p>{copy.guide.recordsBody}</p>
-          </section>
-          <section>
-            <h3>{copy.guide.privacyTitle}</h3>
+          </details>
+          <details>
+            <summary><h3>{copy.guide.privacyTitle}</h3></summary>
             <p>{copy.guide.privacyBody}</p>
-          </section>
-          <section>
-            <h3>{copy.guide.limitsTitle}</h3>
-            <p>{copy.guide.limitsBody}</p>
-          </section>
-          <section>
-            <h3>{copy.guide.reviewTitle}</h3>
+          </details>
+          <details>
+            <summary><h3>{copy.guide.reviewTitle}</h3></summary>
             <p>{copy.guide.reviewBody}</p>
-          </section>
+          </details>
         </div>
         <nav aria-label={copy.guide.kicker} className="lobby-guide-links">
           <a href="/about/">{copy.guide.aboutLink}</a>

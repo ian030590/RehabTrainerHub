@@ -1,0 +1,106 @@
+訓練大廳使用說明：antislop 驗收（2026-11-02）
+
+範圍：TrainingLobby 的使用說明、中英文文案與局部 CSS。
+模式：during，由本次對話選定。方向沿用 DESIGN.md：安靜、可信、易讀。
+ENERGY 1 / RHYTHM 2 / MOTION 1。
+
+改動與依據
+原版把六種不同用途的長文等量排列，並混入程式碼掃描門檻。
+改為簡短網站介紹、兩個開始步驟、常顯的分數限制，以及三個按需展開的補充說明。
+保留原有品牌綠與 Noto Sans TC，維持熟悉的閱讀環境；不新增圖片或圖示。
+步驟在手機單欄、平板以上兩欄，讓挑選與準備依序閱讀；細節使用平面分隔線。
+分數限制使用既有淡色表面，與操作及補充資訊分層，避免把提醒收進摺疊區。
+繁中預設可見內容由 988 減至 307 個非空白字元，約減少 69%（含標題與連結）。
+390px Brave 下說明區高度由 1954.8px 減至 977.1px。
+
+測試證據
+TDD：先新增雙語閱讀結構／展開內容測試。舊版四項失敗：沒有有序步驟或原生展開區。
+修正後 check-hub-presentation.test.mjs 為 8/8，包含原有搜尋、篩選與遊戲 overlay 往返。
+此檔已由 test:entrypoints 納入 test:ci，沒有新增或繞過 gate。
+PASS：npm run prepare；git config --local core.hooksPath 為 .githooks。
+PASS：npm run test:ci 全部七項 gate。
+PASS：npm run build:hub，含 TypeScript、靜態輸出及內建 SEO 檢查。
+PASS：npm run test:seo。
+PASS：Brave 320／390／768／1024／1440px × 中英文共十組檢查。
+PASS：每個展開項目均實測 Enter 展開、Space 收合、點擊展開及收合，焦點環可見。
+PASS：說明錨點跳轉；關於、衛教及隱私三個連結實際導向有 main 的頁面。
+PASS：所有說明文字放大 200% 後可重排，沒有頁面水平溢出；手機文字也量測容器邊界。
+PASS：Brave 無 Runtime exception 或 console.error。
+PASS：git diff --check。
+
+SEO 證據
+比較修改前後實際 index.html：lang、title、description、canonical、OG、Twitter、robots 完全相同。
+首頁仍以繁中預渲染，保留唯一 H1 與原網站定義 H2。
+三個 details 的完整回答都存在初始 HTML，沒有依賴點擊後載入。
+FAQPage 保留七組問答，逐項核對初始 HTML 中的標題與回答，與同一份 i18n 文案一致。
+保留 /about/、/qa/、/privacy/ 站內連結及品牌、居家練習工具、衛教資訊等用途描述。
+不加入隱藏 SEO 文字或關鍵字堆砌，不修改路由、索引規則或假造更新日期。
+Google 的內容原則並未設定偏好的字數；本次精簡以實際閱讀用途為準。
+來源：[Google Search Central](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)。
+
+Delivery Gate：Hard Gate
+R-02 PASS：新增文案沒有 em dash；test:entrypoints 的 antislop 檢查通過。
+R-03 PASS：五種寬度、中英文與 200% 文字重排通過；說明控制高度至少 44px。
+R-17 PASS：頁面沒有新增使用量、效果或其他統計宣稱，步驟編號對應實際兩項操作。
+R-18 PASS：沒有新增見證、人物或評價。
+R-23 PASS：只重排已授權的說明，沿用既有品牌與字型，沒有建立新視覺資產。
+R-24 PASS：保留的三個站內連結均完成本機導覽。
+R-25 PASS：contrast-check.py 驗算，次要文字對比 5.71:1、提醒內文 5.43:1、連結 5.87:1、提醒標題 10.70:1。
+R-26 PASS：錨點、三個展開項目及三個連結均有實際操作證據。
+R-27 PASS：說明為靜態內容；原大廳搜尋空結果、載入與錯誤流程未修改，相關 gate 通過。
+R-28 PASS：保留的問題均來自既有選活動、準備、登入、隱私、分數與投稿審核用途。
+R-32 PASS：原生 summary 支援 Enter／Space；焦點環實測可見，對比為 4.60:1。
+R-33 PASS：功能直接修改 TSX、字典及 CSS；沒有新增執行時改寫原始碼的腳本。
+R-34 PASS：沿用 DESIGN.md 指定的淺色主題，本次沒有引入其他主題。
+R-35 PASS：已實際建置；新增說明控制、錨點、連結、語言切換均經 Brave 操作。
+R-36 PASS：文案僅壓縮既有功能事實，沒有新增安全認證、療效或效能宣稱。
+R-37 PASS：先讀 DESIGN.md，並在修改前宣告閱讀方向與三個 dials。
+R-38 PASS：沒有虛構功能、人物、數字或導覽目的地。
+
+Delivery Gate：Purpose Gate
+R-01 PASS：沿用品牌綠及既有表面 token，分別標示操作與分數提醒，沒有新增漸層。
+R-04 PASS：沒有新增裝飾圖示；原生三角標記只表達展開狀態。
+R-06 PASS：沿用 Noto Sans TC；內文維持可讀大小，標題保留語意階層。
+R-07 PASS：沒有新增背景圖樣。
+R-08 PASS：沒有新增裝飾性箭頭按鈕。
+R-09 PASS：沒有新增徽章或膠囊標籤。
+R-10 PASS：沒有新增玻璃或模糊效果。
+R-12 PASS：沒有新增陰影。
+R-13 PASS：沒有新增發光效果。
+R-14 PASS：移除六個同權重的長文格，依操作、提醒與補充說明分層。
+R-19 PASS：沒有新增動畫；沿用原生互動，符合 MOTION 1。
+R-22 PASS：沒有新增插畫。
+
+Delivery Gate：Liveliness
+Dials PASS：ENERGY 1 / RHYTHM 2 / MOTION 1 已在實作前宣告。
+Consistency PASS：簡介、步驟、提醒與展開列有不同的內容結構，操作保持安靜。
+Focal point PASS：網站定義 H2 為說明區主要視覺重點，步驟與補充資訊依序退讓。
+Whitespace PASS：以 20／24／32px 間距區分步驟、提醒及細節，手機不沿用大幅空白。
+Accent PASS：使用既有品牌綠強調可操作連結及步驟編號。
+Identity PASS：保留居家練習分類、品牌配色、繁中文字型及具體操作語氣。
+Design Read PASS：沿用 DESIGN.md 的居家使用者、手機優先、易讀方向。
+
+Delivery Gate：Craftsmanship & Quality Locks
+C-1 PASS：主要色彩、字型、排列、留白與提醒表面的理由均記於上文。
+C-2 PASS：三個原生展開控制與既有連結均可操作。
+C-3 PASS：只保留開始練習所需資訊及原有常見問題，刪除掃描實作細節。
+C-4 PASS：五種寬度、雙語、鍵盤、可見焦點與 200% 文字均已驗證。
+C-5 PASS：沒有新增無來源的功能或成效宣稱。
+R-05 PASS：兩個步驟對應實際先挑選、再準備的流程；補充資訊沒有套相同卡片模板。
+R-11 PASS：只有提醒表面沿用 --radius，沒有將展開列或連結改為膠囊。
+R-15 PASS：連結名稱直接說明目的地；問題標題直接說明可展開的內容。
+R-16 PASS：中英文刪除內部技術細節，以具體操作取代冗長說明。
+R-20 PASS：品牌與居家練習用途一致，使用既有分類與操作，而非其他產品模板。
+R-21 PASS：依 DESIGN.md 保持原有淺色主題，沒有新增主題需求。
+R-29 PASS：僅沿用既有中性色及品牌綠，沒有擴張配色。
+R-30 PASS：沒有複製其他產品外觀或新增模板區塊。
+R-31 PASS：每個主要版面決策均能對應閱讀、資訊分層或操作目的。
+
+推送前本機人工複驗方式
+先 npm run build:hub，再 npm --prefix apps/rehabtrainerhub run preview，以 Brave 開啟輸出的本機網址。
+在上述五種寬度切換中英文，點第一次使用的指南錨點，確認段落及最後的連結可捲動到達。
+以 Tab 到每個 summary，Enter 展開、Space 收合，再以滑鼠或觸控點擊；確認焦點與 44px 操作高度。
+放大說明文字 200%，確認不裁切；分別開啟關於、衛教、隱私頁，檢查 console。
+本次暫存截圖及量測位於 .tmp/lobby-guide-review/；沒有連線寫入正式紀錄。
+限制：瀏覽器驗收使用 Windows Brave；未實測 Safari／iOS 或實體觸控。
+本次驗收僅操作本機輸出與測試資料；Git 交付由後續核准的提交與推送處理，未另行發布遊戲。

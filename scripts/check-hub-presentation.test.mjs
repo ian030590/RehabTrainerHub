@@ -17,7 +17,14 @@ function Elements(tree) {
   return [tree, ...Elements(tree.props?.children)];
 }
 
-async function Lobby() {
+function Text(tree) {
+  if (tree == null || typeof tree === 'boolean') return '';
+  if (typeof tree !== 'object') return String(tree);
+  if (Array.isArray(tree)) return tree.map(Text).join(' ');
+  return Text(tree.props?.children);
+}
+
+async function Lobby(language = 'en') {
   const slots = [];
   const effects = [];
   let cursor = 0;
@@ -40,14 +47,14 @@ async function Lobby() {
     useCallback: callback => callback,
     useMemo: callback => callback(),
   };
-  const dictionarySource = await readFile(new URL('i18n/en.ts', appRoot), 'utf8');
+  const dictionarySource = await readFile(new URL(`i18n/${language}.ts`, appRoot), 'utf8');
   const dictionary = { exports: {} };
   new Function('exports', ts.transpileModule(dictionarySource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(dictionary.exports);
-  const copy = dictionary.exports.en.hubUi;
+  const copy = (dictionary.exports.en ?? dictionary.exports.zhTW).hubUi;
   const dependencies = {
     react, 'react/jsx-runtime': { jsx, jsxs: jsx },
     './i18n': { GetHubUiCopy: () => copy },
-    './i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: key => key }) },
+    './i18n/HubLanguage': { useHubLanguage: () => ({ language: language === 'en' ? 'en' : 'zh', locale: language, t: key => key }) },
     './gameCatalog': { BuildHubGameCatalog: () => games },
     './lobbyResults.js': results,
     './trainingThemeStyle': { BuildTrainingThemeStyle: () => ({}) },
@@ -67,7 +74,7 @@ async function Lobby() {
   const loaded = { exports: {} };
   new Function('exports', 'require', 'document', compiled)(loaded.exports, name => dependencies[name] ?? {}, { activeElement: null });
   const render = () => { cursor = 0; const tree = loaded.exports.TrainingLobby(); effects.splice(0).forEach(effect => effect()); return Elements(tree); };
-  return { render, copy };
+  return { render, copy, dictionary: dictionary.exports };
 }
 
 test('clearing a search returns focus to the field while keeping selected categories', async () => {
@@ -99,6 +106,68 @@ test('the lobby offers a working guide anchor and preserves accessible search an
   const search = elements.find(node => node.type === 'input' && node.props.type === 'search');
   assert.ok(search);
   assert.ok(elements.some(node => node.type === 'label' && node.props.htmlFor === search.props.id));
+});
+
+for (const language of ['zh-TW', 'en']) {
+  test(`${language} guide puts short starting instructions and score limits before optional details`, async () => {
+    const { render, copy } = await Lobby(language);
+    const guide = render().find(node => node.props?.id === 'lobby-guide');
+    const elements = Elements(guide);
+    const steps = elements.find(node => node.type === 'ol');
+    assert.ok(steps, 'Starting instructions must be a scannable ordered list.');
+    assert.equal(Elements(steps).filter(node => node.type === 'li').length, 2);
+    assert.ok(Text(steps).includes(copy.lobby.guide.chooseBody));
+    assert.ok(Text(steps).includes(copy.lobby.guide.prepareBody));
+    const note = elements.find(node => node.props?.className === 'lobby-guide-note');
+    assert.ok(note, 'Score limits stay visible without opening a disclosure.');
+    assert.ok(Text(note).includes(copy.lobby.guide.limitsBody));
+    assert.ok(elements.indexOf(note) < elements.findIndex(node => node.type === 'details'));
+    const visibleText = elements.filter(node => node.type === 'p' &&
+      !elements.filter(item => item.type === 'details').some(item => Elements(item).includes(node)))
+      .map(Text).join(' ');
+    assert.ok(language === 'en' ? visibleText.split(/\s+/).length <= 140 : visibleText.length <= 260,
+      'The default guide must fit a short read.');
+  });
+
+  test(`${language} guide keeps login, privacy and review answers in native disclosures and retains useful links`, async () => {
+    const { render, copy } = await Lobby(language);
+    const guide = Elements(render().find(node => node.props?.id === 'lobby-guide'));
+    const disclosures = guide.filter(node => node.type === 'details');
+    assert.equal(disclosures.length, 3);
+    for (const [index, key] of ['records', 'privacy', 'review'].entries()) {
+      const disclosure = disclosures[index];
+      assert.ok(!disclosure.props.open, 'Extra details are initially collapsed.');
+      const content = Elements(disclosure);
+      assert.equal(Text(content.find(node => node.type === 'summary')), copy.lobby.guide[`${key}Title`]);
+      assert.equal(Text(content.find(node => node.type === 'p')), copy.lobby.guide[`${key}Body`],
+        'The full answer must exist in the initial render, before interaction.');
+    }
+    assert.deepEqual(guide.filter(node => node.type === 'a').map(node => node.props.href),
+      ['/about/', '/qa/', '/privacy/']);
+    assert.doesNotMatch(Text(guide), /5000|5%|escape-character|iframe|Worker/,
+      'Developer implementation details do not belong in the lobby guide.');
+  });
+}
+
+test('homepage FAQ structured data matches every rendered guide heading and answer', async () => {
+  const { render, dictionary } = await Lobby('zh-TW');
+  const guide = Elements(render().find(node => node.props?.id === 'lobby-guide'));
+  const source = await readFile(new URL('seo.ts', appRoot), 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const loaded = { exports: {} };
+  const dependencies = {
+    './i18n': dictionary,
+    './hubBrand': { hubLocalName: '居家訓練網', hubAlternateNames: ['Rehab Trainer Hub'], hubFullName: '居家訓練網 Rehab Trainer Hub' },
+    './siteUrls': { siteUrls: { hub: 'https://trainerhub.cc' } },
+  };
+  new Function('exports', 'require', compiled)(loaded.exports, name => dependencies[name]);
+  const questions = loaded.exports.homepageFaqJsonLd.mainEntity;
+  assert.equal(questions.length, 7);
+  for (const question of questions) {
+    assert.ok(guide.some(node => ['h2', 'h3'].includes(node.type) && Text(node) === question.name), question.name);
+    assert.ok(guide.some(node => node.type === 'p' && Text(node) === question.acceptedAnswer.text),
+      `The FAQ answer must match the page: ${question.name}`);
+  }
 });
 
 test('game actions retain their install destinations and open and close the original overlay', async () => {

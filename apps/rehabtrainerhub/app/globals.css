@@ -1092,8 +1092,9 @@ html:has(dialog.training-overlay[open]) {
 }
 
 .lobby-guide {
+  max-width: 960px;
   margin: 24px 30px 72px;
-  padding-top: 48px;
+  padding-top: 32px;
   border-top: 1px solid var(--border);
 }
 
@@ -1105,10 +1106,6 @@ html:has(dialog.training-overlay[open]) {
   margin: 14px 0 0;
   color: var(--text-muted);
   line-height: 1.8;
-}
-
-.lobby-guide .lobby-guide-updated {
-  font-size: 0.85rem;
 }
 
 .about-page .page-heading > p:last-child,
@@ -1129,36 +1126,76 @@ html:has(dialog.training-overlay[open]) {
   font-size: 0.85rem;
 }
 
-.lobby-guide-sections {
+.lobby-guide-steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 34px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  gap: 20px 40px;
+  margin: 24px 0;
+  padding-left: 24px;
 }
 
-.lobby-guide-sections > section {
-  padding: 26px 28px 28px 0;
+.lobby-guide-steps > li {
+  padding-left: 4px;
 }
 
-.lobby-guide-sections > section:not(:nth-child(3n + 1)) {
-  padding-left: 28px;
-  border-left: 1px solid var(--border);
+.lobby-guide-steps > li::marker {
+  color: var(--primary);
+  font-weight: 800;
 }
 
-.lobby-guide-sections > section:nth-child(n + 4) {
-  border-top: 1px solid var(--border);
+.lobby-guide-note {
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: var(--surface-muted);
 }
 
-.lobby-guide-sections h3 {
-  margin-bottom: 10px;
+.lobby-guide h3 {
+  margin: 0 0 8px;
   font-size: 1.08rem;
 }
 
-.lobby-guide-sections p {
+.lobby-guide-steps p,
+.lobby-guide-note p,
+.lobby-guide-details p {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.75;
+}
+
+.lobby-guide-details {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.lobby-guide-details > details {
+  border-bottom: 1px solid var(--border);
+}
+
+.lobby-guide-details summary {
+  min-height: 44px;
+  padding: 12px 0;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.lobby-guide-details summary h3 {
+  display: inline;
+  font-size: 1rem;
+}
+
+.lobby-guide-details summary:hover,
+.lobby-guide-details summary:active {
+  color: var(--primary);
+}
+
+.lobby-guide-details p {
+  max-width: 70ch;
+  padding-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .lobby-guide-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .lobby-guide-links {
@@ -1169,6 +1206,9 @@ html:has(dialog.training-overlay[open]) {
 }
 
 .lobby-guide-links a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: var(--primary);
   font-weight: 750;
   text-underline-offset: 4px;
@@ -2812,23 +2852,6 @@ html:has(dialog.training-overlay[open]) {
 
   .lobby-layout {
     grid-template-columns: 244px minmax(0, 1fr);
-  }
-
-  .lobby-guide-sections {
-    grid-template-columns: 1fr;
-  }
-
-  .lobby-guide-sections > section {
-    padding: 24px 0;
-  }
-
-  .lobby-guide-sections > section:not(:nth-child(3n + 1)) {
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  .lobby-guide-sections > section + section {
-    border-top: 1px solid var(--border);
   }
 
   .lobby-heading {
