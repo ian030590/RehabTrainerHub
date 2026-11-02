@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "gesture-battler",
+  "version": "2.0.8",
+  "name": "手勢指令對戰",
+  "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking",
+    "settings-storage"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BOoCjdSe.js",
+      "size": 1170813,
+      "sha256": "70f94f511441bd9506d25d583cad262529f37ced18da3b29fa88412cb8aa3cd1",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BIIOO0ZP.css",
+      "size": 19372,
+      "sha256": "13571522d2222ce866d13f052147d76a296c4f9288c7633748ac0dd1a176c577",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "8569a5788b125c04d4008c40583d50032faee629ddf964a056514a80a731cf48",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8568,
+      "sha256": "28c25fdd914a8baf1d66e39c3a84fff62e1a48920e35b59274d65ebdcfa3fd84",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "runtime/pixelfx/LICENSE-pixelfx.md",
+      "size": 1748,
+      "sha256": "9c3a2a81f97df7a615f0c34ef51faa2f79d6f58ad95164e46bdd4b8c1c730faf",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/pixelfx/core/act.js",
+      "size": 24502,
+      "sha256": "a889dc43a2a29b68ab81a8454037300548406cac06eb0fb11351dd0f5472d061",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/actor.js",
+      "size": 4492,
+      "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/chain.js",
+      "size": 2183,
+      "sha256": "9aeaaa2b123f2f209432adb71473011aa970fea8cebb161e0808620eceaf910f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/color.js",
+      "size": 5370,
+      "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/font.js",
+      "size": 5487,
+      "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/fx.js",
+      "size": 5238,
+      "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/index.js",
+      "size": 924,
+      "sha256": "7f091ce296a10273cfe06d34219c0f809c062f9c3e7a218414e2efad320ef1ee",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/math.js",
+      "size": 6254,
+      "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/painter.js",
+      "size": 17070,
+      "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/particles.js",
+      "size": 3334,
+      "sha256": "2de981a69439e3543a9741dbb20c116a2be346872f6ed326fb2e09e648a6fa69",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/poses.js",
+      "size": 2260,
+      "sha256": "a817b1c0d11e21f7dd759ec942f46a753b0429309a4a225f511931a282b4c269",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/rig.js",
+      "size": 28968,
+      "sha256": "9ca03b6620ea4100ca19f5e12e2338c4f61f0b9e62ad37dacc3dabc58838b0d9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/scene.js",
+      "size": 1724,
+      "sha256": "33379b9efeb696824acc2e14a39301fb8db538808741da9640dc77b80a196866",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/shapes.js",
+      "size": 2280,
+      "sha256": "440e8244b752b626daeec565806a5031ac25049142e9292c4f25aa38dad50019",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/sim.js",
+      "size": 19972,
+      "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/arcane/_lib.js",
+      "size": 8768,
+      "sha256": "bbfb38a6e83bcf5afba76609931e4a8f97a749062e5fe7cc47b4886b85167fba",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/arcane/mana-burst.js",
+      "size": 6701,
+      "sha256": "f0f006342184d792fb25dd73093ae790ca028cc1c10480250a5786d1aba656ae",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/impacts/hit-spark.js",
+      "size": 4352,
+      "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/melee/sword-slash.js",
+      "size": 6725,
+      "sha256": "8a5b90c9003e611e1af531897d870bd3cb412277ba0c924a659c98579af4de42",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/spawn/poof.js",
+      "size": 7104,
+      "sha256": "b4b0508a4d96d8ae43f732965b666431cad334c8df42b003767da677a5c95d44",
+      "contentType": "text/javascript; charset=utf-8"
+    }
+  ],
+  "contentSha256": "9b4c031add4ce848f30820563a056bb1a0ac078e5171e951261b69935f669f7b",
+  "approvedAt": "2026-11-02T15:14:02.919Z"
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tongue-catch",
+  "version": "2.0.2",
+  "name": "舌頭動作訓練",
+  "description": "辨識舌頭左右伸出方向，練習口腔肌肉控制與動作維持。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "tongue-tracking",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "LICENSE-pixelfx.txt",
+      "size": 1629,
+      "sha256": "fe6deca151b52fd396cdbe9b40fc318ce70d7040914bda460b8917e6461d0aff",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "assets/apple-DdAGs30N.svg",
+      "size": 393,
+      "sha256": "4b84afa7aa9f1753fe876cf4d1ab4c34e1c46fec650c195c39f96c01b0e9916b",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/index-CyGjACtj.js",
+      "size": 1149519,
+      "sha256": "d4944571c9239500c3bba2030519006ebddce5d9df412d32759334aad6f504d3",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Ch_o2O97.css",
+      "size": 26698,
+      "sha256": "42d0adbba35d8f7bfed70c467a74362331ae270fa798c5f2b9f504efe10f5f6b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 474,
+      "sha256": "6fd022ae09f9e4139121c668789766e93523addec08d15004789871f87ae1812",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "66c56af0bddf27fbc39a20133772ca5f40028c3b2fdf12d4b7d41efc288dbb66",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2992,
+      "sha256": "13b1927cc94888b62b8de0f88caac833d5305f29e40ecdf829cacfa69794071d",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "61249c4e0d2a5afdab64d3b8da99d539012a4a38c478097c85be9d88ed19143f",
+  "approvedAt": "2026-11-02T15:11:59.776Z"
+}

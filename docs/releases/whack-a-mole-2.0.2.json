@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "whack-a-mole",
+  "version": "2.0.2",
+  "name": "目標點擊",
+  "description": "地鼠會從洞裡一隻隻冒出來，趁牠躲回去前點牠。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-xh2XAEgR.js",
+      "size": 571058,
+      "sha256": "67d1b54d558da8c65f61b8a0d64a31539584b62563ec83a8e02b9c92f8025cd2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DBMZ82RU.css",
+      "size": 19369,
+      "sha256": "60e65b34aa4344ddb3ef49b464c1c1995b064c312ea6c9a1fa5b2fcbf04802f1",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 445,
+      "sha256": "5c1edcf5ff1e932c9c85feac0bd8b5c04cc1da5fd280edc8ed3f84ecd28c7982",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "fab8d87aff1e0a3143696cac5ac02585d287b507cfd901c17dc92df15d8f8cf2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/LICENSE-pixelfx.md",
+      "size": 1115,
+      "sha256": "553c30b19cb6dc6f717885e3f1c96ce905085399f82645a2ab14a7671a3eb48f",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "pixelfx/NOTICE.md",
+      "size": 547,
+      "sha256": "d5a758c3f450bc168a8d40847a5de159357c6a13da622eae17758d58ab2906ee",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "pixelfx/core/actor.js",
+      "size": 4492,
+      "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/color.js",
+      "size": 5370,
+      "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/font.js",
+      "size": 5487,
+      "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/fx.js",
+      "size": 5238,
+      "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/index.js",
+      "size": 303,
+      "sha256": "1fec39b35750e37df1891c78d486d4ae95297ce25afcb00985568ee1e118c429",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/math.js",
+      "size": 6254,
+      "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/painter.js",
+      "size": 17070,
+      "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/sim.js",
+      "size": 19972,
+      "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/_lib.js",
+      "size": 10507,
+      "sha256": "43950b54c0c6de11254084366bef58940b673e7558359f7714207b6b6ec50872",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/blunt-hit.js",
+      "size": 6598,
+      "sha256": "c1e0ea8abf424cecd9c68ca4ad5b9a09b8e4b1d8d62c935e50fc42986924c94d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/hit-spark.js",
+      "size": 4352,
+      "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/pickups/_lib.js",
+      "size": 21334,
+      "sha256": "e3e8700dd4c82e78c41edbf78e6b91a3bd8058273a598226762985d63cc3b5cd",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/pickups/collect-burst.js",
+      "size": 4344,
+      "sha256": "3d0f58fa6bb91bae5ebad8b32ffd7dce3af5e05bf6b36317eb6e074d50499263",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6308,
+      "sha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "d26f0b6523b46ab713d5ce6d2cb47a050e6406f642e878ca439e9c8ea2387719",
+  "approvedAt": "2026-11-02T15:10:07.311Z"
+}
