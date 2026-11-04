@@ -297,6 +297,15 @@
     "previewSha256": "bb8112488a9c3d2fdbe25ce6463dae5d7b292acd2c3f460b7db04ce0f75c3c94"
   },
   {
+    "gameId": "popout-search",
+    "version": "1.0.0",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "fae4eab6877ae0cb67b088fddd889f34c5b23f72c5e7bc6b900222310377d25a",
+    "previewSha256": "17936e786a4513aefb0c07892ce8b571e3a6d9e128b047b54e8063d857b8bbf3"
+  },
+  {
     "gameId": "reaction-time",
     "version": "2.0.2",
     "phase": "go",
@@ -457,5 +466,32 @@
     "screenshotHeight": 720,
     "screenshotSha256": "506b6cb2a08b01ed13fe89d93b935c8b502b42ff01feebabd92f33dc90a11c60",
     "previewSha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526"
+  },
+  {
+    "gameId": "complex-search",
+    "version": "1.0.0",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "76c87b85ee5ad63bbbac2aae6857cde733eba2d6e4a76f12e5d4ebf1d40fc084",
+    "previewSha256": "aafa11986b577a0e28d6619023a9448d815d79d0a5827c4d28ebf61c3ffa61f4"
+  },
+  {
+    "gameId": "conjunction-search",
+    "version": "1.0.0",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "45d4bba801c0712f6cf7510be24ce9f7e7b70ba44bdbdfd9ae6d7a2b40245e70",
+    "previewSha256": "3ef43ad298c4a54159f8f6b85cba28484944c7e86e24aa0bacc4b2da52b3337f"
+  },
+  {
+    "gameId": "exploratory-saccade",
+    "version": "1.0.0",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "54a66ee2a2d96b3e52ccd1ac61b36853e5267ac94edcf331af6f2f73f6fcd6dc",
+    "previewSha256": "ddf8d86e987ef3e585c388a1f1f6a1f8155260b6955d1375f79c90a3e719bfdd"
   }
 ]

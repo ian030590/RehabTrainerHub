@@ -8,6 +8,10 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'popout-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },
+  { id: 'complex-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },
+  { id: 'conjunction-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },
+  { id: 'exploratory-saccade', defaultMetric: 'foundMs', alternate: 'found', row: { screen: 1, target: 6, side: 0, quadrant: 0, xDeg: -5, yDeg: -4, found: 1, foundMs: 2, intervalMs: 300, order: 1, screenFalseClicks: 0 } },
   { id: 'seagull-flight', defaultMetric: 'passed', alternate: 'headAngle', row: { ring: 1, passed: 2, side: 1, headAngle: 14, offset: 40, altitude: 60 } },
   { id: 'hart-chart', defaultMetric: 'accuracy', alternate: 'attempts', row: { accuracy: 2, durationMs: 1000, targets: 10, attempts: 12, hints: 0 } },
   { id: 'driving-rehab', defaultMetric: 'rt', alternate: 'avoided', row: { rt: 2, avoided: 1, responded: 1, collision: 0, distance: 12, otherCollision: 0 } },

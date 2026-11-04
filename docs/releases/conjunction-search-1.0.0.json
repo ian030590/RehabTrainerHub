@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "conjunction-search",
+  "version": "1.0.0",
+  "name": "視覺搜尋：顏色與字形",
+  "description": "判斷散布的字母中有沒有中央圓圈裡的綠色目標字，其他字與目標同色或同形。十二級視覺搜尋的第 9 到 12 級。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-C3IChtNI.js",
+      "size": 577843,
+      "sha256": "aef0cdcc7965d287a0a1813265ae1623db23de5ad167ae228ce28aee4f379a11",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C-l_d7ob.css",
+      "size": 19292,
+      "sha256": "d4005c3a02a867f43f67b4c07cbb3921bf3ca2cab2cbd1f48807beee10bf729a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 667,
+      "sha256": "18fd38ce2aaeedfa680240bdd5c3f2057566416610d6ff70a27d0b42b612629e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "ad53af736845965fff6aec27b35300324311ec7b456c10ada6bd79170d2a2d18",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6030,
+      "sha256": "3ef43ad298c4a54159f8f6b85cba28484944c7e86e24aa0bacc4b2da52b3337f",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "9d71d251e72dcd1149ab09b1da83fbb5b2a17606a1c7a716806117a0a0b875dc",
+  "approvedAt": "2026-11-04T15:26:18.377Z"
+}

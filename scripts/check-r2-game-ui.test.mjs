@@ -9,6 +9,10 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'popout-search', component: 'PopoutSearchGame', tutorial: 'PopoutSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
+  { id: 'complex-search', component: 'ComplexSearchGame', tutorial: 'ComplexSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
+  { id: 'conjunction-search', component: 'ConjunctionSearchGame', tutorial: 'ConjunctionSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
+  { id: 'exploratory-saccade', component: 'ExploratorySaccadeGame', tutorial: 'ExploratorySaccadeTutorial', logic: { '../settings': 'settings.ts', '../logic/screens': 'logic/screens.ts', '../RunningView': 'RunningView.tsx' } },
   { id: 'seagull-flight', component: 'SeagullFlightGame', tutorial: 'SeagullTutorial', logic: { '../labels': 'labels.ts', '../SeagullIcon': 'SeagullIcon.tsx' } },
   { id: 'driving-rehab', component: 'DrivingRehabGame', tutorial: 'DrivingTutorial' },
   { id: 'reading-training', component: 'ReadingTrainingGame', tutorial: 'ReadingTutorial' },

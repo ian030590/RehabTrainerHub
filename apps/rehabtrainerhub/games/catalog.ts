@@ -42,6 +42,10 @@ import ufovCatalog from './ufov/public/game.json';
 import everyBallCatalog from './every-ball-response/public/game.json';
 import tongueCatchCatalog from './tongue-catch/public/game.json';
 import seagullFlightCatalog from './seagull-flight/public/game.json';
+import popoutSearchCatalog from './popout-search/public/game.json';
+import exploratorySaccadeCatalog from './exploratory-saccade/public/game.json';
+import conjunctionSearchCatalog from './conjunction-search/public/game.json';
+import complexSearchCatalog from './complex-search/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -749,6 +753,46 @@ const seeds: readonly TrainingCatalogSeed[] = [
     path: '/?module=seagull-flight',
     zh: [seagullFlightCatalog.copy['zh-TW'].title, seagullFlightCatalog.copy['zh-TW'].description],
     en: [seagullFlightCatalog.copy.en.title, seagullFlightCatalog.copy.en.description],
+  },
+  {
+    id: 'popout-search',
+    trainer: popoutSearchCatalog.trainer as 'vision',
+    purpose: popoutSearchCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/popout-search/${popoutSearchCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=popout-search',
+    zh: [popoutSearchCatalog.copy['zh-TW'].title, popoutSearchCatalog.copy['zh-TW'].description],
+    en: [popoutSearchCatalog.copy.en.title, popoutSearchCatalog.copy.en.description],
+  },
+  {
+    id: 'complex-search',
+    trainer: complexSearchCatalog.trainer as 'vision',
+    purpose: complexSearchCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/complex-search/${complexSearchCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=complex-search',
+    zh: [complexSearchCatalog.copy['zh-TW'].title, complexSearchCatalog.copy['zh-TW'].description],
+    en: [complexSearchCatalog.copy.en.title, complexSearchCatalog.copy.en.description],
+  },
+  {
+    id: 'conjunction-search',
+    trainer: conjunctionSearchCatalog.trainer as 'vision',
+    purpose: conjunctionSearchCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/conjunction-search/${conjunctionSearchCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=conjunction-search',
+    zh: [conjunctionSearchCatalog.copy['zh-TW'].title, conjunctionSearchCatalog.copy['zh-TW'].description],
+    en: [conjunctionSearchCatalog.copy.en.title, conjunctionSearchCatalog.copy.en.description],
+  },
+  {
+    id: 'exploratory-saccade',
+    trainer: exploratorySaccadeCatalog.trainer as 'vision',
+    purpose: exploratorySaccadeCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/exploratory-saccade/${exploratorySaccadeCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=exploratory-saccade',
+    zh: [exploratorySaccadeCatalog.copy['zh-TW'].title, exploratorySaccadeCatalog.copy['zh-TW'].description],
+    en: [exploratorySaccadeCatalog.copy.en.title, exploratorySaccadeCatalog.copy.en.description],
   },
 ] as const;
 

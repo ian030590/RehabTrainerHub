@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "exploratory-saccade",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "探索掃視練習",
+      "description": "在散布的數字與字母中找出所有指定數字，以滑鼠移入或點按標記。"
+    },
+    "en": {
+      "title": "Exploratory Saccade Practice",
+      "description": "Find every requested digit among scattered numbers and letters by moving the mouse over it or tapping it."
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "complex-search",
+  "version": "1.0.0",
+  "name": "視覺搜尋：相似字形",
+  "description": "判斷散布的字母中有沒有中央圓圈裡的目標字，目標與其他字的形狀相近。十二級視覺搜尋的第 5 到 8 級。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CFZLt7HL.js",
+      "size": 577761,
+      "sha256": "b9f7dbfc91bdba7a716a94816e7fe99a9f9dacf7efb3c782cd5d99e38f9886b1",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C-l_d7ob.css",
+      "size": 19292,
+      "sha256": "d4005c3a02a867f43f67b4c07cbb3921bf3ca2cab2cbd1f48807beee10bf729a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 640,
+      "sha256": "6da0ed0cb40a5c92cd6f2a82c7230567f015c84cc7e7935b2a3042811b8094c7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "66ecd506f7dd43c63317421315ba07952f6876e683c5168aa9eb7722a5347a06",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5236,
+      "sha256": "aafa11986b577a0e28d6619023a9448d815d79d0a5827c4d28ebf61c3ffa61f4",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "67e1c2a4ec617c5dd196e2283e714a3223666bf1b9ddfd040c77f80753046be9",
+  "approvedAt": "2026-11-04T15:25:44.997Z"
+}

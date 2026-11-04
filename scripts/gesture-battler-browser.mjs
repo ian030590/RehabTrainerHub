@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
 export async function CheckGestureBattler({ game, evaluate, send, until, session, gameContext, standalone,
-  english, mobile, capture, sqlite, getSaveAttempts, getSessionAttempts, sessionFailure, requests, errors, version, accountId, guestSubjectId }) {
+  english, mobile, capture, sqlite, rawDataBucket, getSaveAttempts, getSessionAttempts, sessionFailure, requests, errors, version, accountId, guestSubjectId }) {
   const body = () => game('document.body.innerText');
   const directed = process.argv.includes('--directed');
   const hp = directed ? 5 : 2;
@@ -174,7 +175,8 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
     assert.equal(rows.length, 1);
     assert.equal(rows[0].user_id, accountId);
     assert.equal(rows[0].subject_id === guestSubjectId, accountId === null);
-    const record = JSON.parse(rows[0].payload_json);
+    const record = await ReadSavedGameRecord(rows[0], rawDataBucket, version);
+    assert.ok(record.rawFiles.some(file => file.kind === 'hand' && file.rows > 0), 'The hand input CSV is saved before the summary.');
     assert.deepEqual(record.config, { enemyMaxHp: hp, holdDurationSec: 0.5, strictnessPercent: 65, targetMode: directed ? 'directed' : 'free' });
     assert.equal(record.score.summary.successfulCasts, hp);
     assert.equal(record.score.rounds.filter(row => row.kind === 0).length, 5);

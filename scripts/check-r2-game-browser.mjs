@@ -8,8 +8,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { BuildOfficialGameRelease } from './publish-official-game.mjs';
 import { HandleRequest } from '../apps/usergamerunner/functions/[[path]].js';
 import { ContentTypeForPath } from '../apps/usergamerunner/functions/_lib/release.js';
-import { onRequestPost as createSession } from '../apps/rehabtrainerhub/functions/api/official-game-sessions.js';
-import { onRequestPost as saveRecord } from '../apps/rehabtrainerhub/functions/api/records.js';
+import { browserApiHandlers, CreateBrowserDatabase, VerifyRemotePreview } from './r2-browser-fixtures.mjs';
 import { onRequestGet as listGames } from '../apps/rehabtrainerhub/functions/api/games.js';
 import { onRequestGet as readAccount } from '../apps/rehabtrainerhub/functions/api/auth/me.js';
 import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/auth.js';
@@ -19,7 +18,6 @@ import { CheckGestureBattler } from './gesture-battler-browser.mjs';
 import { CheckMotorCortex } from './motor-cortex-browser.mjs';
 import { CheckOculomotor } from './oculomotor-browser.mjs';
 import { LoadEyeCameraFixture } from './eye-camera-fixtures.mjs';
-import { onRequestPost as saveCsv } from '../apps/rehabtrainerhub/functions/api/oculomotor-data.js';
 import { CheckGaborPatching } from './gabor-patching-browser.mjs';
 import { CheckDrivingRehab } from './driving-rehab-r2-browser.mjs';
 import { CheckReadingTraining } from './reading-training-browser.mjs';
@@ -37,13 +35,14 @@ const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
 assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'every-ball-response', 'tongue-catch', 'seagull-flight', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
 const brainGame = Object.hasOwn(brainGameSpecs, gameId);
+const specTrainer = brainGame ? (brainGameSpecs[gameId].trainer ?? 'brain') : 'brain';
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 // Every Ball uses the container's pose and microphone proxies; it sits with the attention games.
 const sensorGame = gameId === 'every-ball-response';
 const brainPurpose = brainGame ? brainGameSpecs[gameId].purpose : sensorGame ? 'attention' : null;
 // Tongue Catch uses the container's face and tongue proxy and is the only mouth game.
 const tongueGame = gameId === 'tongue-catch';
-const phasePrefix = gameId;
+const phasePrefix = brainGame ? (brainGameSpecs[gameId].phasePrefix ?? gameId) : gameId;
 const root = resolve(import.meta.dirname, '..');
 // The Hub build embeds this origin from officialGameReleases.json; local runs swap it for the local runner.
 const productionRunnerOrigin = new URL(JSON.parse(await readFile(resolve(root, 'apps/usergamerunner/package.json'), 'utf8')).homepage).origin;
@@ -78,6 +77,7 @@ assert.ok(browserPath, 'Install Brave or set BRAVE_BIN.');
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const gameCatalog = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/games', gameId, 'public/game.json'), 'utf8'));
+if (remote && lobby && !standalone) await VerifyRemotePreview(manifest, gameCatalog, productionRunnerOrigin);
 const handFixtures = handGame || sensorGame ? await LoadGestureCameraFixtures(root) : new Map();
 if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
 const facePortrait = tongueGame ? `data:image/jpeg;base64,${(await LoadEyeCameraFixture(root)).toString('base64')}` : null;
@@ -86,14 +86,7 @@ assert.ok(!rendererFailure || unavailableTexture || ['driving-rehab', 'moving-ca
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
-const database = { prepare: sql => {
-  const statement = sqlite.prepare(sql);
-  let values = [];
-  const result = { bind: (...bindings) => { values = bindings; return result; },
-    first: async () => statement.get(...values) ?? null, all: async () => ({ results: statement.all(...values) }),
-    run: async () => ({ meta: { changes: Number(statement.run(...values).changes) } }) };
-  return result;
-} };
+const database = CreateBrowserDatabase(sqlite);
 let revoked = false;
 const catalog = { schemaVersion: 1, gameId: manifest.gameId, currentVersion: manifest.version,
   releases: { [manifest.version]: { contentSha256: manifest.contentSha256 } } };
@@ -112,6 +105,7 @@ if (signedIn) sqlite.prepare('INSERT INTO app_users (id,display_name,created_at,
 const accountToken = signedIn ? await CreateSessionForUser(environment, { id: accountId }) : null;
 const errors = [];
 const requests = [];
+const apiFailures = [];
 let failFirstSave = true;
 let saveAttempts = 0; let csvAttempts = 0; const csvObjects = new Map();
 environment.OCULOMOTOR_DATA = {
@@ -158,7 +152,7 @@ try {
         await Respond(response, await readAccount({ request: new Request('https://trainerhub.cc/api/auth/me', { headers: request.headers }), env: environment }));
         return;
       }
-      if (url.pathname === '/api/official-game-sessions' || (['/api/records','/api/oculomotor-data'].includes(url.pathname) && request.method === 'POST')) {
+      if (Object.hasOwn(browserApiHandlers, url.pathname) && request.method === 'POST') {
         const chunks = [];
         for await (const chunk of request) chunks.push(chunk);
         const body = Buffer.concat(chunks);
@@ -173,12 +167,14 @@ try {
         }
         const headers = { ...request.headers, origin: 'https://trainerhub.cc', 'cf-connecting-ip': '127.0.0.88' };
         const apiRequest = new Request('https://trainerhub.cc' + url.pathname, { method: 'POST', headers, body });
-        await Respond(response, await (url.pathname.endsWith('sessions') ? createSession : url.pathname.endsWith('oculomotor-data') ? saveCsv : saveRecord)({ request: apiRequest, env: environment }));
+        const result = await browserApiHandlers[url.pathname]({ request: apiRequest, env: environment });
+        if (!result.ok) apiFailures.push({ path: url.pathname, status: result.status, body: await result.clone().text() });
+        await Respond(response, result);
         return;
       }
       if (url.pathname.startsWith('/api/')) {
         const oldGame = { id: ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: brainPurpose ? 'brain' : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor', category: brainPurpose ?? (tongueGame ? 'oral' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'general' : 'upper-limb'), developerName: 'Sample author', updatedAt: '2026-10-08',
+          summary: 'Legacy publication', trainer: brainPurpose ? specTrainer : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor', category: brainPurpose ?? (tongueGame ? 'oral' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'general' : 'upper-limb'), developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -382,7 +378,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainPurpose ? 'brain' : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainPurpose ? specTrainer : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -401,7 +397,7 @@ try {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
       try { bodies.push(await evaluate('document.body.innerText.slice(0,6000)', context)); } catch {}
     }
-    throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
+    throw new Error(`Timed out: ${label}\n${JSON.stringify(apiFailures)}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
   let lobbyScrollState;
   const selectLobbyGame = async (minimumCatalogRequests = 1) => {
@@ -415,7 +411,7 @@ try {
   if (lobby && !standalone) {
     await selectLobbyGame();
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, vision: english ? /vision/i : /視覺/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.module-card[data-runtime-id=${gameId}] img')).objectFit`), 'contain', 'The Hub shows the entire gameplay screenshot, including edge controls.');
@@ -576,6 +572,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckTongueCatch({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (sensorGame) {
     const screenshots = resolve(root, '.tmp/every-ball-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--microphone') ? 'microphone' : 'camera'}`);
@@ -588,6 +585,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckBrainGame(gameId, { game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'hart-chart') {
     const screenshots = resolve(root, '.tmp/hart-chart-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
@@ -630,6 +628,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckGestureBattler({ game, evaluate, send, until, gameContext, session, standalone, english,
+      rawDataBucket: environment.RAW_DATA,
       mobile: process.argv.includes('--mobile'), capture, sqlite, getSaveAttempts: () => saveAttempts,
       getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'asteroid-shield') {

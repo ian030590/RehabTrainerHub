@@ -86,6 +86,10 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:dots-and-boxes', 'dots-and-boxes/DotsAndBoxesGame.tsx', 'none', 'external-runtime-adapter'],
   ['brain:hex', 'hex/HexGame.tsx', 'none', 'external-runtime-adapter'],
   ['brain:maze', 'maze/MazeGame.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:popout-search', 'popout-search/PopoutSearchGame.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:complex-search', 'complex-search/ComplexSearchGame.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:conjunction-search', 'conjunction-search/ConjunctionSearchGame.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:exploratory-saccade', 'exploratory-saccade/ExploratorySaccadeGame.tsx', 'none', 'external-runtime-adapter'],
   ['vision:seagull-flight', 'seagull-flight/SeagullFlightGame.tsx', 'camera-optional', 'external-runtime-adapter'],
   ['mouth:tongue-catch', 'tongue-catch/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],
 ];

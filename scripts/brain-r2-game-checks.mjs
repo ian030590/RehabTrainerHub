@@ -48,7 +48,7 @@ export function AcceptsResult(gameId, config, score) {
   return AcceptGameMessage(message, state) && !AcceptGameMessage(message, state);
 }
 
-export async function CheckGamePackaging(gameId, { component, trainer = 'brain', category, version = '1.0.0' }) {
+export async function CheckGamePackaging(gameId, { component, trainer = 'brain', category, version = '1.0.0', title: dataTitle }) {
   const gameRoot = GameRoot(gameId);
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, `@rehab-trainer/game-${gameId}`);
@@ -74,7 +74,7 @@ export async function CheckGamePackaging(gameId, { component, trainer = 'brain',
   assert.match(source, /<ScoreAnalysis rounds=\{score\.rounds\}/);
   assert.match(source, /ValidateSettings\(settings\)/);
   assert.match(source, /SendGameResult\(/);
-  const title = (await readFile(resolve(gameRoot, 'i18n/zh.ts'), 'utf8')).match(/'game\.title': '([^']+)'/)?.[1];
+  const title = (await readFile(resolve(gameRoot, 'i18n/zh.ts'), 'utf8')).match(/'game\.title': '([^']+)'/)?.[1] ?? dataTitle;
   assert.equal(title, metadata.copy['zh-TW'].title, 'The game title matches its catalogue copy.');
 }
 

@@ -336,6 +336,10 @@ const implementationGroups = [
       'SendGameResult',
     ],
   },
+  { ids: ['vision:popout-search'], files: ['popout-search/PopoutSearchGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'PopoutSearchTutorial', 'ValidateSettings(settings)'] },
+  { ids: ['vision:complex-search'], files: ['complex-search/ComplexSearchGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'ComplexSearchTutorial', 'ValidateSettings(settings)'] },
+  { ids: ['vision:conjunction-search'], files: ['conjunction-search/ConjunctionSearchGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'ConjunctionSearchTutorial', 'ValidateSettings(settings)'] },
+  { ids: ['vision:exploratory-saccade'], files: ['exploratory-saccade/ExploratorySaccadeGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'ExploratorySaccadeTutorial', 'ValidateSettings(settings)'] },
   ...nativeBrainGames.map(([id, component, tutorial]) => ({
     ids: [`brain:${id}`],
     files: [`${id}/${component}.tsx`],
@@ -440,6 +444,9 @@ const jsPsychLifecycleGroups = [
     'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
     'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
     'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
+    'vision:popout-search': 'popout-search/PopoutSearchGame.tsx',
+    'vision:complex-search': 'complex-search/ComplexSearchGame.tsx',
+    'vision:conjunction-search': 'conjunction-search/ConjunctionSearchGame.tsx',
     'vision:seagull-flight': 'seagull-flight/SeagullFlightGame.tsx',
     'brain:every-ball-response': 'every-ball-response/EveryBallGame.tsx',
   }).map(([id, file]) => ({
@@ -449,6 +456,14 @@ const jsPsychLifecycleGroups = [
     tokens: externalRuntimeAdapterTokens,
     forbiddenTokens: ['WriteJsPsychData'],
   })),
+  {
+    status: 'external-runtime-adapter',
+    ids: ['vision:exploratory-saccade'],
+    files: ['exploratory-saccade/ExploratorySaccadeGame.tsx'],
+    tokens: ['initJsPsych(', 'new JsPsychExternalLifecycle(', 'lifecycle.start({', 'lifecycle.finish({',
+      'lifecycleRef.current?.abort({', 'lifecycle.dispose()'],
+    forbiddenTokens: ['WriteJsPsychData'],
+  },
 ];
 
 const jsPsychLifecycleIds = jsPsychLifecycleGroups.flatMap(({ ids }) => ids);

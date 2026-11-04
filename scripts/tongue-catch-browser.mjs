@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
@@ -60,7 +61,7 @@ export function FaceFixtureScript(portraitDataUrl) {
 }
 
 export async function CheckTongueCatch({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId }) {
   const { copy } = await ImportGameModule('labels.ts');
   const labels = copy[english ? 'en' : 'zh'];
   // A short session with many apples: the held right movement keeps the tongue out to the right edge.
@@ -280,7 +281,8 @@ export async function CheckTongueCatch({ game, evaluate, send, until, standalone
     assert.ok(getSaveAttempts() >= 2);
     assert.equal(records[0].user_id ?? null, accountId);
     if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
-    const saved = JSON.parse(records[0].payload_json);
+    const saved = await ReadSavedGameRecord(records[0], rawDataBucket, version);
+    assert.ok(saved.rawFiles.some(file => file.kind === 'tongue' && file.rows > 0), 'The mouth input CSV is saved before the summary.');
     assert.equal(saved.gameId, 'tongue-catch');
     assert.equal(saved.metadata.release_version, version.replaceAll('.', '_'));
     assert.deepEqual(saved.config, settings);

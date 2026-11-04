@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "popout-search",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "視覺搜尋：突顯目標",
+      "description": "判斷散布的字母中有沒有中央圓圈裡的目標字，目標與其他字的形狀差異明顯。十二級視覺搜尋的第 1 到 4 級。"
+    },
+    "en": {
+      "title": "Visual Search: Pop-out",
+      "description": "Decide whether the letter shown in the centre circle is among the scattered letters. The target looks clearly different from the others. Levels 1 to 4 of 12."
+    }
+  }
+}
