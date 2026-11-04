@@ -6,9 +6,101 @@ import { runInNewContext } from 'node:vm';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, GameRoot, LoadGameModule, root } from './brain-r2-game-checks.mjs';
 
 const gameId = 'exploratory-saccade';
+test('field settling waits for fullscreen and two stable frames, rejects promptly and caps at 1000 ms', async () => {
+  const { WaitForField } = await LoadGameModule(gameId, 'logic/fieldSettle.ts');
+  const clock = FakeClock(), frames = new Map();
+  let id = 0, entered = false, size = { width: 120, height: 120 }, finished = [];
+  const source = { ...clock, frame: callback => { frames.set(++id, callback); return id; },
+    cancelFrame: handle => frames.delete(handle), size: () => size, entered: () => entered };
+  const frame = () => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback()); };
+  const request = Promise.resolve();
+  WaitForField({ ...source, request }, bounds => finished.push(bounds));
+  frame(); frame(); frame(); assert.equal(finished.length, 0, 'A resolved request alone does not mean fullscreen was entered.');
+  entered = true; frame(); frame(); assert.equal(finished.length, 0);
+  size = { width: 1000, height: 650 }; frame(); frame(); assert.equal(finished.length, 0);
+  frame(); assert.deepEqual(finished, [size]); assert.equal(clock.pending(), 0); assert.equal(frames.size, 0);
+
+  finished = []; entered = false;
+  WaitForField({ ...source, request: Promise.reject(new Error('denied')) }, bounds => finished.push(bounds));
+  await Promise.resolve();
+  assert.deepEqual(finished, [size]); assert.equal(clock.pending(), 0); assert.equal(frames.size, 0);
+
+  finished = [];
+  WaitForField({ ...source, request: new Promise(() => {}) }, bounds => finished.push(bounds));
+  clock.advance(999); assert.equal(finished.length, 0);
+  size = { width: 900, height: 600 }; clock.advance(1);
+  assert.deepEqual(finished, [size]); assert.equal(frames.size, 0);
+  finished = []; entered = true;
+  WaitForField({ ...source, request }, bounds => finished.push(bounds));
+  for (let i = 0; i < 10; i++) { size = { width: 900 + i, height: 600 }; frame(); clock.advance(100); }
+  assert.deepEqual(finished, [size], 'Changing sizes cannot extend the cap.');
+
+  finished = [];
+  const cancel = WaitForField({ ...source, request: null }, bounds => finished.push(bounds));
+  cancel(); clock.advance(1000); frame();
+  assert.deepEqual(finished, []); assert.equal(clock.pending(), 0); assert.equal(frames.size, 0);
+});
+
+test('failed layout retries only on a size change for 1000 ms from the first failure', async () => {
+  const { CreateLayoutRetry } = await LoadGameModule(gameId, 'logic/fieldSettle.ts');
+  const clock = FakeClock();
+  let fits = false, attempts = 0, starts = 0, errors = 0;
+  const create = () => CreateLayoutRetry(clock, () => { attempts++; if (!fits) throw new Error('field'); return 'block'; },
+    block => { assert.equal(block, 'block'); starts++; }, () => errors++);
+  let retry = create();
+  retry.tryLayout(); clock.advance(500);
+  assert.equal(attempts, 1); assert.equal(errors, 0);
+  retry.tryLayout(); clock.advance(499); assert.equal(errors, 0);
+  fits = true; retry.tryLayout(); assert.equal(starts, 1);
+  clock.advance(1000); assert.equal(errors, 0); assert.equal(clock.pending(), 0);
+  retry.cancel();
+
+  fits = false; retry = create(); retry.tryLayout(); clock.advance(800); retry.tryLayout();
+  clock.advance(199); assert.equal(errors, 0); clock.advance(1); assert.equal(errors, 1);
+  fits = true; retry.tryLayout(); assert.equal(starts, 1, 'An expired window leaves the adjust panel in place.');
+  retry = create(); fits = false; retry.tryLayout(); retry.cancel(); clock.advance(1000);
+  assert.equal(errors, 1); assert.equal(clock.pending(), 0);
+});
+
+test('only the first unstarted screen allows a silent layout change', async () => {
+  const { CanRelayout, CreateLayoutRetry } = await LoadGameModule(gameId, 'logic/fieldSettle.ts');
+  assert.equal(CanRelayout('ready', 0), true);
+  for (const state of ['search', 'complete', 'missed', 'finished', 'stopped']) assert.equal(CanRelayout(state, 0), false);
+  assert.equal(CanRelayout('ready', 1), false);
+  const clock = FakeClock(); let errors = 0;
+  const retry = CreateLayoutRetry(clock, () => { throw new Error('field'); }, () => assert.fail(), () => errors++, () => CanRelayout('ready', 1));
+  retry.tryLayout(); assert.equal(errors, 1); assert.equal(clock.pending(), 0);
+});
+
 const LoadSettings = () => LoadGameModule(gameId, 'settings.ts');
 const LoadScreens = () => LoadGameModule(gameId, 'logic/screens.ts');
 const LoadRun = () => LoadGameModule(gameId, 'logic/screenRun.ts');
+
+test('a failed rebuild cannot start the first screen using its previous layout', async () => {
+  const { ScreenRun } = await LoadRun();
+  let ready, fits = true;
+  const run = new ScreenRun({ sessionMs: 1000, screenLimitMs: 0 }, () => {
+    if (!fits) throw new Error('field');
+    return { target: '6', items: [{ id: 0, target: true }] };
+  }, { prepare: callback => { ready = callback; }, change() {}, mark() {}, end() {} }, FakeClock());
+  run.prepare(); ready(); assert.ok(run.state.screen);
+  fits = false; assert.throws(() => ready(), /field/);
+  run.startScreen(); assert.equal(run.state.phase, 'ready'); assert.equal(run.state.screen, null);
+});
+
+test('each screen waits for deferred field preparation and cancellation prevents a late start', async () => {
+  const { ScreenRun } = await LoadRun();
+  const clock = FakeClock();
+  let prepare, creates = 0, changes = 0;
+  const run = new ScreenRun({ sessionMs: 100, screenLimitMs: 0 }, () => { creates++; return { target: '6', items: [{ id: 0, target: true }] }; },
+    { prepare: ready => { prepare = ready; }, change: () => changes++, mark() {}, end() {} }, clock);
+  run.prepare(); assert.equal(creates, 0); assert.equal(run.state.screen, null);
+  prepare(); assert.equal(creates, 1); run.startScreen(); run.interact(0, 'click'); clock.advance(600);
+  assert.equal(creates, 1); assert.equal(run.screens.length, 1);
+  prepare(); assert.equal(creates, 2);
+  run.prepare(); run.stop(); const before = changes; prepare();
+  assert.equal(creates, 2); assert.equal(changes, before);
+});
 const LoadScore = () => LoadGameModule(gameId, 'logic/saccadeScore.ts');
 
 test('settings offer only the published UI choices and reject invalid or fractional steps', async () => {
@@ -262,7 +354,7 @@ test('browser clock fixture advances real game timers without a product-only set
   assert.equal(performance.now, clock.now); assert.equal(window.setTimeout, clock.set); assert.equal(window.clearTimeout, clock.clear);
   assert.equal(clock.pending(), 0);
 });
-test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
+test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { version: '1.0.1', component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
 test('catalog entry', async () => assert.ok(/id: 'exploratory-saccade'/.test(await readFile(resolve(root, 'apps/rehabtrainerhub/games/catalog.ts'), 'utf8')), 'catalog must register exploratory-saccade'));
 test('lockfile workspace', async () => {
   const lockfile = JSON.parse(await readFile(resolve(root, 'package-lock.json'), 'utf8'));

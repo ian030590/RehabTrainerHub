@@ -20,7 +20,7 @@ export function RunningView({ state, en, remainingMs, fieldRef, onStart, onStop,
       <button type="button" className="btn btn-ghost saccade-stop" onClick={onStop}>{en ? 'Stop' : '停止'}</button>
     </header>
     <div ref={fieldRef} className="saccade-field" data-state={phase} data-target={screen?.target}>
-      {phase === 'ready' && <button type="button" className="btn btn-primary saccade-start" autoFocus onClick={onStart}>
+      {phase === 'ready' && <button type="button" className="btn btn-primary saccade-start" disabled={!screen} autoFocus onClick={onStart}>
         {en ? `Start: find every ${screen?.target ?? '?'}` : `開始：找出所有的 ${screen?.target ?? '?'}`}</button>}
       {screen && showing && screen.items.map(item => <button key={item.id} type="button" tabIndex={-1} className="saccade-item"
         data-id={item.id} data-target={item.target} data-found={found.includes(item.id)} data-missed={missed.includes(item.id)}

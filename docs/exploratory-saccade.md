@@ -99,3 +99,21 @@ Design read：Hub 居家練習畫面，沿用 R2 對話框，ENERGY 1／RHYTHM 1
 最終 dry-run contentSha256：`57bac27304dc156f0bb00ba676919cbce70d5ad28d45b0e6ece4bbe11a1f4186`。共用 gates 及另外三款的精確結果見 `docs/visual-search-training.md`。遊戲內舊 smoke 與暫存目錄已在共用 harness 通過後移除。
 
 擁有者核准後於 2026-11-04 發布 1.0.0 到 R2，收據為 `docs/releases/exploratory-saccade-1.0.0.json`。
+
+## 1.0.1：全螢幕場地穩定與第一次準備重試（2026-11-05）
+
+第一次 `ScreenRun.prepare()` 可能在全螢幕尚未完成調整時量到過小場地，舊 catch 立刻 `failLayout()` 並停止 run，後續 ResizeObserver 看見變大的場地也無法恢復。已發布的 1.0.0 不覆寫，改為 1.0.1。
+
+自有純模組 `logic/fieldSettle.ts` 注入 clock、frame、size 與 fullscreen source：請求拒絕立即採現有尺寸；進入全螢幕後連續兩個影格同尺寸才排版；最多等待 1000 ms。`ScreenRun` 的可選 prepare hook 讓每個畫面在建立前等待，等待不列入搜尋計時，停止後的延遲 callback 不再建立畫面。既有不提供 hook 的邏輯測試行為不變。第一次尚未開始的畫面排版失敗時，保留 run 並在尺寸變化時重試，首次失敗後 1000 ms 未恢復才顯示原提示；失敗不能延長期限。畫面已開始或已有完成畫面時，尺寸變化與排版失敗維持原來的停止／返回設定流程，不另給重試期限。每次停止、退出、卸載清理影格與 timer。
+
+視覺選擇：保留白色場地、原數字與文字、紅色找到狀態、漏找外框及設定／成果，因為本次只修場地生命週期。ENERGY 1／RHYTHM 1／MOTION 1 保持。預覽仍是既有 1.0.0 實拍檔及拍攝紀錄；preview gate 不要求重新拍攝，圖片與 SHA 沒有改。contrast-check.py 重新驗證正文 15.62:1、找到紅字 7.50:1、漏找外框 6.23:1、焦點環 4.95:1。
+
+TDD 先新增 settle／retry／狀態資格測試及 1.0.1 斷言，四款一起跑最初 86 項中 16 失敗（缺模組與舊版本）。本款另先測每畫面延後準備、停止後 callback 取消，未修改時因立即產生畫面而失敗；另測第一畫面開始後不延遲原排版錯誤。最終 `node --test scripts/check-exploratory-saccade-game.test.mjs` 29／29。仍由既有 self-contained import 經 `test:game-architecture` 接入 `test:ci`，設定記憶固定版本一併由失敗測試指出並更新。
+
+`scripts/exploratory-saccade-r2-browser.mjs` 在 beforeStart 透過 CDP 將真實 running 場地暫設 120×120，300 ms 後長大；舊 build 先顯示錯誤並無法進入 running，新版正常準備。driver 另驗證第一畫面開始前 resize 可重排、真正過小且不再變化時仍顯示原提示並可返回設定重開、第一畫面開始後 resize 維持原錯誤流程，再完成原五分鐘搜尋的找齊／漏找／誤點去重與保存。fixture 僅在 harness，產品沒有測試入口、加速時鐘或安全例外。
+
+最後另鎖定「已準備的第一畫面在 resize 後無法重排」：重試期間必須清除舊畫面，不能讓開始鈕沿用失效的排版。先新增純邏輯測試，未修正時按開始會進入 search（預期 ready／screen=null）；browser 也先失敗於開始鈕仍可用（false 對預期 disabled=true，紀錄 `.tmp/codex/task-c-saccade-stale-layout-red.log`）。修正僅在 create 失敗時清除畫面並通知 view，RunningView 於沒有畫面時沿用既有 disabled 樣式。正常 gameplay、成功準備時的事件次數、計時與預覽不變。新增測試仍在既有專用測試入口，合計本款 29 項、四款 88 項；變更後重建本款並重跑六個 browser 流程、七項 gate 與 Hub build。
+
+完整七項 gate、四款命令與摘要集中列於 `docs/visual-search-training.md` 的 1.0.1 節。擁有者核准後於 2026-11-05 發布 1.0.1 到 R2，收據為 `docs/releases/exploratory-saccade-1.0.1.json`；本機驗證沒有建立正式紀錄。
+
+本款最終 1.0.1 dry-run 為 5 檔、`contentSha256: 6a3bcaab74370a2e9a91e9a0080473598c1f135a195bfd632b651c899bcb253e`。`--lobby` 連續三次、`--lobby --mobile`、`--standalone`、`--lobby --signed-in --english` 六個流程全部通過；專用測試 29／29，最終共享架構 gate 為 1382／1382。

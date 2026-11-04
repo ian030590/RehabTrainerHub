@@ -1,3 +1,4 @@
+import { CheckFieldGrowth, InstallFieldGrowth, ResizeField } from './vision-field-browser.mjs';
 import assert from 'node:assert/strict';
 
 // Installed through the harness's beforeStart hook, never included in the game bundle.
@@ -41,8 +42,43 @@ export const exploratorySaccadeBrowserSpec = {
   tutorialTargets: ['.saccade-target', '.saccade-item[data-target="true"]', '.saccade-hud'],
   runningSelector: '.saccade-running', stopSelector: '.saccade-stop',
   defaultMetric: 'foundMs', alternateMetric: 'found',
-  async beforeStart({ game }) { await game(saccadeClockFixture); },
+  async beforeStart({ game }) { await game(saccadeClockFixture); await InstallFieldGrowth(game, '.saccade-running .saccade-field'); },
   async play({ game, send, inputSession, until, tap, mobile, capture }) {
+    await CheckFieldGrowth(game, until);
+    const ready = () => until(() => game(`Boolean(document.querySelector('.saccade-running .saccade-field')?.dataset.target)`), 'prepared first screen');
+    const restart = async () => {
+      await tap('.saccade-layout-error .btn-primary');
+      await until(() => game(`Boolean(document.querySelector('form'))`), 'settings after layout error');
+      await game(`document.querySelector('form .btn-primary').click()`);
+      for (let i = 0; i < 3; i++) {
+        await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted spotlight');
+        await game(`document.querySelector('.game-tour button').click()`);
+      }
+      await until(() => game(`Boolean(document.querySelector('.training-confirmation'))`), 'confirmation after layout error');
+      await until(async () => {
+        if (await game(`Boolean(document.querySelector('.saccade-running'))`)) return true;
+        await tap('.training-confirmation .btn-primary');
+        return false;
+      }, 'restart enters the running scene after fullscreen exit resizes the iframe');
+      await ready();
+    };
+    await ready();
+    await ResizeField(game, '.saccade-field');
+    await until(() => game(`document.querySelector('.saccade-field')?.dataset.state === 'ready'`), 'resize before the first screen stays ready');
+    assert.equal(await game(`Boolean(document.querySelector('.saccade-layout-error'))`), false);
+    await game(`(() => { const field = document.querySelector('.saccade-field'); field.style.width = '120px'; field.style.height = '120px'; })()`);
+    await game(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+    assert.equal(await game(`document.querySelector('.saccade-start')?.disabled`), true, 'A failed layout cannot start using the old screen.');
+    await tap('.saccade-start');
+    assert.equal(await game(`document.querySelector('.saccade-field')?.dataset.state`), 'ready');
+    await until(() => game(`Boolean(document.querySelector('.saccade-layout-error'))`), 'genuinely small field expires the retry window');
+    assert.match(await game(`document.querySelector('.saccade-layout-error').textContent`), /請調整顯示設定|Adjust the display settings/);
+    await restart();
+    await tap('.saccade-start');
+    await until(() => game(`document.querySelector('.saccade-field')?.dataset.state === 'search'`), 'first screen started');
+    await ResizeField(game, '.saccade-field');
+    await until(() => game(`Boolean(document.querySelector('.saccade-layout-error'))`), 'resizing a started screen keeps the existing error flow');
+    await restart();
     const plan = { screens: 0, found: 0, missed: 0, falseClicks: 1, targets: [], missedScreens: [] };
     const advance = async ms => game(`window.saccadeFixtureClock.advance(${ms})`);
     const readPhase = () => game(`document.querySelector('.saccade-field')?.dataset.state`);

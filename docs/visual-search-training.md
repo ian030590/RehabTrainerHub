@@ -262,3 +262,81 @@ TDD 初跑合計 70 項中 32 通過、38 失敗：新遊戲不存在、掃視�
 本次沒有因缺預覽留下失敗測試。實體觀看距離、色覺差異、實體觸控、Safari／iOS 與長時間離線仍待人工驗收。推送前仍必須由既有 hook 再執行完整 test:ci。最終掃描沒有 conflicted 複本，原有 browser fixture 修改保留。
 
 四款都不需要 Hub API 變更。
+
+## 1.0.1：全螢幕尺寸穩定與排版重試（2026-11-05）
+
+正式 `conjunction-search@1.0.0` 曾在 `--lobby --production-hub` 量到全螢幕切換前的 768×432 搜尋區，24 字排版失敗後直接進入「請調整畫面」，即使欄位稍後長大也不會恢復。三款搜尋使用同一份引擎的各自副本；探索掃視第一次 `prepare()` 失敗後也會停止 runtime。已發布的 1.0.0 保持不變，四款均改為 1.0.1。擁有者核准下列四個精確 contentSha256 後，於 2026-11-05 發布到 R2 並逐檔驗證，收據為 `docs/releases/<gameId>-1.0.1.json`。
+
+每款自有 `logic/fieldSettle.ts`，沒有跨遊戲 import。全螢幕請求在開始按鈕的使用者操作內發出，掛載實際場地後才測量：拒絕時立即採目前尺寸；進入全螢幕後須連續兩個影格不變；1000 ms 上限包含未完成的請求與持續變化的尺寸。沒有固定 sleep。每段開始均先等待；ResizeObserver 追蹤實際欄位，未作答的第一題在 lead 或 target 可無聲重排。初次排版失敗保留至首次失敗後 1000 ms，只在尺寸變化時重試，不能因再次失敗延長期限。期限內的變大直接重試，避免最後一刻的有效尺寸被額外等待影格吃掉。
+
+第一題作答後改尺寸仍要求 Continue，僅重做該段，保留完成段落。真正太小而沒有變化的欄位仍顯示原來的中英文提示；放大後 Continue 可用。每段完成、退出、卸載均取消等待、重試及觀察器；這也避免成果頁移除欄位時的 0×0 通知覆蓋成果。原鍵盤、時間、計分、設定保存、私有 bridge 與安全政策保持原流程。探索掃視的後續畫面等待與開始後限制另見 `docs/exploratory-saccade.md`。
+
+視覺選擇：沿用白色場地、原字形、橘色目標圈、原設定／成果與提示，因為本次只處理場地生命週期，額外視覺變化會干擾搜尋。ENERGY 1／RHYTHM 1／MOTION 1 保持。`docs/game-preview-captures.json` 的檢查只要求真實 gameplay、圖片尺寸及 SHA 一致，沒有要求拍攝版本等於 package 版本，因此保留四款 1.0.0 的實拍圖與原拍攝紀錄，沒有改圖片或捏造 1.0.1 拍攝。重新用 contrast-check.py 驗證白底正文 15.62:1、綠 7.47:1、藍 7.05:1、橘 5.43:1，均通過 AA。
+
+### TDD 證據與測試接線
+
+- 先新增四款專用測試的 fake clock、frame／size source：拒絕、兩個穩定影格、等待上限、失敗重試期限、成功取消、退出取消與可無聲重排狀態；版本斷言先改為 1.0.1。第一次 `node --test scripts/check-popout-search-game.test.mjs scripts/check-complex-search-game.test.mjs scripts/check-conjunction-search-game.test.mjs scripts/check-exploratory-saccade-game.test.mjs` 為 86 項、70 通過／16 失敗，原因為缺少模組及版本仍為 1.0.0；紀錄 `.tmp/codex/task-c-red.log`。
+- 探索掃視另先測延後每畫面準備與停止取消，修正前產生畫面的次數為 1，預期 0；開始過第一畫面後的排版失敗也先測出錯誤被延後，才限制重試資格。合計最終 88／88，分別為 popout 18、complex 19、conjunction 22、saccade 29。
+- 四款瀏覽器 spec 先透過 CDP 在真正的 running 場地注入 120×120 尺寸，300 ms 後恢復。未修改產品的 1.0.0 build 時，三款搜尋皆先出現「請調整畫面」；探索掃視先出現原錯誤頁，無法進入 running。紀錄 `.tmp/codex/task-c-browser-red-<gameId>.log`。
+- 完整流程再重現成果卸載 0×0 被當作 resize 的錯誤，才補上段落完成取消監聽。七項 gate 第一輪指出設定記憶測試仍固定四款為 1.0.0（1381 項、1377 通過／4 失敗），更新精確版本後該組 114／114。
+- 四款專用測試仍由 `check-self-contained-game.test.mjs` import，直接隸屬 root `test:game-architecture`，再由 `test:ci`／pre-push 執行；沒有新增 CI matrix 或未接線的測試入口。
+
+瀏覽器搜尋情境同時驗證：延後長大期間沒有調整提示；真正過小時 1000 ms 後提示及放大後 Continue；每段第一題 target 改尺寸可無聲重排；第二段首題作答後改尺寸須提示、Continue 後仍保留第一段；最後仍有 60 筆原計分規則的成果與保存重試。原生鍵盤與手機觸控均使用 CDP 真實 input，fixture 僅在 harness 內，未編入遊戲。
+
+### 1.0.1 本機 gate 與 dry run
+
+| 命令 | 結果 |
+| --- | --- |
+| `npm run prepare`；`git config --local core.hooksPath` | 通過；`.githooks` |
+| `npm --prefix apps/rehabtrainerhub/games/<gameId> run build`，四款各一次 | 四款均通過，保留既有 500kB bundle 提示 |
+| `node --test scripts/check-popout-search-game.test.mjs` | 18／18 |
+| `node --test scripts/check-complex-search-game.test.mjs` | 19／19 |
+| `node --test scripts/check-conjunction-search-game.test.mjs` | 22／22 |
+| `node --test scripts/check-exploratory-saccade-game.test.mjs` | 29／29 |
+| `node --test scripts/check-r2-settings-memory.test.mjs` | 114／114 |
+| `npm run test:ci` | 七項 gate 全通過；紀錄 `.tmp/codex/task-c-ci-final.log` |
+| `test:naming`／`test:pwa`／`test:game-architecture` | 2／2 與命名掃描；3／3 與靜態資產；TypeScript 及 1382／1382 |
+| `test:hub-functions`／`test:gamerunner` | 308／308；78／78 |
+| `test:entrypoints` | 入口掃描與各組 95、18、15、9、6、10、29 項全通過，WebGazer／i18n／樣式掃描通過 |
+| `test:cloudflare-deploy` | 部署腳本靜態檢查及 46／46；沒有部署 |
+| `npm run build:hub` | 通過；55 款獨立遊戲架構、0 個 Hub 遊戲 bundle、PWA／SEO 通過；25.028 秒 |
+| `node scripts/publish-official-game.mjs <gameId> --dry-run`，四款各一次 | 全通過；各為 1.0.1、5 檔，digest 與正式發布一致 |
+
+| 1.0.1 候選 | contentSha256 |
+| --- | --- |
+| popout-search | `6162903ade68bcd5a0f228b6ffc21601c0a361ceb7b6bec3ccb348b6b80cf6a2` |
+| complex-search | `9ed3946d5195a3ec7b0eaeecac2d0224b8cc171d29875e784f07e994c470df96` |
+| conjunction-search | `3bd94b0805cfc4dc3d789d41ef603ed6b7360f5969be3a1de177771cfe955b7b` |
+| exploratory-saccade | `6a3bcaab74370a2e9a91e9a0080473598c1f135a195bfd632b651c899bcb253e` |
+
+本機 esbuild 受沙盒祖先目錄限制、Brave 受 CDP 初始化限制時，使用核准的本機權限執行相同命令，沒有改 gate。同步工具曾將 popout 的生成檔 `dist/index.html` 改名成 `index [conflicted 4].html`，已還原生成檔檔名，套件驗證與後續 browser 能正常讀取。沒有修改任何已追蹤檔的行尾格式或發布收據。
+
+Hub build 之後同步工具也將 `out/` 與 `.next/` 共 123 個生成檔改名，導致一次英文登入流程在進入大廳前就因缺少 `out/index.html` 失敗。逐一確認目標仍在各生成目錄、目標檔不存在後還原檔名，再把完整 out 複製到本機 Temp 的唯一目錄，後續 browser 使用 `HUB_OUTPUT_ROOT` 指向該固定快照。路徑紀錄在 `.tmp/codex/task-c-browser-snapshot.json`；測試命令可先執行 `$env:HUB_OUTPUT_ROOT = (Get-Content -Raw .tmp/codex/task-c-browser-snapshot.json | ConvertFrom-Json).hubOutputRoot`。受影響流程已在快照上重跑，沒有將這個環境失敗當成遊戲通過，也沒有停用同步程式或修改來源檔來迴避問題。
+
+最後檢視另為掃視新增「重排失敗不能開始舊畫面」的先紅後綠測試；未修正時純邏輯會錯進 search，browser 開始鈕也未停用。修正後本款 29 項、四款合計 88 項；成功 gameplay 不變，失敗等待期間沿用既有 disabled 狀態。詳見掃視文件的 1.0.1 節。修改範圍為四款自有 TSX／fieldSettle／package.json、掃視 screenRun／RunningView、root lockfile、四款專用測試與設定記憶版本、四份 browser spec／vision-field-browser fixture，以及這兩份文件。
+
+### 1.0.1 瀏覽器結果與交付檢查
+
+每格的命令是 `node scripts/check-r2-game-browser.mjs --game <gameId>`，後接表頭旗標；三次大廳在各款內連續執行。四款皆完成原生啟動、成果、保存／重試及返回流程，沒有正式 API、帳號或資料寫入。搜尋保留真正的逐題時間，單次約 95 至 101 秒；掃視沿用原有 harness clock fixture。
+
+| gameId | `--lobby` 連續三次 | `--lobby --mobile` | `--standalone` | `--lobby --signed-in --english` |
+| --- | --- | --- | --- | --- |
+| popout-search | 3／3 通過 | 通過 | 通過 | 通過 |
+| complex-search | 3／3 通過 | 通過 | 通過 | 通過 |
+| conjunction-search | 3／3 通過 | 通過 | 通過 | 通過 |
+| exploratory-saccade | 3／3 通過 | 通過 | 通過 | 通過 |
+
+最終 24／24。逐次結果與 log 路徑在 `.tmp/codex/task-c-browser-matrix-final.json`，各 log 為 `.tmp/codex/task-c-browser-<gameId>-<flow>.log`。掃視補上失敗排版保護後重新完成全部六格；最後七項 gate 為 1382 項架構測試全部通過，Hub build 25.028 秒通過，四款 dry run 再次通過，以上摘要是最後候選 bytes。
+
+掃視重開測試一度在第三次大廳讀到確認頁，原因是 helper 把教學的 `.saccade-field` 誤認為 running 場地，退出全螢幕後尺寸變化也可能讓原生點擊落空（紀錄 `.tmp/codex/task-c-saccade-restart-missed-click.log`）。helper 改為限定 `.saccade-running .saccade-field`，並以原生點擊及真正進入 running 作為重開成功條件，之後才繼續原本的成果驗證；沒有放寬遊戲結果、時間或保存斷言。修正後重新連續三次大廳與其餘三個流程，全部通過。
+
+| antislop DURING 交付項目 | 結果與證據 |
+| --- | --- |
+| Hard Gate | PASS：無新增破折號、虛構文案、素材或裝飾；手機 viewport／鍵盤／觸控、錯誤與恢復均由四款 browser 驗證；色彩 AA 比率如上 |
+| Purpose Gate | PASS：保留原場地／字形／預覽；唯一新增狀態為無有效掃視排版時停用開始，避免啟動舊位置 |
+| Liveliness | PASS：既有 1／1／1、平面場地與目標焦點不變；沒有新增動畫或視覺元素 |
+| Craftsmanship | PASS：四款 build、88 項專用測試、24 個完整 browser、七項 gate、Hub build 與 dry run 通過；git diff 檢查與完整 conflicted 掃描完成 |
+
+沒有發布、commit、push、部署、改 `docs/releases/` 或改正式 current。Safari／iOS、實體裝置與長時間離線仍是既有人工限制；本次手機為 Brave 觸控模擬。
+
+最後一次 Hub build 也遇到同步工具改名 125 個 `out/`／`.next/` 生成檔，已按相同目錄邊界與目標不存在檢查還原。結束時完整掃描 apps／packages／scripts（含 ignored 產物、排除 node_modules）為 0 個 conflicted 檔，`git diff --check` 通過，發布收據無差異。來源檔未被改名，browser 使用的固定快照不受這次生成檔改名影響；同步工具本身未在本工作中調整。

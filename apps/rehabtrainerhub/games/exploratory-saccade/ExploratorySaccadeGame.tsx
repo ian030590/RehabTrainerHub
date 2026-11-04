@@ -3,6 +3,7 @@ import { initJsPsych } from 'jspsych';
 import { useT } from './i18n/useT';
 import { defaultSettings, numericSettings, SymbolPx, ValidateSettings, ViewingDistanceCm, type SaccadeSettings } from './settings';
 import { GenerateScreen } from './logic/screens';
+import { CanRelayout, CreateLayoutRetry, WaitForField } from './logic/fieldSettle';
 import { browserClock, ScreenRun, type ScreenRecord, type ScreenState } from './logic/screenRun';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
@@ -34,9 +35,12 @@ export function ExploratorySaccadeGame() {
   const fieldRef = useRef<HTMLDivElement>(null), jsPsychHostRef = useRef<HTMLDivElement>(null);
   const lifecycleRef = useRef<JsPsychExternalLifecycle | null>(null), runRef = useRef<ScreenRun | null>(null);
   const phaseRef = useRef(phase), generationRef = useRef(0);
+  const fullscreenRequestRef = useRef<Promise<void> | null>(null);
+  const cancelLayoutRef = useRef<(() => void) | null>(null);
   phaseRef.current = phase;
   const stopRuntime = useCallback(() => {
     generationRef.current++;
+    cancelLayoutRef.current?.();
     runRef.current?.stop(); runRef.current = null;
     lifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     DisposeAudioFeedback();
@@ -76,8 +80,20 @@ export function ExploratorySaccadeGame() {
     const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychHostRef.current }));
     lifecycleRef.current = lifecycle;
     const seed = Date.now();
-    let bounds = fieldRef.current.getBoundingClientRect();
+    const field = fieldRef.current;
+    let bounds = field.getBoundingClientRect();
+    let cancelWait = () => {}, prepare = () => {}, settling = false;
     const failLayout = () => { stopRuntime(); setLayoutError(true); };
+    const retry = CreateLayoutRetry(browserClock, () => { bounds = field.getBoundingClientRect(); prepare(); }, () => {}, failLayout,
+      () => CanRelayout(runRef.current?.state.phase ?? '', runRef.current?.screens.length ?? 0));
+    const settle = (ready: () => void) => {
+      prepare = ready; cancelWait(); settling = true;
+      cancelWait = WaitForField({ ...browserClock, request: fullscreenRequestRef.current,
+        entered: () => Boolean(document.fullscreenElement), size: () => field.getBoundingClientRect(),
+        frame: callback => requestAnimationFrame(callback), cancelFrame: id => cancelAnimationFrame(id) }, () => { settling = false; retry.tryLayout(); });
+    };
+    const cancel = () => { cancelWait(); retry.cancel(); };
+    cancelLayoutRef.current = cancel;
     const finish = (completed: ScreenRecord[]) => {
       runRef.current = null;
       const score = BuildGameScore(completed);
@@ -92,25 +108,27 @@ export function ExploratorySaccadeGame() {
       const run = new ScreenRun({ sessionMs: settings.practiceMinutes * 60000, screenLimitMs: settings.screenTimeLimitSec * 1000 },
         (index, previous) => GenerateScreen(settings, { width: bounds.width, height: bounds.height,
           symbolPx: SymbolPx(window.screen.width, settings.symbolSizeDeg) }, seed + index, index, previous), {
+          prepare: settle,
           change: next => { setState(next); setRemainingMs(run.remainingMs()); },
           mark: () => PlaySuccessSound(), end: finish,
         }, browserClock);
       runRef.current = run;
-      try { run.prepare(); } catch { failLayout(); }
+      run.prepare();
     } });
     const ticker = window.setInterval(() => { if (runRef.current) setRemainingMs(runRef.current.remainingMs()); }, 200);
-    // Only the first, unstarted screen can be rebuilt after fullscreen settles.
     const observer = new ResizeObserver(entries => {
+      if (phaseRef.current !== 'running') return;
       const current = entries[0]?.contentRect;
       if (!current || (Math.abs(current.width - bounds.width) <= 2 && Math.abs(current.height - bounds.height) <= 2)) return;
       const run = runRef.current;
-      if (run && run.state.phase === 'ready' && run.screens.length === 0 && fieldRef.current) {
-        bounds = fieldRef.current.getBoundingClientRect();
-        try { run.prepare(); } catch { failLayout(); }
-      } else failLayout();
+      bounds = field.getBoundingClientRect();
+      if (!run || settling) return;
+      if (CanRelayout(run.state.phase, run.screens.length)) retry.tryLayout();
+      else failLayout();
     });
     observer.observe(fieldRef.current);
     return () => {
+      cancel(); if (cancelLayoutRef.current === cancel) cancelLayoutRef.current = null;
       observer.disconnect(); window.clearInterval(ticker);
       runRef.current?.stop(); runRef.current = null;
       lifecycle.dispose(); DisposeAudioFeedback();
@@ -129,12 +147,13 @@ export function ExploratorySaccadeGame() {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
     const generation = generationRef.current;
     PrepareAudioFeedback();
-    try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
-      return;
-    }
+    try { fullscreenRequestRef.current = rootRef.current?.requestFullscreen?.() ?? null; }
+    catch { fullscreenRequestRef.current = Promise.reject(new Error('Fullscreen unavailable')); }
+    void fullscreenRequestRef.current?.then(() => {
+      if ((generation !== generationRef.current || !(phaseRef.current === 'running')) && document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    }, () => undefined);
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') return;
+    phaseRef.current = 'running';
     setState(emptyState); setLayoutError(false); setRemainingMs(settings.practiceMinutes * 60000);
     SendGameEvent('active'); setPhase('running');
   };

@@ -6,6 +6,7 @@ import { gameDefinition, LevelLabel, levels } from './logic/levels';
 import { CreateRandom, CreateSearchBlocks, SearchTiming, type SearchTrial } from './logic/searchTrials';
 import { BlockStatistics, type SearchRow } from './logic/searchScore';
 import { TrialRun, type RunClock } from './logic/trialRun';
+import { CanRelayout, CreateLayoutRetry, WaitForField } from './logic/fieldSettle';
 import { BuildGameScore, ToRow } from './score';
 import { Glyph } from './Glyph';
 import { ScoreAnalysis } from './ScoreAnalysis';
@@ -37,7 +38,6 @@ export function PopoutSearchGame() {
   const [trial, setTrial] = useState<SearchTrial | null>(null);
   const [symbolPx, setSymbolPx] = useState(24);
   const [layoutError, setLayoutError] = useState(false);
-  const [layoutVersion, setLayoutVersion] = useState(0);
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
   const rootRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -51,6 +51,8 @@ export function PopoutSearchGame() {
   const runRef = useRef<TrialRun<SearchTrial> | null>(null);
   const generationRef = useRef(0);
   const startingRef = useRef(false);
+  const fullscreenRequestRef = useRef<Promise<void> | null>(null);
+  const cancelLayoutRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const enRef = useRef(en);
@@ -62,6 +64,7 @@ export function PopoutSearchGame() {
   }), []);
   const stopRuntime = useCallback(() => {
     generationRef.current++;
+    cancelLayoutRef.current?.();
     runRef.current?.stop();
     runRef.current = null;
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
@@ -99,71 +102,90 @@ export function PopoutSearchGame() {
   useEffect(() => {
     if (phase !== 'running' || !fieldRef.current || !jsPsychHostRef.current) return;
     const field = fieldRef.current;
-    const rect = field.getBoundingClientRect();
-    const pixels = SymbolPx(window.screen.width, settings.symbolSizeDeg);
-    setSymbolPx(pixels);
-    let block: SearchTrial[];
-    try {
-      block = CreateSearchBlocks(settings, CreateRandom(Date.now()), { width: rect.width, height: rect.height, symbolPx: pixels, circleRadius: pixels * 1.25 })[blockIndex];
-    } catch {
-      setLayoutError(true); setPhase('rest'); return;
-    }
-    const setState = (state: string) => { field.dataset.state = state; };
-    const finish = (outcomes: Parameters<typeof ToRow>[0][]) => {
-      runRef.current = null;
-      const completed = [...rowsRef.current, ...outcomes.map(outcome => ToRow(outcome, settings.timeLimitMs, settings.trialsPerBlock))];
-      rowsRef.current = completed; setRows(completed);
-      if (blockIndex < 2) { setBlockIndex(blockIndex + 1); setLayoutError(false); setPhase('rest'); return; }
-      const score = BuildGameScore(completed, settings);
-      jsPsychLifecycleRef.current?.finish({ trials: completed.length, accuracy_percent: score.summary.accuracy });
-      PlayGameEndSound(score.summary.passed ? 'Victory' : 'Defeat');
-      setSaveState(IsHubGame() ? 'saving' : 'local');
-      SendGameResult({ ...settings }, score.summary, score.rounds);
-      SaveGameSettings(NextSettings(settings, Boolean(score.summary.passed)));
-      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
-      setPhase('results');
+    let rect = field.getBoundingClientRect();
+    let run: TrialRun<SearchTrial> | null = null;
+    let cancelWait = () => {}, settling = false;
+    const failLayout = () => { cancelWait(); setLayoutError(true); setPhase('rest'); };
+    const retry = CreateLayoutRetry(browserClock, () => {
+      rect = field.getBoundingClientRect();
+      const pixels = SymbolPx(window.screen.width, settings.symbolSizeDeg);
+      const block = CreateSearchBlocks(settings, CreateRandom(Date.now()), { width: rect.width, height: rect.height, symbolPx: pixels, circleRadius: pixels * 1.25 })[blockIndex];
+      return { block, pixels };
+    }, ({ block, pixels }) => {
+      setSymbolPx(pixels);
+      const setState = (state: string) => { field.dataset.state = state; };
+      const finish = (outcomes: Parameters<typeof ToRow>[0][]) => {
+        cancelLayoutRef.current?.();
+        runRef.current = null;
+        const completed = [...rowsRef.current, ...outcomes.map(outcome => ToRow(outcome, settings.timeLimitMs, settings.trialsPerBlock))];
+        rowsRef.current = completed; setRows(completed);
+        if (blockIndex < 2) { setBlockIndex(blockIndex + 1); setLayoutError(false); setPhase('rest'); return; }
+        const score = BuildGameScore(completed, settings);
+        jsPsychLifecycleRef.current?.finish({ trials: completed.length, accuracy_percent: score.summary.accuracy });
+        PlayGameEndSound(score.summary.passed ? 'Victory' : 'Defeat');
+        setSaveState(IsHubGame() ? 'saving' : 'local');
+        SendGameResult({ ...settings }, score.summary, score.rounds);
+        SaveGameSettings(NextSettings(settings, Boolean(score.summary.passed)));
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+        setPhase('results');
+      };
+      const nextRun = new TrialRun<SearchTrial>(block.length, index => ({ trial: block[index], timing: SearchTiming(settings.timeLimitMs) }), {
+        lead: (state, step, index) => {
+          setTrial(step.trial); setState(state);
+          field.dataset.trial = String((blockIndex * settings.trialsPerBlock) + index + 1);
+          field.dataset.present = String(Number(step.trial.present));
+          if (feedbackRef.current) feedbackRef.current.textContent = '';
+          if (progressLabelRef.current) progressLabelRef.current.textContent = enRef.current
+            ? `Level ${levels[settings.level - 1].globalLevel}, block ${blockIndex + 1} (${step.trial.setSize} letters), item ${index + 1}/${block.length}`
+            : `等級 ${levels[settings.level - 1].globalLevel}，第 ${blockIndex + 1} 段（${step.trial.setSize} 個字），第 ${index + 1}／${block.length} 題`;
+        },
+        show: () => setState('target'), hide: () => undefined, signal: () => undefined,
+        end: outcome => {
+          setState('feedback');
+          const correct = outcome.response === String(Number(outcome.trial.present));
+          if (correct) PlaySuccessSound(); else PlayFailureSound();
+          if (feedbackRef.current) {
+            feedbackRef.current.dataset.result = correct ? 'correct' : 'wrong';
+            feedbackRef.current.textContent = correct ? (enRef.current ? 'Correct' : '答對了')
+              : outcome.response === null ? (enRef.current ? 'Time is up' : '超過時間') : (enRef.current ? 'Incorrect' : '答錯了');
+          }
+        },
+        clear: () => setState('gap'),
+      }, browserClock, finish, 0);
+      run = nextRun; runRef.current = nextRun;
+      if (!jsPsychLifecycleRef.current) {
+        const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychHostRef.current }));
+        jsPsychLifecycleRef.current = lifecycle;
+        void jsPsychLifecycleRef.current?.start({ moduleId: `vision:${gameDefinition.id}`, onStart: () => { if (runRef.current === nextRun) nextRun.start(); } });
+      } else nextRun.start();
+    }, failLayout);
+    const settle = () => {
+      cancelWait(); settling = true;
+      cancelWait = WaitForField({ ...browserClock, request: fullscreenRequestRef.current,
+        entered: () => Boolean(document.fullscreenElement), size: () => field.getBoundingClientRect(),
+        frame: callback => requestAnimationFrame(callback), cancelFrame: id => cancelAnimationFrame(id) }, () => { settling = false; retry.tryLayout(); });
     };
-    const run = new TrialRun<SearchTrial>(block.length, index => ({ trial: block[index], timing: SearchTiming(settings.timeLimitMs) }), {
-      lead: (state, step, index) => {
-        setTrial(step.trial); setState(state);
-        field.dataset.trial = String((blockIndex * settings.trialsPerBlock) + index + 1);
-        field.dataset.present = String(Number(step.trial.present));
-        if (feedbackRef.current) feedbackRef.current.textContent = '';
-        if (progressLabelRef.current) progressLabelRef.current.textContent = enRef.current
-          ? `Level ${levels[settings.level - 1].globalLevel}, block ${blockIndex + 1} (${step.trial.setSize} letters), item ${index + 1}/${block.length}`
-          : `等級 ${levels[settings.level - 1].globalLevel}，第 ${blockIndex + 1} 段（${step.trial.setSize} 個字），第 ${index + 1}／${block.length} 題`;
-      },
-      show: () => setState('target'), hide: () => undefined, signal: () => undefined,
-      end: outcome => {
-        setState('feedback');
-        const correct = outcome.response === String(Number(outcome.trial.present));
-        if (correct) PlaySuccessSound(); else PlayFailureSound();
-        if (feedbackRef.current) {
-          feedbackRef.current.dataset.result = correct ? 'correct' : 'wrong';
-          feedbackRef.current.textContent = correct ? (enRef.current ? 'Correct' : '答對了')
-            : outcome.response === null ? (enRef.current ? 'Time is up' : '超過時間') : (enRef.current ? 'Incorrect' : '答錯了');
-        }
-      },
-      clear: () => setState('gap'),
-    }, browserClock, finish, 0);
-    runRef.current = run;
-    if (!jsPsychLifecycleRef.current) {
-      const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychHostRef.current }));
-      jsPsychLifecycleRef.current = lifecycle;
-      void jsPsychLifecycleRef.current?.start({ moduleId: `vision:${gameDefinition.id}`, onStart: () => { if (runRef.current === run) run.start(); } });
-    } else run.start();
-    // Resizing changes the visual angles and spacing. Restart only the unfinished block after an explicit continue.
     const resized = () => {
+      if (phaseRef.current !== 'running') return;
       const current = field.getBoundingClientRect();
       if (Math.abs(current.width - rect.width) <= 1 && Math.abs(current.height - rect.height) <= 1) return;
-      run.stop();
-      if (field.dataset.state === 'lead' && field.dataset.trial === String(blockIndex * settings.trialsPerBlock + 1)) {
-        setLayoutVersion(value => value + 1);
-      } else { setLayoutError(true); setPhase('rest'); }
+      rect = current;
+      if (settling) return;
+      if (!run) { retry.tryLayout(); return; }
+      if (run) {
+        run.stop(); runRef.current = null;
+        if (!CanRelayout(field.dataset.state ?? '', Number(field.dataset.trial) - blockIndex * settings.trialsPerBlock - 1)) { failLayout(); return; }
+        run = null; field.dataset.state = 'lead'; setTrial(null);
+      }
+      settle();
     };
-    window.addEventListener('resize', resized);
-    return () => { run.stop(); if (runRef.current === run) runRef.current = null; window.removeEventListener('resize', resized); };
-  }, [phase, blockIndex, settings, layoutVersion]);
+    const observer = new ResizeObserver(resized);
+    observer.observe(field);
+    const cancel = () => { cancelWait(); retry.cancel(); run?.stop(); if (runRef.current === run) runRef.current = null; observer.disconnect(); };
+    cancelLayoutRef.current = cancel;
+    settle();
+    return () => { cancel(); if (cancelLayoutRef.current === cancel) cancelLayoutRef.current = null; };
+  }, [phase, blockIndex, settings]);
 
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
@@ -174,13 +196,14 @@ export function PopoutSearchGame() {
     startingRef.current = true;
     const generation = generationRef.current;
     PrepareAudioFeedback();
-    try { await rootRef.current?.requestFullscreen?.(); } catch { /* Keep windowed input available when fullscreen is unavailable. */ }
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    try { fullscreenRequestRef.current = rootRef.current?.requestFullscreen?.() ?? null; }
+    catch { fullscreenRequestRef.current = Promise.reject(new Error('Fullscreen unavailable')); }
+    void fullscreenRequestRef.current?.then(() => {
+      if ((generation !== generationRef.current || !(['running', 'rest'].includes(phaseRef.current))) && document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    }, () => undefined);
     startingRef.current = false;
-    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
-      return;
-    }
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') return;
+    phaseRef.current = 'running';
     rowsRef.current = []; setRows([]); setBlockIndex(0); setLayoutError(false);
     SendGameEvent('active'); setPhase('running');
   };

@@ -10,10 +10,10 @@ import ts from 'typescript';
 const root = resolve(import.meta.dirname, '..');
 const gamesRoot = resolve(root, 'apps/rehabtrainerhub/games');
 const games = {
-  'popout-search': { version: '1.0.0', file: 'PopoutSearchGame.tsx', settings: 'settings.ts' },
-  'complex-search': { version: '1.0.0', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
-  'conjunction-search': { version: '1.0.0', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
-  'exploratory-saccade': { version: '1.0.0', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
+  'popout-search': { version: '1.0.1', file: 'PopoutSearchGame.tsx', settings: 'settings.ts' },
+  'complex-search': { version: '1.0.1', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
+  'conjunction-search': { version: '1.0.1', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
+  'exploratory-saccade': { version: '1.0.1', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
   'seagull-flight': { version: '1.0.1', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
   'hart-chart': { version: '2.0.5', file: 'HartChartPage.tsx', settings: 'settings.ts' },
   'driving-rehab': { version: '2.1.2', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },

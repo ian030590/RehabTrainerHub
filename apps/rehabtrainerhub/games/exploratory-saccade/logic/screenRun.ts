@@ -19,14 +19,24 @@ export class ScreenRun {
 
   constructor(private readonly options: { sessionMs: number; screenLimitMs: number },
     private readonly create: (index: number, previous: string | null) => SearchScreen,
-    private readonly events: { change: (state: ScreenState) => void; mark: (itemId: number) => void; end: (screens: ScreenRecord[]) => void },
+    private readonly events: { prepare?: (ready: () => void) => void; change: (state: ScreenState) => void; mark: (itemId: number) => void; end: (screens: ScreenRecord[]) => void },
     private readonly clock: Clock) {}
 
   prepare(): void {
     if (this.state.phase === 'stopped' || this.state.phase === 'finished') return;
-    const screen = this.create(this.screens.length, this.screens.at(-1)?.target ?? null);
-    this.state = { phase: 'ready', screen, found: [], missed: [] };
-    this.events.change(this.state);
+    const ready = () => {
+      if (this.state.phase === 'stopped' || this.state.phase === 'finished') return;
+      let screen: SearchScreen;
+      try { screen = this.create(this.screens.length, this.screens.at(-1)?.target ?? null); }
+      catch (error) {
+        this.state = { phase: 'ready', screen: null, found: [], missed: [] };
+        this.events.change(this.state);
+        throw error;
+      }
+      this.state = { phase: 'ready', screen, found: [], missed: [] };
+      this.events.change(this.state);
+    };
+    if (this.events.prepare) this.events.prepare(ready); else ready();
   }
 
   startScreen(): void {

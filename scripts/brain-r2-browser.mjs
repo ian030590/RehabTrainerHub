@@ -1,3 +1,4 @@
+import { CheckFieldGrowth, CheckSmallSearchField, InstallFieldGrowth, ResizeField } from './vision-field-browser.mjs';
 import { exploratorySaccadeBrowserSpec } from './exploratory-saccade-r2-browser.mjs';
 import { conjunctionSearchBrowserSpec } from './conjunction-search-r2-browser.mjs';
 import { complexSearchBrowserSpec } from './complex-search-r2-browser.mjs';
@@ -21,14 +22,18 @@ export const brainGameSpecs = {
     tutorialTargets: ['.search-target-circle', '.search-pads', '.search-hud'],
     runningSelector: '.search-running', stopSelector: '.search-stop',
     defaultMetric: 'rtMs', alternateMetric: 'correct', rows: 60,
+    async beforeStart({ game }) { await InstallFieldGrowth(game, '.search-running .search-field'); },
     async play({ game, until, tap, press, mobile, capture }) {
+      await CheckFieldGrowth(game, until);
+      await CheckSmallSearchField({ game, until, tap });
+      const resizedTargets = new Set(); let resizedAnswered = false;
       const seen = new Set();
       let rests = 0;
       await until(async () => {
         if (await game(`Boolean(document.querySelector('.experiment-results'))`)) return true;
         if (await game(`Boolean(document.querySelector('.search-rest'))`)) {
           assert.equal(await game(`document.activeElement?.classList.contains('search-continue')`), true);
-          assert.ok(!await game(`document.querySelector('.search-rest').textContent.includes('請調整畫面')`), `The selected stimuli fit the viewport: ${JSON.stringify(await game(`(() => { const f = document.querySelector('.search-field').getBoundingClientRect(); return { width: f.width, height: f.height, screenWidth: screen.width, state: document.querySelector('.search-field').dataset.state }; })()`))}`);
+          assert.ok(!await game(`document.querySelector('.search-rest').textContent.includes('請調整畫面')`), `The selected stimuli fit the viewport: ${JSON.stringify(await game(`(() => { const f = document.querySelector('.search-field').getBoundingClientRect(); return { width: f.width, height: f.height, sizes: window.fieldGrowth?.sizes, screenWidth: screen.width, state: document.querySelector('.search-field').dataset.state }; })()`))}`);
           rests++;
           if (mobile) await tap('.search-continue'); else await press('Enter', 'Enter', 13);
           await until(() => game(`!document.querySelector('.search-rest')`), 'continue after rest');
@@ -38,6 +43,25 @@ export const brainGameSpecs = {
           phase: field?.dataset.state, index: Number(field?.dataset.trial), present: field?.dataset.present,
           count: document.querySelectorAll('.search-items .search-item').length }; })()`);
         if (state.phase !== 'target' || !state.index || seen.has(state.index)) return false;
+        if (state.index % 20 === 1 && !resizedTargets.has(state.index)) {
+          resizedTargets.add(state.index);
+          await ResizeField(game, '.search-running .search-field');
+          await until(() => game(`document.querySelector('.search-field')?.dataset.state === 'lead'`), 'silent relayout during first target');
+          assert.equal(await game(`Boolean(document.querySelector('.search-rest'))`), false);
+          return false;
+        }
+        if (state.index === 22 && !resizedAnswered) {
+          resizedAnswered = true;
+          await ResizeField(game, '.search-running .search-field');
+          await until(() => game(`Boolean(document.querySelector('.search-rest'))`), 'resize after the first answer requires Continue');
+          assert.match(await game(`document.querySelector('.search-rest').textContent`), /\u8acb\u8abf\u6574\u756b\u9762|Adjust the window/);
+          await ResizeField(game, '.search-running .search-field', false);
+          assert.ok(await game(`Boolean(document.querySelector('.search-rest'))`), 'Enlarging alone keeps the adjust panel after an answer.');
+          for (const index of [...seen]) if (index > 20) seen.delete(index);
+          await tap('.search-continue');
+          await until(() => game(`!document.querySelector('.search-rest')`), 'restart only the unfinished block');
+          return false;
+        }
         seen.add(state.index);
         if (state.index === 2) {
           assert.equal(state.count, 8);
