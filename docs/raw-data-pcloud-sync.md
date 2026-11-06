@@ -4,7 +4,7 @@
 
 ## 同步範圍與路徑
 
-獨立 Worker `trainerhubsync` 每天 19:17 UTC（臺灣隔天 03:17）執行。只綁定兩個私人 R2 bucket，沒有 D1、KV、Hub 認證或遊戲發布 bucket；不提供 HTTP 入口。Hub／runner 的既有部署命令不會部署此 Worker，runner 不取得這兩個 bucket。
+獨立 Worker `trainerhubsync` 每小時第 17 分鐘 UTC（臺灣時間每小時 :17）執行。只綁定兩個私人 R2 bucket，沒有 D1、KV、Hub 認證或遊戲發布 bucket；不提供 HTTP 入口。Hub／runner 的既有部署命令不會部署此 Worker，runner 不取得這兩個 bucket。
 
 | R2 來源 | pCloud 目的地（相對於根目錄） |
 | --- | --- |
@@ -25,15 +25,17 @@
 2. 以 WebDAV `GET` 讀取目的檔。404 表示尚未上傳；200 且 bytes 長度與 SHA-256 均相同，視為已同步，不重傳。200 但內容不同則記錄 `conflict`、增加 `failed` 並保留兩端檔案，不覆寫。宣告 `Content-Length` 超過 25 MiB 時不緩衝內容；未宣告長度時也只讀取至來源大小上限，超過即停止，均視為衝突。其他 HTTP 狀態視為該檔失敗。
 3. 需要上傳時，從指定根目錄開始逐層 `MKCOL`，201 表示已建立，405 表示已存在；其他狀態失敗。同一輪快取已確認的目錄。以 `PUT` 傳送原始 bytes，帶 `Content-Type: text/csv; charset=utf-8`，不送 `If-None-Match`，只接受 200／201／204；包括 412 在內的其他狀態均記為上傳失敗並保留 R2 來源。目的 URL 由固定端點及逐段 `encodeURIComponent` 的根目錄與來源對應路徑組成，目錄中的空格成為 `%20`。
 4. 上傳後再次 `GET` 相同目的檔；只有 200、bytes 長度相同且 SHA-256 相同才算驗證完成。這是下載回讀比對，不依賴 pCloud API checksum 或回傳 metadata，也不計算 SHA-1。
-5. 遠端副本驗證相符後，以 R2 `head()` 再查 etag、大小、version 與目標對應，與讀取時相同且未超時才刪除。任何驗證、權限、網路或 HTTP 錯誤都保留 R2 來源，等待後續排程。
+5. 遠端副本驗證相符後，以 R2 `head()` 再查 etag、大小、version 與目標對應，與讀取時相同且未超時才刪除。任何驗證、權限、網路或 HTTP 錯誤都保留 R2 來源，等待下一輪每小時排程或下一次完整列舉循環重試。
 
-若 PUT 已完整寫入但回應中斷，或 R2 刪除失敗，後續重訪同一來源時會先 GET 回讀比對，相符就不重傳。若中斷留下不同或不完整的遠端檔，會持續記為 `conflict` 並保留 R2；擁有者必須先核對與另存衝突檔，再決定如何恢復，不會自動覆寫。已保存的列舉進度可能讓失敗來源在下一次完整循環才重試。
+帳號眼動 CSV 只在下一輪同步封存前可從進度頁下載，排程正常且無積壓或失敗時約在上傳後一小時內封存（原為等到下一次臺灣時間 03:17），之後進度頁顯示既有的「已封存」提示。
+
+若 PUT 已完整寫入但回應中斷，或 R2 刪除失敗，後續重訪同一來源時會先 GET 回讀比對，相符就不重傳。若中斷留下不同或不完整的遠端檔，會持續記為 `conflict` 並保留 R2；擁有者必須先核對與另存衝突檔，再決定如何恢復，不會自動覆寫。已保存的列舉進度可能讓失敗來源在後續每小時排程推進至下一次完整循環時才重試。
 
 **來源必須保持不可變：** R2 Workers API 的 `delete(key)` 沒有條件式刪除參數；`head()` 與 `delete()` 之間不能形成原子比較刪除。程式會攔下檢查時已變動的物件，但不能保證攔下恰好在兩次呼叫之間發生的覆寫。所有來源寫入端必須用唯一 record key 與 `onlyIf: { etagDoesNotMatch: '*' }` 保護，不可覆寫或刪除後重用相同 key；同步期間也不能用其他工具改寫來源。兩個寫入端均以條件式建立 CSV，並保留 checksums/<CSV 鍵> 的空物件及 SHA-256，避免封存刪除後換 bytes 重用鍵；只有 CSV 寫入完成才建立 receipts/<CSV 鍵>，供成果驗證與追溯。保護物件不在同步 prefix 中，不能與原始 CSV 一起清除。[R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
 
-每輪合計最多 200 次成功 PUT／已相符的封存檔處理，另有 2,000 個來源物件的掃描上限，以及約 10 分鐘時間上限，以先到者為準。跳過、來源讀取／檢查失敗及封存衝突不占 200 檔額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次網路／逾時、HTTP 401／403／408／429、5xx 或轉址失敗就提前停止；單檔讀取、metadata／checksum 不符、衝突及其他單檔 HTTP 錯誤不累計此門檻。列舉失敗會停止該來源，本輪仍可嘗試下一個來源。
+每小時一輪，每輪合計最多 200 次成功 PUT／已相符的封存檔處理，每日 24 輪合計上限為 4,800 檔；每輪另有 2,000 個來源物件的掃描上限，以及約 10 分鐘時間上限，以先到者為準。跳過、來源讀取／檢查失敗及封存衝突不占 200 檔額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次網路／逾時、HTTP 401／403／408／429、5xx 或轉址失敗就提前停止；單檔讀取、metadata／checksum 不符、衝突及其他單檔 HTTP 錯誤不累計此門檻。列舉失敗會停止該來源，本輪仍可嘗試下一個來源。
 
-`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存目前來源、該頁的 R2 cursor 與最後處理的鍵；頁中途停止時，下一輪略過已處理鍵並接續未處理檔案。此控制物件不屬於同步 prefix，不上傳 pCloud，也不刪除原始資料。掃描滿 2,000 個無效物件後，下輪會往後接續，不會永遠重看開頭；到達來源結尾後，保留的失敗物件會在後續循環再次檢查。進度讀取失敗或內容無效時，本輪在列舉前記為 `progress-read` 失敗；保存失敗記為 `progress-write`，可能使下輪重看舊頁，需由擁有者排查。同步 Worker 應維持單一執行者，不同時手動執行另一輪。
+`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存目前來源、該頁的 R2 cursor 與最後處理的鍵；頁中途停止時，下一小時略過已處理鍵並接續未處理檔案。此控制物件不屬於同步 prefix，不上傳 pCloud，也不刪除原始資料。掃描滿 2,000 個無效物件後，下輪會往後接續，不會永遠重看開頭；到達來源結尾後，保留的失敗物件會在後續循環再次檢查。進度讀取失敗或內容無效時，本輪在列舉前記為 `progress-read` 失敗；保存失敗記為 `progress-write`，可能使下輪重看舊頁，需由擁有者排查。約 10 分鐘的單輪時間上限低於一小時排程間隔；同步 Worker 應維持單一執行者，不同時手動執行另一輪。
 
 ## 擁有者一次性設定
 
@@ -70,7 +72,7 @@
    npx wrangler deploy --config workers/raw-data-sync/wrangler.toml
    ```
 
-   `scripts/deploy-cloudflare-workers.mjs` 只部署 `trainerhubgames` 與 `trainerhub`；目前 `.github/workflows/deploy-cloudflare-pages.yml` 透過該腳本部署這兩站，不會部署 `trainerhubsync`。CI 會執行相關測試，不能據此宣稱同步 Worker 已部署。確認它的 Cron 為 `17 19 * * *`。
+   `scripts/deploy-cloudflare-workers.mjs` 只部署 `trainerhubgames` 與 `trainerhub`；目前 `.github/workflows/deploy-cloudflare-pages.yml` 透過該腳本部署這兩站，不會部署 `trainerhubsync`。CI 會執行相關測試，不能據此宣稱同步 Worker 已部署。確認它的 Cron 為 `17 * * * *`。
 
 [pCloud 官方 WebDAV 說明](https://help.pcloud.com/article/connect-to-pcloud-using-webdav-and-rsync)（2026-10-29 查閱）列出 EU／US 端點及登入 email／密碼。該頁說明 WebDAV 適合較小的傳輸，長時間的大型或頻繁備份可能中斷；本專案的 25 MiB 與每輪 200 檔是自身限制。本文不推定帳號方案或未實測的登入行為。
 
@@ -165,7 +167,7 @@ npm run test:naming
 
 搜尋 `games/oculomotor-training`、`app` 與 `packages/ui`：現行 POST 呼叫僅在 `packages/ui/src/saveOculomotorCsv.ts`，由 `app/train/R2GameOverlay.tsx` 使用，固定附 `officialGameVersion` 與 `runSessionToken`；進度頁只 GET。未找到不帶官方 session token 的現行前端上傳呼叫。API 的舊訪客路徑與上傳契約保留相容性，沒有移除。
 
-sec-t5b 追修：pCloud 對 `If-None-Match: *` 的支援未驗證，故移除條件式標頭與 412 特例；先新增 `PUT requests omit the If-None-Match header`，確認修正前失敗於 `'*' !== null`，並將條件式建立競態測試替換為 412 上傳失敗測試。每日同步維持單一執行者，上傳前 GET 仍拒絕不同內容；GET 與 PUT 之間沒有原子保護，不得同時由其他程式或人工寫入封存目的路徑。
+sec-t5b 追修：pCloud 對 `If-None-Match: *` 的支援未驗證，故移除條件式標頭與 412 特例；先新增 `PUT requests omit the If-None-Match header`，確認修正前失敗於 `'*' !== null`，並將條件式建立競態測試替換為 412 上傳失敗測試。每小時同步維持單一執行者，上傳前 GET 仍拒絕不同內容；GET 與 PUT 之間沒有原子保護，不得同時由其他程式或人工寫入封存目的路徑。
 
 追修後 `rawDataSync.test.mjs` 為 105 通過、0 失敗，`npm run test:hub-functions` 為 376 通過、0 失敗；同步函式與測試均通過 `node --check`。
 

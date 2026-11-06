@@ -57,7 +57,7 @@ presence 與 face_found 為 0/1。tongue direction 為 Rest=0、Tongue_Left=-1�
 
 新眼動物件以 Subject ID 與固定日期封存：帳號使用 `eye/oculomotor-training/<subjectId>/<date>/<recordId>.csv`，訪客使用 `guest-eye/oculomotor-training/<subjectId>/<date>/<recordId>.csv`，兩者隔離且路徑不包含帳號 ID。同步 list 帶 customMetadata，在 get 與刪除前 head 再檢查對應。舊 users 物件沒有有效 subjectId／recordedDate 時保留、不上傳、不刪除；舊 guests 物件沒有日期 metadata 時沿用 uploaded 的 UTC 日期。既有封存檔不搬移，舊版寫在 `eye` 下的訪客檔需另案核對。
 
-封存目的檔已存在但 bytes 不同時記為 `conflict`，保留 R2 與遠端原檔；新檔以 `If-None-Match: *` 條件式 PUT 建立。完整寫入但回應中斷可透過後續 GET 比對恢復；不完整的遠端檔需擁有者核對，不會自動覆寫。同步每輪最多處理 200 次成功 PUT／已相符檔、掃描 2,000 個物件或約 10 分鐘；`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存接續位置，跳過物件與單檔失敗不會讓後方來源永遠卡在開頭，未封存的來源不刪除。細節見 [pCloud 同步文件](raw-data-pcloud-sync.md)。
+上傳前以 GET 檢查封存目的檔，已存在但 bytes 不同時記為 `conflict`，保留 R2 與遠端原檔；新檔以 PUT 建立，不送 `If-None-Match`，GET 與 PUT 之間沒有原子保護，封存目的路徑須維持單一寫入者。完整寫入但回應中斷可透過後續 GET 比對恢復；不完整的遠端檔需擁有者核對，不會自動覆寫。同步每小時第 17 分鐘執行，每輪最多處理 200 次成功 PUT／已相符檔、掃描 2,000 個物件或約 10 分鐘；`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存接續位置，跳過物件與單檔失敗不會讓後方來源永遠卡在開頭，未封存的來源不刪除。細節見 [pCloud 同步文件](raw-data-pcloud-sync.md)。
 
 獨立同步 Worker 以 EU WebDAV `https://ewebdav.pcloud.com` 傳送 CSV；登入 email 與密碼只透過 `PCLOUD_WEBDAV_USERNAME`／`PCLOUD_WEBDAV_PASSWORD` secrets 設定，不再讀取 API token。GET 回讀的 byte 長度與 SHA-256 均相符，再通過 R2 head 檢查後才刪除 R2 CSV，下載 API 對不存在的檔案回覆 404。進度頁移除該檔下載按鈕，雙語說明同步檔案已封存、當次摘要仍保留；空白、載入、下載中及錯誤狀態均保留。404 不提供 pCloud 連結，也不讓 Subject ID 成為查詢授權。
 

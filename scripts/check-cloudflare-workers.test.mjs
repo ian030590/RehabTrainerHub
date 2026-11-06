@@ -69,13 +69,13 @@ test('binding drift from the Pages config is reported instead of creating empty 
   assert.match(FindWorkerConfigProblems([newDate, runner]).join('\n'), /compatibility_date must stay 2026-07-02/);
 });
 
-test('raw CSV sync is a separate daily cron with only its two private R2 buckets', () => {
+test('raw CSV sync is a separate hourly cron with only its two private R2 buckets', () => {
   const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
   assert.match(config, /^name = "trainerhubsync"$/m);
   assert.match(config, /^workers_dev = false$/m);
   // Persisted logs show each run's counts; the sync tests keep secrets, keys and Subject IDs out of them.
   assert.match(config, /^\[observability\]\r?\nenabled = true$/m);
-  assert.match(config, /^crons = \["17 19 \* \* \*"\]$/m);
+  assert.match(config, /^crons = \["17 \* \* \* \*"\]$/m);
   assert.match(config, /^PCLOUD_WEBDAV_URL = "https:\/\/ewebdav\.pcloud\.com"$/m);
   assert.doesNotMatch(config, /PCLOUD_API_HOST/);
   assert.match(config, /#.*PCLOUD_WEBDAV_USERNAME/);
@@ -89,6 +89,28 @@ test('raw CSV sync is a separate daily cron with only its two private R2 buckets
   for (const path of ['apps/usergamerunner/wrangler.toml', 'apps/usergamerunner/wrangler.workers.jsonc']) {
     assert.doesNotMatch(readFileSync(resolve(defaultRepoRoot, path), 'utf8'), /RAW_DATA|OCULOMOTOR_DATA|rehab-raw-data|oculomotor-data/);
   }
+});
+
+test('raw storage copy matches the hourly sync cron in both Hub languages', async (context) => {
+  const config = readFileSync(resolve(defaultRepoRoot, 'workers/raw-data-sync/wrangler.toml'), 'utf8');
+  assert.match(config, /^crons = \["17 \* \* \* \*"\]$/m);
+  for (const [locale, hourly, daily] of [['en', /\bhourly\b/i, /\bdaily\b/i], ['zh-TW', /每小時/, /每日/]]) {
+    await context.test(locale, () => {
+      const source = readFileSync(resolve(defaultRepoRoot, `apps/rehabtrainerhub/app/i18n/${locale}.ts`), 'utf8');
+      const body = source.match(/^\s*rawStorageBody: '([^\r\n]*)',\r?$/m)?.[1];
+      assert.ok(body, `${locale}: rawStorageBody must exist`);
+      assert.match(body, hourly, `${locale}: rawStorageBody must describe the hourly sync`);
+      assert.doesNotMatch(body, daily, `${locale}: rawStorageBody must not describe a daily sync`);
+    });
+  }
+});
+
+test('raw CSV sync run budget stays below the hourly cron interval', () => {
+  const source = readFileSync(resolve(defaultRepoRoot, 'apps/rehabtrainerhub/functions/_lib/rawDataSync.js'), 'utf8');
+  const budget = source.match(/^const maximumRunMs = (\d+(?:\s*\*\s*\d+)*);$/m);
+  assert.ok(budget, 'maximumRunMs must declare an explicit millisecond budget');
+  const maximumRunMs = budget[1].split('*').reduce((total, factor) => total * Number(factor), 1);
+  assert.ok(maximumRunMs > 0 && maximumRunMs < 60 * 60 * 1000, 'sync runs must finish before the next hourly cron');
 });
 
 test('the isolated runner never receives private bindings, variables or secrets', () => {
