@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { strToU8, zipSync } from 'fflate';
+import { strToU8, unzipSync, zipSync } from 'fflate';
 import { platformRuntimeContract } from '../../../usergamerunner/functions/_lib/runtime.js';
 import {
   GamePackageError,
@@ -10,6 +10,7 @@ import {
   NormalizeGameSlug,
   NormalizeGameVersion,
   NormalizePackagePath,
+  gamePackageLimits,
   gamePackageRuntimeContract,
 } from './gamePackages.js';
 
@@ -153,6 +154,149 @@ test('accepts safe ZIP assets and records their digests', async () => {
   assert.equal(result.blockCount, 0);
   assert.deepEqual(result.files.map((file) => file.path), ['index.html', 'styles/game.css']);
   assert.ok(result.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
+});
+
+test('rejects directory payloads that expand beyond the package budget', async (t) => {
+  const bytes = zipSync({
+    'index.html': strToU8(validHtml),
+    'assets/': new Uint8Array(gamePackageLimits.maximumTotalBytes + 1).fill(65),
+  });
+  const decoded = unzipSync(bytes);
+  assert.equal(decoded['assets/'].byteLength, gamePackageLimits.maximumTotalBytes + 1);
+  t.diagnostic(`Unfiltered decoder expanded directory payload: ${decoded['assets/'].byteLength} bytes`);
+  await assert.rejects(
+    InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+    { name: 'GamePackageError', code: 'zip-directory-data' },
+  );
+});
+
+test('rejects directory payloads before the ZIP decoder reads compressed data', async () => {
+  const bytes = zipSync({
+    'index.html': strToU8(validHtml),
+    'assets/': strToU8('directory payload'),
+  });
+  const view = new DataView(bytes.buffer);
+  const centralOffset = view.getUint32(bytes.length - 6, true);
+  const directoryOffset = centralOffset + 46 + view.getUint16(centralOffset + 28, true);
+  const localOffset = view.getUint32(directoryOffset + 42, true);
+  const dataOffset = localOffset + 30 + view.getUint16(localOffset + 26, true)
+    + view.getUint16(localOffset + 28, true);
+  bytes[dataOffset] = 0x07;
+  assert.throws(() => unzipSync(bytes), /invalid block type/);
+  await assert.rejects(
+    InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+    { name: 'GamePackageError', code: 'zip-directory-data' },
+  );
+});
+
+test('rejects ZIP64 end records and locators', async (t) => {
+  const original = zipSync({ 'index.html': strToU8(validHtml) });
+  const eocdOffset = original.length - 22;
+  const originalView = new DataView(original.buffer);
+  const records = new Uint8Array(76);
+  const recordsView = new DataView(records.buffer);
+  recordsView.setUint32(0, 0x06064b50, true);
+  recordsView.setBigUint64(4, 44n, true);
+  recordsView.setUint16(12, 45, true);
+  recordsView.setUint16(14, 45, true);
+  recordsView.setBigUint64(24, 1n, true);
+  recordsView.setBigUint64(32, 1n, true);
+  recordsView.setBigUint64(40, BigInt(originalView.getUint32(eocdOffset + 12, true)), true);
+  recordsView.setBigUint64(48, BigInt(originalView.getUint32(eocdOffset + 16, true)), true);
+  recordsView.setUint32(56, 0x07064b50, true);
+  recordsView.setBigUint64(64, BigInt(eocdOffset), true);
+  recordsView.setUint32(72, 1, true);
+  for (const [name, record] of [
+    ['end record and locator', records],
+    ['end record alone', records.subarray(0, 56)],
+    ['locator alone', records.subarray(56)],
+  ]) {
+    await t.test(name, async () => {
+      const bytes = new Uint8Array(original.length + record.length);
+      bytes.set(original.subarray(0, eocdOffset));
+      bytes.set(record, eocdOffset);
+      bytes.set(original.subarray(eocdOffset), eocdOffset + record.length);
+      await assert.rejects(
+        InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+        { name: 'GamePackageError', code: 'zip64' },
+      );
+    });
+  }
+});
+
+test('rejects ZIP64 extra fields in either local or central headers', async (t) => {
+  for (const header of ['local', 'central']) {
+    await t.test(header, async () => {
+      const bytes = zipSync({
+        'index.html': [strToU8(validHtml), { extra: { 2: new Uint8Array(16) } }],
+      });
+      const view = new DataView(bytes.buffer);
+      const centralOffset = view.getUint32(bytes.length - 6, true);
+      const extraOffset = header === 'local'
+        ? 30 + view.getUint16(26, true)
+        : centralOffset + 46 + view.getUint16(centralOffset + 28, true);
+      view.setUint16(extraOffset, 1, true);
+      await assert.rejects(
+        InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+        { name: 'GamePackageError', code: 'zip64' },
+      );
+    });
+  }
+});
+
+test('rejects ZIP64 sentinel values before expansion', async (t) => {
+  const original = zipSync({ 'index.html': strToU8(validHtml) });
+  const centralOffset = new DataView(original.buffer).getUint32(original.length - 6, true);
+  for (const [name, offset, width] of [
+    ['EOCD disk number', original.length - 18, 2],
+    ['EOCD central disk', original.length - 16, 2],
+    ['EOCD disk entry count', original.length - 14, 2],
+    ['EOCD total entry count', original.length - 12, 2],
+    ['EOCD central size', original.length - 10, 4],
+    ['EOCD central offset', original.length - 6, 4],
+    ['central compressed size', centralOffset + 20, 4],
+    ['central original size', centralOffset + 24, 4],
+    ['central starting disk', centralOffset + 34, 2],
+    ['central local offset', centralOffset + 42, 4],
+    ['local compressed size', 18, 4],
+    ['local original size', 22, 4],
+  ]) {
+    await t.test(name, async () => {
+      const bytes = original.slice();
+      bytes.fill(0xff, offset, offset + width);
+      await assert.rejects(
+        InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+        { name: 'GamePackageError', code: 'zip64' },
+      );
+    });
+  }
+});
+
+test('rejects stored ZIP entries whose decoded size differs from preflight', async () => {
+  const bytes = zipSync({ 'index.html': strToU8(validHtml) }, { level: 0 });
+  const view = new DataView(bytes.buffer);
+  const centralOffset = view.getUint32(bytes.length - 6, true);
+  view.setUint32(centralOffset + 24, 1, true);
+  await assert.rejects(
+    InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes)),
+    { name: 'GamePackageError', code: 'zip-entry' },
+  );
+});
+
+test('accepts ordinary ZIP directories and extra fields without changing file bytes', async () => {
+  const sourceFiles = {
+    'index.html': strToU8(validHtml),
+    'assets/game.css': strToU8('body { color: CanvasText; }'),
+  };
+  const bytes = zipSync({
+    'index.html': [sourceFiles['index.html'], { extra: { 2: new Uint8Array(16) } }],
+    'assets/': [new Uint8Array(0), { level: 0 }],
+    'assets/game.css': sourceFiles['assets/game.css'],
+  });
+  const result = await InspectGamePackage(FakeFile('game.zip', 'application/zip', bytes));
+  assert.equal(result.blockCount, 0);
+  assert.equal(result.totalBytes, Object.values(sourceFiles).reduce((sum, value) => sum + value.length, 0));
+  assert.deepEqual(Object.fromEntries(result.files.map(({ path, bytes: value }) => [path, value])), sourceFiles);
 });
 
 test('requires and validates root settings.json for a submitted game slug', async () => {

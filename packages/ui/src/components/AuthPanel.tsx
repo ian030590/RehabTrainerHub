@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   authChangedEvent,
+  authTokenKey,
   type AuthLocale,
   type AuthUser,
   type HabitStatus,
@@ -10,6 +11,8 @@ import {
   FetchCurrentAuthUser,
   FetchSharedAuthSession,
   GetAuthApiOrigin,
+  GetAuthToken,
+  GetAuthUserIdFromToken,
   IsAuthSessionMessage,
   LoginPasswordAccount,
   LogoutAuthSession,
@@ -18,6 +21,7 @@ import {
   SaveAuthProfile,
   SetAuthToken,
 } from '../auth/authClient';
+import { CreateIdentityGuard } from '../auth/identityGuard';
 import { TurnstileWidget } from './TurnstileWidget';
 
 interface AuthPanelProps {
@@ -289,6 +293,7 @@ export function AuthPanel({
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const profileOwnerIdRef = useRef<string | null>(null);
   const loadUserGenerationRef = useRef(0);
   const loadUserAbortRef = useRef<AbortController | null>(null);
   const authOrigin = useMemo(() => GetAuthApiOrigin(apiBase), [apiBase]);
@@ -298,6 +303,13 @@ export function AuthPanel({
   }, [authOrigin, privacyHref]);
 
   const applyLoadedUser = useCallback((nextUser: AuthUser | null) => {
+    if (profileOwnerIdRef.current !== (nextUser?.id ?? null)) {
+      setProfile(CreateEmptyProfile());
+      setIsProfileOpen(false);
+      setIsSavingProfile(false);
+      setError('');
+    }
+    profileOwnerIdRef.current = nextUser?.id ?? null;
     setUser(nextUser);
     onAuthChange?.(nextUser);
     if (!nextUser) return;
@@ -329,13 +341,17 @@ export function AuthPanel({
       controller.abort();
     }, authSessionCheckTimeoutMs);
     setError('');
+    let token = GetAuthToken();
     let nextUser: AuthUser | null = null;
     try {
       nextUser = await FetchCurrentAuthUser(apiBase, controller.signal);
+      if (GetAuthToken() !== token) return null;
       if (!nextUser && !controller.signal.aborted) {
         const sharedSession = await FetchSharedAuthSession(apiBase, controller.signal);
-        if (sharedSession) {
+        if (GetAuthToken() !== token) return null;
+        if (sharedSession && !controller.signal.aborted) {
           SetAuthToken(sharedSession.token, false);
+          token = GetAuthToken();
           nextUser = sharedSession.user;
         }
       }
@@ -343,10 +359,11 @@ export function AuthPanel({
       if (!controller.signal.aborted) {
         console.warn('Unable to load auth user.', loadError);
       }
+    } finally {
+      window.clearTimeout(timeoutId);
+      if (loadUserAbortRef.current === controller) loadUserAbortRef.current = null;
     }
-    window.clearTimeout(timeoutId);
-    if (loadUserAbortRef.current === controller) loadUserAbortRef.current = null;
-    if (generation !== loadUserGenerationRef.current) return null;
+    if (GetAuthToken() !== token || generation !== loadUserGenerationRef.current) return null;
     if (controller.signal.aborted && !timedOut) return null;
     applyLoadedUser(nextUser);
     return nextUser;
@@ -357,7 +374,13 @@ export function AuthPanel({
   }, [loadUser]);
 
   useEffect(() => {
-    const handleAuthChange = () => void loadUser();
+    const handleAuthChange = () => {
+      if (profileOwnerIdRef.current !== GetAuthUserIdFromToken(GetAuthToken())) applyLoadedUser(null);
+      void loadUser();
+    };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === authTokenKey || event.key === null) handleAuthChange();
+    };
     const handleMessage = (event: MessageEvent) => {
       if (authOrigin && event.origin !== authOrigin) return;
       if (!IsAuthSessionMessage(event.data)) return;
@@ -367,9 +390,11 @@ export function AuthPanel({
     };
 
     window.addEventListener(authChangedEvent, handleAuthChange);
+    window.addEventListener('storage', handleStorage);
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener(authChangedEvent, handleAuthChange);
+      window.removeEventListener('storage', handleStorage);
       window.removeEventListener('message', handleMessage);
       cancelLoadUser();
     };
@@ -479,8 +504,9 @@ export function AuthPanel({
   };
 
   const handleLogout = () => {
-    setUser(null);
-    onAuthChange?.(null);
+    applyLoadedUser(null);
+    ClearAuthToken();
+    cancelLoadUser();
     void LogoutAuthSession(apiBase).catch((logoutError) => {
       console.warn('Unable to clear shared auth session.', logoutError);
       ClearAuthToken();
@@ -514,6 +540,13 @@ export function AuthPanel({
   };
 
   const submitProfile = async () => {
+    if (!user || GetAuthUserIdFromToken(GetAuthToken()) !== user.id) {
+      applyLoadedUser(null);
+      void loadUser();
+      return;
+    }
+    const generation = loadUserGenerationRef.current;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken);
     const validationError = validateProfile();
     if (validationError) {
       setError(validationError);
@@ -529,15 +562,17 @@ export function AuthPanel({
         smokingFrequency: profile.smokingStatus === 'current' ? profile.smokingFrequency : undefined,
         alcoholFrequency: profile.alcoholStatus === 'current' ? profile.alcoholFrequency : undefined,
       };
-      const nextUser = await SaveAuthProfile(apiBase, cleanedProfile);
+      const nextUser = await SaveAuthProfile(apiBase, cleanedProfile, user.id);
+      if (!isCurrentIdentity() || generation !== loadUserGenerationRef.current) return;
       setUser(nextUser);
       onAuthChange?.(nextUser);
       setIsProfileOpen(false);
     } catch (saveError) {
+      if (!isCurrentIdentity() || generation !== loadUserGenerationRef.current) return;
       console.warn('Unable to save auth profile.', saveError);
       setError(labels.profileFailed);
     } finally {
-      setIsSavingProfile(false);
+      if (isCurrentIdentity() && generation === loadUserGenerationRef.current) setIsSavingProfile(false);
     }
   };
 

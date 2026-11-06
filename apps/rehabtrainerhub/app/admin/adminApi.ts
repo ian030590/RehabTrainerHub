@@ -276,9 +276,11 @@ export async function ReviewAdminGameRelease(
 
 export async function DownloadAdminGameReleaseArtifact(
   releaseId: string,
+  signal?: AbortSignal,
 ): Promise<{ blob: Blob; filename: string }> {
   const response = await AdminFetch(
     `/api/admin/game-releases/${encodeURIComponent(releaseId)}/artifact`,
+    { signal },
   );
   const disposition = response.headers.get('Content-Disposition') ?? '';
   const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1]

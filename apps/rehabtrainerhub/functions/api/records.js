@@ -25,6 +25,7 @@ import {
   BuildRoundsCsv, CsvSha256, OfficialRecordedDate, rawCoordinateKinds, RawCoordinateKindAllowed, RawDataKey, StoreImmutableCsv,
 } from '../_lib/rawData.js';
 
+const officialGameIds = Object.keys(officialGameReleases);
 const appIds = new Set(['rehabtrainerhub']);
 const runtimeIds = new Set(['hub', 'motor', 'vision', 'brain', 'mouth']);
 const runtimeModuleIds = new Map([
@@ -46,6 +47,7 @@ const maximumDefaultRecordRequestBytes = 32 * 1024;
 // gaze point. Keep a bounded ceiling that fits a five-minute run without
 // allowing unbounded record uploads.
 const maximumRecordRequestBytes = 512 * 1024;
+const maximumRoundMetricKeys = 64;
 const maximumEyeTrackingSamples = 3500;
 const maximumEyeTrackingDurationMs = 5 * 60 * 1000 + 1000;
 const eyeTrackingSampleColumns = [
@@ -345,7 +347,9 @@ export async function onRequestPost({ request, env }) {
         AND training_records.subject_id IS excluded.subject_id
         AND training_records.app_id = excluded.app_id
         AND training_records.runtime_id = excluded.runtime_id
-        AND training_records.module_id = excluded.module_id`}
+        AND training_records.module_id = excluded.module_id
+        AND (training_records.game_id IS NULL
+          OR training_records.game_id NOT IN (SELECT value FROM json_each(?)))`}
     `)
     .bind(
       payload.record.id,
@@ -364,6 +368,7 @@ export async function onRequestPost({ request, env }) {
       summaryJson,
       serverTimestamp,
       serverTimestamp,
+      ...(officialGame ? [] : [JSON.stringify(officialGameIds)]),
     )
     .run();
 
@@ -594,6 +599,7 @@ function IsRuntimeModuleId(runtimeId, moduleId) {
 
 export function IsBoundedGameScoreRecord(input) {
   const score = input?.record?.score;
+  const roundMetricKeys = new Set();
   const metrics = (value) => IsPlainObject(value) && Object.keys(value).length <= 12
     && Object.entries(value).every(([key, number]) => /^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key)
       && !/(auth|email|jwt|name|password|token|user|participant|secret|cookie)/i.test(key)
@@ -609,7 +615,11 @@ export function IsBoundedGameScoreRecord(input) {
     && typeof score.gameId === 'string' && /^[a-z0-9-]{1,80}$/.test(score.gameId)
     && score.gameId === input.record.gameId && score.gameId === input.record.moduleId
     && metrics(score.summary) && Array.isArray(score.rounds) && score.rounds.length <= 4000
-    && score.rounds.every(metrics) && GetJsonByteLength(score) <= 450 * 1024;
+    && score.rounds.every(round => {
+      if (!metrics(round)) return false;
+      for (const key of Object.keys(round)) roundMetricKeys.add(key);
+      return roundMetricKeys.size <= maximumRoundMetricKeys;
+    }) && GetJsonByteLength(score) <= 450 * 1024;
 }
 
 function IsBoundedScoreConfig(config) {

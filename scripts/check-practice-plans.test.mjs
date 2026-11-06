@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
+import { CreateIdentityGuard } from '../packages/ui/src/auth/identityGuard.ts';
 import * as channelRules from '../packages/ui/src/selfContainedGame.js';
 
 const appRoot = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
@@ -272,6 +273,8 @@ test('staff dashboard omits the tab when disabled and exposes it to admin and th
     const hooks = Hooks();
     let probes = 0;
     const { AdminDashboard } = await Load('admin/AdminDashboard.tsx', {
+      '@rehab-trainer/ui/auth/authClient': { GetAuthToken: () => 'fake-staff-token' },
+      '@rehab-trainer/ui/auth/identityGuard': { CreateIdentityGuard },
       react: hooks.hooks, 'react/jsx-runtime': { jsx: Jsx, jsxs: Jsx },
       '../HubNavigation': { useHubAuth: () => ({ user: { id: 'staff', role } }) },
       '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en' }) },
@@ -294,6 +297,8 @@ test('switching staff accounts reloads the player picker from the current accoun
   let userId = 'staff-1';
   let overviews = 0;
   const { AdminDashboard } = await Load('admin/AdminDashboard.tsx', {
+    '@rehab-trainer/ui/auth/authClient': { GetAuthToken: () => 'fake-staff-token' },
+    '@rehab-trainer/ui/auth/identityGuard': { CreateIdentityGuard },
     react: hooks.hooks, 'react/jsx-runtime': { jsx: Jsx, jsxs: Jsx },
     '../HubNavigation': { useHubAuth: () => ({ user: { id: userId, role: 'therapist' } }) },
     '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en' }) },

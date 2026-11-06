@@ -9,6 +9,7 @@ const eyeKey = `guests/${subjectId}/${recordId}.csv`;
 const root = '/RehabTrainerHub/raw-data';
 const rawPath = `${root}/rounds/n-back/${subjectId}/2026-10-24/${recordId}.csv`;
 const csv = 'trial,score\n1,7\n';
+const progressKey = 'sync-state/raw-data-sync.json';
 
 const username = 'fake-owner@example.test';
 const password = 'fake-password-密碼🔑';
@@ -36,7 +37,11 @@ function CreateBucket(entries = [], pageSize = 1000) {
       const { text, ...metadata } = object;
       if (options?.onlyIf?.etagMatches && options.onlyIf.etagMatches !== object.etag) return metadata;
       return { ...metadata, body: new Blob([text]).stream(),
+        async text() { return text; },
         async arrayBuffer() { return new TextEncoder().encode(text).buffer; } };
+    },
+    async put(key, text) {
+      objects.set(key, { key, text, size: Buffer.byteLength(text), etag: 'state-etag', version: 'state-version' });
     },
     async head(key) {
       const object = objects.get(key);
@@ -91,6 +96,7 @@ function CreateWebdav(options = {}) {
       }
       assert.equal(method, 'PUT');
       assert.equal(new Headers(init.headers).get('Content-Type'), 'text/csv; charset=utf-8');
+      assert.equal(new Headers(init.headers).get('If-None-Match'), null);
       const text = new TextDecoder('utf-8', { fatal: true }).decode(init.body);
       files.set(path, text);
       uploads.push({ path, text });
@@ -125,9 +131,17 @@ test('uploads exact CSV bytes, verifies by GET before head and delete, and logs 
   assert.deepEqual(await run.run(), { scanned: 1, uploaded: 1, alreadySynced: 0, deleted: 1, skipped: 0, failed: 0 });
   assert.deepEqual(run.pcloud.uploads, [{ path: rawPath, text: csv }]);
   assert.deepEqual(run.rawBucket.deleted, [rawKey]);
-  assert.deepEqual(run.rawBucket.getCalls[0].options, { onlyIf: { etagMatches: 'etag-1' } });
+  assert.deepEqual(run.rawBucket.getCalls.find(({ key }) => key === rawKey).options, { onlyIf: { etagMatches: 'etag-1' } });
   assert.ok(JSON.stringify(run.logs).includes('"deleted":1'));
   AssertPrivateLogs(run.logs);
+});
+
+test('PUT requests omit the If-None-Match header', async () => {
+  const run = CreateRun();
+  assert.equal((await run.run()).deleted, 1);
+  const uploads = run.pcloud.requests.filter(({ method }) => method === 'PUT');
+  assert.equal(uploads.length, 1);
+  for (const { init } of uploads) assert.equal(new Headers(init.headers).get('If-None-Match'), null);
 });
 
 test('a matching earlier upload is verified by GET and deleted without PUT or MKCOL', async () => {
@@ -149,10 +163,12 @@ for (const verifyText of [csv.replace('7', '8'), `${csv}extra`, csv.slice(0, -1)
   });
 }
 
-test('different existing bytes with the same length are overwritten at the same path and verified', async () => {
+test('different existing bytes with the same length are retained at the same path', async () => {
   const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv.replace('7', '8') } });
-  assert.equal((await run.run()).deleted, 1);
-  assert.deepEqual(run.pcloud.uploads, [{ path: rawPath, text: csv }]);
+  assert.equal((await run.run()).deleted, 0);
+  assert.equal(run.pcloud.files.get(rawPath), csv.replace('7', '8'));
+  assert.deepEqual(run.pcloud.uploads, []);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
 });
 
 test('a failed R2 deletion recovers next run through the previously verified remote file', async () => {
@@ -164,6 +180,25 @@ test('a failed R2 deletion recovers next run through the previously verified rem
   assert.equal(first.deleted, 0);
   assert.equal(run.rawBucket.objects.has(rawKey), true);
   run.rawBucket.delete = originalDelete;
+  const second = await run.run();
+  assert.equal(second.alreadySynced, 1);
+  assert.equal(second.uploaded, 0);
+  assert.equal(second.deleted, 1);
+  assert.equal(run.pcloud.uploads.length, 1);
+});
+
+test('an interrupted PUT with complete remote bytes recovers without overwriting on retry', async () => {
+  const run = CreateRun();
+  const originalFetch = run.options.fetch;
+  run.options.fetch = async (url, init) => {
+    const response = await originalFetch(url, init);
+    if (init.method === 'PUT') throw new DOMException('fake interrupted upload', 'TimeoutError');
+    return response;
+  };
+  assert.equal((await run.run()).failed, 1);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
+  assert.equal(run.pcloud.files.get(rawPath), csv);
+  run.options.fetch = originalFetch;
   const second = await run.run();
   assert.equal(second.alreadySynced, 1);
   assert.equal(second.uploaded, 0);
@@ -255,7 +290,7 @@ test('UTF-8 credentials stay in the Basic header and both WebDAV regions are acc
   }
 });
 
-test('a declared oversized existing GET is not buffered and is overwritten', async () => {
+test('a declared oversized existing GET is not buffered or overwritten', async () => {
   const run = CreateRun();
   const originalFetch = run.options.fetch;
   let cancelled = false;
@@ -267,8 +302,9 @@ test('a declared oversized existing GET is not buffered and is overwritten', asy
     }
     return originalFetch(url, init);
   };
-  assert.equal((await run.run()).deleted, 1);
-  assert.equal(run.pcloud.uploads.length, 1);
+  assert.equal((await run.run()).deleted, 0);
+  assert.equal(run.pcloud.uploads.length, 0);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
   assert.equal(cancelled, true);
 });
 
@@ -293,7 +329,9 @@ test('GET without Content-Length stops reading as soon as it exceeds the source 
     }
     return originalFetch(url, init);
   };
-  assert.equal((await run.run()).deleted, 1);
+  assert.equal((await run.run()).deleted, 0);
+  assert.equal(run.pcloud.uploads.length, 0);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
   assert.equal(cancelled, true);
 });
 
@@ -366,7 +404,7 @@ test('invalid ids, traversal, dates, extensions and oversized objects are skippe
   const summary = await run.run();
   assert.equal(summary.scanned, invalid.length);
   assert.equal(summary.skipped, invalid.length);
-  assert.equal(run.rawBucket.getCalls.length, 0);
+  assert.deepEqual(run.rawBucket.getCalls.map(({ key }) => key), [progressKey]);
   assert.equal(run.pcloud.requests.length, 0);
 });
 
@@ -377,7 +415,7 @@ test('all raw categories and guest eye keys map to Subject ID paths while old ac
   assert.equal((await run.run()).deleted, 6);
   assert.equal(run.eyeBucket.objects.has(accountKey), true);
   assert.equal(run.eyeBucket.listCalls[0].prefix, 'guests/');
-  assert.ok(run.pcloud.uploads.some(({ path }) => path === `${root}/eye/oculomotor-training/${subjectId}/2026-10-24/${recordId}.csv`));
+  assert.ok(run.pcloud.uploads.some(({ path }) => path === `${root}/guest-eye/oculomotor-training/${subjectId}/2026-10-24/${recordId}.csv`));
   assert.doesNotMatch(JSON.stringify(run.pcloud.uploads), /encoded|account|users/);
 });
 
@@ -391,6 +429,46 @@ test('account eye CSVs use verified Subject ID metadata and the fixed recorded d
   assert.ok(run.eyeBucket.listCalls.some(({ prefix }) => prefix === 'users/'));
   assert.ok(run.eyeBucket.listCalls.every(({ include }) => include?.includes('customMetadata')));
   assert.doesNotMatch(JSON.stringify(run.pcloud.requests.map(({ url }) => url)) + JSON.stringify(run.logs), /encoded%40account|users\//);
+});
+
+test('a guest eye upload cannot replace an archived account CSV with the same subject, record and date', async () => {
+  const accountKey = `users/fake-account/${recordId}.csv`;
+  const accountPath = `${root}/eye/oculomotor-training/${subjectId}/2026-10-24/${recordId}.csv`;
+  const run = CreateRun([], [{ key: accountKey, customMetadata: { subjectId, recordedDate: '2026-10-24' } }]);
+  assert.equal((await run.run()).deleted, 1);
+  assert.equal(run.eyeBucket.objects.has(accountKey), false);
+  const guestCsv = csv.replace('7', '9');
+  run.eyeBucket.objects.set(eyeKey, { key: eyeKey, text: guestCsv, size: Buffer.byteLength(guestCsv),
+    etag: 'guest-etag', version: 'guest-version', uploaded: new Date('2026-10-24T02:00:00Z'),
+    customMetadata: { subjectId, recordedDate: '2026-10-24' } });
+  assert.equal((await run.run()).deleted, 1);
+  assert.equal(run.pcloud.files.get(accountPath), csv, 'the archived account bytes must remain unchanged');
+  assert.equal(run.pcloud.files.get(`${root}/guest-eye/oculomotor-training/${subjectId}/2026-10-24/${recordId}.csv`), guestCsv);
+  AssertPrivateLogs(run.logs);
+});
+
+test('an archive conflict retains both the remote bytes and the R2 source', async () => {
+  const archivedCsv = csv.replace('7', '8');
+  const run = CreateRun([rawKey], [], { existing: { [rawPath]: archivedCsv } });
+  const summary = await run.run();
+  assert.equal(run.pcloud.files.get(rawPath), archivedCsv, 'different archived bytes must never be overwritten');
+  assert.equal(summary.failed, 1);
+  assert.equal(summary.deleted, 0);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
+  assert.equal(run.pcloud.uploads.length, 0);
+  assert.ok(run.logs.some(([line]) => line === 'raw-data-sync failed RAW_DATA item=1: conflict'));
+  AssertPrivateLogs(run.logs);
+});
+
+test('PUT 412 is an upload failure that retains R2 without verification', async () => {
+  const run = CreateRun([rawKey], [], { failAt: 'PUT', status: 412 });
+  assert.deepEqual(await run.run(), { scanned: 1, uploaded: 0, alreadySynced: 0, deleted: 0, skipped: 0, failed: 1 });
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
+  assert.equal(run.pcloud.uploads.length, 0);
+  assert.ok(run.logs.some(([line]) => line === 'raw-data-sync webdav PUT http=412'));
+  assert.ok(run.logs.some(([line]) => line === 'raw-data-sync failed RAW_DATA item=1: upload'));
+  assert.equal(run.pcloud.requests.filter(({ method }) => method === 'GET').length, 1);
+  AssertPrivateLogs(run.logs);
 });
 
 test('account eye CSVs lacking valid Subject ID or fixed-date metadata are skipped without reading', async () => {
@@ -408,7 +486,7 @@ test('guest eye CSVs prefer a valid fixed date and retain the uploaded-date fall
     const run = CreateRun([], [{ key: eyeKey, customMetadata: { recordedDate } }]);
     assert.equal((await run.run()).deleted, 1);
     const date = recordedDate === '2026-10-23' ? recordedDate : '2026-10-24';
-    assert.equal(run.pcloud.uploads[0].path, `${root}/eye/oculomotor-training/${subjectId}/${date}/${recordId}.csv`);
+    assert.equal(run.pcloud.uploads[0].path, `${root}/guest-eye/oculomotor-training/${subjectId}/${date}/${recordId}.csv`);
     assert.ok(run.eyeBucket.listCalls.every(({ include }) => include?.includes('customMetadata')));
   }
 });
@@ -455,14 +533,117 @@ test('the global 200-object cap applies across both buckets with paginated lists
   assert.equal(run.eyeBucket.objects.size, 3);
 });
 
-test('three consecutive failures stop the run and leave the rest for a later cron', async () => {
-  const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
-  const run = CreateRun(raw, [], { failAt: 'GET' });
-  const summary = await run.run();
-  assert.equal(summary.scanned, 3);
-  assert.equal(summary.failed, 3);
-  assert.equal(run.rawBucket.objects.size, 8);
+for (const oversized of [false, true]) {
+  test(`more than 200 ${oversized ? 'oversized' : 'malformed'} objects cannot block later valid raw and account CSVs`, async () => {
+    const invalid = Array.from({ length: 205 }, (_, index) => ({
+      key: rawKey.replace(recordId, `aaa-${String(index).padStart(3, '0')}${oversized ? '' : '.invalid'}`),
+      ...(oversized ? { size: 25 * 1024 * 1024 + 1 } : {}),
+    }));
+    const accountKey = `users/fake-account/${recordId}.csv`;
+    const run = CreateRun([...invalid, rawKey], [{ key: accountKey,
+      customMetadata: { subjectId, recordedDate: '2026-10-24' } }], {}, 37);
+    const summary = await run.run();
+    assert.equal(summary.deleted, 2, 'valid CSVs after the skipped objects must be archived');
+    assert.equal(summary.skipped, invalid.length);
+    assert.equal(run.pcloud.files.get(rawPath), csv);
+    assert.equal(run.eyeBucket.objects.has(accountKey), false);
+    for (const { key } of invalid) assert.equal(run.rawBucket.objects.has(key), true);
+  });
+}
+
+test('a persisted listing position lets later runs pass a full run of skipped objects', async () => {
+  const invalid = Array.from({ length: 2200 }, (_, index) => rawKey.replace(recordId, `aaa-${String(index).padStart(4, '0')}.invalid`));
+  const run = CreateRun([...invalid, rawKey], [], {}, 37);
+  const first = await run.run();
+  assert.ok(first.scanned <= 2000, 'listing has a separate bounded budget');
+  assert.equal(first.deleted, 0);
+  assert.equal((await ProcessRawDataSync(run.env, run.options)).deleted, 1, 'the next run must continue past skipped objects');
+  assert.equal(run.pcloud.files.get(rawPath), csv);
+  for (const key of invalid) assert.equal(run.rawBucket.objects.has(key), true);
 });
+
+test('a mid-page time limit resumes at the next untouched file and revisits the retained failure', async () => {
+  const firstKey = rawKey.replace(recordId, 'aaa-first');
+  const run = CreateRun([firstKey, rawKey]);
+  let now = 0;
+  run.options.now = () => now;
+  const originalGet = run.rawBucket.get.bind(run.rawBucket);
+  run.rawBucket.get = async (key, options) => {
+    if (key === firstKey) {
+      now = 600001;
+      throw new Error('fake failed first object');
+    }
+    return originalGet(key, options);
+  };
+  assert.equal((await run.run()).failed, 1);
+  assert.equal(run.pcloud.uploads.length, 0);
+  now = 0;
+  assert.equal((await run.run()).deleted, 1);
+  assert.equal(run.pcloud.files.get(rawPath), csv);
+  assert.equal(run.rawBucket.objects.has(firstKey), true);
+  run.rawBucket.get = originalGet;
+  now = 0;
+  assert.equal((await run.run()).deleted, 1);
+  assert.equal(run.rawBucket.objects.has(firstKey), false);
+});
+
+for (const stage of ['read', 'write']) {
+  test(`a progress ${stage} failure is reported without leaking data or removing unarchived sources`, async () => {
+    const run = CreateRun();
+    if (stage === 'read') {
+      run.rawBucket.get = async () => { throw new Error(`${password} ${rawKey}`); };
+    } else {
+      run.rawBucket.objects.get(rawKey).size = 25 * 1024 * 1024 + 1;
+      run.rawBucket.objects.set(progressKey, { key: progressKey, text: JSON.stringify({ source: 0, cursor: 'aaa' }) });
+      run.rawBucket.put = async () => { throw new Error(`${password} ${rawKey}`); };
+    }
+    const summary = await run.run();
+    assert.equal(summary.failed, 1);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+    assert.equal(run.pcloud.uploads.length, 0);
+    assert.ok(run.logs.some(([line]) => line === `raw-data-sync failed RAW_DATA: progress-${stage}`));
+    AssertPrivateLogs(run.logs);
+  });
+}
+
+for (const failure of ['read', 'checksum', 'conflict', 'http']) {
+  test(`object-specific ${failure} failures cannot block a later valid CSV`, async () => {
+    const broken = Array.from({ length: 4 }, (_, index) => rawKey.replace(recordId, `aaa-${index}`));
+    const run = CreateRun([...broken, rawKey]);
+    const originalGet = run.rawBucket.get.bind(run.rawBucket);
+    const originalFetch = run.options.fetch;
+    run.rawBucket.get = async (key, options) => {
+      if (failure === 'read' && broken.includes(key)) throw new Error('fake object read failure');
+      const object = await originalGet(key, options);
+      if (failure === 'checksum' && broken.includes(key)) object.size++;
+      return object;
+    };
+    run.options.fetch = async (url, init) => {
+      if (new URL(url).pathname.includes('/aaa-')) {
+        if (failure === 'http') return new Response(null, { status: 409 });
+        if (failure === 'conflict') return new Response(csv.replace('7', '8'));
+      }
+      return originalFetch(url, init);
+    };
+    const summary = await run.run();
+    assert.equal(summary.deleted, 1, 'a valid CSV must be archived after four object-specific failures');
+    assert.equal(summary.failed, 4);
+    for (const key of broken) assert.equal(run.rawBucket.objects.has(key), true);
+    assert.equal(run.pcloud.files.get(rawPath), csv);
+  });
+}
+
+for (const status of [401, 403, 408, 429, 507, 'timeout', 302]) {
+  test(`three consecutive service failures stop the run and leave the rest for a later cron: ${status}`, async () => {
+    const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
+    const run = CreateRun(raw, [], { failAt: 'GET', status });
+    const summary = await run.run();
+    assert.equal(summary.scanned, 3);
+    assert.equal(summary.failed, 3);
+    assert.equal([...run.rawBucket.objects.keys()].filter(key => key.startsWith('pending/')).length, 8);
+    AssertPrivateLogs(run.logs);
+  });
+}
 
 for (const changed of [{ etag: 'new-etag' }, { size: 1000 }, { version: 'new-version' }]) {
   test(`an object changed between verification and deletion is retained: ${JSON.stringify(changed)}`, async () => {
@@ -480,7 +661,7 @@ test('a rewrite after listing cannot upload or delete stale bytes', async () => 
   const run = CreateRun();
   const originalGet = run.rawBucket.get.bind(run.rawBucket);
   run.rawBucket.get = async (key, options) => {
-    run.rawBucket.objects.get(key).etag = 'changed-after-list';
+    if (key === rawKey) run.rawBucket.objects.get(key).etag = 'changed-after-list';
     return originalGet(key, options);
   };
   assert.equal((await run.run()).deleted, 0);

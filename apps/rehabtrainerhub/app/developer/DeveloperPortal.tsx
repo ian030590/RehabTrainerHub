@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { GetAuthToken, GetAuthUserIdFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { CreateIdentityGuard } from '@rehab-trainer/ui/auth/identityGuard';
 import {
   GetTrainingPurposeTrainerId,
   trainerCategoryTags,
@@ -29,6 +31,12 @@ const categoryOptions = trainingPurposes.map((theme) => ({
 
 export function DeveloperPortal() {
   const { user } = useHubAuth();
+  const privateActionsRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    privateActionsRef.current = controller;
+    return () => controller.abort();
+  }, [user?.id]);
   const { language, locale } = useHubLanguage();
   const copy = GetDeveloperCopy(language);
   const [games, setGames] = useState<DeveloperGame[]>([]);
@@ -56,16 +64,17 @@ export function DeveloperPortal() {
       return;
     }
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     setIsLoading(true);
     setError('');
     void FetchDeveloperGames(controller.signal)
-      .then(setGames)
+      .then(nextGames => { if (isCurrentIdentity()) setGames(nextGames); })
       .catch((nextError: unknown) => {
-        if (controller.signal.aborted) return;
+        if (!isCurrentIdentity()) return;
         setError(nextError instanceof Error ? nextError.message : copy.submission.errors.load);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (isCurrentIdentity()) setIsLoading(false);
       });
     return () => controller.abort();
   }, [copy.submission.errors.load, loadKey, user]);
@@ -100,6 +109,11 @@ export function DeveloperPortal() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!user || GetAuthUserIdFromToken(GetAuthToken()) !== user?.id) return;
+    const controller = privateActionsRef.current;
+    if (!controller || controller.signal.aborted) return;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
+    if (!isCurrentIdentity()) return;
     setError('');
     setMessage('');
     if (!packageFile || !sourceConfirmed || !trainer || !category) {
@@ -121,6 +135,7 @@ export function DeveloperPortal() {
         capabilities,
         changeNotes: changeNotes.trim(),
       });
+      if (!isCurrentIdentity()) return;
       setMessage(response.release.status === 'blocked'
         ? copy.submission.messages.blocked(response.release.scan.blockCount ?? response.release.findings.length)
         : copy.submission.messages.pending);
@@ -129,9 +144,10 @@ export function DeveloperPortal() {
       setChangeNotes('');
       setLoadKey((current) => current + 1);
     } catch (nextError) {
+      if (!isCurrentIdentity()) return;
       setError(nextError instanceof Error ? nextError.message : copy.submission.errors.submit);
     } finally {
-      setIsSubmitting(false);
+      if (isCurrentIdentity()) setIsSubmitting(false);
     }
   };
 

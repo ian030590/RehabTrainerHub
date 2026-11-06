@@ -175,7 +175,8 @@ for (const [actor, patient, status] of [['admin', 'patient', 200], ['admin', 'ot
       assert.equal((await ArchiveCall(fixture, plan.id, actor)).status, 200);
     } else {
       const plan = await CreatePlan(fixture, { patientId: fixture.ids[patient] });
-      assert.equal((await ArchiveCall(fixture, plan.id, actor)).status, status);
+      assert.equal((await ArchiveCall(fixture, plan.id, actor)).status,
+        actor === 'therapist' && patient === 'other' ? 404 : status);
     }
   });
 }
@@ -263,6 +264,31 @@ test('concurrent list replacement leaves one active list and complete audit even
   assert.equal(Count(fixture, 'training_plan_items'), 2);
   assert.equal(Count(fixture, 'admin_audit_events'), 2);
 });
+
+for (const removedAssignment of [false, true]) {
+  test(`archive hides active, archived and unknown plans from an unassigned therapist (removed: ${removedAssignment})`, async t => {
+    const fixture = CreateFixture(t);
+    const patientId = removedAssignment ? fixture.ids.patient : fixture.ids.other;
+    const archived = await CreatePlan(fixture, { patientId });
+    const active = await CreatePlan(fixture, { patientId });
+    if (removedAssignment) {
+      fixture.sqlite.prepare('DELETE FROM therapist_patient_assignments WHERE therapist_id = ? AND patient_id = ?')
+        .run(fixture.ids.therapist, patientId);
+    }
+    const before = fixture.sqlite.prepare('SELECT id, status FROM training_plans ORDER BY id').all();
+    const auditCount = Count(fixture, 'admin_audit_events');
+    const responses = [];
+    for (const planId of [active.id, archived.id, 'missing']) {
+      const response = await ArchiveCall(fixture, planId, 'therapist');
+      responses.push({ status: response.status, body: await response.json() });
+    }
+    assert.deepEqual(responses, Array.from({ length: 3 }, () => ({
+      status: 404, body: { error: 'Training plan not found.' },
+    })));
+    assert.deepEqual(fixture.sqlite.prepare('SELECT id, status FROM training_plans ORDER BY id').all(), before);
+    assert.equal(Count(fixture, 'admin_audit_events'), auditCount);
+  });
+}
 
 test('archive is scoped, audits once and returns an empty current list', async t => {
   const fixture = CreateFixture(t);

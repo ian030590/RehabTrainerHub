@@ -4,7 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  Fragment,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -15,10 +17,15 @@ import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { AccountAvatar } from '@rehab-trainer/ui/components/AccountAvatar';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import {
+  authChangedEvent,
+  authTokenKey,
+  GetAuthToken,
+  GetAuthUserIdFromToken,
   ConfigureRemoteTrainingRecordVerification,
   FlushPendingRemoteTrainingRecords,
   type AuthUser,
 } from '@rehab-trainer/ui/auth/authClient';
+import { NextIdentityEpoch } from '@rehab-trainer/ui/auth/identityGuard';
 import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { GetOrCreateSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import { hubLocalName, hubName } from './hubBrand';
@@ -58,6 +65,15 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [identityEpoch, setIdentityEpoch] = useState(0);
+  const identityIdRef = useRef<string | null>(null);
+  const handleAuthChange = useCallback((nextUser: AuthUser | null) => {
+    const nextUserId = nextUser?.id ?? null;
+    const previousUserId = identityIdRef.current;
+    identityIdRef.current = nextUserId;
+    setIdentityEpoch(epoch => NextIdentityEpoch(epoch, previousUserId, nextUserId));
+    setUser(nextUser);
+  }, []);
   const { language, locale, setLanguage } = useHubLanguage();
   const isStaff = IsStaffUser(user);
   const isTrainingRoute = pathname === '/train' || pathname.startsWith('/train/');
@@ -65,6 +81,22 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const nextLanguage = language === 'en' ? 'zh' : 'en';
 
   useHubTourAutoStart(language);
+
+  useEffect(() => {
+    const handleStoredIdentity = () => {
+      if (identityIdRef.current !== null
+        && identityIdRef.current !== GetAuthUserIdFromToken(GetAuthToken())) handleAuthChange(null);
+    };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === authTokenKey || event.key === null) handleStoredIdentity();
+    };
+    window.addEventListener(authChangedEvent, handleStoredIdentity);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener(authChangedEvent, handleStoredIdentity);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [handleAuthChange]);
 
   useEffect(() => {
     GetOrCreateSubjectId();
@@ -225,7 +257,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
                     appName={hubName}
                     className="hub-auth-panel"
                     locale={locale}
-                    onAuthChange={setUser}
+                    onAuthChange={handleAuthChange}
                     privacyHref={`${siteUrls.hub}/privacy/`}
                     turnstileSiteKey={
                       process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
@@ -244,7 +276,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
             className={`hub-route-transition${isTrainingRoute ? ' hub-route-transition-training' : ''}`}
             key={pathname}
           >
-            {children}
+            <Fragment key={identityEpoch}>{children}</Fragment>
           </div>
         </div>
         {!isTrainingRoute && (

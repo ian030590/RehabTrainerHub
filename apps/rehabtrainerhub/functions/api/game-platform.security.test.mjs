@@ -7,7 +7,7 @@ import { onRequestPut as reviewRelease } from './admin/game-releases/[id].js';
 import { onRequestGet as downloadArtifact } from './admin/game-releases/[id]/artifact.js';
 import { onRequestPost as saveGameRun } from './game-runs.js';
 import { onRequestGet as listGames } from './games.js';
-import { CreateGameReviewDigest } from '../_lib/gameReview.js';
+import { CheckGameReleaseOwner, CreateGameReviewDigest } from '../_lib/gameReview.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const users = new Map([
@@ -37,6 +37,29 @@ test('game review endpoints require an administrator', async () => {
     params: { id: 'release-1' },
   });
   assert.equal(artifact.status, 403);
+});
+
+test('the disabled release-owner sentinel returns 503 even for an administrator named none', async () => {
+  const request = new Request('https://trainerhub.cc/api/admin/game-releases/release-1');
+  const response = CheckGameReleaseOwner(request, { GAME_RELEASE_OWNER_USER_ID: 'none' }, { id: 'none', role: 'admin' });
+  assert.equal(response?.status, 503);
+  const unsetResponse = CheckGameReleaseOwner(request, {}, { id: 'none', role: 'admin' });
+  assert.deepEqual(await response.json(), await unsetResponse.json());
+});
+
+test('a revoked release owner cannot approve or revoke a release', async () => {
+  for (const decision of ['approve', 'revoke']) {
+    const response = await reviewRelease({
+      request: AuthorizedRequest('https://trainerhub.cc/api/admin/game-releases/release-1', tokens['admin-1'], {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, note: 'Checked', sourceReviewed: true, playTested: true, metadataReviewed: true }),
+      }),
+      env: { ...env, GAME_RELEASE_OWNER_USER_ID: 'none' },
+      params: { id: 'release-1' },
+    });
+    assert.equal(response.status, 503);
+  }
 });
 
 test('approval requires source, public metadata, and isolated play-test evidence', async () => {

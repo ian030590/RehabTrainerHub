@@ -71,11 +71,18 @@ export async function onRequestPost({ request, env }) {
 
   const accountLimit = await RateLimitResponse(request, env, 'password-login-account', {
     identity: email,
-    identityOnly: true,
     limit: 10,
     windowSeconds: 15 * 60,
   });
   if (accountLimit) return accountLimit;
+
+  const globalAccountLimit = await RateLimitResponse(request, env, 'password-login-account-global', {
+    identity: email,
+    identityOnly: true,
+    limit: 100,
+    windowSeconds: 60 * 60,
+  });
+  if (globalAccountLimit) return globalAccountLimit;
 
   try {
     const account = await RequireDatabase(env)

@@ -5,7 +5,7 @@ export const gameReviewPolicyVersion = 1;
 
 export function CheckGameReleaseOwner(request, env, user) {
   const ownerId = String(env.GAME_RELEASE_OWNER_USER_ID || '').trim();
-  if (!ownerId) return ErrorResponse(request, env, 'Game release owner is not configured.', 503);
+  if (!ownerId || ownerId === 'none') return ErrorResponse(request, env, 'Game release owner is not configured.', 503);
   if (user?.role !== 'admin' || user.id !== ownerId) return ErrorResponse(request, env, 'Only the game release owner can make this decision.', 403);
   return null;
 }

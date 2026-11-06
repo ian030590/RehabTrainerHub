@@ -3,10 +3,13 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type KeyboardEvent,
 } from 'react';
+import { GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
+import { CreateIdentityGuard } from '@rehab-trainer/ui/auth/identityGuard';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { useHubAuth } from '../HubNavigation';
 import { GameReleaseManager } from './GameReleaseManager';
@@ -129,6 +132,12 @@ export function AdminDashboard() {
   const { user } = useHubAuth();
   const role = GetUserRole(user);
   const isStaff = IsStaffRole(role);
+  const privateActionsRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    privateActionsRef.current = controller;
+    return () => controller.abort();
+  }, [user?.id, role]);
   const { language } = useHubLanguage();
   const copy = GetHubUiCopy(language).practicePlans;
   const [plansProbe, setPlansProbe] = useState<{ userId?: string; status: 'loading' | 'enabled' | 'disabled' | 'error' }>({ status: 'loading' });
@@ -145,9 +154,10 @@ export function AdminDashboard() {
   useEffect(() => {
     if (!isStaff) return;
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     void ProbePracticePlans(controller.signal).then(enabled => {
-      if (!controller.signal.aborted) setPlansProbe({ userId: user?.id, status: enabled ? 'enabled' : 'disabled' });
-    }).catch(() => { if (!controller.signal.aborted) setPlansProbe({ userId: user?.id, status: 'error' }); });
+      if (isCurrentIdentity()) setPlansProbe({ userId: user?.id, status: enabled ? 'enabled' : 'disabled' });
+    }).catch(() => { if (isCurrentIdentity()) setPlansProbe({ userId: user?.id, status: 'error' }); });
     return () => controller.abort();
   }, [isStaff, user?.id, plansProbeKey]);
   useEffect(() => {
@@ -177,16 +187,17 @@ export function AdminDashboard() {
     }
 
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     setOverviewStatus('loading');
     setOverviewError('');
     void FetchAdminOverview(controller.signal)
       .then((nextOverview) => {
-        if (controller.signal.aborted) return;
+        if (!isCurrentIdentity()) return;
         setOverview(nextOverview);
         setOverviewStatus('ready');
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (!isCurrentIdentity()) return;
         console.warn('Unable to load therapist overview.', error);
         setOverviewError('目前無法載入後台總覽，請稍後再試。');
         setOverviewStatus('error');
@@ -198,21 +209,23 @@ export function AdminDashboard() {
     if (!isStaff || activeTab !== 'records') return;
 
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     setRecordsStatus('loading');
     setRecordsError('');
     void FetchAdminRecords(filters, page, pageSize, controller.signal)
       .then((nextRecords) => {
+        if (!isCurrentIdentity()) return;
         setRecords(nextRecords);
         setRecordsStatus('ready');
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (!isCurrentIdentity()) return;
         console.warn('Unable to load therapist records.', error);
         setRecordsError('目前無法載入訓練紀錄，請稍後再試。');
         setRecordsStatus('error');
       });
     return () => controller.abort();
-  }, [activeTab, filters, isStaff, page, recordsKey]);
+  }, [activeTab, filters, isStaff, page, recordsKey, user?.id, role]);
 
   if (!isStaff) {
     return <AdminAccessMessage signedIn={Boolean(user)} />;
@@ -259,11 +272,16 @@ export function AdminDashboard() {
   };
 
   const downloadCsv = async () => {
+    const controller = privateActionsRef.current;
+    if (!controller || controller.signal.aborted) return;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
+    if (!isCurrentIdentity()) return;
     setIsDownloading(true);
     setRecordsError('');
     setRecordsNotice('');
     try {
-      const csv = await FetchAdminRecordsCsv(filters);
+      const csv = await FetchAdminRecordsCsv(filters, controller.signal);
+      if (!isCurrentIdentity()) return;
       DownloadFile(csv.blob, csv.filename, csv.blob.type || 'text/csv;charset=utf-8');
       if (csv.truncated) {
         setRecordsNotice(
@@ -271,10 +289,11 @@ export function AdminDashboard() {
         );
       }
     } catch (error) {
+      if (!isCurrentIdentity()) return;
       console.warn('Unable to download therapist records.', error);
       setRecordsError('CSV 下載失敗，請稍後再試。');
     } finally {
-      setIsDownloading(false);
+      if (isCurrentIdentity()) setIsDownloading(false);
     }
   };
 

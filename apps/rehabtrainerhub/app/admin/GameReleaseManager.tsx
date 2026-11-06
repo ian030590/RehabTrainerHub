@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
+import { CreateIdentityGuard } from '@rehab-trainer/ui/auth/identityGuard';
+import { useHubAuth } from '../HubNavigation';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import {
   trainerCategoryTags,
@@ -24,6 +27,13 @@ const statusLabels: Readonly<Record<GameReleaseReviewStatus, string>> = {
 };
 
 export function GameReleaseManager() {
+  const { user } = useHubAuth();
+  const privateActionsRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    privateActionsRef.current = controller;
+    return () => controller.abort();
+  }, [user?.id, user?.role]);
   const [filter, setFilter] = useState<GameReleaseReviewStatus | ''>('pending_review');
   const [releases, setReleases] = useState<AdminGameRelease[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -45,21 +55,23 @@ export function GameReleaseManager() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     setStatus('loading');
     setError('');
     void FetchAdminGameReleases(filter || undefined, controller.signal, requestedRelease)
       .then((nextReleases) => {
+        if (!isCurrentIdentity()) return;
         setReleases(nextReleases);
         setStatus('ready');
       })
       .catch((loadError: unknown) => {
-        if (controller.signal.aborted) return;
+        if (!isCurrentIdentity()) return;
         console.warn('Unable to load game releases.', loadError);
         setError('目前無法載入遊戲送審版本，請稍後再試。');
         setStatus('error');
       });
     return () => controller.abort();
-  }, [filter, reloadKey, requestedRelease]);
+  }, [filter, reloadKey, requestedRelease, user?.id, user?.role]);
 
   const review = async (release: AdminGameRelease, decision: 'approve' | 'reject' | 'revoke') => {
     const verb = decision === 'approve' ? '核准並發布' : decision === 'revoke' ? '緊急下架' : '退回';
@@ -83,16 +95,22 @@ export function GameReleaseManager() {
   };
 
   const downloadArtifact = async (release: AdminGameRelease) => {
+    const controller = privateActionsRef.current;
+    if (!controller || controller.signal.aborted) return;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
+    if (!isCurrentIdentity()) return;
     setBusyId(release.id);
     setError('');
     try {
-      const artifact = await DownloadAdminGameReleaseArtifact(release.id);
+      const artifact = await DownloadAdminGameReleaseArtifact(release.id, controller.signal);
+      if (!isCurrentIdentity()) return;
       DownloadFile(artifact.blob, artifact.filename, 'application/octet-stream');
     } catch (downloadError) {
+      if (!isCurrentIdentity()) return;
       console.warn('Unable to download game review artifact.', downloadError);
       setError('無法下載送審原始檔，請勿在未完成原始碼核對的情況下核准。');
     } finally {
-      setBusyId('');
+      if (isCurrentIdentity()) setBusyId('');
     }
   };
 

@@ -9,6 +9,9 @@ import {
   ToPublicUser,
 } from '../../_lib/auth.js';
 import { EnsureAccountSubjectId } from '../../_lib/subjects.js';
+import { ReadJsonBody } from '../../_lib/request.js';
+
+const maximumProfileBodyBytes = 16 * 1024;
 
 const chronicDiagnosisValues = new Set([
   'centralNervousSystem',
@@ -37,8 +40,16 @@ export async function onRequestPut({ request, env }) {
   const session = await RequireSession(request, env);
   if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
-  const input = await request.json().catch(() => null);
-  const profile = NormalizeProfile(input);
+  const parsedBody = await ReadJsonBody(request, maximumProfileBodyBytes);
+  if (!parsedBody.ok) {
+    return ErrorResponse(
+      request,
+      env,
+      parsedBody.reason === 'too-large' ? 'Profile payload is too large.' : 'Invalid profile payload.',
+      parsedBody.reason === 'too-large' ? 413 : 400,
+    );
+  }
+  const profile = NormalizeProfile(parsedBody.value);
   if (!profile) return ErrorResponse(request, env, 'Invalid profile payload.', 400);
 
   const now = new Date().toISOString();
@@ -87,7 +98,7 @@ function NormalizeProfile(input) {
   const gender = typeof input.gender === 'string' ? input.gender.trim() : '';
   const nationality = typeof input.nationality === 'string' ? input.nationality.trim() : '';
   const chronicDiagnoses = Array.isArray(input.chronicDiagnoses)
-    ? input.chronicDiagnoses.filter((value) => typeof value === 'string' && chronicDiagnosisValues.has(value))
+    ? [...new Set(input.chronicDiagnoses.filter((value) => typeof value === 'string' && chronicDiagnosisValues.has(value)))]
     : [];
   const smokingStatus = habitStatuses.has(input.smokingStatus) ? input.smokingStatus : 'none';
   const alcoholStatus = habitStatuses.has(input.alcoholStatus) ? input.alcoholStatus : 'none';

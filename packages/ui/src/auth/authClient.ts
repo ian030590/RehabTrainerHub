@@ -18,7 +18,7 @@ export type AlcoholUnit = 'bottles' | 'cans' | 'cups';
 export const authChangedEvent = 'rehab-auth-changed';
 export const authMessageType = 'rehabtrainerhub-auth-session';
 
-const authTokenKey = 'rehabtrainerhub.auth.token';
+export const authTokenKey = 'rehabtrainerhub.auth.token';
 const runtimeStorageNamespaces = [
   CreateRuntimeStorageNamespace('motor'),
   CreateRuntimeStorageNamespace('vision'),
@@ -336,6 +336,7 @@ export async function FetchCurrentAuthUser(
     signal,
   });
 
+  if (GetAuthToken() !== token || signal?.aborted) return null;
   if (response.status === 401) {
     ClearAuthToken();
     return null;
@@ -346,6 +347,7 @@ export async function FetchCurrentAuthUser(
   }
 
   const payload = await response.json() as { user?: AuthUser };
+  if (GetAuthToken() !== token || signal?.aborted) return null;
   CacheAccountSubjectId(payload.user);
   return payload.user ?? null;
 }
@@ -466,9 +468,15 @@ export async function LoginPasswordAccount(
   return ParseAuthSessionResponse(response, 'Unable to sign in');
 }
 
-export async function SaveAuthProfile(apiBase: string | undefined, profile: RehabProfile): Promise<AuthUser> {
+export async function SaveAuthProfile(
+  apiBase: string | undefined,
+  profile: RehabProfile,
+  expectedUserId?: string,
+): Promise<AuthUser> {
   const token = GetAuthToken();
-  if (!token) throw new Error('Cannot save profile without an auth token.');
+  if (!token || (expectedUserId !== undefined && GetAuthUserIdFromToken(token) !== expectedUserId)) {
+    throw new Error('Unable to save profile.');
+  }
 
   const response = await fetch(BuildApiUrl(apiBase, '/api/auth/profile'), {
     method: 'PUT',
@@ -484,6 +492,7 @@ export async function SaveAuthProfile(apiBase: string | undefined, profile: Reha
   }
 
   const payload = await response.json() as { user: AuthUser };
+  if (GetAuthToken() !== token) throw new Error('Unable to save profile.');
   CacheAccountSubjectId(payload.user);
   return payload.user;
 }

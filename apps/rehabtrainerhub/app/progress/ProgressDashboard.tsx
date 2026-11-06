@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { CreateIdentityGuard } from '@rehab-trainer/ui/auth/identityGuard';
 import {
   FetchRehabProgress,
   GetAuthToken,
@@ -50,6 +51,12 @@ type GazeFile = { recordId: string; uploadedAt: string; size: number };
 
 export function ProgressDashboard() {
   const { user } = useHubAuth();
+  const privateActionsRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    privateActionsRef.current = controller;
+    return () => controller.abort();
+  }, [user?.id]);
   const { language, locale, t } = useHubLanguage();
   const [progress, setProgress] = useState<RehabProgress | null>(null);
   const [status, setStatus] = useState<LoadStatus>('idle');
@@ -71,14 +78,16 @@ export function ProgressDashboard() {
       return;
     }
 
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken);
     setStatus('loading');
     void FetchRehabProgress(siteUrls.hub)
       .then((nextProgress) => {
-        if (cancelled) return;
+        if (cancelled || !isCurrentIdentity()) return;
         setProgress(nextProgress);
         setStatus(nextProgress ? 'ready' : 'idle');
       })
       .catch((error) => {
+        if (cancelled || !isCurrentIdentity()) return;
         console.warn('Unable to load rehabilitation progress.', error);
         if (!cancelled) setStatus('error');
       });
@@ -98,6 +107,7 @@ export function ProgressDashboard() {
       return;
     }
     const controller = new AbortController();
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
     void fetch('/api/oculomotor-data', {
       headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
       signal: controller.signal,
@@ -105,31 +115,37 @@ export function ProgressDashboard() {
       if (!response.ok) throw new Error(`Gaze CSV list failed (${response.status}).`);
       return response.json() as Promise<{ records: GazeFile[]; cursor: string | null }>;
     }).then(({ records, cursor }) => {
-      if (controller.signal.aborted) return;
+      if (!isCurrentIdentity()) return;
       setGazeFiles(records);
       setGazeCursor(cursor);
       setGazeOwnerId(user.id);
       setGazeError(false);
-    }).catch(() => { if (!controller.signal.aborted) setGazeError(true); })
-      .finally(() => { if (!controller.signal.aborted) setGazeLoading(false); });
+    }).catch(() => { if (isCurrentIdentity()) setGazeError(true); })
+      .finally(() => { if (isCurrentIdentity()) setGazeLoading(false); });
     return () => controller.abort();
   }, [user]);
 
   const downloadGazeCsv = async (recordId: string) => {
-    const token = GetAuthToken();
+    const controller = privateActionsRef.current;
+    if (!controller || controller.signal.aborted) return;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
+    if (!isCurrentIdentity()) return;
     setGazeBusy(recordId);
     try {
       const response = await fetch(`/api/oculomotor-data?recordId=${encodeURIComponent(recordId)}`, {
         headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
+        signal: controller.signal,
       });
-      if (GetAuthToken() !== token) return;
+      if (!isCurrentIdentity()) return;
       if (response.status === 404) {
         setGazeFiles(current => current.filter(file => file.recordId !== recordId));
         setGazeArchived(true); setGazeError(false); setGazeBusy(null);
         return;
       }
       if (!response.ok) throw new Error(`Gaze CSV download failed (${response.status}).`);
-      const url = URL.createObjectURL(await response.blob());
+      const blob = await response.blob();
+      if (!isCurrentIdentity()) return;
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `oculomotor-${recordId}.csv`;
@@ -139,27 +155,33 @@ export function ProgressDashboard() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       setGazeError(false);
     } catch {
-      if (GetAuthToken() === token) setGazeError(true);
+      if (isCurrentIdentity()) setGazeError(true);
     }
-    if (GetAuthToken() === token) setGazeBusy(null);
+    if (isCurrentIdentity()) setGazeBusy(null);
   };
 
   const loadMoreGazeFiles = async () => {
     if (!gazeCursor || gazeLoading) return;
+    const controller = privateActionsRef.current;
+    if (!controller || controller.signal.aborted) return;
+    const isCurrentIdentity = CreateIdentityGuard(GetAuthToken, controller.signal);
+    if (!isCurrentIdentity()) return;
     setGazeLoading(true);
     try {
       const response = await fetch(`/api/oculomotor-data?cursor=${encodeURIComponent(gazeCursor)}`, {
         headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
+        signal: controller.signal,
       });
       if (!response.ok) throw new Error(`Gaze CSV list failed (${response.status}).`);
       const payload = await response.json() as { records: GazeFile[]; cursor: string | null };
+      if (!isCurrentIdentity()) return;
       setGazeFiles((current) => [...current, ...payload.records]);
       setGazeCursor(payload.cursor);
       setGazeError(false);
     } catch {
-      setGazeError(true);
+      if (isCurrentIdentity()) setGazeError(true);
     }
-    setGazeLoading(false);
+    if (isCurrentIdentity()) setGazeLoading(false);
   };
 
   const achievements = progress?.achievements ?? emptyAchievements;

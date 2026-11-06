@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
+import { CreateIdentityGuard } from '../packages/ui/src/auth/identityGuard.ts';
 import * as gameMessages from '../packages/ui/src/selfContainedGame.js';
 import { CreateSensorInputHost } from '../packages/ui/src/sensorInputHost.js';
 import { CreateRawCoordinateRecorder, rawCoordinateColumns } from '../packages/ui/src/rawCoordinateRecorder.js';
@@ -295,6 +296,7 @@ for (const language of ['en', 'zh-TW']) {
     const dependencies = {
       react: renderer.hooks, 'react/jsx-runtime': jsxRuntime, 'next/link': { default: 'a' },
       '@rehab-trainer/ui/auth/authClient': { GetAuthToken: () => 'account-token', FetchRehabProgress: async () => null },
+      '@rehab-trainer/ui/auth/identityGuard': { CreateIdentityGuard },
       '@rehab-trainer/hub-modules/catalog': { trainingCatalog: [] },
       '../HubNavigation': { useHubAuth: () => ({ user }) },
       '../i18n': { GetHubUiCopy: () => ({ progress: { dailyTaskTitles: {} } }) },

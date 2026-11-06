@@ -244,7 +244,7 @@ test('Hub Worker secrets are an explicit runtime allowlist that keeps runner ori
     TURNSTILE_REQUIRED: '0', TURNSTILE_RECORDS_REQUIRED: '0', ANONYMOUS_RECORDS_ENABLED: '0', TRAINING_PLANS_ENABLED: '', GAME_RELEASE_OWNER_USER_ID: '' }, movedApps);
   assert.equal('TURNSTILE_SECRET_KEY' in withoutOptional, false, 'empty values are not uploaded as secrets');
   assert.equal(withoutOptional.TRAINING_PLANS_ENABLED, '0', 'practice lists stay off unless the repository variable is 1');
-  assert.equal('GAME_RELEASE_OWNER_USER_ID' in withoutOptional, false);
+  assert.equal(withoutOptional.GAME_RELEASE_OWNER_USER_ID, 'none');
 
   for (const blocked of [newOrigin, 'https://trainerhub-user-games.pages.dev']) {
     assert.throws(() => CreateHubWorkerSecrets({ ...environment, AUTH_ALLOWED_ORIGINS: blocked }, movedApps), /must not include game runner origin/);
@@ -254,6 +254,24 @@ test('Hub Worker secrets are an explicit runtime allowlist that keeps runner ori
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, AUTH_SESSION_SECRET: '' }, movedApps), /AUTH_SESSION_SECRET/);
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, TURNSTILE_RECORDS_REQUIRED: '0' }, movedApps), /ANONYMOUS_RECORDS_ENABLED=1 requires/);
   assert.throws(() => CreateHubWorkerSecrets({ ...environment, TRAINING_PLANS_ENABLED: 'yes' }, movedApps), /TRAINING_PLANS_ENABLED must be 0 or 1/);
+});
+
+test('clearing the release owner overwrites the previous Worker secret with a disabled sentinel', () => {
+  const { apps } = LoadApps();
+  const environment = {
+    AUTH_SESSION_SECRET: 'fake-session-secret',
+    AUTH_STATE_SECRET: 'fake-state-secret',
+    GOOGLE_CLIENT_ID: 'fake-google-id',
+    GOOGLE_CLIENT_SECRET: 'fake-google-secret',
+  };
+  for (const ownerId of [undefined, '', '   ']) {
+    const desiredSecrets = CreateHubWorkerSecrets({ ...environment, GAME_RELEASE_OWNER_USER_ID: ownerId }, apps);
+    assert.equal(desiredSecrets.GAME_RELEASE_OWNER_USER_ID, 'none');
+    const deployedSecrets = { GAME_RELEASE_OWNER_USER_ID: 'previous-owner', ...desiredSecrets };
+    assert.equal(deployedSecrets.GAME_RELEASE_OWNER_USER_ID, 'none');
+  }
+  const configuredSecrets = CreateHubWorkerSecrets({ ...environment, GAME_RELEASE_OWNER_USER_ID: ' owner-id ' }, apps);
+  assert.equal(configuredSecrets.GAME_RELEASE_OWNER_USER_ID, 'owner-id');
 });
 
 test('asset responses keep Pages defaults while Function responses stay untouched', async () => {
@@ -403,6 +421,27 @@ test('the real repository dry run deploys both Workers in order', () => {
   const runner = output.indexOf('deploy --config=apps/usergamerunner/wrangler.workers.jsonc');
   const hub = output.indexOf('deploy --config=apps/rehabtrainerhub/wrangler.workers.jsonc --secrets-file=');
   assert.ok(runner > 0 && hub > runner, output);
+});
+
+test('every workflow step receiving secrets is restricted to main', () => {
+  const workflow = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
+  const jobs = workflow.split('\njobs:\n')[1].split(/(?=^  [\w-]+:\n)/m);
+  const mainRefGuard = /^\$\{\{\s*(?:[^|()]* && )?github\.ref == 'refs\/heads\/main'(?: && [^|()]*)?\s*\}\}$/;
+  const unguardedSteps = [];
+  let secretSteps = 0;
+  for (const job of jobs) {
+    const jobCondition = job.match(/^    if: (.+)$/m)?.[1] ?? '';
+    for (const step of job.split(/(?=^      - )/m).slice(1)) {
+      if (!/\bsecrets\./.test(step)) continue;
+      secretSteps += 1;
+      const stepCondition = step.match(/^        if: (.+)$/m)?.[1] ?? '';
+      if (!mainRefGuard.test(jobCondition) && !mainRefGuard.test(stepCondition)) {
+        unguardedSteps.push(step.match(/^      - (?:name|uses|id): (.+)$/m)?.[1]);
+      }
+    }
+  }
+  assert.ok(secretSteps > 0, 'deployment workflow must include secret-bearing steps');
+  assert.deepEqual(unguardedSteps, [], 'secret-bearing steps must require refs/heads/main');
 });
 
 test('the deploy workflow deploys Workers by default and Pages only when the repository variable asks for it', () => {

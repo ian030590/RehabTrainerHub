@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     needs: [deployment_scope]
-    if: ${{ needs.deployment_scope.outputs.pages_required == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' && needs.deployment_scope.outputs.pages_required == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: cloudflare-pages

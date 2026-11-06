@@ -12,11 +12,11 @@ export async function onRequestPost({ request, env, params }) {
   try {
     const { user, response } = await RequireTrainingPlanStaff(request, env);
     if (response) return response;
-    const plan = await RequireDatabase(env).prepare("SELECT id, patient_user_id FROM training_plans WHERE id = ? AND status = 'active'")
+    const plan = await RequireDatabase(env).prepare('SELECT id, patient_user_id FROM training_plans WHERE id = ?')
       .bind(params.planId).first();
     if (!plan) return ErrorResponse(request, env, 'Training plan not found.', 404);
     const denied = await CheckTrainingPlanPatient(request, env, user, plan.patient_user_id);
-    if (denied) return denied;
+    if (denied) return ErrorResponse(request, env, 'Training plan not found.', 404);
     if (!await ArchiveTrainingPlan(env, user, plan)) return ErrorResponse(request, env, 'Training plan not found.', 404);
     return JsonResponse(request, env, { ok: true });
   } catch (error) {

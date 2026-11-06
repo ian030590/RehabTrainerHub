@@ -10,28 +10,30 @@
 | --- | --- |
 | `rehab-raw-data`：`pending/rounds/<gameId>/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` | `rounds/<gameId>/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
 | `rehab-raw-data`：`pending/<hand\|head\|pose\|tongue>/<gameId>/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` | `<hand\|head\|pose\|tongue>/<gameId>/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
-| `oculomotor-data`：`guests/<subjectId>/<recordId>.csv` | `eye/oculomotor-training/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
+| `oculomotor-data`：`guests/<subjectId>/<recordId>.csv` | `guest-eye/oculomotor-training/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
 | `oculomotor-data`：`users/<encoded userId>/<recordId>.csv`，僅限有效 Subject ID 與日期 metadata | `eye/oculomotor-training/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
 
 根目錄預設 `/RehabTrainerHub/raw-data`。新眼動日期取 metadata.recordedDate（官方 session issue time 依 Hub `REHAB_TIME_ZONE` 換算的日期，預設 Asia/Taipei），帳號路徑使用 metadata.subjectId，不使用帳號 ID。舊 guests 沒有有效日期 metadata 時取 R2 uploaded 的 UTC 日期；舊 users 缺少有效 Subject ID 或日期 metadata 則跳過。其餘類型沿用來源鍵的日期。CSV 以原始 bytes 傳送，不重新編碼或改寫欄位。
+
+2026-11-06 安全修正：訪客改用獨立的 `guest-eye` 類型，帳號維持 `eye`，即使兩者的 Subject ID、record ID 與日期相同也不會共用目的檔。既有封存檔不搬移、不改寫；舊版已寫在 `eye` 下的訪客檔需另案核對來源，不能自動假設為帳號檔。
 
 `gameId`／`recordId` 只接受小寫英數與單一連字號分隔，最長 128 字元；`subjectId` 必須是本站使用的小寫 UUID v4；日期必須是真實的 ISO 日期。非 `.csv`、不合路徑規則或超過 25 MiB 的物件保留在 R2，記為 `skipped`，不讀取內容上傳。其他 prefix 不處理。
 
 ## 驗證及刪除規則
 
-1. 以 R2 `list` 分頁列舉，每次先處理 `pending/`，再處理 `guests/` 與 `users/`；list 帶 `include: ['customMetadata']`。眼動來源的 Subject ID／日期對應會在 get 與刪除前 head 再檢查。讀取時帶 `onlyIf: { etagMatches }`，核對 etag、大小與 version，並計算原始 bytes 的 SHA-256。
-2. 以 WebDAV `GET` 讀取目的檔。404 表示尚未上傳；200 且 bytes 長度與 SHA-256 均相同，視為已同步，不重傳。200 但內容不同則覆寫；宣告 `Content-Length` 超過 25 MiB 時不緩衝內容，直接進入覆寫流程。未宣告長度時也只讀取至來源大小上限，超過即停止。其他 HTTP 狀態視為該檔失敗。
-3. 需要上傳時，從指定根目錄開始逐層 `MKCOL`，201 表示已建立，405 表示已存在；其他狀態失敗。同一輪快取已確認的目錄。以 `PUT` 傳送原始 bytes，`Content-Type: text/csv; charset=utf-8`，只接受 200／201／204。目的 URL 由固定端點及逐段 `encodeURIComponent` 的根目錄與來源對應路徑組成，目錄中的空格成為 `%20`。
+1. 以 R2 `list` 分頁列舉，首次先處理 `pending/`，再處理 `guests/` 與 `users/`；後續從已保存的進度接續，完成三個來源後循環。list 帶 `include: ['customMetadata']`。眼動來源的 Subject ID／日期對應會在 get 與刪除前 head 再檢查。讀取時帶 `onlyIf: { etagMatches }`，核對 etag、大小與 version，並計算原始 bytes 的 SHA-256。
+2. 以 WebDAV `GET` 讀取目的檔。404 表示尚未上傳；200 且 bytes 長度與 SHA-256 均相同，視為已同步，不重傳。200 但內容不同則記錄 `conflict`、增加 `failed` 並保留兩端檔案，不覆寫。宣告 `Content-Length` 超過 25 MiB 時不緩衝內容；未宣告長度時也只讀取至來源大小上限，超過即停止，均視為衝突。其他 HTTP 狀態視為該檔失敗。
+3. 需要上傳時，從指定根目錄開始逐層 `MKCOL`，201 表示已建立，405 表示已存在；其他狀態失敗。同一輪快取已確認的目錄。以 `PUT` 傳送原始 bytes，帶 `Content-Type: text/csv; charset=utf-8`，不送 `If-None-Match`，只接受 200／201／204；包括 412 在內的其他狀態均記為上傳失敗並保留 R2 來源。目的 URL 由固定端點及逐段 `encodeURIComponent` 的根目錄與來源對應路徑組成，目錄中的空格成為 `%20`。
 4. 上傳後再次 `GET` 相同目的檔；只有 200、bytes 長度相同且 SHA-256 相同才算驗證完成。這是下載回讀比對，不依賴 pCloud API checksum 或回傳 metadata，也不計算 SHA-1。
 5. 遠端副本驗證相符後，以 R2 `head()` 再查 etag、大小、version 與目標對應，與讀取時相同且未超時才刪除。任何驗證、權限、網路或 HTTP 錯誤都保留 R2 來源，等待後續排程。
 
-若上傳後程式中斷，下一輪會由相同目的路徑找回已同步檔。若 R2 刪除失敗，下一輪先 GET 回讀比對，已相同就不重傳。不同內容以 PUT 覆寫相同路徑；這裡不保證遠端版本保留行為。
+若 PUT 已完整寫入但回應中斷，或 R2 刪除失敗，後續重訪同一來源時會先 GET 回讀比對，相符就不重傳。若中斷留下不同或不完整的遠端檔，會持續記為 `conflict` 並保留 R2；擁有者必須先核對與另存衝突檔，再決定如何恢復，不會自動覆寫。已保存的列舉進度可能讓失敗來源在下一次完整循環才重試。
 
 **來源必須保持不可變：** R2 Workers API 的 `delete(key)` 沒有條件式刪除參數；`head()` 與 `delete()` 之間不能形成原子比較刪除。程式會攔下檢查時已變動的物件，但不能保證攔下恰好在兩次呼叫之間發生的覆寫。所有來源寫入端必須用唯一 record key 與 `onlyIf: { etagDoesNotMatch: '*' }` 保護，不可覆寫或刪除後重用相同 key；同步期間也不能用其他工具改寫來源。兩個寫入端均以條件式建立 CSV，並保留 checksums/<CSV 鍵> 的空物件及 SHA-256，避免封存刪除後換 bytes 重用鍵；只有 CSV 寫入完成才建立 receipts/<CSV 鍵>，供成果驗證與追溯。保護物件不在同步 prefix 中，不能與原始 CSV 一起清除。[R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
 
-每輪合計最多掃描 200 個物件，或約 10 分鐘，以先到者為準；跳過的物件也占掃描額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次處理失敗就提前停止，不在同一輪密集重試；HTTP 5xx 錯誤也留待後續排程。列舉失敗會停止該 bucket，本輪仍可嘗試下一個 bucket。
+每輪合計最多 200 次成功 PUT／已相符的封存檔處理，另有 2,000 個來源物件的掃描上限，以及約 10 分鐘時間上限，以先到者為準。跳過、來源讀取／檢查失敗及封存衝突不占 200 檔額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次網路／逾時、HTTP 401／403／408／429、5xx 或轉址失敗就提前停止；單檔讀取、metadata／checksum 不符、衝突及其他單檔 HTTP 錯誤不累計此門檻。列舉失敗會停止該來源，本輪仍可嘗試下一個來源。
 
-沒有跨輪持久化游標。若前段一直累積不合法物件，或每天新增量超過額度，後段檔案可能持續延後。擁有者應查明 `skipped` 原因並另行保存／整理這些物件，再視實際流量調整排程與額度，不能直接把未驗證物件當作已同步刪除。
+`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存目前來源、該頁的 R2 cursor 與最後處理的鍵；頁中途停止時，下一輪略過已處理鍵並接續未處理檔案。此控制物件不屬於同步 prefix，不上傳 pCloud，也不刪除原始資料。掃描滿 2,000 個無效物件後，下輪會往後接續，不會永遠重看開頭；到達來源結尾後，保留的失敗物件會在後續循環再次檢查。進度讀取失敗或內容無效時，本輪在列舉前記為 `progress-read` 失敗；保存失敗記為 `progress-write`，可能使下輪重看舊頁，需由擁有者排查。同步 Worker 應維持單一執行者，不同時手動執行另一輪。
 
 ## 擁有者一次性設定
 
@@ -54,7 +56,7 @@
    npx wrangler secret put PCLOUD_WEBDAV_PASSWORD --config workers/raw-data-sync/wrangler.toml
    ```
 
-   username 必須為非空的可列印字串，不能有 `:` 或控制字元；password 必須非空且不能有控制字元。認證只放在 `Authorization: Basic base64(utf8(username + ':' + password))`，所有請求均為 `redirect: 'error'`，不跟隨轉址。缺憑證、端點／root 無效或任一 bucket binding 不完整時，在列舉前記錄 `raw-data-sync refused: configuration` 並拒絕執行。
+   username 必須為非空的可列印字串，不能有 `:` 或控制字元；password 必須非空且不能有控制字元。認證只放在 `Authorization: Basic base64(utf8(username + ':' + password))`，所有請求均為 `redirect: 'manual'` 並拒絕轉址狀態，不跟隨轉址。缺憑證、端點／root 無效或任一 bucket binding 不完整時，在列舉前記錄 `raw-data-sync refused: configuration` 並拒絕執行；`RAW_DATA` 另需支援 `put` 保存進度。
 
 5. 若先前設定過 API token，刪除舊 secret；程式不再讀取它：
 
@@ -103,7 +105,7 @@ npx wrangler tail --config workers/raw-data-sync/wrangler.toml
 | `alreadySynced` | 目的路徑 GET 回讀的 SHA-256 與 byte 長度已相符的次數 |
 | `deleted` | 驗證完成且 R2 刪除呼叫成功的次數 |
 | `skipped` | 不合路徑／副檔名／大小規則而保留的物件數 |
-| `failed` | 檔案處理、列舉或分頁錯誤次數，可能包含未列入 `scanned` 的列舉錯誤 |
+| `failed` | 檔案處理、衝突、列舉、分頁或進度讀寫錯誤次數，可能包含未列入 `scanned` 的錯誤 |
 
 錯誤日誌只包含 bucket binding 名稱、當輪序號、固定處理階段，以及 WebDAV 方法名稱與數字 HTTP 狀態（例如 `raw-data-sync webdav PUT http=507`）；不輸出 URL、路徑、登入 email、密碼、來源鍵、Subject ID、CSV 內容或回傳錯誤文字。設定錯誤會記錄 `refused: configuration`，不產生成功摘要。檢查 `failed`／`skipped` 及 pCloud 實際檔案，不以 `uploaded` 單獨判定可刪除。
 
@@ -150,3 +152,21 @@ npm run test:naming
 共用工作樹曾出現其他任務的 Blogger 與 D1 清理測試失敗；以上為其後的重跑結果，未修改那些任務的程式或測試。已核對 R2 來源、預算、root／bucket 驗證、條件式讀取、TargetSegments／SameObject 與 head／delete 區段保持不變；本次六個檔案保留 LF，沒有新增 U+2014 或空白差異。已執行狀態與 conflicted 檔搜尋；其他並行修改保留。
 
 正式 secrets、舊 token 移除、獨立 Worker 部署與假 CSV 排程驗收由擁有者執行，本機替身測試不能代替正式驗收。
+
+## 2026-11-06 安全修正驗證
+
+先新增 11 項回歸測試，產品程式未修改時全部失敗。主要證據：
+
+- `a guest eye upload cannot replace an archived account CSV with the same subject, record and date`：`AssertionError [ERR_ASSERTION]: the archived account bytes must remain unchanged`，實際 `'trial,score\n1,9\n'`，預期 `'trial,score\n1,7\n'`。
+- `more than 200 oversized objects cannot block later valid raw and account CSVs`：`AssertionError [ERR_ASSERTION]: valid CSVs after the skipped objects must be archived`，`0 !== 2`；malformed 版本同樣失敗。
+- `a persisted listing position lets later runs pass a full run of skipped objects`：`AssertionError [ERR_ASSERTION]: the next run must continue past skipped objects`，`0 !== 1`。
+
+初版修正另驗條件式 PUT 的相同／不同內容競態、完整 PUT 回應中斷後恢復、頁中途超時接續、進度讀寫失敗及服務故障門檻。HTTP 408／429 的停止測試先失敗於 `8 !== 3`，再補入服務層級錯誤。當時 `npm run test:hub-functions` 為 376 通過、0 失敗；兩個指定測試檔合計 114 通過、0 失敗。既有 glob 自動包含新增測試，root `test:ci` 不需改線；`npm run test:naming` 為 2 通過、0 失敗且來源掃描通過。修改的同步函式與測試，以及未修改的眼動 API 與測試均通過 `node --check`。條件式 PUT 與其競態測試已由下述 sec-t5b 追修取代。
+
+搜尋 `games/oculomotor-training`、`app` 與 `packages/ui`：現行 POST 呼叫僅在 `packages/ui/src/saveOculomotorCsv.ts`，由 `app/train/R2GameOverlay.tsx` 使用，固定附 `officialGameVersion` 與 `runSessionToken`；進度頁只 GET。未找到不帶官方 session token 的現行前端上傳呼叫。API 的舊訪客路徑與上傳契約保留相容性，沒有移除。
+
+sec-t5b 追修：pCloud 對 `If-None-Match: *` 的支援未驗證，故移除條件式標頭與 412 特例；先新增 `PUT requests omit the If-None-Match header`，確認修正前失敗於 `'*' !== null`，並將條件式建立競態測試替換為 412 上傳失敗測試。每日同步維持單一執行者，上傳前 GET 仍拒絕不同內容；GET 與 PUT 之間沒有原子保護，不得同時由其他程式或人工寫入封存目的路徑。
+
+追修後 `rawDataSync.test.mjs` 為 105 通過、0 失敗，`npm run test:hub-functions` 為 376 通過、0 失敗；同步函式與測試均通過 `node --check`。
+
+本次未連線 pCloud／Cloudflare、未部署或搬移既有封存檔。正式 WebDAV 驗收仍由擁有者執行；不同或不完整的既有封存檔需人工核對，不能以自動覆寫恢復。

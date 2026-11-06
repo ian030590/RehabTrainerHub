@@ -400,7 +400,16 @@ function DetectArtifactType(file, bytes) {
 
 function ExtractZipFiles(bytes) {
   const entries = ReadZipCentralDirectory(bytes);
-  const extracted = unzipSync(bytes);
+  const acceptedEntries = new Map(entries.filter((entry) => !entry.directory).map((entry) => [entry.path, entry]));
+  const extracted = unzipSync(bytes, {
+    filter: (file) => {
+      const entry = acceptedEntries.get(file.name);
+      return Boolean(entry
+        && file.size === entry.compressedSize
+        && file.originalSize === entry.uncompressedSize
+        && file.compression === entry.method);
+    },
+  });
   const files = new Map();
   const extractedNames = new Map(
     Object.entries(extracted).map(([name, value]) => [name.normalize('NFC'), value]),
@@ -426,6 +435,11 @@ function ReadZipCentralDirectory(bytes) {
   const totalEntries = view.getUint16(eocdOffset + 10, true);
   const centralSize = view.getUint32(eocdOffset + 12, true);
   const centralOffset = view.getUint32(eocdOffset + 16, true);
+  if ([diskNumber, centralDisk, diskEntries, totalEntries].includes(0xffff)
+    || centralSize === 0xffffffff || centralOffset === 0xffffffff
+    || (eocdOffset >= 20 && view.getUint32(eocdOffset - 20, true) === 0x07064b50)) {
+    throw new GamePackageError('ZIP64 packages are not accepted.', 'zip64');
+  }
   if (diskNumber !== 0 || centralDisk !== 0 || diskEntries !== totalEntries) {
     throw new GamePackageError('Multi-volume ZIP files are not accepted.', 'zip-multivolume');
   }
@@ -439,12 +453,21 @@ function ReadZipCentralDirectory(bytes) {
     throw new GamePackageError('Invalid ZIP central directory bounds.', 'zip-directory');
   }
 
+  const centralEnd = centralOffset + centralSize;
+  if (centralEnd + 4 <= eocdOffset
+    && [0x06064b50, 0x07064b50].includes(view.getUint32(centralEnd, true))) {
+    throw new GamePackageError('ZIP64 packages are not accepted.', 'zip64');
+  }
+  if (centralEnd !== eocdOffset) {
+    throw new GamePackageError('Invalid ZIP central directory bounds.', 'zip-directory');
+  }
+
   const entries = [];
   const seenPaths = new Set();
   let offset = centralOffset;
   let totalBytes = 0;
   for (let index = 0; index < totalEntries; index += 1) {
-    if (offset + 46 > bytes.byteLength || view.getUint32(offset, true) !== 0x02014b50) {
+    if (offset + 46 > centralEnd || view.getUint32(offset, true) !== 0x02014b50) {
       throw new GamePackageError('Invalid ZIP entry.', 'zip-entry');
     }
     const flags = view.getUint16(offset + 8, true);
@@ -454,11 +477,37 @@ function ReadZipCentralDirectory(bytes) {
     const nameLength = view.getUint16(offset + 28, true);
     const extraLength = view.getUint16(offset + 30, true);
     const commentLength = view.getUint16(offset + 32, true);
+    const startingDisk = view.getUint16(offset + 34, true);
     const externalAttributes = view.getUint32(offset + 38, true);
+    const localOffset = view.getUint32(offset + 42, true);
     const end = offset + 46 + nameLength + extraLength + commentLength;
-    if (end > bytes.byteLength) throw new GamePackageError('Truncated ZIP entry.', 'zip-entry');
+    if (end > centralEnd) throw new GamePackageError('Truncated ZIP entry.', 'zip-entry');
+    if (compressedSize === 0xffffffff || uncompressedSize === 0xffffffff
+      || startingDisk === 0xffff || localOffset === 0xffffffff) {
+      throw new GamePackageError('ZIP64 packages are not accepted.', 'zip64');
+    }
+    if (startingDisk !== 0) {
+      throw new GamePackageError('Multi-volume ZIP files are not accepted.', 'zip-multivolume');
+    }
+    ValidateZipExtraFields(view, offset + 46 + nameLength, extraLength);
+    if (localOffset + 30 > centralOffset || view.getUint32(localOffset, true) !== 0x04034b50) {
+      throw new GamePackageError('Invalid ZIP local header.', 'zip-entry');
+    }
+    if (view.getUint32(localOffset + 18, true) === 0xffffffff
+      || view.getUint32(localOffset + 22, true) === 0xffffffff) {
+      throw new GamePackageError('ZIP64 packages are not accepted.', 'zip64');
+    }
+    const localExtraOffset = localOffset + 30 + view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    if (localExtraOffset + localExtraLength + compressedSize > centralOffset) {
+      throw new GamePackageError('Invalid ZIP entry bounds.', 'zip-entry');
+    }
+    ValidateZipExtraFields(view, localExtraOffset, localExtraLength);
     if ((flags & 0x1) !== 0) throw new GamePackageError('Encrypted ZIP entries are not accepted.', 'zip-encrypted');
     if (![0, 8].includes(method)) throw new GamePackageError('Unsupported ZIP compression method.', 'zip-compression');
+    if (method === 0 && compressedSize !== uncompressedSize) {
+      throw new GamePackageError('Invalid stored ZIP entry size.', 'zip-entry');
+    }
     const unixMode = (externalAttributes >>> 16) & 0xffff;
     if ((unixMode & 0xf000) === 0xa000) {
       throw new GamePackageError('ZIP symbolic links are not accepted.', 'zip-symlink');
@@ -466,6 +515,9 @@ function ReadZipCentralDirectory(bytes) {
     const rawName = bytes.subarray(offset + 46, offset + 46 + nameLength);
     const path = DecodeZipName(rawName, flags).normalize('NFC');
     const directory = path.endsWith('/');
+    if (directory && (compressedSize !== 0 || uncompressedSize !== 0)) {
+      throw new GamePackageError('ZIP directories must be empty.', 'zip-directory-data');
+    }
     const normalizedPath = directory ? NormalizeDirectoryPath(path) : NormalizePackagePath(path);
     if (!normalizedPath) throw new GamePackageError(`Unsafe ZIP path: ${path}`, 'unsafe-path');
     const comparisonPath = normalizedPath.toLocaleLowerCase('en-US');
@@ -492,12 +544,28 @@ function ReadZipCentralDirectory(bytes) {
     entries.push({
       compressedSize,
       directory,
+      method,
       path: normalizedPath,
       uncompressedSize,
     });
     offset = end;
   }
+  if (offset !== centralEnd) {
+    throw new GamePackageError('Invalid ZIP central directory size.', 'zip-directory');
+  }
   return entries;
+}
+
+function ValidateZipExtraFields(view, offset, length) {
+  const end = offset + length;
+  while (offset < end) {
+    if (offset + 4 > end) throw new GamePackageError('Invalid ZIP extra field.', 'zip-entry');
+    const headerId = view.getUint16(offset, true);
+    const fieldLength = view.getUint16(offset + 2, true);
+    if (headerId === 0x0001) throw new GamePackageError('ZIP64 packages are not accepted.', 'zip64');
+    offset += 4 + fieldLength;
+    if (offset > end) throw new GamePackageError('Invalid ZIP extra field.', 'zip-entry');
+  }
 }
 
 function FindEndOfCentralDirectory(view) {

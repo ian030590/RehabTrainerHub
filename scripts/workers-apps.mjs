@@ -180,7 +180,8 @@ export function CreateHubWorkerSecrets(environment, apps, { dryRun = false } = {
     AUTH_BASE_URL: authBaseUrl,
     AUTH_SESSION_SECRET: required('AUTH_SESSION_SECRET'),
     AUTH_STATE_SECRET: required('AUTH_STATE_SECRET'),
-    GAME_RELEASE_OWNER_USER_ID: optional('GAME_RELEASE_OWNER_USER_ID'),
+    // Additive secret updates must replace a cleared owner with an explicit disabled value.
+    GAME_RELEASE_OWNER_USER_ID: optional('GAME_RELEASE_OWNER_USER_ID') || 'none',
     GAME_RUNNER_ORIGIN: runner.siteUrl,
     GOOGLE_CLIENT_ID: required('GOOGLE_CLIENT_ID'),
     GOOGLE_CLIENT_SECRET: required('GOOGLE_CLIENT_SECRET'),

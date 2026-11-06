@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./aiAssets": "./src/aiAssets.ts",
     "./auth/authClient": "./src/auth/authClient.ts",
+    "./auth/identityGuard": "./src/auth/identityGuard.ts",
     "./audioFeedback": "./src/audioFeedback.ts",
     "./components/AppLoading": "./src/components/AppLoading.tsx",
     "./components/AppDialog": "./src/components/AppDialog.tsx",
