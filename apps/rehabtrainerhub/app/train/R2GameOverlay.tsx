@@ -66,6 +66,7 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
   const [session, setSession] = useState<Session | null>(null);
   const saving = useRef(false);
   const saved = useRef(false);
+  const [leaveGuard, setLeaveGuard] = useState(false);
   const inputRef = useRef<(HandInputBroker & Partial<EyeInputBroker>) | null>(null);
   const sensorRef = useRef<SensorInputHost | null>(null);
   const shellRef = useRef<HTMLDivElement>(null);
@@ -89,6 +90,7 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
   const source = session ? `${release.origin}/games/${module.runtimeId}/${session.version}/package/index.html` : null;
   const [identity] = useState(() => ({ token: GetAuthToken(), subjectId: GetOrCreateSubjectIdForUser(GetAuthUserIdFromToken(GetAuthToken())) }));
   const close = useCallback(async () => {
+    setLeaveGuard(false);
     inputRef.current?.Stop();
     sensorRef.current?.Stop();
     rawRecorder.current?.Reset(); rawSaved.current.clear(); sessionRef.current = null;
@@ -133,11 +135,22 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
       });
       if (sessionRef.current !== selected || portRef.current !== port) return;
       saved.current = true;
+      setLeaveGuard(false);
       acknowledge('saved');
       onSaved?.();
     } catch { if (sessionRef.current === selected && portRef.current === port) acknowledge('error'); }
     finally { if (sessionRef.current === selected) saving.current = false; }
   }, [acknowledge, identity, module.runtimeId, planLaunch, captureSettings, onSaved]);
+
+  useEffect(() => {
+    if (!leaveGuard) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [leaveGuard]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -291,6 +304,7 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
         return;
       }
       if (!planLaunch && message.type === 'settings') WriteSavedGameSettings(settingsStorage, module.runtimeId, message.payload);
+      if (message.type === 'active') setLeaveGuard(true);
       if (message.type === 'result') { inputRef.current?.Stop(); sensorRef.current?.Stop(); resultRef.current = message.payload; void save(); }
       if (message.type === 'retry') void save();
       if (message.type === 'exit') void close();
@@ -342,7 +356,7 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
         && <div ref={previewRef} className="training-input-preview" hidden />}
       {!ready && <div className="training-loading-stage" role={error ? 'alert' : 'status'}>
         <p>{error ? (language === 'en' ? 'Game could not be loaded' : '無法載入遊戲') : (language === 'en' ? 'Loading game…' : '正在載入遊戲…')}</p>
-        {error && <><button onClick={() => { inputRef.current?.Stop(); sensorRef.current?.Stop(); rawRecorder.current?.Reset(); rawSaved.current.clear(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; resultFilesRef.current.clear(); csvSaved.current = false; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
+        {error && <><button onClick={() => { inputRef.current?.Stop(); sensorRef.current?.Stop(); rawRecorder.current?.Reset(); rawSaved.current.clear(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; resultFilesRef.current.clear(); csvSaved.current = false; saving.current = false; saved.current = false; setLeaveGuard(false); setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
       </div>}
       {!unavailable && source && <iframe key={generation} ref={frameRef} src={source} title={release.name} onLoad={initialize}
         sandbox="allow-scripts" allow={`autoplay; fullscreen${session?.capabilities?.includes('gamepad') ? '; gamepad *' : ''}`} allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}

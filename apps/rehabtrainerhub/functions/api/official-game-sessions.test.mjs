@@ -6,11 +6,43 @@ import { DatabaseSync } from 'node:sqlite';
 import { readdir, readFile } from 'node:fs/promises';
 import { onRequestPost as createSession } from './official-game-sessions.js';
 import { onRequestPost as saveRecord } from './records.js';
-import { CreateMemoryBucket } from '../_lib/rawDataTestFixtures.mjs';
+import { CreateMemoryBucket, CreateRawDataEnvironment } from '../_lib/rawDataTestFixtures.mjs';
 
 const env = { AUTH_SESSION_SECRET: 'official-game-test-secret-abcdefghijklmnopqrstuvwxyz' };
 const version = '2.0.2';
 const nextVersion = '2.0.3';
+
+for (const { account, limit } of [{ account: 'session-owner', limit: 300 }, { account: null, limit: 3000 }]) {
+  test(`official sessions ${account ? 'account' : 'guest IP'} hourly limit accepts ${limit} and rejects ${limit + 1}`, async (t) => {
+    t.mock.method(Date, 'now', () => Date.UTC(2026, 10, 7, 4, 0, 10));
+    const fixture = CreateRawDataEnvironment('oculomotor-training', ['eye-tracking']);
+    try {
+      const { env: environment, sqlite } = fixture;
+      if (account) {
+        const now = new Date().toISOString();
+        sqlite.prepare('INSERT INTO app_users (id,display_name,created_at,updated_at) VALUES (?,?,?,?)')
+          .run(account, 'Session owner', now, now);
+      }
+      const token = account ? await CreateSessionForUser(environment, { id: account }) : null;
+      const clientIp = '203.0.113.20';
+      const windowId = Math.floor(Date.now() / 1000 / 3600);
+      const key = createHash('sha256').update(`official-game-session:${clientIp}${account ? `:${account}` : ''}:${windowId}`).digest('base64url');
+      sqlite.prepare('INSERT INTO rate_limits (key,count,reset_at,updated_at) VALUES (?,?,?,?)')
+        .run(key, limit - 1, (windowId + 1) * 3600, new Date().toISOString());
+      const request = () => new Request('https://trainerhub.cc/api/official-game-sessions', {
+        method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json',
+          'CF-Connecting-IP': clientIp, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ gameId: 'oculomotor-training', subjectId: crypto.randomUUID() }),
+      });
+      assert.equal((await createSession({ request: request(), env: environment })).status, 201, `Session ${limit} is accepted`);
+      assert.equal(sqlite.prepare('SELECT count FROM rate_limits WHERE key = ?').get(key).count, limit);
+      const response = await createSession({ request: request(), env: environment });
+      assert.equal(response.status, 429, `Session ${limit + 1} is rate limited`);
+      assert.equal(sqlite.prepare('SELECT count FROM rate_limits WHERE key = ?').get(key).count, limit + 1);
+      assert.equal(response.headers.get('Retry-After'), '3590');
+    } finally { fixture.sqlite.close(); }
+  });
+}
 
 function CreateOfficialRelease(releaseVersion, gameId = 'drawing-defense') {
   const bytes = Buffer.from(`<!doctype html><title>Game ${releaseVersion}</title>`);

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import test from 'node:test';
 import { CreateSessionForUser } from '../_lib/auth.js';
 import { onRequestGet, onRequestPost } from './records.js';
 
@@ -811,12 +813,56 @@ assert.deepEqual(await victimRecordsAfterAnonymousWrite.json(), { records: [vict
 
 console.log('records security checks passed');
 
+test('record siteverify transient limit accepts 30 writes per minute and rejects 31', async (t) => {
+  t.mock.method(Date, 'now', () => Date.UTC(2026, 10, 7, 4, 0, 10));
+  const environment = { ...anonymousEnv, REHAB_DB: CreateTrainingRecordsDb([]) };
+  const subjects = Array.from({ length: 10 }, () => crypto.randomUUID());
+  const request = (count) => new Request('https://trainerhub.cc/api/records', {
+    method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.30' },
+    body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'motor', subjectId: subjects[count % subjects.length],
+      record: { ...anonymousRecord, id: `transient-record-${count}` } }),
+  });
+  for (let count = 1; count <= 30; count++) {
+    assert.equal((await onRequestPost({ request: request(count), env: environment })).status, 201, `Write ${count} is accepted`);
+  }
+  const response = await onRequestPost({ request: request(31), env: environment });
+  assert.equal(response.status, 429, 'Write 31 is rate limited');
+  assert.equal(response.headers.get('Retry-After'), '50');
+  assert.equal(environment.REHAB_DB.rows.size, 30);
+  const windowId = Math.floor(Date.now() / 1000 / 60);
+  const key = createHash('sha256').update(`training-record-write-guest-ip:203.0.113.30:${windowId}`).digest('base64url');
+  assert.equal(environment.REHAB_DB.rateLimits.get(key).count, 30, 'The transient rejection happens before the persistent limit');
+});
+
+test('guest IP daily record limit accepts 3000 writes and rejects 3001', async (t) => {
+  t.mock.method(Date, 'now', () => Date.UTC(2026, 10, 7, 4, 0, 10));
+  const environment = { ...anonymousEnv, REHAB_DB: CreateTrainingRecordsDb([]) };
+  const windowSeconds = 24 * 60 * 60;
+  const windowId = Math.floor(Date.now() / 1000 / windowSeconds);
+  const clientIp = '203.0.113.31';
+  const key = createHash('sha256').update(`training-record-write-guest-ip-daily:${clientIp}:${windowId}`).digest('base64url');
+  environment.REHAB_DB.rateLimits.set(key, { count: 2999, reset_at: (windowId + 1) * windowSeconds });
+  const request = () => new Request('https://trainerhub.cc/api/records', {
+    method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': clientIp },
+    body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'motor', subjectId: crypto.randomUUID(),
+      record: { ...anonymousRecord, id: crypto.randomUUID() } }),
+  });
+  assert.equal((await onRequestPost({ request: request(), env: environment })).status, 201, 'Write 3000 is accepted');
+  assert.equal(environment.REHAB_DB.rateLimits.get(key).count, 3000);
+  const response = await onRequestPost({ request: request(), env: environment });
+  assert.equal(response.status, 429, 'Write 3001 is rate limited');
+  assert.equal(environment.REHAB_DB.rateLimits.get(key).count, 3001);
+  assert.equal(response.headers.get('Retry-After'), '71990');
+  assert.equal(environment.REHAB_DB.rows.size, 1);
+});
+
 function CreateTrainingRecordsDb(initialRows) {
   const rows = new Map(initialRows.map((row) => [row.id, { ...row }]));
   const rateLimits = new Map();
 
   return {
     rows,
+    rateLimits,
     prepare(sql) {
       return {
         async run() {

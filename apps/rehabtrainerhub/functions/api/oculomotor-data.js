@@ -51,7 +51,7 @@ export async function onRequestPost({ request, env }) {
   }
   if (!env.OCULOMOTOR_DATA) return ErrorResponse(request, env, 'Oculomotor storage is unavailable.', 503);
   const transientLimit = TransientRateLimitResponse(request, env, 'oculomotor-data-upload', {
-    identity: session?.sub, limit: 6, windowSeconds: 60,
+    identity: session?.sub, limit: 30, windowSeconds: 60,
   });
   if (transientLimit) return transientLimit;
   const parsed = await ReadJsonBody(request, maximumRequestBytes);
@@ -82,12 +82,12 @@ export async function onRequestPost({ request, env }) {
   }
   const rateLimit = session?.sub
     ? await RateLimitResponse(request, env, 'oculomotor-data-upload-user', {
-      identity: session.sub, identityOnly: true, limit: 20, windowSeconds: 60 * 60,
+      identity: session.sub, identityOnly: true, limit: 150, windowSeconds: 60 * 60,
     })
     : await RateLimitResponse(request, env, 'oculomotor-data-upload-guest-ip', {
-      limit: 12, windowSeconds: 60 * 60,
+      limit: 1500, windowSeconds: 60 * 60,
     }) || await RateLimitResponse(request, env, 'oculomotor-data-upload-guest-subject', {
-      identity: input.subjectId, identityOnly: true, limit: 6, windowSeconds: 60 * 60,
+      identity: input.subjectId, identityOnly: true, limit: 150, windowSeconds: 60 * 60,
     });
   if (rateLimit) return rateLimit;
 

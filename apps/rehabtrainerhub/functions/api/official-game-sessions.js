@@ -16,7 +16,7 @@ export async function onRequestPost({ request, env }) {
     const session = GetBearerToken(request) ? await RequireSession(request, env) : null;
     if (GetBearerToken(request) && !session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
     if (!session?.sub && env.ANONYMOUS_RECORDS_ENABLED !== '1') return ErrorResponse(request, env, 'Anonymous record storage is unavailable.', 503);
-    const limit = await RateLimitResponse(request, env, 'official-game-session', { identity: session?.sub, limit: 120, windowSeconds: 3600 });
+    const limit = await RateLimitResponse(request, env, 'official-game-session', { identity: session?.sub, limit: session?.sub ? 300 : 3000, windowSeconds: 3600 });
     if (limit) return limit;
     const body = await ReadJsonBody(request, 4096);
     const input = body.value;

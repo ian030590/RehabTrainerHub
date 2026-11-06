@@ -202,6 +202,7 @@ test('Hub closes every R2 game only after fullscreen and camera cleanup', async 
   const fullscreen = Deferred();
   const actions = [];
   const close = await LoadFunction('apps/rehabtrainerhub/app/train/R2GameOverlay.tsx', 'close', {
+    setLeaveGuard: value => actions.push(value ? 'guard-on' : 'release-leave-guard'),
     inputRef: { current: { Stop: () => actions.push('stop-camera') } },
     sensorRef: { current: { Stop: () => actions.push('stop-sensors') } },
     rawRecorder: { current: { Reset: () => actions.push('reset-raw') } },
@@ -211,7 +212,7 @@ test('Hub closes every R2 game only after fullscreen and camera cleanup', async 
     onClose: () => actions.push('close'),
   });
   const pending = close();
-  assert.deepEqual(actions, ['stop-camera', 'stop-sensors', 'reset-raw', 'clear-raw-saves', 'exit-fullscreen']);
+  assert.deepEqual(actions, ['release-leave-guard', 'stop-camera', 'stop-sensors', 'reset-raw', 'clear-raw-saves', 'exit-fullscreen']);
   fullscreen.resolve();
   await pending;
   assert.equal(actions.at(-1), 'close');

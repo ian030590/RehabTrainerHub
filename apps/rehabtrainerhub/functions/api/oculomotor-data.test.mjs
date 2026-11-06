@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { CreateSessionForUser } from '../_lib/auth.js';
 import { onRequestGet, onRequestPost } from './oculomotor-data.js';
@@ -24,6 +25,7 @@ function CreateEnv() {
     AUTH_SESSION_SECRET: '0123456789abcdef0123456789abcdef',
     ANONYMOUS_RECORDS_ENABLED: '1',
     objects,
+    limits,
     REHAB_DB: {
       prepare(sql) {
         return {
@@ -66,14 +68,14 @@ function CreateEnv() {
 }
 
 let ip = 0;
-function Post(body, token, env, origin = 'https://trainerhub.cc') {
+function Post(body, token, env, origin = 'https://trainerhub.cc', clientIp = `192.0.2.${++ip}`) {
   return onRequestPost({
     request: new Request('https://trainerhub.cc/api/oculomotor-data', {
       method: 'POST',
       headers: {
         Origin: origin,
         'Content-Type': 'application/json',
-        'X-Forwarded-For': `192.0.2.${++ip}`,
+        'X-Forwarded-For': clientIp,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(body),
@@ -259,3 +261,37 @@ test('maximum five-minute run survives CSV generation without dropping samples',
   assert.equal(csv.split('\r\n').length, 36000 + 9);
   assert.match(csv, /36000,287992,,8,125,1,320,240,330,245,11\.18,0\.2,1,training,right\r\n$/);
 });
+
+test('eye CSV transient limit accepts 30 uploads per minute and rejects 31', async (t) => {
+  t.mock.method(Date, 'now', () => Date.UTC(2026, 10, 7, 4, 0, 10));
+  const env = CreateEnv();
+  for (let count = 1; count <= 30; count++) {
+    assert.equal((await Post(valid, null, env, undefined, '203.0.113.10')).status, 201, `Upload ${count} is accepted`);
+    env.limits.clear();
+  }
+  const response = await Post(valid, null, env, undefined, '203.0.113.10');
+  assert.equal(response.status, 429, 'Upload 31 is rate limited');
+  assert.equal(response.headers.get('Retry-After'), '50');
+});
+
+for (const { name, limit, account, client, identity } of [
+  { name: 'oculomotor-data-upload-user', limit: 150, account: 'hourly-owner', client: 'identity-only', identity: ':hourly-owner' },
+  { name: 'oculomotor-data-upload-guest-ip', limit: 1500, client: '203.0.113.11', identity: '' },
+  { name: 'oculomotor-data-upload-guest-subject', limit: 150, client: 'identity-only', identity: `:${subjectId}` },
+]) {
+  test(`${name} accepts hourly upload ${limit} and rejects ${limit + 1}`, async (t) => {
+    t.mock.method(Date, 'now', () => Date.UTC(2026, 10, 7, 4, 0, 10));
+    const env = CreateEnv();
+    const token = account ? await CreateSessionForUser(env, { id: account }) : null;
+    const windowId = Math.floor(Date.now() / 1000 / 3600);
+    const key = createHash('sha256').update(`${name}:${client}${identity}:${windowId}`).digest('base64url');
+    env.limits.set(key, limit - 1);
+    const clientIp = client === 'identity-only' ? undefined : client;
+    assert.equal((await Post(valid, token, env, undefined, clientIp)).status, 201, `Upload ${limit} is accepted`);
+    assert.equal(env.limits.get(key), limit);
+    const response = await Post(valid, token, env, undefined, clientIp);
+    assert.equal(response.status, 429, `Upload ${limit + 1} is rate limited`);
+    assert.equal(env.limits.get(key), limit + 1);
+    assert.equal(response.headers.get('Retry-After'), '3590');
+  });
+}

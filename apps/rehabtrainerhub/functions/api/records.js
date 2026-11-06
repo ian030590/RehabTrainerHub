@@ -182,7 +182,7 @@ export async function onRequestPost({ request, env }) {
 
   const transientLimit = TransientRateLimitResponse(request, env, 'training-record-siteverify', {
     identity: session?.sub,
-    limit: 20,
+    limit: 30,
     windowSeconds: 60,
   });
   if (transientLimit) return transientLimit;
@@ -414,7 +414,7 @@ async function CheckRecordWriteRateLimits(request, env, userId, subjectId) {
     limit: 10,
     windowSeconds: 60,
   }) || await RateLimitResponse(request, env, 'training-record-write-guest-ip-daily', {
-    limit: 1000,
+    limit: 3000,
     windowSeconds: 24 * 60 * 60,
   }) || RateLimitResponse(request, env, 'training-record-write-guest-subject-daily', {
     identity: subjectId,
