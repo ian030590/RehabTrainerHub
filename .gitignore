@@ -36,3 +36,13 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Game team (CCGS) local state
+.claude/settings.local.json
+CLAUDE.local.md
+project.local.yaml
+production/session-logs/
+production/session-state/
+.claude/agent-memory/
+.claude/worktrees/
+docs/consistency-failures.md

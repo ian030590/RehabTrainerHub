@@ -12,6 +12,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `main` push 會觸發自動部署（純文件變更不會）：預設部署 Workers；只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=pages` 才部署 Pages（兩個 Pages 專案已刪除，會被重新建立）。若變更把新遊戲登記進 `officialGameReleases.json`，須先完成該版核准與 R2 發布，再 push；不要從含未發布遊戲候選的工作樹手動部署。
 - 對外文案遵守台灣醫療法規限制（用「練習／活動／當次紀錄」，不得宣稱治療、診斷、療效）；細節見 `AGENTS.md`。
 
+## 遊戲團隊
+
+新增遊戲目錄或 catalog 項目必須走遊戲團隊，入口見 `.claude/docs/rehab-game-team.md`，並提供含六個指定二級標題的 `design/gdd/<gameId>.md`；既有遊戲依凍結清單豁免，不得把新遊戲加入清單。
+Claude 協調成員，依 `.claude/docs/codex-workers.md` 透過 `.claude/scripts/codex-agent.sh` 執行 Codex workers，不使用 Claude 子代理。Codex 使用 `.agents/skills/` 的團隊技能轉接器；框架與倉庫規範衝突時以 `AGENTS.md` 為準。
+
 ## 常用指令
 
 ```bash
@@ -22,6 +27,7 @@ npm run build:gamerunner        # runner 靜態 runtime → apps/usergamerunner/
 npm run build                   # 全部 gate + 建置（不發布 R2）
 npm --prefix apps/rehabtrainerhub/games/<gameId> run build   # 單獨建置 R2 遊戲 dist/
 npm run sync:games              # 修改 games/catalog.ts 或遊戲 workspace 後
+npm run sync:team-skills        # 修改 .claude/skills 後同步 Codex 團隊技能轉接器
 ```
 
 七項 CI gate（`ci.yml` 與 `deploy-cloudflare-pages.yml` 的 matrix 相同，新增 gate 須兩份同步並更新 `AGENTS.md` CI 節）：

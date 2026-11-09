@@ -6,3 +6,12 @@ apps/usergamerunner/runtime/WEBGAZER-SOURCE.txt -text
 apps/usergamerunner/runtime/gameBridge-1.0.0.js text eol=lf
 
 .githooks/* text eol=lf
+
+# Game team (CCGS) LF line endings
+.claude/**/*.sh text eol=lf
+.claude/**/*.awk text eol=lf
+.claude/**/*.md text eol=lf
+.claude/**/*.tsv text eol=lf
+studio-tests/**/*.md text eol=lf
+design/**/*.md text eol=lf
+.agents/**/*.md text eol=lf
