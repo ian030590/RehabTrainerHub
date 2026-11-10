@@ -35,16 +35,9 @@ export async function BuildEyeTracking(appRoot, outputDirectory) {
   source = source.replace(localGuard, "window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.chrome");
   await writeFile(resolve(inputRoot, 'webgazer.js'), source);
   for (const asset of manifest.assets) {
-    const cachePath = resolve(root, '.tmp/eye-tracking-model', asset.path);
-    let bytes = await readFile(cachePath).catch(() => null);
-    if (!bytes || hash(bytes) !== asset.sha256) {
-      const response = await fetch(asset.sourceUrl, { signal: AbortSignal.timeout(60000) });
-      if (!response.ok) throw new Error(`Eye model download failed (${response.status})`);
-      bytes = Buffer.from(await response.arrayBuffer());
-      if (bytes.length !== asset.size || hash(bytes) !== asset.sha256) throw new Error('Eye model digest mismatch');
-      await mkdir(dirname(cachePath), { recursive: true }); await writeFile(cachePath, bytes);
-    }
-    if (bytes.length !== asset.size || hash(bytes) !== asset.sha256) throw new Error('Eye input asset digest mismatch');
+    if (!asset.source) throw new Error(`Eye model local source missing: ${asset.path}`);
+    const bytes = await readFile(resolve(root, asset.source));
+    if (bytes.length !== asset.size || hash(bytes) !== asset.sha256) throw new Error(`Eye input asset digest mismatch: ${asset.path}`);
     const destination = resolve(inputRoot, 'models', asset.path);
     await mkdir(dirname(destination), { recursive: true }); await writeFile(destination, bytes);
   }

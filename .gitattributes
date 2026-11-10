@@ -1,6 +1,8 @@
 # Keep the reference experiment's vendored jsPsych and WebGazer bundles byte-for-byte.
 apps/rehabtrainerhub/games/oculomotor-training/public/reference/jspsych.js -text
 apps/usergamerunner/runtime/WEBGAZER-SOURCE.txt -text
+apps/usergamerunner/runtime/eye-tracking-model/*/model.json -text
+apps/usergamerunner/runtime/eye-tracking-model/*/*.bin -text
 
 # The released legacy bridge has one immutable byte sequence on every OS.
 apps/usergamerunner/runtime/gameBridge-1.0.0.js text eol=lf
