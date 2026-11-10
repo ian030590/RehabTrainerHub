@@ -123,11 +123,13 @@ function HubShellContent({ children }: { children: ReactNode }) {
     if (!isAccountOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest('.auth-dialog')) return;
       if (!accountMenuRef.current?.contains(event.target as Node)) {
         setIsAccountOpen(false);
       }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || (event.target instanceof Element && event.target.closest('.auth-dialog'))) return;
       if (event.key === 'Escape') setIsAccountOpen(false);
     };
 

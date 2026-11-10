@@ -34,6 +34,7 @@ test('an actual local push runs all gates, and a failing gate blocks the remote 
   }
   writeFileSync(resolve(fixture, 'package.json'), JSON.stringify({ private: true, scripts: {
     'test:ci': pkg.scripts['test:ci'],
+    'test:uiux-browser': 'node scripts/gate.cjs test:uiux-browser',
     ...Object.fromEntries(gates.map(name => [name, `node scripts/gate.cjs ${name}`])),
   } }));
   writeFileSync(resolve(fixture, 'scripts/gate.cjs'),
@@ -47,7 +48,7 @@ test('an actual local push runs all gates, and a failing gate blocks the remote 
   RunGit(fixture, ['add', 'package.json']);
   RunGit(fixture, ['-c', 'user.name=Hook Test', '-c', 'user.email=hook@example.invalid', 'commit', '-m', 'fixture']);
   RunGit(fixture, ['push', remote, 'HEAD:refs/heads/main']);
-  assert.deepEqual(readFileSync(resolve(fixture, 'gates.log'), 'utf8').trim().split(/\r?\n/), gates);
+  assert.deepEqual(readFileSync(resolve(fixture, 'gates.log'), 'utf8').trim().split(/\r?\n/), [...gates, 'test:uiux-browser']);
   const published = RunGit(fixture, ['--git-dir', remote, 'rev-parse', 'refs/heads/main']).stdout.trim();
 
   RunGit(fixture, ['-c', 'user.name=Hook Test', '-c', 'user.email=hook@example.invalid', 'commit', '--allow-empty', '-m', 'blocked']);
@@ -57,6 +58,14 @@ test('an actual local push runs all gates, and a failing gate blocks the remote 
   });
   assert.notEqual(blocked.status, 0, blocked.stderr || blocked.stdout);
   assert.deepEqual(readFileSync(resolve(fixture, 'gates.log'), 'utf8').trim().split(/\r?\n/), gates.slice(0, 2));
+  assert.equal(RunGit(fixture, ['--git-dir', remote, 'rev-parse', 'refs/heads/main']).stdout.trim(), published);
+
+  writeFileSync(resolve(fixture, 'gates.log'), '');
+  const browserBlocked = spawnSync('git', ['push', remote, 'HEAD:refs/heads/main'], {
+    cwd: fixture, encoding: 'utf8', env: { ...process.env, FAIL_GATE: 'test:uiux-browser' },
+  });
+  assert.notEqual(browserBlocked.status, 0, 'A failing local browser gate must block the push too.');
+  assert.deepEqual(readFileSync(resolve(fixture, 'gates.log'), 'utf8').trim().split(/\r?\n/), [...gates, 'test:uiux-browser']);
   assert.equal(RunGit(fixture, ['--git-dir', remote, 'rev-parse', 'refs/heads/main']).stdout.trim(), published);
 });
 

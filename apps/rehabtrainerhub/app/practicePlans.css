@@ -14,6 +14,63 @@
   background: var(--surface);
 }
 
+.practice-plan.assigned-practice-plan {
+  padding: 12px 20px;
+}
+
+.assigned-practice-plan-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  min-height: 88px;
+  gap: 4px 12px;
+}
+
+.assigned-practice-plan .assigned-practice-plan-row h2,
+.assigned-practice-plan .assigned-practice-plan-row p {
+  grid-column: 1;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.assigned-practice-plan-row > button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+summary.assigned-practice-plan-row {
+  cursor: pointer;
+  list-style: none;
+}
+
+summary.assigned-practice-plan-row::-webkit-details-marker {
+  display: none;
+}
+
+summary.assigned-practice-plan-row > span {
+  grid-column: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+summary.assigned-practice-plan-row::after {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  content: '+';
+  font-size: 1.5rem;
+}
+
+details[open] > summary.assigned-practice-plan-row::after {
+  content: '−';
+}
+
+.assigned-practice-plan details > h3 {
+  margin-top: 16px;
+}
+
 .practice-plan-manager {
   display: grid;
   gap: 24px;

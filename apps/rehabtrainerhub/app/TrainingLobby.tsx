@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { flushSync } from 'react-dom';
 import {
   useCallback,
   useEffect,
@@ -34,6 +35,7 @@ import {
 } from './publishedGames';
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
 import { BuildLobbyFilterChips, BuildLobbyPageNumbers, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
+import { AnimateVisibleGameCards, CancelHubGameTransition, TransitionGameSurface } from './hubMotion';
 
 const prefetchedTrainingUrls = new Set<string>();
 
@@ -108,7 +110,15 @@ export function TrainingLobby() {
   const [activeGame, setActiveGame] = useState<HubGame | null>(null);
   const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
   const [publishedGamesError, setPublishedGamesError] = useState(false);
-  const handleCloseOverlay = useCallback(() => setActiveGame(null), []);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const previousGameIds = useRef<ReadonlySet<string>>(new Set());
+  const launchCardRef = useRef<HTMLElement | null>(null);
+  const handleCloseOverlay = useCallback(() => {
+    TransitionGameSurface(document.querySelector('.hub-game-transition-surface'), () => {
+      flushSync(() => setActiveGame(null));
+      return launchCardRef.current;
+    });
+  }, []);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).lobby;
   const platformCopy = language === 'en'
@@ -163,6 +173,15 @@ export function TrainingLobby() {
   const activeFilters = useMemo(() => BuildLobbyFilterChips(selectedPurposes, query, categorySubcategories), [selectedPurposes, query]);
   const pagination = PaginateLobbyGames(visibleGames, page);
   const pageNumbers = BuildLobbyPageNumbers(pagination.page, pagination.totalPages);
+  const visibleGameKey = pagination.items.map(game => game.id).join('|');
+
+  useEffect(() => {
+    const stop = AnimateVisibleGameCards(gridRef.current, previousGameIds.current);
+    previousGameIds.current = new Set(pagination.items.map(game => game.id));
+    return stop;
+  }, [visibleGameKey]);
+
+  useEffect(() => CancelHubGameTransition, []);
 
   useEffect(() => {
     setPage(1);
@@ -480,7 +499,7 @@ export function TrainingLobby() {
             </p>
           )}
 
-          <div className="module-grid">
+          <div className="module-grid" ref={gridRef}>
             {pagination.items.map((game) => {
               const preload = () => {
                 if (game.launch.contract === 'catalog-v1') PreloadTrainingModule(game.launch.module);
@@ -525,7 +544,15 @@ export function TrainingLobby() {
                     </dl>
                     <div className="module-card-footer official-game-actions">
                       <button
-                        onClick={() => setActiveGame(game)}
+                        aria-label={copy.start + ': ' + game.title}
+                        onClick={event => {
+                          const card = event.currentTarget.closest<HTMLElement>('[data-runtime-id]');
+                          launchCardRef.current = card;
+                          TransitionGameSurface(card, () => {
+                            flushSync(() => setActiveGame(game));
+                            return document.querySelector('.hub-game-transition-surface');
+                          });
+                        }}
                         onFocus={preload}
                         onPointerDown={preload}
                         type="button"
@@ -533,7 +560,7 @@ export function TrainingLobby() {
                         {copy.start}
                         <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                       </button>
-                      <a href={game.installUrl} rel="noopener noreferrer" target="_blank">
+                      <a aria-label={platformCopy.install + ': ' + game.title} href={game.installUrl} rel="noopener noreferrer" target="_blank">
                         {platformCopy.install}
                         <span className="material-symbols-outlined" aria-hidden="true">download</span>
                       </a>

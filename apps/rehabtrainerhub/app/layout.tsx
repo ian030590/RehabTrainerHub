@@ -5,6 +5,7 @@ import { hubLocalName, hubSeoTitle } from './hubBrand';
 import { siteDescription } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
+import './hubMotion.css';
 import '@rehab-trainer/ui/components/BottomSheet.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
 import '@rehab-trainer/ui/components/InstallAppPage.css';
@@ -52,10 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&display=swap"
           rel="stylesheet"
         />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0"
-          rel="stylesheet"
-        />
+        <link rel="preload" href="/fonts/material-symbols-hub.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body>
         <HubShell>{children}</HubShell>

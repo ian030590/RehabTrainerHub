@@ -4,6 +4,14 @@
 @source "../../../packages/ui/src/components/GameSettingsForm.tsx";
 @source "../../../packages/ui/src/components/ui";
 
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/material-symbols-hub.woff2') format('woff2');
+}
+
 :root {
   color-scheme: light;
   --background: #f5f7f6;
@@ -45,6 +53,33 @@
   --radius-s: var(--radius);
   --radius-l: var(--radius);
   --shadow-floating: var(--shadow-md);
+}
+
+@supports (color: oklch(0 0 0)) {
+  :root {
+    --background: oklch(97.43413% 0.002493 165.076);
+    --surface: oklch(100% 0 0);
+    --surface-muted: oklch(95.65220% 0.006626 160.074);
+    --surface-strong: oklch(92.30289% 0.006936 247.900);
+    --text: oklch(26.86183% 0 0);
+    --text-muted: oklch(43.86048% 0 0);
+    --heading: oklch(20.46265% 0 0);
+    --primary: oklch(26.86183% 0 0);
+    --primary-hover: oklch(14.47880% 0 0);
+    --primary-soft: oklch(93.70489% 0 0);
+    --accent-blue: oklch(48.20533% 0.134214 256.682);
+    --accent-blue-soft: oklch(95.23225% 0.017117 256.281);
+    --success: oklch(49.42714% 0.101469 161.570);
+    --success-soft: oklch(94.66348% 0.024896 164.436);
+    --gold: oklch(58.10362% 0.123649 73.174);
+    --gold-soft: oklch(95.87837% 0.056374 91.784);
+    --border: oklch(89.61164% 0.010925 158.822);
+    --border-strong: oklch(61.52591% 0.016101 244.852);
+    --focus: oklch(54.90818% 0.169268 256.077);
+    --error: oklch(50.12821% 0.178318 28.705);
+    --warning: oklch(51.64278% 0.109054 74.782);
+    --text-on-accent: oklch(100% 0 0);
+  }
 }
 
 * {
@@ -685,13 +720,13 @@ html:has(dialog.training-overlay[open]) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
@@ -720,8 +755,8 @@ html:has(dialog.training-overlay[open]) {
   }
 
   .hub-guide-button {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     justify-content: center;
     border-radius: 50%;
@@ -3746,10 +3781,6 @@ html:has(dialog.training-overlay[open]) {
     transition-duration: 0.01ms !important;
   }
 
-  .minimal-loading-spinner,
-  .training-loading-spinner {
-    animation: training-loading-spin 0.8s linear infinite !important;
-  }
 }
 
 @keyframes hubRouteEnter {
@@ -3802,6 +3833,11 @@ html:has(dialog.training-overlay[open]) {
   font-size: clamp(2.4rem, 5.6vw, 5.2rem);
   line-height: 0.98;
   letter-spacing: -0.055em;
+}
+
+.developer-hero h1:lang(zh) {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .developer-hero > div > p:last-child {
@@ -4474,7 +4510,7 @@ html:has(dialog.training-overlay[open]) {
 
 .developer-prompt-output button {
   display: inline-flex;
-  min-height: 34px;
+  min-height: 44px;
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
@@ -4483,6 +4519,7 @@ html:has(dialog.training-overlay[open]) {
   color: var(--surface);
   background: transparent;
   font: inherit;
+  font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
   transition: background-color 180ms ease, transform 180ms ease;
@@ -4693,6 +4730,10 @@ html:has(dialog.training-overlay[open]) {
 
   .developer-hero h1 {
     font-size: clamp(2.25rem, 13vw, 3.4rem);
+  }
+
+  .developer-hero h1:lang(zh) {
+    font-size: clamp(2rem, 10.5vw, 2.75rem);
   }
 
   .developer-doc-section {

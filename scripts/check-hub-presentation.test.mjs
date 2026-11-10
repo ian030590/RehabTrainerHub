@@ -120,6 +120,8 @@ async function Lobby(language = 'en') {
   const copy = (dictionary.exports.en ?? dictionary.exports.zhTW).hubUi;
   const dependencies = {
     react, 'react/jsx-runtime': { jsx, jsxs: jsx },
+    'react-dom': { flushSync: update => update() },
+    './hubMotion': { AnimateVisibleGameCards: () => () => {}, CancelHubGameTransition() {}, TransitionGameSurface: (_source, update) => update() },
     './i18n': { GetHubUiCopy: () => copy },
     './i18n/HubLanguage': { useHubLanguage: () => ({ language: language === 'en' ? 'en' : 'zh', locale: language, t: key => key }) },
     './gameCatalog': { BuildHubGameCatalog: () => games },
@@ -139,7 +141,7 @@ async function Lobby(language = 'en') {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX,
   } }).outputText;
   const loaded = { exports: {} };
-  new Function('exports', 'require', 'document', compiled)(loaded.exports, name => dependencies[name] ?? {}, { activeElement: null });
+  new Function('exports', 'require', 'document', compiled)(loaded.exports, name => dependencies[name] ?? {}, { activeElement: null, querySelector: () => null });
   const render = () => { cursor = 0; const tree = loaded.exports.TrainingLobby(); effects.splice(0).forEach(effect => effect()); return Elements(tree); };
   return { render, copy, dictionary: dictionary.exports };
 }
@@ -243,7 +245,10 @@ test('game actions retain their install destinations and open and close the orig
   const card = elements.find(node => node.type === 'article');
   const actions = Elements(card);
   assert.ok(actions.some(node => node.type === 'a' && node.props.href === games[0].installUrl));
-  actions.find(node => node.type === 'button' && node.props.children.includes(copy.lobby.start)).props.onClick();
+  const start = actions.find(node => node.type === 'button' && node.props.children.includes(copy.lobby.start));
+  assert.equal(start.props['aria-label'], `${copy.lobby.start}: ${games[0].title}`);
+  assert.ok(actions.find(node => node.type === 'a' && node.props.href === games[0].installUrl).props['aria-label'].includes(games[0].title));
+  start.props.onClick({ currentTarget: { closest: () => ({ isConnected: true }) } });
   elements = render();
   const overlay = elements.find(node => node.props?.game === games[0]);
   assert.ok(overlay);

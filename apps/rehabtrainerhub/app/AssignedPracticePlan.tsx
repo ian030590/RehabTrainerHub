@@ -36,19 +36,23 @@ function PlayerPracticePlan() {
     }).catch(() => { if (!controller.signal.aborted) setStatus('error'); });
     return () => controller.abort();
   }, [refresh]);
-  // Most players have no list (and the feature may be off), so the first load reserves no space.
-  if (status === 'loading' && !plan) return null;
-  if (status === 'error' && !plan) return <section className="practice-plan" role="alert">
-    <p>{copy.loadError}</p><button className="admin-button admin-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)}>{copy.retry}</button>
-  </section>;
-  if (!plan) return null;
   const activeGame = games.find(game => game.id === activeItem?.gameId);
-  return <section className="practice-plan" aria-labelledby="assigned-practice-title">
-    <h2 id="assigned-practice-title">{plan.title}</h2>
-    {status === 'loading' && <p role="status">{copy.loading}</p>}
-    {status === 'error' && <div role="alert"><p>{copy.loadError}</p>
-      <button className="admin-button admin-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)}>{copy.retry}</button></div>}
-    <PracticePlanDetails plan={plan} games={games} onStart={setActiveItem} />
+  return <section className="practice-plan assigned-practice-plan" aria-label={copy.heading}>
+    {plan ? <details>
+      <summary className="assigned-practice-plan-row">
+        <h2>{copy.heading}</h2>
+        <span>{copy.showAssignedList}</span>
+      </summary>
+      <h3>{plan.title}</h3>
+      {status === 'loading' && <p role="status">{copy.loading}</p>}
+      {status === 'error' && <div role="alert"><p>{copy.loadError}</p>
+        <button className="admin-button admin-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)}>{copy.retry}</button></div>}
+      <PracticePlanDetails plan={plan} games={games} onStart={setActiveItem} />
+    </details> : <div className="assigned-practice-plan-row">
+      <h2>{copy.heading}</h2>
+      <p role={status === 'error' ? 'alert' : 'status'}>{status === 'loading' ? copy.loading : status === 'error' ? copy.loadError : copy.noAssignedList}</p>
+      {status === 'error' && <button className="admin-button admin-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)}>{copy.retry}</button>}
+    </div>}
     {activeGame && activeItem && <GameOverlay game={activeGame} onClose={close}
       planLaunch={{ planItemId: activeItem.id, settings: activeItem.settings }}
       onSaved={() => setRefresh(value => value + 1)} />}

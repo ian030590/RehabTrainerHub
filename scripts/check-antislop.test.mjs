@@ -96,7 +96,8 @@ test('hart chart decoder handle and code inputs show a focus ring, not only a ti
 });
 
 test('form control borders reach 3:1 against their surfaces in the Hub and every R2 game', () => {
-  const hubRoot = read('apps/rehabtrainerhub/app/globals.css').split('}')[0];
+  const hubRoot = CssRules(read('apps/rehabtrainerhub/app/globals.css')).find(rule => rule.selector === ':root')?.body;
+  assert.ok(hubRoot, 'Find semantic tokens by their selector, including when a font face precedes them.');
   const hubStrong = hubRoot.match(/--border-strong:\s*(#[0-9a-f]{3,6})/i)?.[1];
   assert.ok(hubStrong);
   assert.ok(Contrast(hubStrong, '#ffffff') >= 3 && Contrast(hubStrong, '#f6f7f9') >= 3, `Hub --border-strong ${hubStrong}`);

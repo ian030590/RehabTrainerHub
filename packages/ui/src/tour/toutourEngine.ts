@@ -96,6 +96,7 @@ const state: TourState = {
 };
 
 let tourElements: TourElements | null = null;
+let scrollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function ClampValue(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -439,6 +440,7 @@ function RenderStep(step: TourStep, index: number) {
 }
 
 function ShowStep(index: number) {
+  if (scrollTimer !== null) clearTimeout(scrollTimer);
   state.index = index;
   state.lastRect = null;
   const step = state.steps[index];
@@ -458,11 +460,12 @@ function ShowStep(index: number) {
   SavePosition(index);
   EmitTourEvent('tour_step', { step: index + 1, total: state.steps.length });
 
-  setTimeout(() => {
+  scrollTimer = setTimeout(() => {
+    scrollTimer = null;
     const element = ResolveTarget(step);
-    if (element && state.active) {
+    if (element && state.active && state.index === index) {
       try {
-        element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        element.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
       } catch {
         element.scrollIntoView();
       }
@@ -560,6 +563,8 @@ export function IsTourActive(): boolean {
 
 export function EndTour(done: boolean = false) {
   if (!state.active) return;
+  if (scrollTimer !== null) clearTimeout(scrollTimer);
+  scrollTimer = null;
   state.active = false;
   cancelAnimationFrame(state.rafId);
   state.rafId = 0;

@@ -203,7 +203,6 @@ test('player section is immediately after the heading; existing filters and pagi
   const source = await readFile(new URL('AssignedPracticePlan.tsx', appRoot), 'utf8');
   assert.match(source, /user\?\.role === 'patient'/);
   assert.match(source, /if \(!isPlayer\) return null/);
-  assert.match(source, /if \(!plan\) return null/);
   assert.match(source, /onSaved=\{/);
   assert.match(source, /planLaunch=\{/);
   assert.match(source, /AbortController/);
@@ -422,7 +421,8 @@ test('player section is absent for guests and staff, and refreshing a saved resu
   user = { id: 'player', role: 'patient' };
   const child = AssignedPracticePlan();
   hooks.Render(child.type); hooks.Flush(); await Settle();
-  assert.equal(hooks.Render(child.type), null, 'Disabled and absent lists both render nothing.');
+  assert.ok(Elements(hooks.Render(child.type)).some(element => element.props?.className === 'assigned-practice-plan-row'),
+    'A patient without an assigned list keeps the compact informational row.');
 
   const playerHooks = Hooks();
   // A fresh mount models a list assigned before the next lobby visit.
@@ -462,7 +462,7 @@ test('new copy has both languages, parameter placeholders match and narrow layou
   assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i);
 });
 
-test('any 404, including a non-JSON one, hides the player section instead of showing an error', async () => {
+test('any 404, including a non-JSON one, means no assigned list instead of showing an error', async () => {
   let response;
   const { FetchAssignedPracticePlan } = await Load('practicePlans.ts', {
     '@rehab-trainer/ui/auth/authClient': { GetAuthToken: () => 'player' },
@@ -474,7 +474,7 @@ test('any 404, including a non-JSON one, hides the player section instead of sho
   await assert.rejects(FetchAssignedPracticePlan(), /Unable to load practice list/);
 });
 
-test('the first lobby load shows no placeholder, so players without a list see no layout jump', async () => {
+test('the first lobby load shows a compact status row without opening list details', async () => {
   const hooks = Hooks();
   const { AssignedPracticePlan } = await Load('AssignedPracticePlan.tsx', {
     react: hooks.hooks, 'react/jsx-runtime': { jsx: Jsx, jsxs: Jsx },
@@ -488,9 +488,11 @@ test('the first lobby load shows no placeholder, so players without a list see n
     './practicePlans': { FetchAssignedPracticePlan: () => new Promise(() => {}) },
   });
   const child = AssignedPracticePlan();
-  assert.equal(hooks.Render(child.type), null);
+  assert.ok(Elements(hooks.Render(child.type)).some(element => element.props?.role === 'status'));
   hooks.Flush(); await Settle();
-  assert.equal(hooks.Render(child.type), null);
+  const tree = hooks.Render(child.type);
+  assert.ok(Elements(tree).some(element => element.props?.className === 'assigned-practice-plan-row'));
+  assert.ok(!Elements(tree).some(element => element.type === 'plan-details'));
 });
 
 test('the week line reads as a localized date range, not as progress with ISO dates', async () => {

@@ -1,0 +1,44 @@
+html {
+  scrollbar-gutter: stable;
+}
+
+.hub-game-overlay-host {
+  display: contents;
+}
+
+.hub-game-transition-surface {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: var(--background);
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(hub-game-surface) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(.2,.75,.25,1);
+}
+
+::view-transition-old(hub-game-surface),
+::view-transition-new(hub-game-surface) {
+  height: 100%;
+  overflow: clip;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(hub-game-surface),
+  ::view-transition-old(hub-game-surface),
+  ::view-transition-new(hub-game-surface) {
+    animation: none !important;
+  }
+}

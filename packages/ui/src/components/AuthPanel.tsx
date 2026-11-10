@@ -1,4 +1,5 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   authChangedEvent,
   authTokenKey,
@@ -270,6 +271,26 @@ function NormalizeProfile(profile: RehabProfile | undefined): RehabProfile {
   };
 }
 
+function IsDialogBackdropClick(event: MouseEvent<HTMLDialogElement>) {
+  if (event.target !== event.currentTarget) return false;
+  const bounds = event.currentTarget.getBoundingClientRect();
+  return event.clientX < bounds.left || event.clientX > bounds.right
+    || event.clientY < bounds.top || event.clientY > bounds.bottom;
+}
+
+function HandleDialogKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
+  if (event.key === 'Escape') event.stopPropagation();
+  if (event.key !== 'Tab') return;
+  const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], summary, [tabindex="0"]')]
+    .filter(element => element.checkVisibility());
+  const first = controls[0];
+  const last = controls.at(-1);
+  if ((!event.shiftKey && document.activeElement === last) || (event.shiftKey && document.activeElement === first)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first)?.focus();
+  }
+}
+
 export function AuthPanel({
   apiBase,
   appName = 'Rehab Trainer Hub',
@@ -288,6 +309,7 @@ export function AuthPanel({
   const [accountForm, setAccountForm] = useState(CreateEmptyAccountForm);
   const [accountError, setAccountError] = useState('');
   const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profile, setProfile] = useState<RehabProfile>(CreateEmptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -296,6 +318,11 @@ export function AuthPanel({
   const profileOwnerIdRef = useRef<string | null>(null);
   const loadUserGenerationRef = useRef(0);
   const loadUserAbortRef = useRef<AbortController | null>(null);
+  const accountDialogRef = useRef<HTMLDialogElement>(null);
+  const profileDialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const profileErrorRef = useRef<HTMLParagraphElement>(null);
+  const accountCheckRef = useRef(false);
   const authOrigin = useMemo(() => GetAuthApiOrigin(apiBase), [apiBase]);
   const resolvedPrivacyHref = useMemo(() => {
     if (privacyHref) return privacyHref;
@@ -366,6 +393,8 @@ export function AuthPanel({
     if (GetAuthToken() !== token || generation !== loadUserGenerationRef.current) return null;
     if (controller.signal.aborted && !timedOut) return null;
     applyLoadedUser(nextUser);
+    accountCheckRef.current = false;
+    setIsCheckingSession(false);
     return nextUser;
   }, [apiBase, applyLoadedUser, cancelLoadUser]);
 
@@ -400,14 +429,37 @@ export function AuthPanel({
     };
   }, [applyLoadedUser, authOrigin, cancelLoadUser, loadUser]);
 
+  const isAccountDialogOpen = accountDialogMode !== null;
+  useEffect(() => {
+    const dialog = isAccountDialogOpen ? accountDialogRef.current : isProfileOpen ? profileDialogRef.current : null;
+    if (!dialog) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const hiddenPanel = panelRef.current?.closest<HTMLElement>('[hidden][id]');
+    const fallbackFocus = hiddenPanel ? document.querySelector<HTMLElement>(`[aria-controls="${hiddenPanel.id}"]`) : null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = overflow;
+      if (previousFocus?.isConnected && previousFocus !== document.body && previousFocus.checkVisibility()) previousFocus.focus({ preventScroll: true });
+      else fallbackFocus?.focus({ preventScroll: true });
+    };
+  }, [isAccountDialogOpen, isProfileOpen]);
+
+  useEffect(() => {
+    if (isProfileOpen && error) profileErrorRef.current?.focus();
+  }, [error, isProfileOpen]);
+
   const openAccountDialog = async (mode: AccountDialogMode = 'login') => {
+    if (user || accountCheckRef.current || accountDialogMode) return;
+    accountCheckRef.current = true;
     setError('');
     setAccountError('');
-    if (user) return;
-    const existingUser = await loadUser();
-    if (existingUser) return;
     setPrivacyAccepted(false);
     setAccountDialogMode(mode);
+    setIsCheckingSession(true);
+    await loadUser();
   };
 
   const startGoogleLogin = () => {
@@ -438,6 +490,9 @@ export function AuthPanel({
   };
 
   const closeAccountDialog = () => {
+    cancelLoadUser();
+    accountCheckRef.current = false;
+    setIsCheckingSession(false);
     setAccountDialogMode(null);
     setPrivacyAccepted(false);
     setAccountForm(CreateEmptyAccountForm());
@@ -454,6 +509,10 @@ export function AuthPanel({
     const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!accountDialogMode) return;
+    if (!privacyAccepted) {
+      setAccountError(labels.privacyRequired);
+      return;
+    }
     if (turnstileSiteKey && !turnstileToken) {
       setAccountError(labels.verificationRequired);
       return;
@@ -582,20 +641,23 @@ export function AuthPanel({
     && accountForm.password.length >= 8
     && privacyAccepted;
   const canLoginAccount = accountEmailIsValid && accountForm.password.length >= 8;
-  const canSubmitAccount = accountDialogMode === 'register' ? canRegisterAccount : canLoginAccount;
+  const canSubmitAccount = privacyAccepted && (accountDialogMode === 'register' ? canRegisterAccount : canLoginAccount);
   const hasVerification = !turnstileSiteKey || Boolean(turnstileToken);
   const privacyNotice = (
     <>
-      <p>{labels.privacyIntro}</p>
-      <ul>
-        {labels.privacyItems.map((item) => <li key={item}>{item}</li>)}
-      </ul>
-      <p className="auth-sensitive-warning">{labels.privacySensitive}</p>
-      <p>
-        <a className="auth-privacy-link" href={resolvedPrivacyHref} target="_blank" rel="noopener noreferrer">
-          {labels.privacyPolicyLink}
-        </a>
-      </p>
+      <details className="auth-privacy-disclosure">
+        <summary>{labels.privacyTitle}</summary>
+        <p>{labels.privacyIntro}</p>
+        <ul>
+          {labels.privacyItems.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+        <p className="auth-sensitive-warning">{labels.privacySensitive}</p>
+        <p>
+          <a className="auth-privacy-link" href={resolvedPrivacyHref} target="_blank" rel="noopener noreferrer">
+            {labels.privacyPolicyLink}
+          </a>
+        </p>
+      </details>
       <label className="auth-checkbox-row">
         <input
           checked={privacyAccepted}
@@ -608,7 +670,7 @@ export function AuthPanel({
   );
 
   return (
-    <section className={`auth-panel ${className ?? ''}`} aria-label={`${appName} account`}>
+    <section className={`auth-panel ${className ?? ''}`} aria-label={`${appName} account`} ref={panelRef}>
       <div className="auth-panel-actions">
         {user ? (
           <>
@@ -628,17 +690,23 @@ export function AuthPanel({
         )}
       </div>
 
-      {error && <p className="auth-panel-error">{error}</p>}
+      {error && !isProfileOpen && <p className="auth-panel-error" role="alert">{error}</p>}
       {user && !user.profileCompleted && <p className="auth-panel-note">{labels.profileNeeded}</p>}
 
-      {accountDialogMode && (
-        <div className="auth-dialog-backdrop" onClick={closeAccountDialog}>
-          <div className="auth-dialog auth-account-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-account-title" onClick={(e) => e.stopPropagation()}>
+      {accountDialogMode && createPortal(
+          <dialog className="auth-dialog auth-account-dialog" ref={accountDialogRef} aria-labelledby="auth-account-title"
+            onKeyDown={HandleDialogKeyDown}
+            onClick={event => { if (IsDialogBackdropClick(event)) closeAccountDialog(); }}
+            onCancel={event => { event.preventDefault(); event.stopPropagation(); closeAccountDialog(); }}>
+            <div className="auth-dialog-header">
             <h2 id="auth-account-title">
               {accountDialogMode === 'register' ? labels.authTitleRegister : labels.authTitleLogin}
             </h2>
+              <button className="auth-dialog-close auth-button auth-button-secondary" type="button" onClick={closeAccountDialog} autoFocus>{labels.cancel}</button>
+            </div>
+            <div className="auth-dialog-body">
             <p>{accountDialogMode === 'register' ? labels.accountIntroRegister : labels.accountIntroLogin}</p>
-            <form className="auth-account-form" onSubmit={submitAccount}>
+            {isCheckingSession ? <p role="status">{labels.loading}</p> : <form className="auth-account-form" onSubmit={submitAccount}>
               {accountDialogMode === 'login' && (
                 <>
                   {privacyNotice}
@@ -709,7 +777,7 @@ export function AuthPanel({
                   siteKey={turnstileSiteKey}
                 />
               )}
-              {accountError && <p className="auth-panel-error">{accountError}</p>}
+              {accountError && <p className="auth-panel-error" role="alert">{accountError}</p>}
               <div className="auth-dialog-actions">
                 <button className="auth-button auth-button-primary" disabled={!canSubmitAccount || !hasVerification || isSubmittingAccount} type="submit">
                   {accountDialogMode === 'register' ? labels.accountCreateSubmit : labels.accountLoginSubmit}
@@ -734,16 +802,23 @@ export function AuthPanel({
               <button className="auth-link-button auth-cancel-link" type="button" onClick={closeAccountDialog}>
                 {labels.cancel}
               </button>
-            </form>
-          </div>
-        </div>
+            </form>}
+            </div>
+          </dialog>, document.body
       )}
 
-      {isProfileOpen && (
-        <div className="auth-dialog-backdrop" onClick={() => setIsProfileOpen(false)}>
-          <div className="auth-dialog auth-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-profile-title" onClick={(e) => e.stopPropagation()}>
+      {isProfileOpen && createPortal(
+          <dialog className="auth-dialog auth-profile-dialog" ref={profileDialogRef} aria-labelledby="auth-profile-title"
+            onKeyDown={HandleDialogKeyDown}
+            onClick={event => { if (IsDialogBackdropClick(event)) setIsProfileOpen(false); }}
+            onCancel={event => { event.preventDefault(); event.stopPropagation(); setIsProfileOpen(false); }}>
+            <div className="auth-dialog-header">
             <h2 id="auth-profile-title">{labels.profileTitle}</h2>
+              <button className="auth-dialog-close auth-button auth-button-secondary" type="button" onClick={() => setIsProfileOpen(false)} autoFocus>{labels.cancel}</button>
+            </div>
+            <div className="auth-dialog-body">
             <p>{labels.profileIntro}</p>
+            {error && <p className="auth-panel-error" role="alert" tabIndex={-1} ref={profileErrorRef}>{error}</p>}
             <h3 className="auth-section-heading">{labels.basicQuestionnaire}</h3>
             <div className="auth-profile-grid">
               <label>
@@ -825,8 +900,8 @@ export function AuthPanel({
                 {isSavingProfile ? labels.saving : labels.saveProfile}
               </button>
             </div>
-          </div>
-        </div>
+            </div>
+          </dialog>, document.body
       )}
     </section>
   );

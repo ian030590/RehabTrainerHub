@@ -24,30 +24,9 @@ import { siteUrls } from '../siteUrls';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { TrophyIcon } from '../TrophyIcon';
 
-const emptyAchievements: RehabAchievement[] = [
-  ['streak-7-days', '連續訓練 7 天', 7],
-  ['streak-14-days', '連續訓練 14 天', 14],
-  ['streak-21-days', '連續訓練 21 天', 21],
-  ['streak-1-month', '連續訓練 1 個月', 30],
-  ['streak-2-months', '連續訓練 2 個月', 60],
-  ['streak-3-months', '連續訓練 3 個月', 90],
-  ['streak-4-months', '連續訓練 4 個月', 120],
-  ['streak-5-months', '連續訓練 5 個月', 150],
-  ['streak-6-months', '連續訓練 6 個月', 180],
-  ['streak-1-year', '連續訓練 1 年', 365],
-  ['streak-2-years', '連續訓練 2 年', 730],
-  ['streak-3-years', '連續訓練 3 年', 1095],
-  ['streak-4-years', '連續訓練 4 年', 1460],
-  ['streak-5-years', '連續訓練 5 年', 1825],
-].map(([id, title, requiredDays]) => ({
-  id: String(id),
-  title: String(title),
-  requiredDays: Number(requiredDays),
-  achieved: false,
-}));
-
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 type GazeFile = { recordId: string; uploadedAt: string; size: number };
+type GazeFailure = { kind: 'list' | 'more' } | { kind: 'download'; recordId: string };
 
 export function ProgressDashboard() {
   const { user } = useHubAuth();
@@ -59,14 +38,17 @@ export function ProgressDashboard() {
   }, [user?.id]);
   const { language, locale, t } = useHubLanguage();
   const [progress, setProgress] = useState<RehabProgress | null>(null);
+  const [progressOwnerId, setProgressOwnerId] = useState<string | null>(null);
   const [status, setStatus] = useState<LoadStatus>('idle');
+  const [refresh, setRefresh] = useState(0);
   const [gazeFiles, setGazeFiles] = useState<GazeFile[]>([]);
   const [gazeCursor, setGazeCursor] = useState<string | null>(null);
   const [gazeOwnerId, setGazeOwnerId] = useState<string | null>(null);
-  const [gazeError, setGazeError] = useState(false);
+  const [gazeFailure, setGazeFailure] = useState<GazeFailure | null>(null);
   const [gazeArchived, setGazeArchived] = useState(false);
   const [gazeLoading, setGazeLoading] = useState(false);
   const [gazeBusy, setGazeBusy] = useState<string | null>(null);
+  const [gazeRefresh, setGazeRefresh] = useState(0);
   const copy = GetHubUiCopy(language).progress;
 
   useEffect(() => {
@@ -74,6 +56,7 @@ export function ProgressDashboard() {
 
     if (!user) {
       setProgress(null);
+      setProgressOwnerId(null);
       setStatus('idle');
       return;
     }
@@ -84,6 +67,7 @@ export function ProgressDashboard() {
       .then((nextProgress) => {
         if (cancelled || !isCurrentIdentity()) return;
         setProgress(nextProgress);
+        setProgressOwnerId(user.id);
         setStatus(nextProgress ? 'ready' : 'idle');
       })
       .catch((error) => {
@@ -95,14 +79,16 @@ export function ProgressDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, refresh]);
 
   useEffect(() => {
-    setGazeFiles([]);
-    setGazeCursor(null);
-    setGazeOwnerId(null);
+    if (gazeOwnerId !== user?.id) {
+      setGazeFiles([]);
+      setGazeCursor(null);
+      setGazeOwnerId(null);
+    }
     setGazeArchived(false); setGazeBusy(null); setGazeLoading(Boolean(user));
-    setGazeError(false);
+    setGazeFailure(null);
     if (!user) {
       return;
     }
@@ -119,11 +105,11 @@ export function ProgressDashboard() {
       setGazeFiles(records);
       setGazeCursor(cursor);
       setGazeOwnerId(user.id);
-      setGazeError(false);
-    }).catch(() => { if (isCurrentIdentity()) setGazeError(true); })
+      setGazeFailure(null);
+    }).catch(() => { if (isCurrentIdentity()) setGazeFailure({ kind: 'list' }); })
       .finally(() => { if (isCurrentIdentity()) setGazeLoading(false); });
     return () => controller.abort();
-  }, [user]);
+  }, [user, gazeRefresh]);
 
   const downloadGazeCsv = async (recordId: string) => {
     const controller = privateActionsRef.current;
@@ -139,7 +125,7 @@ export function ProgressDashboard() {
       if (!isCurrentIdentity()) return;
       if (response.status === 404) {
         setGazeFiles(current => current.filter(file => file.recordId !== recordId));
-        setGazeArchived(true); setGazeError(false); setGazeBusy(null);
+        setGazeArchived(true); setGazeFailure(null); setGazeBusy(null);
         return;
       }
       if (!response.ok) throw new Error(`Gaze CSV download failed (${response.status}).`);
@@ -153,9 +139,9 @@ export function ProgressDashboard() {
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setGazeError(false);
+      setGazeFailure(null);
     } catch {
-      if (isCurrentIdentity()) setGazeError(true);
+      if (isCurrentIdentity()) setGazeFailure({ kind: 'download', recordId });
     }
     if (isCurrentIdentity()) setGazeBusy(null);
   };
@@ -177,17 +163,19 @@ export function ProgressDashboard() {
       if (!isCurrentIdentity()) return;
       setGazeFiles((current) => [...current, ...payload.records]);
       setGazeCursor(payload.cursor);
-      setGazeError(false);
+      setGazeFailure(null);
     } catch {
-      if (isCurrentIdentity()) setGazeError(true);
+      if (isCurrentIdentity()) setGazeFailure({ kind: 'more' });
     }
     if (isCurrentIdentity()) setGazeLoading(false);
   };
 
-  const achievements = progress?.achievements ?? emptyAchievements;
+  const visibleProgress = progressOwnerId === user?.id ? progress : null;
+  const achievements: RehabAchievement[] = visibleProgress?.achievements ?? [];
+  const unavailableValue = user && status !== 'error' ? copy.loadingValue : copy.unavailableValue;
   const visibleGazeFiles = gazeOwnerId === user?.id ? gazeFiles : [];
   const visibleGazeCursor = gazeOwnerId === user?.id ? gazeCursor : null;
-  const recentModules = (progress?.recentModules ?? [])
+  const recentModules = (visibleProgress?.recentModules ?? [])
     .map((recentModule) => trainingCatalog.find((module) => module.runtimeId === recentModule.moduleId))
     .filter((module): module is (typeof trainingCatalog)[number] => Boolean(module));
   const dateFormatter = new Intl.DateTimeFormat(locale, {
@@ -214,24 +202,27 @@ export function ProgressDashboard() {
       )}
 
       {status === 'error' && (
-        <p className="progress-error" role="alert">{copy.loadError}</p>
+        <div className="progress-error" role="alert">
+          <p>{copy.loadError}</p>
+          <button className="admin-button admin-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)}>{copy.retry}</button>
+        </div>
       )}
 
       <section className="progress-metrics" aria-label={copy.rehabilitationDays}>
         <article>
           <span>{copy.daysSinceStart}</span>
-          <strong>{status === 'loading' ? copy.loadingValue : progress?.daysSinceStart ?? 0}</strong>
-          {status !== 'loading' && <small>{copy.days}</small>}
+          <strong>{visibleProgress?.daysSinceStart ?? unavailableValue}</strong>
+          {visibleProgress && <small>{copy.days}</small>}
           <p>
-            {progress?.startedOn
-              ? t('progress.startedOn', { date: dateFormatter.format(new Date(`${progress.startedOn}T00:00:00+08:00`)) })
-              : copy.noRecords}
+            {visibleProgress?.startedOn
+              ? t('progress.startedOn', { date: dateFormatter.format(new Date(`${visibleProgress.startedOn}T00:00:00+08:00`)) })
+              : visibleProgress ? copy.noRecords : unavailableValue}
           </p>
         </article>
         <article>
           <span>{copy.rehabilitationDays}</span>
-          <strong>{status === 'loading' ? copy.loadingValue : progress?.rehabilitationDays ?? 0}</strong>
-          {status !== 'loading' && <small>{copy.days}</small>}
+          <strong>{visibleProgress?.rehabilitationDays ?? unavailableValue}</strong>
+          {visibleProgress && <small>{copy.days}</small>}
           <p>{copy.streakNote}</p>
         </article>
       </section>
@@ -242,19 +233,16 @@ export function ProgressDashboard() {
             <p className="page-kicker">{copy.today}</p>
             <h2 id="daily-title">{copy.dailyTasks}</h2>
           </div>
-          {progress && (
-            <time dateTime={progress.serverDate}>
-              {dateFormatter.format(new Date(`${progress.serverDate}T00:00:00+08:00`))}
+          {visibleProgress && (
+            <time dateTime={visibleProgress.serverDate}>
+              {dateFormatter.format(new Date(`${visibleProgress.serverDate}T00:00:00+08:00`))}
             </time>
           )}
         </header>
 
         <div className="daily-task-list">
-          {(progress?.dailyTasks ?? [
-            { id: 'complete-one', title: '完成 1 次訓練', current: 0, target: 1, completed: false },
-            { id: 'complete-three', title: '完成 3 次訓練', current: 0, target: 3, completed: false },
-            { id: 'use-two-modules', title: '完成 2 種不同模組', current: 0, target: 2, completed: false },
-          ]).map((task) => (
+          {!visibleProgress && <p>{unavailableValue}</p>}
+          {(visibleProgress?.dailyTasks ?? []).map((task) => (
             <article className={task.completed ? 'is-complete' : ''} key={task.id}>
               <span className="material-symbols-outlined" aria-hidden="true">
                 {task.completed ? 'check_circle' : 'radio_button_unchecked'}
@@ -286,7 +274,7 @@ export function ProgressDashboard() {
           </div>
         </header>
 
-        {status === 'loading' ? (
+        {!visibleProgress && status !== 'error' && user ? (
           <div
             aria-label={copy.loadingRecent}
             className="recent-module-empty"
@@ -323,7 +311,7 @@ export function ProgressDashboard() {
             })}
           </div>
         ) : (
-          <p className="recent-module-empty">{copy.noRecent}</p>
+          <p className="recent-module-empty">{visibleProgress ? copy.noRecent : unavailableValue}</p>
         )}
       </section>
 
@@ -333,10 +321,10 @@ export function ProgressDashboard() {
             <p className="page-kicker">{copy.milestones}</p>
             <h2 id="achievement-title">{copy.achievements}</h2>
           </div>
-          <p>{t('progress.achievedCount', {
+          <p>{visibleProgress ? t('progress.achievedCount', {
             current: achievements.filter((achievement) => achievement.achieved).length,
             total: achievements.length,
-          })}</p>
+          }) : unavailableValue}</p>
         </header>
 
         <div className="achievement-grid">
@@ -347,7 +335,7 @@ export function ProgressDashboard() {
               </div>
               <h3>{t('progress.achievementTitle', { days: achievement.requiredDays })}</h3>
               <p>{achievement.achieved ? copy.achieved : t('progress.daysToGo', {
-                days: Math.max(0, achievement.requiredDays - (progress?.rehabilitationDays ?? 0)),
+                days: Math.max(0, achievement.requiredDays - (visibleProgress?.rehabilitationDays ?? 0)),
               })}</p>
             </article>
           ))}
@@ -359,10 +347,17 @@ export function ProgressDashboard() {
           <header className="section-title-row">
             <h2 id="gaze-files-title">{language === 'en' ? 'Eye movement CSV records' : '眼動訓練逐筆座標 CSV'}</h2>
           </header>
-          {gazeError && <p role="alert">{language === 'en' ? 'Unable to load or download CSV. Please try again.' : '無法載入或下載 CSV，請稍後重試。'}</p>}
+          {gazeFailure && <div role="alert">
+            <p>{language === 'en' ? 'Unable to load or download CSV. Please try again.' : '無法載入或下載 CSV，請稍後重試。'}</p>
+            <button className="admin-button admin-button-secondary" type="button" disabled={gazeLoading || gazeBusy !== null} onClick={() => {
+              if (gazeFailure.kind === 'download') void downloadGazeCsv(gazeFailure.recordId);
+              else if (gazeFailure.kind === 'more') void loadMoreGazeFiles();
+              else setGazeRefresh(value => value + 1);
+            }}>{copy.retry}</button>
+          </div>}
           {gazeLoading && <p role="status">{language === 'en' ? 'Loading CSV files…' : '正在載入 CSV 檔案…'}</p>}
           {gazeArchived && <p role="status">{language === 'en' ? 'This per-sample file is no longer in site storage. Synced files are kept in the site archive; the session summary is still here.' : '此逐筆檔案已不在本站儲存區；同步的檔案保存在網站封存空間，當次摘要仍保留。'}</p>}
-          {visibleGazeFiles.length === 0 && !gazeError && !gazeLoading && <p>{language === 'en' ? 'No CSV files in site storage. Archived files are no longer listed here; session summaries remain.' : '本站儲存區目前沒有 CSV 檔案。已封存的檔案不再列於此處，當次摘要仍保留。'}</p>}
+          {gazeOwnerId === user.id && visibleGazeFiles.length === 0 && !gazeFailure && !gazeLoading && <p>{language === 'en' ? 'No CSV files in site storage. Archived files are no longer listed here; session summaries remain.' : '本站儲存區目前沒有 CSV 檔案。已封存的檔案不再列於此處，當次摘要仍保留。'}</p>}
           <ul>
             {visibleGazeFiles.map((file) => (
               <li key={file.recordId}>
@@ -377,8 +372,8 @@ export function ProgressDashboard() {
         </section>
       )}
 
-      {progress && (
-        <p className="server-date-note">{t('progress.serverDate', { timeZone: progress.timeZone })}</p>
+      {visibleProgress && (
+        <p className="server-date-note">{t('progress.serverDate', { timeZone: visibleProgress.timeZone })}</p>
       )}
     </main>
   );
