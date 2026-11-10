@@ -22,4 +22,5 @@ bucket_name = "rehab-raw-data"
 binding = "OCULOMOTOR_DATA"
 bucket_name = "oculomotor-data"
 
-# Server-only secret: PCLOUD_ACCESS_TOKEN (pCloud OAuth access token).
+# Server-only secret: PCLOUD_ACCESS_TOKEN (pCloud OAuth token; EU checksumfile SHA-256 validation).
+# checksumfile deployed 2026-11-10 UTC: 6efcde2f-2a2f-4ce0-868a-7d28cbd43474.

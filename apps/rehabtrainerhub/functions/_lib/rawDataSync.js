@@ -13,7 +13,7 @@ export async function ProcessRawDataSync(env, options = {}) {
   const rootSegments = root === '/' ? [] : typeof root === 'string' ? root.slice(1).split('/') : [];
   const sources = [[env.RAW_DATA, 'RAW_DATA', 'pending/'], [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'guests/'],
     [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'users/']];
-  if (!['eapi.pcloud.com', 'api.pcloud.com'].includes(env.PCLOUD_API_HOST)
+  if (env.PCLOUD_API_HOST !== 'eapi.pcloud.com'
     || typeof env.PCLOUD_ACCESS_TOKEN !== 'string' || !/^[A-Za-z0-9._~+\/-]+=*$/.test(env.PCLOUD_ACCESS_TOKEN)
     || typeof root !== 'string' || !root.startsWith('/') || root.length > 1024
     || !rootSegments.every((segment) => /^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(segment))
@@ -87,14 +87,17 @@ export async function ProcessRawDataSync(env, options = {}) {
     return data;
   };
   const ReadRemote = async (path, allowMissing = false) => {
-    const link = await Api('getfilelink', { path }, allowMissing);
-    if (!link) return null;
-    const host = Array.isArray(link.hosts) ? link.hosts[0] : undefined;
-    if (typeof host !== 'string' || host.length > 253
-      || !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+pcloud\.com$/i.test(host)
-      || typeof link.path !== 'string' || !link.path.startsWith('/') || link.path.startsWith('//')
-      || /[\\#\p{C}]/u.test(link.path)) throw new Error('Invalid pCloud download link.', { cause: 'service' });
-    return Request(`https://${host}${link.path}`, { method: 'GET' }, 'download');
+    const checksum = await Api('checksumfile', { path }, allowMissing);
+    if (!checksum) return null;
+    const metadata = checksum.metadata;
+    if (metadata?.isfolder !== false || metadata.name !== path.split('/').at(-1)
+      || !Number.isSafeInteger(metadata.fileid) || metadata.fileid <= 0
+      || !Number.isSafeInteger(metadata.parentfolderid) || metadata.parentfolderid < 0
+      || !Number.isSafeInteger(metadata.size) || metadata.size < 0
+      || typeof checksum.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(checksum.sha256)) {
+      throw new Error('Invalid pCloud checksum.');
+    }
+    return checksum;
   };
   const EnsureFolder = async (segments) => {
     let path = '';
@@ -154,7 +157,7 @@ export async function ProcessRawDataSync(env, options = {}) {
           const path = `/${segments.join('/')}`;
           operation = 'existing-checksum';
           const existing = await ReadRemote(path, true);
-          if (existing && await MatchesRemote(existing, object.size, sha256)) {
+          if (existing && MatchesRemote(existing, object.size, sha256)) {
             summary.alreadySynced++;
           } else {
             if (existing) {
@@ -178,7 +181,8 @@ export async function ProcessRawDataSync(env, options = {}) {
             summary.uploaded++;
             operation = 'uploaded-checksum';
             const verified = await ReadRemote(path);
-            if (!await MatchesRemote(verified, object.size, sha256)) throw new Error('pCloud checksum mismatch.');
+            if (verified.metadata.fileid !== metadata.fileid || verified.metadata.parentfolderid !== folderId
+              || !MatchesRemote(verified, object.size, sha256)) throw new Error('pCloud checksum mismatch.');
           }
           operation = 'delete';
           const current = await bucket.head(listed.key);
@@ -296,31 +300,6 @@ async function ReadApiResponse(response) {
   }
 }
 
-async function MatchesRemote(response, size, sha256) {
-  if (response.status !== 200 || Number(response.headers.get('Content-Length')) > maximumBytes) {
-    await response.body?.cancel();
-    return false;
-  }
-  const reader = response.body?.getReader();
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  if (reader) {
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (offset + value.byteLength > size) {
-          await reader.cancel();
-          return false;
-        }
-        bytes.set(value, offset);
-        offset += value.byteLength;
-      }
-    } catch {
-      throw new Error('pCloud read failed.', { cause: 'service' });
-    } finally {
-      reader.releaseLock();
-    }
-  }
-  return offset === size && await Digest('SHA-256', bytes) === sha256;
+function MatchesRemote(checksum, size, sha256) {
+  return checksum.metadata.size === size && checksum.sha256.toLowerCase() === sha256;
 }

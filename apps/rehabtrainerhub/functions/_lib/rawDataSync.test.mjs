@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
 import { ProcessRawDataSync } from './rawDataSync.js';
 
 const subjectId = '12345678-1234-4234-8234-123456789abc';
@@ -66,18 +67,25 @@ function CreatePcloud(options = {}) {
   for (const path of options.folders ?? []) AddFolders(path);
   const files = new Map(Object.entries(options.existing ?? {}));
   for (const path of files.keys()) AddFolders(path.slice(0, path.lastIndexOf('/')));
+  const fileIds = new Map();
+  const FileId = (path) => {
+    if (!fileIds.has(path)) fileIds.set(path, fileIds.size + 100);
+    return fileIds.get(path);
+  };
   const requests = [];
   const uploads = [];
   const Json = (value) => Response.json(value);
   return { folders, files, requests, uploads,
     async fetch(url, init) {
       const parsed = new URL(url);
-      const command = init.method === 'GET' ? 'download' : parsed.pathname.slice(1);
+      const command = parsed.pathname.slice(1);
       const params = init.body instanceof FormData || init.body instanceof URLSearchParams ? init.body : null;
-      const path = command === 'download' ? parsed.pathname.slice('/download'.length).split('/').map(decodeURIComponent).join('/')
-        : command === 'uploadfile' ? `${params?.get('path')}/${params?.get('file')?.name}` : params?.get('path');
+      const path = command === 'uploadfile' ? `${params?.get('path')}/${params?.get('file')?.name}` : params?.get('path');
       requests.push({ url: String(url), init, method: init.method, command, path, params });
-      assert.equal(new Headers(init.headers).get('Authorization'), command === 'download' ? null : `Bearer ${accessToken}`);
+      assert.equal(new Headers(init.headers).get('Authorization'), `Bearer ${accessToken}`);
+      assert.equal(new Headers(init.headers).get('Cookie'), null);
+      assert.equal(params?.get('auth'), null);
+      assert.equal(params?.get('access_token'), null);
       assert.equal(init.redirect, 'manual');
       assert.ok(init.signal instanceof AbortSignal);
       assert.equal(parsed.username, '');
@@ -90,19 +98,16 @@ function CreatePcloud(options = {}) {
         if (options.result !== undefined) return Json({ result: options.result, error: `${accessToken} ${rawKey}` });
         return new Response(`${accessToken} ${rawKey}`, { status: options.status ?? 507 });
       }
-      if (command === 'download') {
-        assert.equal(parsed.hostname, 'download.pcloud.com');
-        if (!files.has(path)) return new Response(null, { status: 404 });
+      assert.equal(init.method, 'POST');
+      assert.equal(parsed.hostname, 'eapi.pcloud.com');
+      if (command === 'checksumfile') {
+        if (!files.has(path)) return Json({ result: options.missingResult ?? 2009 });
         const text = uploads.some((upload) => upload.path === path) && options.verifyText !== undefined
           ? options.verifyText : files.get(path);
-        return new Response(text, { headers: { 'Content-Length': String(Buffer.byteLength(text)) } });
-      }
-      assert.equal(init.method, 'POST');
-      assert.ok(['eapi.pcloud.com', 'api.pcloud.com'].includes(parsed.hostname));
-      if (command === 'getfilelink') {
-        if (!files.has(path)) return Json({ result: options.missingResult ?? 2009 });
-        return Json({ result: 0, hosts: ['download.pcloud.com'],
-          path: `/download${path.split('/').map(encodeURIComponent).join('/')}` });
+        const sha256 = createHash('sha256').update(text, 'utf8').digest('hex');
+        return Json({ result: 0, sha256: options.uppercaseChecksum ? sha256.toUpperCase() : sha256,
+          metadata: { isfolder: false, fileid: FileId(path), name: path.split('/').at(-1),
+            parentfolderid: folders.get(path.slice(0, path.lastIndexOf('/'))), size: Buffer.byteLength(text) } });
       }
       const parent = path?.slice(0, path.lastIndexOf('/'));
       if (!folders.has(parent)) return Json({ result: 2002 });
@@ -117,12 +122,12 @@ function CreatePcloud(options = {}) {
       assert.equal(params.get('nopartial'), '1');
       const file = params.get('file');
       assert.equal(file.type, 'text/csv; charset=utf-8');
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await file.arrayBuffer());
       if (options.raceText !== undefined) files.set(path, options.raceText);
       const target = files.has(path) ? path.replace(/\.csv$/, ' (2).csv') : path;
       files.set(target, text);
       uploads.push({ path: target, text });
-      return Json({ result: 0, metadata: [{ isfolder: false, fileid: 123, name: target.split('/').at(-1),
+      return Json({ result: 0, metadata: [{ isfolder: false, fileid: FileId(target), name: target.split('/').at(-1),
         parentfolderid: folders.get(parent), size: Buffer.byteLength(text) }] });
     },
   };
@@ -143,11 +148,11 @@ function AssertPrivateLogs(logs) {
   for (const privateText of [accessToken, username, password, rawKey, subjectId, csv]) assert.ok(!JSON.stringify(logs).includes(privateText));
 }
 
-test('uploads exact CSV bytes, verifies by GET before head and delete, and logs only the summary', async () => {
+test('uploads exact CSV bytes, verifies EU SHA-256 before head and delete, and logs only the summary', async () => {
   const run = CreateRun();
   const originalHead = run.rawBucket.head.bind(run.rawBucket);
   run.rawBucket.head = async (key) => {
-    assert.equal(run.pcloud.requests.filter(({ command }) => command === 'download').length, 1);
+    assert.equal(run.pcloud.requests.filter(({ command }) => command === 'checksumfile').length, 2);
     assert.equal(run.pcloud.files.get(rawPath), csv);
     return originalHead(key);
   };
@@ -170,10 +175,10 @@ test('uploads use multipart and request rename-on-conflict without partial files
   }
 });
 
-test('a matching earlier upload is verified by GET and deleted without uploading or creating folders', async () => {
+test('a matching earlier upload is verified by EU SHA-256 and deleted without uploading or creating folders', async () => {
   const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
   assert.deepEqual(await run.run(), { scanned: 1, uploaded: 0, alreadySynced: 1, deleted: 1, skipped: 0, failed: 0 });
-  assert.deepEqual(run.pcloud.requests.map(({ command }) => command), ['getfilelink', 'download']);
+  assert.deepEqual(run.pcloud.requests.map(({ command }) => command), ['checksumfile']);
   assert.equal(run.pcloud.requests[0].path, rawPath);
   assert.deepEqual(run.pcloud.uploads, []);
 });
@@ -233,11 +238,11 @@ test('an interrupted uploadfile with complete remote bytes recovers without over
 });
 
 for (const status of [401, 404, 507, 'timeout']) {
-  test(`a failed verification GET retains the uploaded source: ${status}`, async () => {
+  test(`a failed verification checksumfile retains the uploaded source: ${status}`, async () => {
     const run = CreateRun();
     const originalFetch = run.options.fetch;
     run.options.fetch = async (url, init) => {
-      if (init.method === 'GET' && run.pcloud.uploads.length) {
+      if (new URL(url).pathname === '/checksumfile' && run.pcloud.uploads.length) {
         if (status === 'timeout') throw new DOMException(`${password} ${rawKey}`, 'TimeoutError');
         return new Response(`${username} ${password}`, { status });
       }
@@ -252,14 +257,14 @@ for (const status of [401, 404, 507, 'timeout']) {
   });
 }
 
-for (const command of ['getfilelink', 'createfolderifnotexists', 'uploadfile']) {
+for (const command of ['checksumfile', 'createfolderifnotexists', 'uploadfile']) {
   for (const status of [401, 507, 'timeout', 302, 202]) {
     test(`pCloud ${command} HTTP ${status} retains R2 and counts a private failure`, async () => {
       const run = CreateRun([rawKey], [], { failAt: command, status });
       assert.equal((await run.run()).failed, 1);
       assert.deepEqual(run.rawBucket.deleted, []);
       AssertPrivateLogs(run.logs);
-      const operation = { getfilelink: 'existing-checksum', createfolderifnotexists: 'folders', uploadfile: 'upload' }[command];
+      const operation = { checksumfile: 'existing-checksum', createfolderifnotexists: 'folders', uploadfile: 'upload' }[command];
       assert.ok(run.logs.some(([line]) => line === `raw-data-sync failed RAW_DATA item=1: ${operation}`));
       if (typeof status === 'number') assert.ok(run.logs.some(([line]) => line === `raw-data-sync pcloud ${command} http=${status}`));
     });
@@ -267,10 +272,10 @@ for (const command of ['getfilelink', 'createfolderifnotexists', 'uploadfile']) 
 }
 
 for (const missingResult of [2002, 2009]) {
-  test(`getfilelink result ${missingResult} permits a new upload followed by byte verification`, async () => {
+  test(`checksumfile result ${missingResult} permits a new upload followed by size and SHA-256 verification`, async () => {
     const run = CreateRun([rawKey], [], { missingResult });
     assert.equal((await run.run()).deleted, 1);
-    assert.equal(run.pcloud.requests.at(-1).command, 'download');
+    assert.equal(run.pcloud.requests.at(-1).command, 'checksumfile');
   });
 }
 
@@ -280,7 +285,7 @@ test('createfolderifnotexists accepts existing folders and creates missing paren
   assert.equal(run.pcloud.requests.filter(({ command }) => command === 'createfolderifnotexists').length, 6);
 });
 
-for (const command of ['getfilelink', 'createfolderifnotexists', 'uploadfile']) {
+for (const command of ['checksumfile', 'createfolderifnotexists', 'uploadfile']) {
   for (const result of [1000, 2000, 2003, 2008, 2041, 2094, 4000, 5000]) {
     test(`pCloud ${command} result ${result} inside HTTP 200 retains the source and stops after three failures`, async () => {
       const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
@@ -351,45 +356,12 @@ for (const result of [2002, 2009]) {
   test(`a missing uploaded file at API verification retains R2: ${result}`, async () => {
     const run = CreateRun();
     const originalFetch = run.options.fetch;
-    run.options.fetch = async (url, init) => new URL(url).pathname === '/getfilelink' && run.pcloud.uploads.length
+    run.options.fetch = async (url, init) => new URL(url).pathname === '/checksumfile' && run.pcloud.uploads.length
       ? Response.json({ result }) : originalFetch(url, init);
     const summary = await run.run();
     assert.equal(summary.uploaded, 1);
     assert.equal(summary.failed, 1);
     assert.equal(summary.deleted, 0);
-    assert.equal(run.rawBucket.objects.has(rawKey), true);
-  });
-}
-
-for (const link of [
-  { hosts: [] }, { hosts: ['evil.example'] }, { hosts: ['download.pcloud.com.evil.example'] },
-  { hosts: ['fake@download.pcloud.com'] }, { hosts: ['download.pcloud.com:443'] },
-  { hosts: ['https://download.pcloud.com'] }, { hosts: ['download.pcloud.com/evil'] },
-  { hosts: ['download.pcloud.com\n'] }, { hosts: [null] },
-  { path: '//evil.example/file' }, { path: 'https://evil.example/file' },
-  { path: '/\\evil.example/file' }, { path: '/file\n' }, { path: '' }, { path: null },
-]) {
-  test(`unsafe download link is refused before any download or upload: ${JSON.stringify(link)}`, async () => {
-    const run = CreateRun();
-    const requests = [];
-    run.options.fetch = async (url, init) => {
-      requests.push({ url: String(url), method: init.method });
-      return Response.json({ result: 0, hosts: ['download.pcloud.com'], path: '/safe/file', ...link });
-    };
-    assert.equal((await run.run()).deleted, 0);
-    assert.deepEqual(requests.map(({ method }) => method), ['POST']);
-    assert.equal(run.pcloud.uploads.length, 0);
-    assert.equal(run.rawBucket.objects.has(rawKey), true);
-    AssertPrivateLogs(run.logs);
-  });
-}
-
-for (const status of [302, 404]) {
-  test(`download HTTP ${status} keeps the existing remote file and never starts an upload`, async () => {
-    const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv }, failAt: 'download', status });
-    assert.equal((await run.run()).deleted, 0);
-    assert.equal(run.pcloud.files.get(rawPath), csv);
-    assert.equal(run.pcloud.uploads.length, 0);
     assert.equal(run.rawBucket.objects.has(rawKey), true);
   });
 }
@@ -426,7 +398,7 @@ for (const metadata of [[], [{}], [{ isfolder: true }], [null], [{ fileid: 0 }],
 }
 
 for (const change of [
-  { PCLOUD_API_HOST: undefined }, { PCLOUD_API_HOST: 'https://eapi.pcloud.com' },
+  { PCLOUD_API_HOST: undefined }, { PCLOUD_API_HOST: 'api.pcloud.com' }, { PCLOUD_API_HOST: 'https://eapi.pcloud.com' },
   { PCLOUD_API_HOST: 'evil.example' }, { PCLOUD_API_HOST: 'eapi.pcloud.com/evil' },
   { PCLOUD_API_HOST: 'eapi.pcloud.com/' }, { PCLOUD_API_HOST: 'eapi.pcloud.com?secret=fake' },
   { PCLOUD_API_HOST: 'eapi.pcloud.com#fake' }, { PCLOUD_API_HOST: 'fake@eapi.pcloud.com' },
@@ -451,78 +423,113 @@ for (const change of [
   });
 }
 
-test('Bearer credentials stay on API requests and both pCloud regions are accepted', async () => {
-  for (const host of ['eapi.pcloud.com', 'api.pcloud.com']) {
-    const run = CreateRun();
-    run.env.PCLOUD_API_HOST = host;
-    assert.equal((await run.run()).deleted, 1);
-    for (const request of run.pcloud.requests) {
-      assert.equal(new URL(request.url).hostname, request.command === 'download' ? 'download.pcloud.com' : host);
-    }
-    AssertPrivateLogs(run.logs);
-  }
-});
-
-test('a declared oversized existing GET is not buffered or overwritten', async () => {
+test('EU checksum verification uses only fixed API endpoints and no downloadable links', async () => {
   const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
-  const originalFetch = run.options.fetch;
-  let cancelled = false;
-  run.options.fetch = async (url, init) => {
-    if (init.method === 'GET' && !run.pcloud.uploads.length) {
-      return { status: 200, headers: new Headers({ 'Content-Length': String(25 * 1024 * 1024 + 1) }),
-        body: { async cancel() { cancelled = true; } },
-        async arrayBuffer() { assert.fail('oversized body must not be buffered'); } };
-    }
-    return originalFetch(url, init);
-  };
-  assert.equal((await run.run()).deleted, 0);
-  assert.equal(run.pcloud.uploads.length, 0);
-  assert.equal(run.rawBucket.objects.has(rawKey), true);
-  assert.equal(cancelled, true);
+  const summary = await run.run();
+  assert.equal(summary.alreadySynced, 1);
+  assert.equal(summary.deleted, 1);
+  assert.deepEqual(run.pcloud.requests.map(({ command }) => command), ['checksumfile']);
+  assert.ok(run.pcloud.requests.every(({ url, method }) => new URL(url).origin === 'https://eapi.pcloud.com' && method === 'POST'));
+  AssertPrivateLogs(run.logs);
 });
 
-test('Unicode CSV bytes survive multipart encoding without changing the root validation', async () => {
-  const text = 'trial,label\n1,測試🔑\n';
-  const run = CreateRun([{ key: rawKey, text, size: Buffer.byteLength(text) }]);
+for (const [label, text] of [['BOM and CRLF', '\ufefftrial,score\r\n1,7\r\n'],
+  ['Unicode', 'trial,label\n1,測試🔑\n'], ['empty', '']]) {
+  test(`EU checksum matches original ${label} bytes without changing the upload`, async () => {
+    const run = CreateRun([{ key: rawKey, text, size: Buffer.byteLength(text) }]);
+    const summary = await run.run();
+    assert.equal(summary.deleted, 1);
+    assert.equal(summary.failed, 0);
+    assert.deepEqual(run.pcloud.uploads, [{ path: rawPath, text }]);
+    assert.equal(run.pcloud.files.get(rawPath), text);
+  });
+}
+
+test('uppercase hexadecimal SHA-256 is normalized before comparison', async () => {
+  const run = CreateRun([rawKey], [], { uppercaseChecksum: true });
   assert.equal((await run.run()).deleted, 1);
-  assert.deepEqual(run.pcloud.uploads, [{ path: rawPath, text }]);
-  assert.ok(!JSON.stringify(run.logs).includes('假帳號'));
 });
 
-test('GET without Content-Length stops reading as soon as it exceeds the source size', async () => {
+for (const stage of ['existing', 'uploaded']) {
+  for (const sha256 of [undefined, null, 123, '', 'a'.repeat(40), 'a'.repeat(63), 'a'.repeat(65),
+    'z'.repeat(64), `${'a'.repeat(64)}\n`]) {
+    test(`invalid SHA-256 at ${stage} refuses upload or R2 deletion: ${JSON.stringify(sha256)}`, async () => {
+      const run = CreateRun([rawKey], [], stage === 'existing' ? { existing: { [rawPath]: csv } } : {});
+      const originalFetch = run.options.fetch;
+      run.options.fetch = async (url, init) => {
+        const response = await originalFetch(url, init);
+        if (new URL(url).pathname !== '/checksumfile' || (stage === 'uploaded' && !run.pcloud.uploads.length)) return response;
+        const result = await response.json();
+        return Response.json({ ...result, sha256, sha1: 'a'.repeat(40) });
+      };
+      const summary = await run.run();
+      assert.equal(summary.failed, 1);
+      assert.equal(summary.deleted, 0);
+      assert.equal(run.pcloud.uploads.length, stage === 'existing' ? 0 : 1);
+      assert.equal(run.rawBucket.objects.has(rawKey), true);
+      assert.equal(run.pcloud.files.get(rawPath), csv);
+      AssertPrivateLogs(run.logs);
+    });
+  }
+}
+
+for (const stage of ['existing', 'uploaded']) {
+  for (const change of [undefined, null, {}, { name: 'other.csv' }, { isfolder: true },
+    { fileid: 0 }, { fileid: -1 }, { fileid: '100' }, { fileid: Number.MAX_SAFE_INTEGER + 1 },
+    { parentfolderid: undefined }, { parentfolderid: -1 }, { parentfolderid: '0' },
+    { parentfolderid: Number.MAX_SAFE_INTEGER + 1 }, { size: undefined }, { size: -1 },
+    { size: '16' }, { size: Number.MAX_SAFE_INTEGER + 1 }]) {
+    test(`invalid checksum metadata at ${stage} refuses upload or R2 deletion: ${JSON.stringify(change)}`, async () => {
+      const run = CreateRun([rawKey], [], stage === 'existing' ? { existing: { [rawPath]: csv } } : {});
+      const originalFetch = run.options.fetch;
+      run.options.fetch = async (url, init) => {
+        const response = await originalFetch(url, init);
+        if (new URL(url).pathname !== '/checksumfile' || (stage === 'uploaded' && !run.pcloud.uploads.length)) return response;
+        const result = await response.json();
+        const metadata = change && Object.keys(change).length ? { ...result.metadata, ...change } : change;
+        return Response.json({ ...result, metadata });
+      };
+      const summary = await run.run();
+      assert.equal(summary.failed, 1);
+      assert.equal(summary.deleted, 0);
+      assert.equal(run.pcloud.uploads.length, stage === 'existing' ? 0 : 1);
+      assert.equal(run.rawBucket.objects.has(rawKey), true);
+      assert.equal(run.pcloud.files.get(rawPath), csv);
+      AssertPrivateLogs(run.logs);
+    });
+  }
+}
+
+for (const change of [{ fileid: 9999 }, { parentfolderid: 9999 }]) {
+  test(`a matching checksum from a different uploaded file identity retains R2: ${JSON.stringify(change)}`, async () => {
+    const run = CreateRun();
+    const originalFetch = run.options.fetch;
+    run.options.fetch = async (url, init) => {
+      const response = await originalFetch(url, init);
+      if (new URL(url).pathname !== '/checksumfile' || !run.pcloud.uploads.length) return response;
+      const result = await response.json();
+      return Response.json({ ...result, metadata: { ...result.metadata, ...change } });
+    };
+    const summary = await run.run();
+    assert.equal(summary.uploaded, 1);
+    assert.equal(summary.failed, 1);
+    assert.equal(summary.deleted, 0);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+  });
+}
+
+test('an existing matching archive may have any nonnegative safe parent folder ID', async () => {
   const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
   const originalFetch = run.options.fetch;
-  let cancelled = false;
   run.options.fetch = async (url, init) => {
-    if (init.method === 'GET' && !run.pcloud.uploads.length) {
-      return new Response(new ReadableStream({
-        start(controller) { controller.enqueue(new Uint8Array(Buffer.byteLength(csv) + 1)); },
-        cancel() { cancelled = true; },
-      }));
-    }
-    return originalFetch(url, init);
-  };
-  assert.equal((await run.run()).deleted, 0);
-  assert.equal(run.pcloud.uploads.length, 0);
-  assert.equal(run.rawBucket.objects.has(rawKey), true);
-  assert.equal(cancelled, true);
-});
-
-test('an oversized verification response is not buffered and keeps the R2 source', async () => {
-  const run = CreateRun();
-  const originalFetch = run.options.fetch;
-  run.options.fetch = async (url, init) => {
-    if (init.method === 'GET' && run.pcloud.uploads.length) {
-      return { status: 200, headers: new Headers({ 'Content-Length': String(25 * 1024 * 1024 + 1) }),
-        async arrayBuffer() { assert.fail('oversized verification must not be buffered'); } };
-    }
-    return originalFetch(url, init);
+    const response = await originalFetch(url, init);
+    const result = await response.json();
+    return Response.json({ ...result, metadata: { ...result.metadata, parentfolderid: 0 } });
   };
   const summary = await run.run();
-  assert.equal(summary.uploaded, 1);
-  assert.equal(summary.failed, 1);
-  assert.equal(summary.deleted, 0);
-  assert.equal(run.rawBucket.objects.has(rawKey), true);
+  assert.equal(summary.alreadySynced, 1);
+  assert.equal(summary.deleted, 1);
+  assert.equal(run.pcloud.uploads.length, 0);
 });
 
 test('each request timeout is capped at 30 seconds and the remaining run budget', async (context) => {
@@ -639,7 +646,7 @@ test('uploadfile HTTP 412 retains R2 without verification', async () => {
   assert.equal(run.pcloud.uploads.length, 0);
   assert.ok(run.logs.some(([line]) => line === 'raw-data-sync pcloud uploadfile http=412'));
   assert.ok(run.logs.some(([line]) => line === 'raw-data-sync failed RAW_DATA item=1: upload'));
-  assert.equal(run.pcloud.requests.filter(({ command }) => command === 'getfilelink').length, 1);
+  assert.equal(run.pcloud.requests.filter(({ command }) => command === 'checksumfile').length, 1);
   AssertPrivateLogs(run.logs);
 });
 
@@ -809,7 +816,7 @@ for (const failure of ['read', 'checksum', 'conflict', 'http']) {
 for (const status of [401, 403, 408, 429, 507, 'timeout', 302]) {
   test(`three consecutive service failures stop the run and leave the rest for a later cron: ${status}`, async () => {
     const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
-    const run = CreateRun(raw, [], { failAt: 'getfilelink', status });
+    const run = CreateRun(raw, [], { failAt: 'checksumfile', status });
     const summary = await run.run();
     assert.equal(summary.scanned, 3);
     assert.equal(summary.failed, 3);
@@ -848,7 +855,7 @@ test('the ten-minute budget stops starting new files and retains data when verif
   const originalFetch = run.options.fetch;
   run.options.fetch = async (url, init) => {
     const response = await originalFetch(url, init);
-    if (init.method === 'GET' && run.pcloud.uploads.length) now = 600001;
+    if (new URL(url).pathname === '/checksumfile' && run.pcloud.uploads.length) now = 600001;
     return response;
   };
   const summary = await run.run();
