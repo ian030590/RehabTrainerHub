@@ -50,6 +50,8 @@ let authCheckCount = 0;
 const heldAuthChecks = [];
 const apiCalls = [];
 let progressFailed = true;
+let holdProgress = false;
+let releaseProgress = null;
 const pending = new Map();
 const send = (method, params = {}, sessionId = session) => new Promise((done, reject) => {
   const id = ++serial;
@@ -94,6 +96,7 @@ const check = async (name, action) => {
   finally {
     releaseAuthChecks(); user.profileCompleted = true;
     holdPlan = false; releasePlan?.(); releasePlan = null;
+    holdProgress = false; releaseProgress?.(); releaseProgress = null;
   }
 };
 
@@ -144,9 +147,12 @@ try {
             items: [{ id: 'fixture-item', gameId: 'drawing-defense', weeklyTarget: 3, settings: null, completedThisWeek: 0 }],
             week: { start: '2026-11-09', end: '2026-11-16', achieved: false }, achievedWeeks: 0, currentStreak: 0, weeksToTitle: 6, titles: [] } });
         }
-        if (url.pathname.includes('progress')) return fulfill(progressFailed ? 503 : 200, {
-          serverDate: '2026-11-10', timeZone: 'Asia/Taipei', startedOn: '2026-11-09', daysSinceStart: 1,
-          rehabilitationDays: 1, totalRehabilitationDays: 1, recentModules: [], dailyTasks: [], achievements: [] });
+        if (url.pathname.includes('progress')) {
+          if (holdProgress) await new Promise(done => releaseProgress = done);
+          return fulfill(progressFailed ? 503 : 200, {
+            serverDate: '2026-11-10', timeZone: 'Asia/Taipei', startedOn: '2026-11-09', daysSinceStart: 1,
+            rehabilitationDays: 1, totalRehabilitationDays: 1, recentModules: [], dailyTasks: [], achievements: [] });
+        }
         return fulfill(200, { records: [], cursor: null });
       }
       if (url.origin !== new URL(baseUrl).origin) return send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' });
@@ -306,8 +312,13 @@ try {
       const text = await evaluate(`document.querySelector('.progress-metrics').innerText`);
       assert.doesNotMatch(text, /\b0\b/);
       const retry = await evaluate(`(()=>{const e=[...document.querySelectorAll('main button')].find(b=>/重試|重新載入|Try again|Retry/i.test(b.innerText));if(!e)return false;e.id='uiux-progress-retry';return true;})()`);
-      assert.equal(retry, true); progressFailed = false; await click('#uiux-progress-retry');
-      await waitFor(`!document.querySelector('.progress-error')`);
+      assert.equal(retry, true); progressFailed = false; holdProgress = true; await click('#uiux-progress-retry');
+      for (let attempt = 0; attempt < 50 && !releaseProgress; attempt++) await sleep(100);
+      assert.ok(releaseProgress, 'Retry must issue another progress request.');
+      await waitFor(`!document.querySelector('.progress-error')&&[...document.querySelectorAll('.progress-metrics strong')].every(e=>/載入中|Loading/i.test(e.textContent))`);
+      assert.doesNotMatch(await evaluate(`document.querySelector('.progress-metrics').innerText`), /\b0\b/);
+      holdProgress = false; releaseProgress(); releaseProgress = null;
+      await waitFor(`!document.querySelector('.progress-error')&&document.querySelectorAll('.progress-metrics strong').length===2&&[...document.querySelectorAll('.progress-metrics strong')].every(e=>e.textContent.trim()==='1')`);
       assert.match(await evaluate(`document.querySelector('.progress-metrics').innerText`), /1/);
     });
     await check('card entry motion is bounded and disabled for reduced motion', async () => {
