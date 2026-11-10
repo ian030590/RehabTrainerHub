@@ -2,6 +2,8 @@
 
 2026-10-29，Task D。本次只修改本機程式、設定與測試；沒有建立正式 bucket、設定 secrets、發布遊戲、部署、commit 或 push。排程啟用方式見 [pCloud 同步文件](raw-data-pcloud-sync.md)。
 
+2026-11-10 更新同步傳輸為標準 pCloud API；以下封存及設定說明已更新。既有資料形狀、來源與目的路徑不變，未設定正式 token 或部署，歷史測試結果仍保留原日期。
+
 ## 新寫入的資料
 
 `training_records.payload_json` 與 `summary_json` 保存相同的摘要紀錄。官方成果保留 `score.summary`、設定、版本、伺服器日期，`score.rounds` 固定為 `[]`，另有原始 `scoreRoundCount` 與小型 `rawFiles` 清單（kind、key、rows、sha256）。CSV 必須先成功寫入 R2，才能新增 D1 訓練紀錄；儲存失敗回覆 503，同鍵不同內容回覆 409。帳號 Subject ID 由伺服器解析，訪客使用裝置的 UUID v4。
@@ -57,17 +59,17 @@ presence 與 face_found 為 0/1。tongue direction 為 Rest=0、Tongue_Left=-1�
 
 新眼動物件以 Subject ID 與固定日期封存：帳號使用 `eye/oculomotor-training/<subjectId>/<date>/<recordId>.csv`，訪客使用 `guest-eye/oculomotor-training/<subjectId>/<date>/<recordId>.csv`，兩者隔離且路徑不包含帳號 ID。同步 list 帶 customMetadata，在 get 與刪除前 head 再檢查對應。舊 users 物件沒有有效 subjectId／recordedDate 時保留、不上傳、不刪除；舊 guests 物件沒有日期 metadata 時沿用 uploaded 的 UTC 日期。既有封存檔不搬移，舊版寫在 `eye` 下的訪客檔需另案核對。
 
-上傳前以 GET 檢查封存目的檔，已存在但 bytes 不同時記為 `conflict`，保留 R2 與遠端原檔；新檔以 PUT 建立，不送 `If-None-Match`，GET 與 PUT 之間沒有原子保護，封存目的路徑須維持單一寫入者。完整寫入但回應中斷可透過後續 GET 比對恢復；不完整的遠端檔需擁有者核對，不會自動覆寫。同步每小時第 17 分鐘執行，每輪最多處理 200 次成功 PUT／已相符檔、掃描 2,000 個物件或約 10 分鐘；`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存接續位置，跳過物件與單檔失敗不會讓後方來源永遠卡在開頭，未封存的來源不刪除。細節見 [pCloud 同步文件](raw-data-pcloud-sync.md)。
+上傳前以 pCloud `getfilelink` 下載回讀封存目的檔，已存在但 bytes 不同時記為 `conflict`，保留 R2 與遠端原檔。缺檔時以 `createfolderifnotexists` 建立目錄，`uploadfile` 以原始 bytes 上傳，帶 `renameifexists=1` 與 `nopartial=1`；同名競態不覆寫既有檔案，若 API 改名或回傳 metadata 不符則保留 R2、記為失敗，遠端衝突副本由擁有者核對。完整寫入但回應中斷可透過後續下載比對恢復；不同或不完整的遠端檔不會自動覆寫。同步每小時第 17 分鐘執行，每輪最多處理 200 次成功上傳／已相符檔、掃描 2,000 個物件或約 10 分鐘；`RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存接續位置，跳過物件與單檔失敗不會讓後方來源永遠卡在開頭，未封存的來源不刪除。細節見 [pCloud 同步文件](raw-data-pcloud-sync.md)。
 
-獨立同步 Worker 以 EU WebDAV `https://ewebdav.pcloud.com` 傳送 CSV；登入 email 與密碼只透過 `PCLOUD_WEBDAV_USERNAME`／`PCLOUD_WEBDAV_PASSWORD` secrets 設定，不再讀取 API token。GET 回讀的 byte 長度與 SHA-256 均相符，再通過 R2 head 檢查後才刪除 R2 CSV，下載 API 對不存在的檔案回覆 404。進度頁移除該檔下載按鈕，雙語說明同步檔案已封存、當次摘要仍保留；空白、載入、下載中及錯誤狀態均保留。404 不提供 pCloud 連結，也不讓 Subject ID 成為查詢授權。
+獨立同步 Worker 使用 EU API `eapi.pcloud.com`（亦接受 US `api.pcloud.com`），`PCLOUD_ACCESS_TOKEN` 只透過 server-only secret 設定，認證放在 API 請求的 Bearer header，不再讀取 WebDAV 帳密。`getfilelink` 回傳的下載主機限 HTTPS `*.pcloud.com`，下載不帶 token，全部請求拒絕轉址。HTTP 200 還須確認 JSON `result: 0`；只有初查的 2002／2009 視為缺檔。回讀的 byte 長度與 SHA-256 均相符，再通過 R2 head 檢查後才刪除 R2 CSV，Hub 下載 API 對不存在的檔案回覆 404。進度頁移除該檔下載按鈕，雙語說明同步檔案已封存、當次摘要仍保留；空白、載入、下載中及錯誤狀態均保留。404 不提供 pCloud 連結，也不讓 Subject ID 成為查詢授權。
 
 ## 後續與人工驗收
 
 - **TODO：滑鼠／pointer 座標只存在各遊戲沙盒內，需要逐款新版本與精確發布核准；本次不擷取。** 獨立 runner/PWA 的座標錄製亦不在此次 Hub 容器範圍。
 - **歷史 D1 資料未遷移、未刪除。** 舊 payload_json、game_runs、管理端匯出仍可能包含逐次資料；清理需擁有者另外核准與驗證。
 - 舊帳號眼動 CSV 缺少 metadata 的對應與補登需另案處理；不能宣稱所有歷史眼動均已同步。
-- 擁有者需部署 Hub 寫入端、建立私人 bucket，並依同步文件設定兩個 WebDAV secrets、移除已設定的舊 `PCLOUD_ACCESS_TOKEN`、確認 EU 端點／目錄，並手動部署獨立排程 Worker（目前 CI 部署腳本只部署 Hub／runner）。不得在同步 Worker 啟用前宣稱正式排程已運作。
-- 正式驗收用不含真人資料的 session：確認 D1 只有摘要、CSV metadata／bytes 與 pCloud 路徑相符；確認摘要校驗通過後 CSV 才刪除；同 record ID 更改 bytes 必須 409；中斷上傳與錯誤 WebDAV 密碼不能造成原始檔遺失；封存後成果重試成功且下載 404 有說明。
+- 擁有者需確認 Hub 寫入端及私人 bucket，依同步文件完成 OAuth 授權、設定 `PCLOUD_ACCESS_TOKEN`、確認 EU host／既有根目錄，再手動部署獨立排程 Worker（目前 CI 部署腳本只部署 Hub／runner）。先保留舊 WebDAV secrets 供回退，待 API 正式驗收通過後才移除；目前未驗證擁有者帳號的應用註冊與 token 取得。不得在同步 Worker 啟用前宣稱正式排程已運作。
+- 正式驗收用不含真人資料的 session：確認 D1 只有摘要、CSV metadata／bytes 與 pCloud 路徑相符；確認摘要校驗通過後 CSV 才刪除；同 record ID 更改 bytes 必須 409；中斷上傳、錯誤 access token 及同名衝突不能造成原始檔遺失或封存被覆寫；封存後成果重試成功且下載 404 有說明。
 - 瀏覽器人工驗收仍需桌機／360px 手機、鍵盤 Tab／Escape、相機同意／取消、實體代理輸入與進度頁下載；本機 hook harness 不等同實體相機或真實 pCloud 驗證。
 
 ## 測試紀錄

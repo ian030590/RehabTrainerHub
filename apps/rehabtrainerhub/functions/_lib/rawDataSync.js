@@ -13,9 +13,8 @@ export async function ProcessRawDataSync(env, options = {}) {
   const rootSegments = root === '/' ? [] : typeof root === 'string' ? root.slice(1).split('/') : [];
   const sources = [[env.RAW_DATA, 'RAW_DATA', 'pending/'], [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'guests/'],
     [env.OCULOMOTOR_DATA, 'OCULOMOTOR_DATA', 'users/']];
-  if (!['https://ewebdav.pcloud.com', 'https://webdav.pcloud.com'].includes(env.PCLOUD_WEBDAV_URL)
-    || typeof env.PCLOUD_WEBDAV_USERNAME !== 'string' || !env.PCLOUD_WEBDAV_USERNAME || /[:\p{C}]/u.test(env.PCLOUD_WEBDAV_USERNAME)
-    || typeof env.PCLOUD_WEBDAV_PASSWORD !== 'string' || !env.PCLOUD_WEBDAV_PASSWORD || /[\x00-\x1f\x7f-\x9f]/.test(env.PCLOUD_WEBDAV_PASSWORD)
+  if (!['eapi.pcloud.com', 'api.pcloud.com'].includes(env.PCLOUD_API_HOST)
+    || typeof env.PCLOUD_ACCESS_TOKEN !== 'string' || !/^[A-Za-z0-9._~+\/-]+=*$/.test(env.PCLOUD_ACCESS_TOKEN)
     || typeof root !== 'string' || !root.startsWith('/') || root.length > 1024
     || !rootSegments.every((segment) => /^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(segment))
     || typeof env.RAW_DATA?.put !== 'function'
@@ -44,45 +43,73 @@ export async function ProcessRawDataSync(env, options = {}) {
     return summary;
   }
   const initialProgress = JSON.stringify(progress);
-  const folders = new Set();
-  const authorization = `Basic ${btoa(Array.from(new TextEncoder().encode(`${env.PCLOUD_WEBDAV_USERNAME}:${env.PCLOUD_WEBDAV_PASSWORD}`),
-    (byte) => String.fromCharCode(byte)).join(''))}`;
+  const folders = new Map();
   let consecutiveFailures = 0;
   const HasBudget = () => summary.uploaded + summary.alreadySynced < maximumFiles
     && summary.scanned < maximumScanned && now() < deadline && consecutiveFailures < 3;
-  const Request = async (method, path, accepted, body) => {
+  const Request = async (url, init, operation) => {
     const remaining = deadline - now();
     if (remaining <= 0) throw new Error('Sync time budget exhausted.');
     let response;
     try {
-      response = await fetchRequest(`${env.PCLOUD_WEBDAV_URL}${path}`, {
-        method, headers: { Authorization: authorization,
-          ...(method === 'PUT' ? { 'Content-Type': 'text/csv; charset=utf-8' } : {}) },
+      response = await fetchRequest(url, {
+        ...init,
         // Workers reject redirect: 'error'; 'manual' plus the accepted-status check below refuses redirects.
-        body, redirect: 'manual', signal: AbortSignal.timeout(Math.min(30000, remaining)),
+        redirect: 'manual', signal: AbortSignal.timeout(Math.min(30000, remaining)),
       });
     } catch {
-      throw new Error('WebDAV request failed.', { cause: 'service' });
+      throw new Error('pCloud request failed.', { cause: 'service' });
     }
-    if (!accepted.includes(response.status)) {
-      log(`raw-data-sync webdav ${method} http=${response.status}`);
+    if (response.status !== 200) {
+      log(`raw-data-sync pcloud ${operation} http=${response.status}`);
       await response.body?.cancel();
-      throw new Error('WebDAV HTTP error.', { cause: response.status >= 500 || response.status === 401
+      throw new Error('pCloud HTTP error.', { cause: response.status >= 500 || response.status === 401
         || response.status === 403 || response.status === 408 || response.status === 429
         || (response.status >= 300 && response.status < 400) ? 'service' : 'object' });
     }
-    if (method !== 'GET') await response.body?.cancel();
     return response;
+  };
+  const Api = async (method, parameters, allowMissing = false) => {
+    const response = await Request(`https://${env.PCLOUD_API_HOST}/${method}`, {
+      method: 'POST', headers: { Authorization: `Bearer ${env.PCLOUD_ACCESS_TOKEN}` },
+      body: parameters instanceof FormData ? parameters : new URLSearchParams(parameters),
+    }, method);
+    let data;
+    try { data = await ReadApiResponse(response); }
+    catch { throw new Error('Invalid pCloud response.', { cause: 'service' }); }
+    if (!Number.isInteger(data?.result)) throw new Error('Invalid pCloud result.', { cause: 'service' });
+    if (allowMissing && [2002, 2009].includes(data.result)) return null;
+    if (data.result !== 0) {
+      log(`raw-data-sync pcloud ${method} result=${data.result}`);
+      throw new Error('pCloud API error.', { cause: data.result < 2000 || [2000, 2003, 2008, 2041, 2094].includes(data.result)
+        || data.result >= 4000 ? 'service' : 'object' });
+    }
+    return data;
+  };
+  const ReadRemote = async (path, allowMissing = false) => {
+    const link = await Api('getfilelink', { path }, allowMissing);
+    if (!link) return null;
+    const host = Array.isArray(link.hosts) ? link.hosts[0] : undefined;
+    if (typeof host !== 'string' || host.length > 253
+      || !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+pcloud\.com$/i.test(host)
+      || typeof link.path !== 'string' || !link.path.startsWith('/') || link.path.startsWith('//')
+      || /[\\#\p{C}]/u.test(link.path)) throw new Error('Invalid pCloud download link.', { cause: 'service' });
+    return Request(`https://${host}${link.path}`, { method: 'GET' }, 'download');
   };
   const EnsureFolder = async (segments) => {
     let path = '';
+    let folderId = 0;
     for (const segment of segments) {
-      path += `/${encodeURIComponent(segment)}`;
+      path += `/${segment}`;
       if (!folders.has(path)) {
-        await Request('MKCOL', path, [201, 405]);
-        folders.add(path);
+        const { metadata } = await Api('createfolderifnotexists', { path });
+        if (metadata?.isfolder !== true || !Number.isSafeInteger(metadata.folderid) || metadata.folderid <= 0
+          || metadata.name !== segment) throw new Error('Invalid pCloud folder.');
+        folders.set(path, metadata.folderid);
       }
+      folderId = folders.get(path);
     }
+    return folderId;
   };
 
   const firstSource = progress.source;
@@ -124,24 +151,34 @@ export async function ProcessRawDataSync(env, options = {}) {
           if (bytes.byteLength !== object.size) throw new Error('R2 size mismatch.');
           const sha256 = await Digest('SHA-256', bytes);
           const segments = [...rootSegments, ...target];
-          const path = `/${segments.map(encodeURIComponent).join('/')}`;
+          const path = `/${segments.join('/')}`;
           operation = 'existing-checksum';
-          const existing = await Request('GET', path, [200, 404]);
-          if (await MatchesRemote(existing, object.size, sha256)) {
+          const existing = await ReadRemote(path, true);
+          if (existing && await MatchesRemote(existing, object.size, sha256)) {
             summary.alreadySynced++;
           } else {
-            if (existing.status === 200) {
+            if (existing) {
               operation = 'conflict';
               throw new Error('Archive conflict.');
             }
             operation = 'folders';
-            await EnsureFolder(segments.slice(0, -1));
+            const folderId = await EnsureFolder(segments.slice(0, -1));
             operation = 'upload';
-            await Request('PUT', path, [200, 201, 204], bytes);
+            const form = new FormData();
+            form.append('path', `/${segments.slice(0, -1).join('/')}`);
+            form.append('renameifexists', '1');
+            form.append('nopartial', '1');
+            form.append('file', new Blob([bytes], { type: 'text/csv; charset=utf-8' }), segments.at(-1));
+            const uploaded = await Api('uploadfile', form);
+            const metadata = uploaded.metadata?.[0];
+            // renameifexists protects the archive; a renamed copy cannot authorize deleting the source.
+            if (!Array.isArray(uploaded.metadata) || uploaded.metadata.length !== 1 || metadata?.isfolder !== false
+              || metadata.name !== segments.at(-1) || metadata.size !== object.size || metadata.parentfolderid !== folderId
+              || !Number.isSafeInteger(metadata.fileid) || metadata.fileid <= 0) throw new Error('pCloud upload conflict.');
             summary.uploaded++;
             operation = 'uploaded-checksum';
-            const verified = await Request('GET', path, [200]);
-            if (!await MatchesRemote(verified, object.size, sha256)) throw new Error('WebDAV checksum mismatch.');
+            const verified = await ReadRemote(path);
+            if (!await MatchesRemote(verified, object.size, sha256)) throw new Error('pCloud checksum mismatch.');
           }
           operation = 'delete';
           const current = await bucket.head(listed.key);
@@ -232,6 +269,33 @@ async function Digest(algorithm, bytes) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+async function ReadApiResponse(response) {
+  const maximumResponseBytes = 64 * 1024;
+  if (Number(response.headers.get('Content-Length')) > maximumResponseBytes) {
+    await response.body?.cancel();
+    throw new Error('pCloud response too large.');
+  }
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Empty pCloud response.');
+  const bytes = new Uint8Array(maximumResponseBytes);
+  let offset = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (offset + value.byteLength > maximumResponseBytes) {
+        await reader.cancel();
+        throw new Error('pCloud response too large.');
+      }
+      bytes.set(value, offset);
+      offset += value.byteLength;
+    }
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, offset)));
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function MatchesRemote(response, size, sha256) {
   if (response.status !== 200 || Number(response.headers.get('Content-Length')) > maximumBytes) {
     await response.body?.cancel();
@@ -253,7 +317,7 @@ async function MatchesRemote(response, size, sha256) {
         offset += value.byteLength;
       }
     } catch {
-      throw new Error('WebDAV read failed.', { cause: 'service' });
+      throw new Error('pCloud read failed.', { cause: 'service' });
     } finally {
       reader.releaseLock();
     }

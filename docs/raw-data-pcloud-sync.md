@@ -1,6 +1,14 @@
 # 原始 CSV 定期同步至 pCloud
 
-日期：2026-10-29，Task G。pCloud 改用 EU WebDAV，不需註冊 API 應用程式。本次只有本機修改與替身測試，未建立正式 bucket、設定 secrets、部署或存取擁有者的 pCloud。寫入欄位、限制與待辦見 [原始資料儲存](raw-data-storage.md)。
+更新：2026-11-10。同步傳輸由 WebDAV 改為標準 pCloud HTTP/JSON API，使用 OAuth access token。初次實作只有本機修改與替身測試；後續擁有者已設定 token，並要求將正式 Worker 與本機同步，部署結果如下。寫入欄位、限制與待辦見 [原始資料儲存](raw-data-storage.md)。下方 2026-10-29 與 2026-11-06 段落是舊 WebDAV 實作的歷史證據，目前操作方式以本文件前半部為準。
+
+## 正式部署狀態（2026-11-10）
+
+依擁有者要求，於 UTC `2026-11-10T04:53:47Z` 部署 `trainerhubsync` 的本機 API 版本，有效 version 為 `4e27c2c7-96d7-4e13-9a02-309facfcf500`（100%）。部署前遠端已有 `PCLOUD_API_HOST` 與 token secret，但程式仍使用 WebDAV，排程仍是每日 `17 19 * * *`；本次一併對齊本機程式與每小時 `17 * * * *`。
+
+部署後透過 Cloudflare API 回讀確認：`PCLOUD_API_HOST=eapi.pcloud.com`、`PCLOUD_ROOT_FOLDER=/4_RehabTrainerHubData`、`PCLOUD_ACCESS_TOKEN` 為 encrypted secret；兩個原 R2 bindings、compatibility date、observability 及停用公開入口均符合本機。下載遠端程式確認含 API 上傳、同名衝突與配額保護，不再含 WebDAV 參照。未讀取或重設 token 值，未手動觸發 CSV 搬移、建立正式測試物件或部署 Hub／runner。
+
+部署前指定同步與 Worker 設定測試合計 185 項通過，Wrangler dry run 通過。實際 pCloud token 有效性、傳輸與刪除來源的端到端驗收仍待下一輪排程及擁有者核對，不能以設定回讀代替。下方一次性設定保留作為重建與操作指引。
 
 ## 同步範圍與路徑
 
@@ -13,7 +21,7 @@
 | `oculomotor-data`：`guests/<subjectId>/<recordId>.csv` | `guest-eye/oculomotor-training/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
 | `oculomotor-data`：`users/<encoded userId>/<recordId>.csv`，僅限有效 Subject ID 與日期 metadata | `eye/oculomotor-training/<subjectId>/<YYYY-MM-DD>/<recordId>.csv` |
 
-根目錄預設 `/RehabTrainerHub/raw-data`。新眼動日期取 metadata.recordedDate（官方 session issue time 依 Hub `REHAB_TIME_ZONE` 換算的日期，預設 Asia/Taipei），帳號路徑使用 metadata.subjectId，不使用帳號 ID。舊 guests 沒有有效日期 metadata 時取 R2 uploaded 的 UTC 日期；舊 users 缺少有效 Subject ID 或日期 metadata 則跳過。其餘類型沿用來源鍵的日期。CSV 以原始 bytes 傳送，不重新編碼或改寫欄位。
+函式未設定根目錄時預設 `/RehabTrainerHub/raw-data`；目前 Worker 設定沿用 `/4_RehabTrainerHubData`。新眼動日期取 metadata.recordedDate（官方 session issue time 依 Hub `REHAB_TIME_ZONE` 換算的日期，預設 Asia/Taipei），帳號路徑使用 metadata.subjectId，不使用帳號 ID。舊 guests 沒有有效日期 metadata 時取 R2 uploaded 的 UTC 日期；舊 users 缺少有效 Subject ID 或日期 metadata 則跳過。其餘類型沿用來源鍵的日期。CSV 以原始 bytes 傳送，不重新編碼或改寫欄位；既有封存檔與路徑不搬移。
 
 2026-11-06 安全修正：訪客改用獨立的 `guest-eye` 類型，帳號維持 `eye`，即使兩者的 Subject ID、record ID 與日期相同也不會共用目的檔。既有封存檔不搬移、不改寫；舊版已寫在 `eye` 下的訪客檔需另案核對來源，不能自動假設為帳號檔。
 
@@ -22,27 +30,29 @@
 ## 驗證及刪除規則
 
 1. 以 R2 `list` 分頁列舉，首次先處理 `pending/`，再處理 `guests/` 與 `users/`；後續從已保存的進度接續，完成三個來源後循環。list 帶 `include: ['customMetadata']`。眼動來源的 Subject ID／日期對應會在 get 與刪除前 head 再檢查。讀取時帶 `onlyIf: { etagMatches }`，核對 etag、大小與 version，並計算原始 bytes 的 SHA-256。
-2. 以 WebDAV `GET` 讀取目的檔。404 表示尚未上傳；200 且 bytes 長度與 SHA-256 均相同，視為已同步，不重傳。200 但內容不同則記錄 `conflict`、增加 `failed` 並保留兩端檔案，不覆寫。宣告 `Content-Length` 超過 25 MiB 時不緩衝內容；未宣告長度時也只讀取至來源大小上限，超過即停止，均視為衝突。其他 HTTP 狀態視為該檔失敗。
-3. 需要上傳時，從指定根目錄開始逐層 `MKCOL`，201 表示已建立，405 表示已存在；其他狀態失敗。同一輪快取已確認的目錄。以 `PUT` 傳送原始 bytes，帶 `Content-Type: text/csv; charset=utf-8`，不送 `If-None-Match`，只接受 200／201／204；包括 412 在內的其他狀態均記為上傳失敗並保留 R2 來源。目的 URL 由固定端點及逐段 `encodeURIComponent` 的根目錄與來源對應路徑組成，目錄中的空格成為 `%20`。
-4. 上傳後再次 `GET` 相同目的檔；只有 200、bytes 長度相同且 SHA-256 相同才算驗證完成。這是下載回讀比對，不依賴 pCloud API checksum 或回傳 metadata，也不計算 SHA-1。
+2. 以 `POST getfilelink` 查詢目的路徑。HTTP 必須為 200，且 JSON `result` 必須為數字；初查的 `2002`（缺上層目錄）或 `2009`（缺檔）才視為尚未上傳。`result: 0` 時，以回傳的 `hosts`／`path` 下載原始 bytes。下載只接受 HTTPS `*.pcloud.com`、不帶 token，並拒絕轉址。長度與 SHA-256 相同視為已同步；不同則記錄 `conflict`、增加 `failed` 並保留兩端檔案。宣告 `Content-Length` 超過 25 MiB 時不緩衝內容；未宣告長度時也只讀取至來源大小上限，超過即停止。其他 HTTP、API 或不合法回應均失敗。
+3. 需要上傳時，以 `POST createfolderifnotexists` 逐層建立目錄，同一輪快取已確認的目錄。`POST uploadfile` 使用 FormData，先放 `path`、`renameifexists=1`、`nopartial=1`，再放原始 CSV bytes 的檔案欄位。API 的 HTTP 200 不代表成功，還必須有 `result: 0`；回傳 metadata 必須只有一筆且檔名、父目錄 ID、檔案大小及型別符合預期。`renameifexists=1` 避免同名競態覆寫封存檔；若 API 將新檔改名，視為失敗、保留 R2 與遠端副本，由擁有者核對，不自動刪除衝突副本。[uploadfile](https://docs.pcloud.com/methods/file/uploadfile.html)、[createfolderifnotexists](https://docs.pcloud.com/methods/folder/createfolderifnotexists.html)
+4. 上傳後再次以 `getfilelink` 查詢相同目的路徑並下載；只有 bytes 長度與 SHA-256 均相同才算驗證完成。驗證階段的缺檔也是失敗。這是下載回讀比對，不依賴 pCloud checksum 或 metadata hash。[getfilelink](https://docs.pcloud.com/methods/streaming/getfilelink.html)
 5. 遠端副本驗證相符後，以 R2 `head()` 再查 etag、大小、version 與目標對應，與讀取時相同且未超時才刪除。任何驗證、權限、網路或 HTTP 錯誤都保留 R2 來源，等待下一輪每小時排程或下一次完整列舉循環重試。
 
 帳號眼動 CSV 只在下一輪同步封存前可從進度頁下載，排程正常且無積壓或失敗時約在上傳後一小時內封存（原為等到下一次臺灣時間 03:17），之後進度頁顯示既有的「已封存」提示。
 
-若 PUT 已完整寫入但回應中斷，或 R2 刪除失敗，後續重訪同一來源時會先 GET 回讀比對，相符就不重傳。若中斷留下不同或不完整的遠端檔，會持續記為 `conflict` 並保留 R2；擁有者必須先核對與另存衝突檔，再決定如何恢復，不會自動覆寫。已保存的列舉進度可能讓失敗來源在後續每小時排程推進至下一次完整循環時才重試。
+若 uploadfile 已完整寫入但回應中斷，或 R2 刪除失敗，後續重訪同一來源時會先下載回讀比對，相符就不重傳。若遠端檔內容不同或不完整，會持續記為 `conflict` 並保留 R2；擁有者必須先核對與另存衝突檔，再決定如何恢復，不會自動覆寫。已保存的列舉進度可能讓失敗來源在後續每小時排程推進至下一次完整循環時才重試。
 
 **來源必須保持不可變：** R2 Workers API 的 `delete(key)` 沒有條件式刪除參數；`head()` 與 `delete()` 之間不能形成原子比較刪除。程式會攔下檢查時已變動的物件，但不能保證攔下恰好在兩次呼叫之間發生的覆寫。所有來源寫入端必須用唯一 record key 與 `onlyIf: { etagDoesNotMatch: '*' }` 保護，不可覆寫或刪除後重用相同 key；同步期間也不能用其他工具改寫來源。兩個寫入端均以條件式建立 CSV，並保留 checksums/<CSV 鍵> 的空物件及 SHA-256，避免封存刪除後換 bytes 重用鍵；只有 CSV 寫入完成才建立 receipts/<CSV 鍵>，供成果驗證與追溯。保護物件不在同步 prefix 中，不能與原始 CSV 一起清除。[R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
 
-每小時一輪，每輪合計最多 200 次成功 PUT／已相符的封存檔處理，每日 24 輪合計上限為 4,800 檔；每輪另有 2,000 個來源物件的掃描上限，以及約 10 分鐘時間上限，以先到者為準。跳過、來源讀取／檢查失敗及封存衝突不占 200 檔額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次網路／逾時、HTTP 401／403／408／429、5xx 或轉址失敗就提前停止；單檔讀取、metadata／checksum 不符、衝突及其他單檔 HTTP 錯誤不累計此門檻。列舉失敗會停止該來源，本輪仍可嘗試下一個來源。
+每小時一輪，每輪合計最多 200 次成功上傳／已相符的封存檔處理，每日 24 輪合計上限為 4,800 檔；每輪另有 2,000 個來源物件的掃描上限，以及約 10 分鐘時間上限，以先到者為準。跳過、來源讀取／檢查失敗及封存衝突不占 200 檔額度。pCloud 請求逐一執行，每個請求最多等待 30 秒，並受本輪剩餘時間限制。連續三次網路／逾時、HTTP 401／403／408／429、5xx、轉址、無效 API 回應或服務層 API 錯誤就提前停止；單檔讀取、metadata／checksum 不符、衝突及其他單檔錯誤不累計此門檻。列舉失敗會停止該來源，本輪仍可嘗試下一個來源。
+
+API JSON 回應限制為 64 KiB，宣告大小或串流讀取超限均取消。API `2008`（配額已滿）與 `2041`（連線中斷）也計入連續服務失敗，避免持續重讀來源並重試上傳。
 
 `RAW_DATA` 的 `sync-state/raw-data-sync.json` 保存目前來源、該頁的 R2 cursor 與最後處理的鍵；頁中途停止時，下一小時略過已處理鍵並接續未處理檔案。此控制物件不屬於同步 prefix，不上傳 pCloud，也不刪除原始資料。掃描滿 2,000 個無效物件後，下輪會往後接續，不會永遠重看開頭；到達來源結尾後，保留的失敗物件會在後續循環再次檢查。進度讀取失敗或內容無效時，本輪在列舉前記為 `progress-read` 失敗；保存失敗記為 `progress-write`，可能使下輪重看舊頁，需由擁有者排查。約 10 分鐘的單輪時間上限低於一小時排程間隔；同步 Worker 應維持單一執行者，不同時手動執行另一輪。
 
 ## 擁有者一次性設定
 
-以下命令由擁有者在確認目的帳號及私人目錄後執行。本次未執行任何遠端命令。
+以下命令供擁有者在確認目的帳號及私人目錄後執行；目前部署狀態以上方紀錄為準。
 
-1. 確認 `workers/raw-data-sync/wrangler.toml` 的 `[vars]` 使用 EU 設定 `PCLOUD_WEBDAV_URL = "https://ewebdav.pcloud.com"`。程式只接受這個端點與美國 `https://webdav.pcloud.com` 的精確值，不接受尾端 `/`、其他路徑、query、帳密或其他主機。
-2. 確認 `PCLOUD_ROOT_FOLDER` 為指定私人目錄，預設 `/RehabTrainerHub/raw-data`。既有驗證不變：絕對路徑、每段以 ASCII 英數起頭，後續可用英數、空格、底線或連字號，每段最長 128 字元，全路徑最多 1,024 字元；不可有 `..`、百分比編碼、反斜線、空段或尾端 `/`，但 `/` 本身可用。
+1. 依 [pCloud OAuth 官方流程](https://docs.pcloud.com/methods/oauth_2.0/index.html) 註冊應用程式並由目的帳號授權，取得 access token；本次未代辦註冊或驗證擁有者帳號能否完成授權。確認 `[vars]` 使用該帳號區域的 `PCLOUD_API_HOST`，目前設定為 EU `eapi.pcloud.com`，US 為 `api.pcloud.com`；程式只接受這兩個精確主機名稱，不接受 scheme、路徑、query、帳密或其他主機。[區域說明](https://docs.pcloud.com/)
+2. 確認 `PCLOUD_ROOT_FOLDER` 沿用既有私人目錄 `/4_RehabTrainerHubData`，避免切到另一份封存。函式未設定時才用 `/RehabTrainerHub/raw-data`。既有驗證不變：絕對路徑、每段以 ASCII 英數起頭，後續可用英數、空格、底線或連字號，每段最長 128 字元，全路徑最多 1,024 字元；不可有 `..`、百分比編碼、反斜線、空段或尾端 `/`，但 `/` 本身可用。
 3. 若新私人 bucket 尚未由寫入端建立，先執行：
 
    ```sh
@@ -51,22 +61,15 @@
 
    既有 `oculomotor-data` 沿用原 bucket。兩個 bucket 都不可公開，也不可綁定 runner。
 
-4. 透過互動提示輸入 pCloud 登入 email 與密碼，不能把值放在命令參數、URL、repo 或日誌：
+4. 透過互動提示輸入 OAuth access token，不能把值放在命令參數、URL、repo 或日誌：
 
    ```sh
-   npx wrangler secret put PCLOUD_WEBDAV_USERNAME --config workers/raw-data-sync/wrangler.toml
-   npx wrangler secret put PCLOUD_WEBDAV_PASSWORD --config workers/raw-data-sync/wrangler.toml
+   npx wrangler secret put PCLOUD_ACCESS_TOKEN --config workers/raw-data-sync/wrangler.toml
    ```
 
-   username 必須為非空的可列印字串，不能有 `:` 或控制字元；password 必須非空且不能有控制字元。認證只放在 `Authorization: Basic base64(utf8(username + ':' + password))`，所有請求均為 `redirect: 'manual'` 並拒絕轉址狀態，不跟隨轉址。缺憑證、端點／root 無效或任一 bucket binding 不完整時，在列舉前記錄 `raw-data-sync refused: configuration` 並拒絕執行；`RAW_DATA` 另需支援 `put` 保存進度。
+   token 只放在 API 請求的 `Authorization: Bearer ...`；API 參數放 request body，內容下載不帶認證。所有請求均為 `redirect: 'manual'` 並拒絕轉址狀態。缺 token、host／root 無效或任一 bucket binding 不完整時，在列舉前記錄 `raw-data-sync refused: configuration` 並拒絕執行；`RAW_DATA` 另需支援 `put` 保存進度。舊 WebDAV 帳密不再由新程式讀取。[HTTP/JSON 協定](https://docs.pcloud.com/protocols/http_json_protocol/)
 
-5. 若先前設定過 API token，刪除舊 secret；程式不再讀取它：
-
-   ```sh
-   npx wrangler secret delete PCLOUD_ACCESS_TOKEN --config workers/raw-data-sync/wrangler.toml
-   ```
-
-6. 確認來源 key 的不可覆寫保護後，手動部署獨立 Worker：
+5. 保留舊 WebDAV secrets 供回退，確認來源 key 的不可覆寫保護後，手動部署獨立 Worker：
 
    ```sh
    npx wrangler deploy --config workers/raw-data-sync/wrangler.toml
@@ -74,7 +77,14 @@
 
    `scripts/deploy-cloudflare-workers.mjs` 只部署 `trainerhubgames` 與 `trainerhub`；目前 `.github/workflows/deploy-cloudflare-pages.yml` 透過該腳本部署這兩站，不會部署 `trainerhubsync`。CI 會執行相關測試，不能據此宣稱同步 Worker 已部署。確認它的 Cron 為 `17 * * * *`。
 
-[pCloud 官方 WebDAV 說明](https://help.pcloud.com/article/connect-to-pcloud-using-webdav-and-rsync)（2026-10-29 查閱）列出 EU／US 端點及登入 email／密碼。該頁說明 WebDAV 適合較小的傳輸，長時間的大型或頻繁備份可能中斷；本專案的 25 MiB 與每輪 200 檔是自身限制。本文不推定帳號方案或未實測的登入行為。
+6. 完成下方正式驗收後，再移除不用的 WebDAV secrets：
+
+   ```sh
+   npx wrangler secret delete PCLOUD_WEBDAV_USERNAME --config workers/raw-data-sync/wrangler.toml
+   npx wrangler secret delete PCLOUD_WEBDAV_PASSWORD --config workers/raw-data-sync/wrangler.toml
+   ```
+
+若 API 授權或驗收失敗，保留 R2 原檔，恢復上一版同步 Worker 與 `PCLOUD_WEBDAV_URL` 設定，使用尚未移除的舊 secrets；不要同時啟動兩個同步執行者。新舊版沿用相同根目錄、來源鍵及接續進度，不需搬移既有封存。25 MiB、200 檔及 10 分鐘是本專案限制；下載主機 allowlist 依官方範例採 `*.pcloud.com`，若實際帳號回傳其他主機會保留來源並失敗，需先核對官方用途再調整。
 
 ## 擁有者正式驗收
 
@@ -87,8 +97,8 @@
 
    為此測試產生全新的假 Subject ID UUID v4 與 record ID，經受保護的寫入流程建立符合來源規則的物件，不重用正式 key、不改寫既存物件。
 2. 等待下一次 Cron。核對 pCloud 的根目錄與相對路徑，下載目的 CSV，比對 byte 長度及 SHA-256；同步 Worker 的 `deleted` 應增加，該 R2 CSV 才消失，checksums／receipts 保護物件保留。
-3. 再用新的假物件做失敗情境：暫時設定錯誤 WebDAV 密碼，等待排程並確認 `failed` 增加而 R2 原檔保留，再依上方 secret 指令還原正確值。
-4. 確認日誌未出現登入 email、密碼、來源鍵、Subject ID 或 CSV 內容。真實 pCloud 帳號、正式 bucket 與排程尚未在本次驗收。
+3. 再用新的假物件做失敗情境：暫時設定錯誤 access token，等待排程並確認 `failed` 增加而 R2 原檔保留，再依上方 secret 指令還原正確值。用新的假 key 驗證已有不同 bytes 的目的檔不被覆寫，原 R2 CSV 保留。
+4. 確認日誌未出現 token、來源鍵、Subject ID、CSV 內容或下載連結。記錄實際區域、下載主機與驗證結果；真實 pCloud 帳號、正式 bucket 與排程尚未在本次驗收。
 
 ## 查核日誌
 
@@ -103,13 +113,13 @@ npx wrangler tail --config workers/raw-data-sync/wrangler.toml
 | 欄位 | 意義 |
 | --- | --- |
 | `scanned` | 本輪已檢查的來源物件數 |
-| `uploaded` | PUT 回傳 200／201／204 的次數，後續 GET 回讀仍可能不符 |
+| `uploaded` | uploadfile 成功且 metadata 相符的次數，後續下載回讀仍可能不符 |
 | `alreadySynced` | 目的路徑 GET 回讀的 SHA-256 與 byte 長度已相符的次數 |
 | `deleted` | 驗證完成且 R2 刪除呼叫成功的次數 |
 | `skipped` | 不合路徑／副檔名／大小規則而保留的物件數 |
 | `failed` | 檔案處理、衝突、列舉、分頁或進度讀寫錯誤次數，可能包含未列入 `scanned` 的錯誤 |
 
-錯誤日誌只包含 bucket binding 名稱、當輪序號、固定處理階段，以及 WebDAV 方法名稱與數字 HTTP 狀態（例如 `raw-data-sync webdav PUT http=507`）；不輸出 URL、路徑、登入 email、密碼、來源鍵、Subject ID、CSV 內容或回傳錯誤文字。設定錯誤會記錄 `refused: configuration`，不產生成功摘要。檢查 `failed`／`skipped` 及 pCloud 實際檔案，不以 `uploaded` 單獨判定可刪除。
+錯誤日誌只包含 bucket binding 名稱、當輪序號、固定處理階段、API 方法與數字 HTTP 狀態／result；不輸出 URL、路徑、token、來源鍵、Subject ID、CSV 內容或回傳錯誤文字。設定錯誤會記錄 `refused: configuration`，不產生成功摘要。檢查 `failed`／`skipped` 及 pCloud 實際檔案，不以 `uploaded` 單獨判定可刪除。
 
 ## 帳號眼動 CSV 的歷史限制
 
@@ -117,7 +127,19 @@ npx wrangler tail --config workers/raw-data-sync/wrangler.toml
 
 **TODO：舊 users 物件缺少有效 Subject ID／日期 metadata 時，會列入 skipped，保留原檔，不上傳、不刪除。** 歷史對應與補登需另案核准，不能宣稱全部歷史眼動資料均已搬離 R2。滑鼠座標與歷史 D1 清理限制見 [原始資料儲存](raw-data-storage.md)。
 
-## TDD 與本機驗證
+## 2026-11-10 API 遷移驗證
+
+先改寫 Worker 設定測試，舊設定執行 `node --test --test-name-pattern='raw CSV sync is a separate' scripts/check-cloudflare-workers.test.mjs`：0 通過、1 失敗，原因為缺少 `PCLOUD_API_HOST = "eapi.pcloud.com"`。修改設定後同一命令為 1 通過、0 失敗。設定測試沿用 `test:cloudflare-deploy`，同步替身測試由 `test:hub-functions` 的既有 glob 執行，兩者都由 root `test:ci` 納入；不新增測試入口。
+
+`node --test scripts/check-cloudflare-workers.test.mjs`：22 通過、0 失敗。確認獨立排程只綁兩個私人 CSV bucket、token 沒有放入一般 vars，runner 未取得私人 bucket；`git diff --check` 通過。
+
+同步測試先將 fixture 改為 API host／token，舊產品執行 `uploads exact CSV bytes` 測試失敗於 `Invalid raw data sync configuration`。改用 API 後，`rawDataSync.test.mjs` 共 163 項通過，保留來源路徑、分頁進度、長度／SHA-256、R2 不可變檢查，並新增 HTTP 200 內的 API 錯誤、JSON 及大小限制、下載連結驗證、認證隔離、同名競態與回傳 metadata 不符的回歸。配額／連線失敗的六項測試另先失敗於掃描 `8 !== 3`，修正錯誤分類後全數通過。
+
+root `test:ci` 的七項 gate 均完成驗證：naming（2 項）、PWA（3 項）、game-architecture（1,400 項及 TypeScript）、hub-functions（441 項）、gamerunner（78 項）、entrypoints（各子套件及靜態檢查）、cloudflare-deploy（52 項）通過。初次執行的 WindowsApps Bash 發生 `EACCES`，改以已安裝的 Git Bash `usr/bin` 加入該次命令的 PATH 後，架構 gate 通過；runner 的 esbuild 又因沙箱拒絕讀取上層目錄而失敗，剩餘三項 gate 於沙箱外重新執行通過，沒有修改或略過測試。同步函式及 Worker entry 均通過 `node --check`。`npm run prepare` 已執行，`core.hooksPath` 確認為 `.githooks`；本次未 commit 或 push。
+
+本機替身測試不能代替正式 API token、下載主機及 Cron 驗收；部署與秘密設定仍待擁有者執行。
+
+## 歷史：2026-10-29 WebDAV TDD 與本機驗證
 
 先改寫 WebDAV 替身測試與同步設定測試，尚未改產品程式時執行：
 
@@ -155,7 +177,7 @@ npm run test:naming
 
 正式 secrets、舊 token 移除、獨立 Worker 部署與假 CSV 排程驗收由擁有者執行，本機替身測試不能代替正式驗收。
 
-## 2026-11-06 安全修正驗證
+## 歷史：2026-11-06 WebDAV 安全修正驗證
 
 先新增 11 項回歸測試，產品程式未修改時全部失敗。主要證據：
 

@@ -10,6 +10,7 @@ const root = '/RehabTrainerHub/raw-data';
 const rawPath = `${root}/rounds/n-back/${subjectId}/2026-10-24/${recordId}.csv`;
 const csv = 'trial,score\n1,7\n';
 const progressKey = 'sync-state/raw-data-sync.json';
+const accessToken = 'fake-pcloud-access-token';
 
 const username = 'fake-owner@example.test';
 const password = 'fake-password-密碼🔑';
@@ -53,78 +54,100 @@ function CreateBucket(entries = [], pageSize = 1000) {
   };
 }
 
-function CreateWebdav(options = {}) {
-  const folders = new Map([['', true], ...(options.folders ?? []).map((path) => [path, true])]);
+function CreatePcloud(options = {}) {
+  const folders = new Map([['', 0], ['/', 0]]);
+  const AddFolders = (path) => {
+    const segments = path.split('/').filter(Boolean);
+    for (let index = 1; index <= segments.length; index++) {
+      const folder = `/${segments.slice(0, index).join('/')}`;
+      if (!folders.has(folder)) folders.set(folder, folders.size);
+    }
+  };
+  for (const path of options.folders ?? []) AddFolders(path);
   const files = new Map(Object.entries(options.existing ?? {}));
-  for (const path of files.keys()) {
-    const segments = path.split('/').slice(1, -1);
-    for (let index = 1; index <= segments.length; index++) folders.set(`/${segments.slice(0, index).join('/')}`, true);
-  }
+  for (const path of files.keys()) AddFolders(path.slice(0, path.lastIndexOf('/')));
   const requests = [];
   const uploads = [];
+  const Json = (value) => Response.json(value);
   return { folders, files, requests, uploads,
     async fetch(url, init) {
       const parsed = new URL(url);
-      const path = parsed.pathname.split('/').map(decodeURIComponent).join('/');
-      const method = init.method;
-      requests.push({ url: String(url), init, method, path });
-      assert.equal(new Headers(init.headers).get('Authorization'), `Basic ${Buffer.from(`${options.username ?? username}:${password}`, 'utf8').toString('base64')}`);
-      // Workers fetch throws on 'error'; only 'follow' and 'manual' are accepted.
+      const command = init.method === 'GET' ? 'download' : parsed.pathname.slice(1);
+      const params = init.body instanceof FormData || init.body instanceof URLSearchParams ? init.body : null;
+      const path = command === 'download' ? parsed.pathname.slice('/download'.length).split('/').map(decodeURIComponent).join('/')
+        : command === 'uploadfile' ? `${params?.get('path')}/${params?.get('file')?.name}` : params?.get('path');
+      requests.push({ url: String(url), init, method: init.method, command, path, params });
+      assert.equal(new Headers(init.headers).get('Authorization'), command === 'download' ? null : `Bearer ${accessToken}`);
       assert.equal(init.redirect, 'manual');
       assert.ok(init.signal instanceof AbortSignal);
       assert.equal(parsed.username, '');
       assert.equal(parsed.password, '');
       assert.equal(parsed.search, '');
       assert.equal(parsed.hash, '');
-      assert.ok(!String(url).includes(username) && !String(url).includes(password));
-      if (options.failAt === method) {
-        if (options.status === 'timeout') throw new DOMException(`${username} ${password} ${rawKey}`, 'TimeoutError');
-        return new Response(`${username} ${password} ${rawKey}`, { status: options.status ?? 507 });
+      assert.ok(!String(url).includes(accessToken) && !String(url).includes(username) && !String(url).includes(password));
+      if (options.failAt === command) {
+        if (options.status === 'timeout') throw new DOMException(`${accessToken} ${rawKey}`, 'TimeoutError');
+        if (options.result !== undefined) return Json({ result: options.result, error: `${accessToken} ${rawKey}` });
+        return new Response(`${accessToken} ${rawKey}`, { status: options.status ?? 507 });
       }
-      if (method === 'GET') {
+      if (command === 'download') {
+        assert.equal(parsed.hostname, 'download.pcloud.com');
         if (!files.has(path)) return new Response(null, { status: 404 });
         const text = uploads.some((upload) => upload.path === path) && options.verifyText !== undefined
           ? options.verifyText : files.get(path);
         return new Response(text, { headers: { 'Content-Length': String(Buffer.byteLength(text)) } });
       }
-      const parent = path.slice(0, path.lastIndexOf('/'));
-      if (!folders.has(parent)) return new Response(null, { status: 409 });
-      if (method === 'MKCOL') {
-        if (folders.has(path)) return new Response(null, { status: 405 });
-        folders.set(path, true);
-        return new Response(null, { status: 201 });
+      assert.equal(init.method, 'POST');
+      assert.ok(['eapi.pcloud.com', 'api.pcloud.com'].includes(parsed.hostname));
+      if (command === 'getfilelink') {
+        if (!files.has(path)) return Json({ result: options.missingResult ?? 2009 });
+        return Json({ result: 0, hosts: ['download.pcloud.com'],
+          path: `/download${path.split('/').map(encodeURIComponent).join('/')}` });
       }
-      assert.equal(method, 'PUT');
-      assert.equal(new Headers(init.headers).get('Content-Type'), 'text/csv; charset=utf-8');
-      assert.equal(new Headers(init.headers).get('If-None-Match'), null);
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(init.body);
-      files.set(path, text);
-      uploads.push({ path, text });
-      return new Response(null, { status: options.putStatus ?? 201 });
+      const parent = path?.slice(0, path.lastIndexOf('/'));
+      if (!folders.has(parent)) return Json({ result: 2002 });
+      if (command === 'createfolderifnotexists') {
+        if (!folders.has(path)) folders.set(path, folders.size);
+        return Json({ result: 0, metadata: { isfolder: true, folderid: folders.get(path), name: path.split('/').at(-1) } });
+      }
+      assert.equal(command, 'uploadfile');
+      assert.ok(init.body instanceof FormData);
+      assert.equal(new Headers(init.headers).get('Content-Type'), null, 'fetch must provide the multipart boundary');
+      assert.equal(params.get('renameifexists'), '1');
+      assert.equal(params.get('nopartial'), '1');
+      const file = params.get('file');
+      assert.equal(file.type, 'text/csv; charset=utf-8');
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      if (options.raceText !== undefined) files.set(path, options.raceText);
+      const target = files.has(path) ? path.replace(/\.csv$/, ' (2).csv') : path;
+      files.set(target, text);
+      uploads.push({ path: target, text });
+      return Json({ result: 0, metadata: [{ isfolder: false, fileid: 123, name: target.split('/').at(-1),
+        parentfolderid: folders.get(parent), size: Buffer.byteLength(text) }] });
     },
   };
 }
 
-function CreateRun(raw = [rawKey], eye = [], webdavOptions = {}, pageSize) {
+function CreateRun(raw = [rawKey], eye = [], pcloudOptions = {}, pageSize) {
   const rawBucket = CreateBucket(raw, pageSize);
   const eyeBucket = CreateBucket(eye, pageSize);
-  const pcloud = CreateWebdav(webdavOptions);
+  const pcloud = CreatePcloud(pcloudOptions);
   const logs = [];
   const env = { RAW_DATA: rawBucket, OCULOMOTOR_DATA: eyeBucket,
-    PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com', PCLOUD_WEBDAV_USERNAME: webdavOptions.username ?? username, PCLOUD_WEBDAV_PASSWORD: password };
+    PCLOUD_API_HOST: 'eapi.pcloud.com', PCLOUD_ACCESS_TOKEN: accessToken };
   const options = { fetch: pcloud.fetch, log: (...args) => logs.push(args) };
   return { rawBucket, eyeBucket, pcloud, logs, env, options, run: () => ProcessRawDataSync(env, options) };
 }
 
 function AssertPrivateLogs(logs) {
-  for (const privateText of [username, password, rawKey, subjectId, csv]) assert.ok(!JSON.stringify(logs).includes(privateText));
+  for (const privateText of [accessToken, username, password, rawKey, subjectId, csv]) assert.ok(!JSON.stringify(logs).includes(privateText));
 }
 
 test('uploads exact CSV bytes, verifies by GET before head and delete, and logs only the summary', async () => {
   const run = CreateRun();
   const originalHead = run.rawBucket.head.bind(run.rawBucket);
   run.rawBucket.head = async (key) => {
-    assert.equal(run.pcloud.requests.filter(({ method }) => method === 'GET').length, 2);
+    assert.equal(run.pcloud.requests.filter(({ command }) => command === 'download').length, 1);
     assert.equal(run.pcloud.files.get(rawPath), csv);
     return originalHead(key);
   };
@@ -136,18 +159,21 @@ test('uploads exact CSV bytes, verifies by GET before head and delete, and logs 
   AssertPrivateLogs(run.logs);
 });
 
-test('PUT requests omit the If-None-Match header', async () => {
+test('uploads use multipart and request rename-on-conflict without partial files', async () => {
   const run = CreateRun();
   assert.equal((await run.run()).deleted, 1);
-  const uploads = run.pcloud.requests.filter(({ method }) => method === 'PUT');
+  const uploads = run.pcloud.requests.filter(({ command }) => command === 'uploadfile');
   assert.equal(uploads.length, 1);
-  for (const { init } of uploads) assert.equal(new Headers(init.headers).get('If-None-Match'), null);
+  for (const { params } of uploads) {
+    assert.equal(params.get('renameifexists'), '1');
+    assert.equal(params.get('nopartial'), '1');
+  }
 });
 
-test('a matching earlier upload is verified by GET and deleted without PUT or MKCOL', async () => {
+test('a matching earlier upload is verified by GET and deleted without uploading or creating folders', async () => {
   const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
   assert.deepEqual(await run.run(), { scanned: 1, uploaded: 0, alreadySynced: 1, deleted: 1, skipped: 0, failed: 0 });
-  assert.equal(run.pcloud.requests.length, 1);
+  assert.deepEqual(run.pcloud.requests.map(({ command }) => command), ['getfilelink', 'download']);
   assert.equal(run.pcloud.requests[0].path, rawPath);
   assert.deepEqual(run.pcloud.uploads, []);
 });
@@ -187,12 +213,12 @@ test('a failed R2 deletion recovers next run through the previously verified rem
   assert.equal(run.pcloud.uploads.length, 1);
 });
 
-test('an interrupted PUT with complete remote bytes recovers without overwriting on retry', async () => {
+test('an interrupted uploadfile with complete remote bytes recovers without overwriting on retry', async () => {
   const run = CreateRun();
   const originalFetch = run.options.fetch;
   run.options.fetch = async (url, init) => {
     const response = await originalFetch(url, init);
-    if (init.method === 'PUT') throw new DOMException('fake interrupted upload', 'TimeoutError');
+    if (new URL(url).pathname === '/uploadfile') throw new DOMException('fake interrupted upload', 'TimeoutError');
     return response;
   };
   assert.equal((await run.run()).failed, 1);
@@ -226,45 +252,190 @@ for (const status of [401, 404, 507, 'timeout']) {
   });
 }
 
-for (const method of ['GET', 'MKCOL', 'PUT']) {
+for (const command of ['getfilelink', 'createfolderifnotexists', 'uploadfile']) {
   for (const status of [401, 507, 'timeout', 302, 202]) {
-    test(`WebDAV ${method} ${status} retains R2 and counts a failure without leaking data`, async () => {
-      const run = CreateRun([rawKey], [], { failAt: method, status });
+    test(`pCloud ${command} HTTP ${status} retains R2 and counts a private failure`, async () => {
+      const run = CreateRun([rawKey], [], { failAt: command, status });
       assert.equal((await run.run()).failed, 1);
       assert.deepEqual(run.rawBucket.deleted, []);
       AssertPrivateLogs(run.logs);
-      const operation = { GET: 'existing-checksum', MKCOL: 'folders', PUT: 'upload' }[method];
+      const operation = { getfilelink: 'existing-checksum', createfolderifnotexists: 'folders', uploadfile: 'upload' }[command];
       assert.ok(run.logs.some(([line]) => line === `raw-data-sync failed RAW_DATA item=1: ${operation}`));
-      if (typeof status === 'number') assert.ok(run.logs.some(([line]) => line === `raw-data-sync webdav ${method} http=${status}`));
+      if (typeof status === 'number') assert.ok(run.logs.some(([line]) => line === `raw-data-sync pcloud ${command} http=${status}`));
     });
   }
 }
 
-for (const putStatus of [200, 201, 204]) {
-  test(`PUT ${putStatus} is accepted only after GET-back verification`, async () => {
-    const run = CreateRun([rawKey], [], { putStatus });
+for (const missingResult of [2002, 2009]) {
+  test(`getfilelink result ${missingResult} permits a new upload followed by byte verification`, async () => {
+    const run = CreateRun([rawKey], [], { missingResult });
     assert.equal((await run.run()).deleted, 1);
-    assert.equal(run.pcloud.requests.at(-1).method, 'GET');
+    assert.equal(run.pcloud.requests.at(-1).command, 'download');
   });
 }
 
-test('MKCOL 405 accepts existing folders and PUT into a missing folder would fail', async () => {
+test('createfolderifnotexists accepts existing folders and creates missing parents', async () => {
   const run = CreateRun([rawKey], [], { folders: ['/RehabTrainerHub', root] });
   assert.equal((await run.run()).deleted, 1);
-  assert.equal(run.pcloud.requests.filter(({ method }) => method === 'MKCOL').length, 6);
+  assert.equal(run.pcloud.requests.filter(({ command }) => command === 'createfolderifnotexists').length, 6);
 });
 
+for (const command of ['getfilelink', 'createfolderifnotexists', 'uploadfile']) {
+  for (const result of [1000, 2000, 2003, 2008, 2041, 2094, 4000, 5000]) {
+    test(`pCloud ${command} result ${result} inside HTTP 200 retains the source and stops after three failures`, async () => {
+      const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
+      const run = CreateRun(raw, [], { failAt: command, result });
+      const summary = await run.run();
+      assert.equal(summary.scanned, 3);
+      assert.equal(summary.failed, 3);
+      assert.equal(summary.deleted, 0);
+      assert.equal(run.rawBucket.deleted.length, 0);
+      AssertPrivateLogs(run.logs);
+    });
+  }
+}
+
+for (const payload of ['not json', 'null', '{}', '{"result":"0"}', '{"result":null}']) {
+  test(`malformed API JSON is a service failure without leaking its body: ${payload}`, async () => {
+    const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
+    const run = CreateRun(raw);
+    run.options.fetch = async () => new Response(payload);
+    const summary = await run.run();
+    assert.equal(summary.scanned, 3);
+    assert.equal(summary.failed, 3);
+    assert.equal(summary.deleted, 0);
+    AssertPrivateLogs(run.logs);
+  });
+}
+
+for (const declared of [true, false]) {
+  test(`API JSON exceeding 64 KiB is cancelled and retains R2: declared=${declared}`, async () => {
+    const run = CreateRun();
+    let cancelled = false;
+    run.options.fetch = async () => new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(64 * 1024 + 1)); },
+      cancel() { cancelled = true; },
+    }), { headers: declared ? { 'Content-Length': String(64 * 1024 + 1) } : {} });
+    const summary = await run.run();
+    assert.equal(summary.failed, 1);
+    assert.equal(summary.deleted, 0);
+    assert.equal(cancelled, true);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+  });
+}
+
+test('an interrupted API JSON body is a private service failure', async () => {
+  const run = CreateRun();
+  run.options.fetch = async () => new Response(new ReadableStream({
+    start(controller) { controller.error(new Error(`${accessToken} ${rawKey}`)); },
+  }));
+  assert.equal((await run.run()).failed, 1);
+  assert.equal(run.rawBucket.objects.has(rawKey), true);
+  AssertPrivateLogs(run.logs);
+});
+
+test('an API object error does not block later valid CSVs', async () => {
+  const broken = Array.from({ length: 4 }, (_, index) => rawKey.replace(recordId, `aaa-${index}`));
+  const run = CreateRun([...broken, rawKey]);
+  const originalFetch = run.options.fetch;
+  run.options.fetch = async (url, init) => init.body?.get?.('path')?.includes('/aaa-')
+    ? Response.json({ result: 2001, error: `${accessToken} ${rawKey}` }) : originalFetch(url, init);
+  const summary = await run.run();
+  assert.equal(summary.failed, 4);
+  assert.equal(summary.deleted, 1);
+  for (const key of broken) assert.equal(run.rawBucket.objects.has(key), true);
+  AssertPrivateLogs(run.logs);
+});
+
+for (const result of [2002, 2009]) {
+  test(`a missing uploaded file at API verification retains R2: ${result}`, async () => {
+    const run = CreateRun();
+    const originalFetch = run.options.fetch;
+    run.options.fetch = async (url, init) => new URL(url).pathname === '/getfilelink' && run.pcloud.uploads.length
+      ? Response.json({ result }) : originalFetch(url, init);
+    const summary = await run.run();
+    assert.equal(summary.uploaded, 1);
+    assert.equal(summary.failed, 1);
+    assert.equal(summary.deleted, 0);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+  });
+}
+
+for (const link of [
+  { hosts: [] }, { hosts: ['evil.example'] }, { hosts: ['download.pcloud.com.evil.example'] },
+  { hosts: ['fake@download.pcloud.com'] }, { hosts: ['download.pcloud.com:443'] },
+  { hosts: ['https://download.pcloud.com'] }, { hosts: ['download.pcloud.com/evil'] },
+  { hosts: ['download.pcloud.com\n'] }, { hosts: [null] },
+  { path: '//evil.example/file' }, { path: 'https://evil.example/file' },
+  { path: '/\\evil.example/file' }, { path: '/file\n' }, { path: '' }, { path: null },
+]) {
+  test(`unsafe download link is refused before any download or upload: ${JSON.stringify(link)}`, async () => {
+    const run = CreateRun();
+    const requests = [];
+    run.options.fetch = async (url, init) => {
+      requests.push({ url: String(url), method: init.method });
+      return Response.json({ result: 0, hosts: ['download.pcloud.com'], path: '/safe/file', ...link });
+    };
+    assert.equal((await run.run()).deleted, 0);
+    assert.deepEqual(requests.map(({ method }) => method), ['POST']);
+    assert.equal(run.pcloud.uploads.length, 0);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+    AssertPrivateLogs(run.logs);
+  });
+}
+
+for (const status of [302, 404]) {
+  test(`download HTTP ${status} keeps the existing remote file and never starts an upload`, async () => {
+    const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv }, failAt: 'download', status });
+    assert.equal((await run.run()).deleted, 0);
+    assert.equal(run.pcloud.files.get(rawPath), csv);
+    assert.equal(run.pcloud.uploads.length, 0);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+  });
+}
+
+for (const raceText of [csv, csv.replace('7', '8')]) {
+  test(`a file appearing during upload is preserved and a renamed upload cannot authorize deletion: ${raceText.length}`, async () => {
+    const run = CreateRun([rawKey], [], { raceText });
+    const summary = await run.run();
+    assert.equal(summary.failed, 1);
+    assert.equal(summary.deleted, 0);
+    assert.equal(run.pcloud.files.get(rawPath), raceText);
+    assert.equal(run.pcloud.files.get(rawPath.replace('.csv', ' (2).csv')), csv);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+    AssertPrivateLogs(run.logs);
+  });
+}
+
+for (const metadata of [[], [{}], [{ isfolder: true }], [null], [{ fileid: 0 }],
+  [{ name: 'different.csv' }], [{ size: 1 }], [{ parentfolderid: 0 }]]) {
+  test(`invalid upload metadata cannot authorize R2 deletion: ${JSON.stringify(metadata)}`, async () => {
+    const run = CreateRun();
+    const originalFetch = run.options.fetch;
+    run.options.fetch = async (url, init) => {
+      const response = await originalFetch(url, init);
+      if (new URL(url).pathname !== '/uploadfile') return response;
+      const result = await response.json();
+      result.metadata = metadata.length === 1 && metadata[0] && Object.keys(metadata[0]).length
+        ? [{ ...result.metadata[0], ...metadata[0] }] : metadata;
+      return Response.json(result);
+    };
+    assert.equal((await run.run()).deleted, 0);
+    assert.equal(run.rawBucket.objects.has(rawKey), true);
+  });
+}
+
 for (const change of [
-  { PCLOUD_WEBDAV_URL: undefined }, { PCLOUD_WEBDAV_URL: 'http://ewebdav.pcloud.com' },
-  { PCLOUD_WEBDAV_URL: 'https://evil.example' }, { PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com/evil' },
-  { PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com/' }, { PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com?secret=fake' },
-  { PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com#fake' }, { PCLOUD_WEBDAV_URL: 'https://fake@ewebdav.pcloud.com' },
-  { PCLOUD_WEBDAV_USERNAME: undefined }, { PCLOUD_WEBDAV_USERNAME: '' }, { PCLOUD_WEBDAV_USERNAME: 'fake:owner' },
-  { PCLOUD_WEBDAV_USERNAME: 'fake\n' }, { PCLOUD_WEBDAV_USERNAME: 'fake\u007f' }, { PCLOUD_WEBDAV_USERNAME: 'fake\u0085' },
-  { PCLOUD_WEBDAV_PASSWORD: undefined }, { PCLOUD_WEBDAV_PASSWORD: '' }, { PCLOUD_WEBDAV_PASSWORD: 'fake\n' },
-  { PCLOUD_WEBDAV_PASSWORD: 'fake\u0085' }, { PCLOUD_ROOT_FOLDER: '/safe\n' },
-  { PCLOUD_WEBDAV_URL: undefined, PCLOUD_WEBDAV_USERNAME: undefined, PCLOUD_WEBDAV_PASSWORD: undefined,
-    PCLOUD_API_HOST: 'eapi.pcloud.com', PCLOUD_ACCESS_TOKEN: 'fake-old-token' },
+  { PCLOUD_API_HOST: undefined }, { PCLOUD_API_HOST: 'https://eapi.pcloud.com' },
+  { PCLOUD_API_HOST: 'evil.example' }, { PCLOUD_API_HOST: 'eapi.pcloud.com/evil' },
+  { PCLOUD_API_HOST: 'eapi.pcloud.com/' }, { PCLOUD_API_HOST: 'eapi.pcloud.com?secret=fake' },
+  { PCLOUD_API_HOST: 'eapi.pcloud.com#fake' }, { PCLOUD_API_HOST: 'fake@eapi.pcloud.com' },
+  { PCLOUD_ACCESS_TOKEN: undefined }, { PCLOUD_ACCESS_TOKEN: '' }, { PCLOUD_ACCESS_TOKEN: 'fake\n' },
+  { PCLOUD_ACCESS_TOKEN: 'fake\u007f' }, { PCLOUD_ACCESS_TOKEN: 'fake\u0085' },
+  { PCLOUD_ACCESS_TOKEN: 'fake token' }, { PCLOUD_ACCESS_TOKEN: '\u5bc6\u78bc' },
+  { PCLOUD_ROOT_FOLDER: '/safe\n' },
+  { PCLOUD_API_HOST: undefined, PCLOUD_ACCESS_TOKEN: undefined, PCLOUD_WEBDAV_URL: 'https://ewebdav.pcloud.com',
+    PCLOUD_WEBDAV_USERNAME: username, PCLOUD_WEBDAV_PASSWORD: password },
   { PCLOUD_ROOT_FOLDER: 'relative' }, { PCLOUD_ROOT_FOLDER: '/safe/../unsafe' },
   { PCLOUD_ROOT_FOLDER: '/safe/%2e%2e/unsafe' }, { PCLOUD_ROOT_FOLDER: '/safe//unsafe' },
   { RAW_DATA: undefined }, { OCULOMOTOR_DATA: undefined },
@@ -280,18 +451,20 @@ for (const change of [
   });
 }
 
-test('UTF-8 credentials stay in the Basic header and both WebDAV regions are accepted', async () => {
-  for (const endpoint of ['https://ewebdav.pcloud.com', 'https://webdav.pcloud.com']) {
+test('Bearer credentials stay on API requests and both pCloud regions are accepted', async () => {
+  for (const host of ['eapi.pcloud.com', 'api.pcloud.com']) {
     const run = CreateRun();
-    run.env.PCLOUD_WEBDAV_URL = endpoint;
+    run.env.PCLOUD_API_HOST = host;
     assert.equal((await run.run()).deleted, 1);
-    for (const request of run.pcloud.requests) assert.equal(new URL(request.url).origin, endpoint);
+    for (const request of run.pcloud.requests) {
+      assert.equal(new URL(request.url).hostname, request.command === 'download' ? 'download.pcloud.com' : host);
+    }
     AssertPrivateLogs(run.logs);
   }
 });
 
 test('a declared oversized existing GET is not buffered or overwritten', async () => {
-  const run = CreateRun();
+  const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
   const originalFetch = run.options.fetch;
   let cancelled = false;
   run.options.fetch = async (url, init) => {
@@ -308,16 +481,16 @@ test('a declared oversized existing GET is not buffered or overwritten', async (
   assert.equal(cancelled, true);
 });
 
-test('Unicode credentials and CSV bytes survive UTF-8 encoding without changing the root validation', async () => {
+test('Unicode CSV bytes survive multipart encoding without changing the root validation', async () => {
   const text = 'trial,label\n1,測試🔑\n';
-  const run = CreateRun([{ key: rawKey, text, size: Buffer.byteLength(text) }], [], { username: '假帳號@example.test' });
+  const run = CreateRun([{ key: rawKey, text, size: Buffer.byteLength(text) }]);
   assert.equal((await run.run()).deleted, 1);
   assert.deepEqual(run.pcloud.uploads, [{ path: rawPath, text }]);
   assert.ok(!JSON.stringify(run.logs).includes('假帳號'));
 });
 
 test('GET without Content-Length stops reading as soon as it exceeds the source size', async () => {
-  const run = CreateRun();
+  const run = CreateRun([rawKey], [], { existing: { [rawPath]: csv } });
   const originalFetch = run.options.fetch;
   let cancelled = false;
   run.options.fetch = async (url, init) => {
@@ -372,23 +545,22 @@ test('each request timeout is capped at 30 seconds and the remaining run budget'
   assert.ok(timeouts.slice(1).every((milliseconds) => milliseconds === 19999));
 });
 
-test('MKCOL and PUT response bodies are released before the next request', async () => {
+test('API JSON response bodies are consumed before the next request', async () => {
   const run = CreateRun();
   const originalFetch = run.options.fetch;
-  let pending = false;
-  let cancelled = 0;
+  let previous;
+  let checked = 0;
   run.options.fetch = async (url, init) => {
-    assert.equal(pending, false, 'the previous response must release its connection');
+    if (previous) {
+      assert.equal(previous.bodyUsed, true, 'the previous response must release its connection');
+      checked++;
+    }
     const response = await originalFetch(url, init);
-    if (init.method === 'GET') return response;
-    pending = true;
-    return new Response(new ReadableStream({
-      start(controller) { controller.enqueue(new TextEncoder().encode('unused WebDAV response')); },
-      cancel() { pending = false; cancelled++; },
-    }), { status: response.status });
+    previous = response;
+    return response;
   };
   assert.equal((await run.run()).deleted, 1);
-  assert.equal(cancelled, run.pcloud.requests.filter(({ method }) => method !== 'GET').length);
+  assert.equal(checked, run.pcloud.requests.length - 1);
 });
 
 test('invalid ids, traversal, dates, extensions and oversized objects are skipped without reading bodies', async () => {
@@ -460,14 +632,14 @@ test('an archive conflict retains both the remote bytes and the R2 source', asyn
   AssertPrivateLogs(run.logs);
 });
 
-test('PUT 412 is an upload failure that retains R2 without verification', async () => {
-  const run = CreateRun([rawKey], [], { failAt: 'PUT', status: 412 });
+test('uploadfile HTTP 412 retains R2 without verification', async () => {
+  const run = CreateRun([rawKey], [], { failAt: 'uploadfile', status: 412 });
   assert.deepEqual(await run.run(), { scanned: 1, uploaded: 0, alreadySynced: 0, deleted: 0, skipped: 0, failed: 1 });
   assert.equal(run.rawBucket.objects.has(rawKey), true);
   assert.equal(run.pcloud.uploads.length, 0);
-  assert.ok(run.logs.some(([line]) => line === 'raw-data-sync webdav PUT http=412'));
+  assert.ok(run.logs.some(([line]) => line === 'raw-data-sync pcloud uploadfile http=412'));
   assert.ok(run.logs.some(([line]) => line === 'raw-data-sync failed RAW_DATA item=1: upload'));
-  assert.equal(run.pcloud.requests.filter(({ method }) => method === 'GET').length, 1);
+  assert.equal(run.pcloud.requests.filter(({ command }) => command === 'getfilelink').length, 1);
   AssertPrivateLogs(run.logs);
 });
 
@@ -510,15 +682,16 @@ for (const stage of ['get', 'head']) {
   }
 }
 
-test('folders use encoded segments and MKCOLs are cached across pages', async () => {
+test('folders use form-encoded paths and are cached across pages', async () => {
   const nextKey = rawKey.replace(recordId, 'another-record');
   const run = CreateRun([rawKey, nextKey], [], {}, 1);
   run.env.PCLOUD_ROOT_FOLDER = '/Owner archive/raw data';
   assert.equal((await run.run()).deleted, 2);
-  const folders = run.pcloud.requests.filter(({ method }) => method === 'MKCOL');
+  const folders = run.pcloud.requests.filter(({ command }) => command === 'createfolderifnotexists');
   const segments = ['Owner archive', 'raw data', 'rounds', 'n-back', subjectId, '2026-10-24'];
-  assert.deepEqual(folders.map(({ url }) => url), segments.map((_, index) =>
-    `https://ewebdav.pcloud.com/${segments.slice(0, index + 1).map(encodeURIComponent).join('/')}`));
+  assert.deepEqual(folders.map(({ params }) => params.get('path')), segments.map((_, index) =>
+    `/${segments.slice(0, index + 1).join('/')}`));
+  assert.ok(folders[0].params.toString().includes('Owner+archive'));
   assert.equal(run.rawBucket.listCalls.length, 2);
   assert.ok(run.rawBucket.listCalls[1].cursor);
 });
@@ -609,7 +782,8 @@ for (const stage of ['read', 'write']) {
 for (const failure of ['read', 'checksum', 'conflict', 'http']) {
   test(`object-specific ${failure} failures cannot block a later valid CSV`, async () => {
     const broken = Array.from({ length: 4 }, (_, index) => rawKey.replace(recordId, `aaa-${index}`));
-    const run = CreateRun([...broken, rawKey]);
+    const run = CreateRun([...broken, rawKey], [], { existing: failure === 'conflict' ?
+      Object.fromEntries(broken.map(key => [`${root}/${key.slice('pending/'.length)}`, csv.replace('7', '8')])) : {} });
     const originalGet = run.rawBucket.get.bind(run.rawBucket);
     const originalFetch = run.options.fetch;
     run.rawBucket.get = async (key, options) => {
@@ -619,9 +793,8 @@ for (const failure of ['read', 'checksum', 'conflict', 'http']) {
       return object;
     };
     run.options.fetch = async (url, init) => {
-      if (new URL(url).pathname.includes('/aaa-')) {
+      if ((init.body?.get?.('path') ?? new URL(url).pathname).includes('/aaa-')) {
         if (failure === 'http') return new Response(null, { status: 409 });
-        if (failure === 'conflict') return new Response(csv.replace('7', '8'));
       }
       return originalFetch(url, init);
     };
@@ -636,7 +809,7 @@ for (const failure of ['read', 'checksum', 'conflict', 'http']) {
 for (const status of [401, 403, 408, 429, 507, 'timeout', 302]) {
   test(`three consecutive service failures stop the run and leave the rest for a later cron: ${status}`, async () => {
     const raw = Array.from({ length: 8 }, (_, index) => rawKey.replace(recordId, `record-${index}`));
-    const run = CreateRun(raw, [], { failAt: 'GET', status });
+    const run = CreateRun(raw, [], { failAt: 'getfilelink', status });
     const summary = await run.run();
     assert.equal(summary.scanned, 3);
     assert.equal(summary.failed, 3);

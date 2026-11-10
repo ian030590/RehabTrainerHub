@@ -76,10 +76,9 @@ test('raw CSV sync is a separate hourly cron with only its two private R2 bucket
   // Persisted logs show each run's counts; the sync tests keep secrets, keys and Subject IDs out of them.
   assert.match(config, /^\[observability\]\r?\nenabled = true$/m);
   assert.match(config, /^crons = \["17 \* \* \* \*"\]$/m);
-  assert.match(config, /^PCLOUD_WEBDAV_URL = "https:\/\/ewebdav\.pcloud\.com"$/m);
-  assert.doesNotMatch(config, /PCLOUD_API_HOST/);
-  assert.match(config, /#.*PCLOUD_WEBDAV_USERNAME/);
-  assert.match(config, /#.*PCLOUD_WEBDAV_PASSWORD/);
+  assert.match(config, /^PCLOUD_API_HOST = "eapi\.pcloud\.com"$/m);
+  assert.doesNotMatch(config, /PCLOUD_WEBDAV_/);
+  assert.match(config, /#.*PCLOUD_ACCESS_TOKEN/);
   assert.match(config, /^PCLOUD_ROOT_FOLDER = "\/[^"\r\n]*"$/m);
   const buckets = [...config.matchAll(/\[\[r2_buckets\]\]\s+binding = "([^"]+)"\s+bucket_name = "([^"]+)"/g)]
     .map((match) => [match[1], match[2]]);
