@@ -32,6 +32,12 @@ export interface HandState {
   handedness: HandChoice | null;
   lastSeenAt: number;
 }
+export interface LaserEncounter {
+  number: number;
+  spawnedAt: number;
+  baseRadius: number;
+  defeatedUntil: number;
+}
 export interface SessionMetrics {
   startedAt: number;
   lastTickAt: number;
@@ -87,4 +93,7 @@ export interface LiveState {
   handY: number;
   handVisible: boolean;
   insideTarget: boolean;
+  laserActive: boolean;
+  enemyPhase: 'active' | 'defeated';
+  enemyNumber: number;
 }

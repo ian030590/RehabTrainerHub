@@ -16,7 +16,7 @@ export const brainGameSpecs = {
   'conjunction-search': conjunctionSearchBrowserSpec,
   'complex-search': complexSearchBrowserSpec,
   'popout-search': {
-    title: { zh: '視覺搜尋：突顯目標', en: 'Visual Search: Pop-out' },
+    title: { zh: '突顯目標', en: 'Visual Search: Pop-out' },
     trainer: 'vision', purpose: 'vision', phasePrefix: 'search',
     settings: { level: 1, timeLimitMs: 1500, trialsPerBlock: 20, symbolSizeDeg: 1.4, screenWidthCm: 30 },
     tutorialTargets: ['.search-target-circle', '.search-pads', '.search-hud'],

@@ -17,7 +17,18 @@ if (!browserPath) {
 } else {
   const npmCli = process.env.npm_execpath;
   if (!npmCli) throw new Error('Run this gate through npm run test:uiux-browser.');
-  for (const args of [[npmCli, 'run', 'build:hub'], [resolve(root, 'scripts/check-hub-uiux-browser.mjs')]]) {
+  for (const args of [
+    [npmCli, 'run', 'build:hub'],
+    [resolve(root, 'scripts/check-hub-uiux-browser.mjs')],
+    [npmCli, '--prefix', 'apps/rehabtrainerhub/games/hart-chart', 'run', 'build'],
+    [npmCli, 'run', 'build:gamerunner'],
+    [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'hart-chart', '--standalone', '--mobile'],
+    [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'hart-chart', '--standalone', '--mobile', '--chinese'],
+    [npmCli, '--prefix', 'apps/rehabtrainerhub/games/motor-cortex-rehab', 'run', 'build'],
+    [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'motor-cortex-rehab', '--standalone', '--mobile'],
+    [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'motor-cortex-rehab', '--standalone', '--wide', '--english', '--right'],
+    [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'motor-cortex-rehab', '--standalone', '--tablet', '--left', '--vertical'],
+  ]) {
     const result = spawnSync(process.execPath, args, {
       cwd: root, stdio: 'inherit', env: { ...process.env, BRAVE_BIN: browserPath }, windowsHide: true,
     });

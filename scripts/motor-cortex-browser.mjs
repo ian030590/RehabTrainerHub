@@ -15,6 +15,12 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.equal(await game('Boolean(document.querySelector(".game-tour"))'), false);
   assert.ok(await game('document.querySelector(".motor-cortex-stage").getBoundingClientRect().height > 100'));
   assert.equal(await game('document.activeElement.name'), 'drill');
+  assert.equal(await game('document.querySelectorAll(".motor-enemy").length'), 1, 'The game presents one enemy.');
+  await until(() => game('[...document.querySelectorAll(".motor-enemy img,.motor-hero-hand img")].every(image=>image.complete&&[16,24].includes(image.naturalWidth))'), 'packaged CC0 pixel sprites');
+  if (!await game('matchMedia("(prefers-reduced-motion: reduce)").matches')) {
+    await until(() => game('getComputedStyle(document.querySelector(".motor-enemy-step")).opacity === "1"'), 'enemy running stride');
+    await until(() => game('getComputedStyle(document.querySelector(".motor-enemy-step")).opacity === "0"'), 'enemy alternating running stride');
+  }
   await capture('settings');
   assert.equal(await game('document.fullscreenElement'), null, 'Settings stay windowed.');
   for (const name of ['targetSizePercent', 'speedPercent']) {
@@ -92,6 +98,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok(layout.scrollWidth <= layout.clientWidth && layout.scrollHeight <= layout.clientHeight,
     `Gameplay fits without an internal page scrollbar: ${JSON.stringify(layout)}`);
   await capture('playing');
+  assert.equal(await game('getComputedStyle(document.querySelector(".motor-enemy-sprite")).imageRendering'), 'pixelated');
   if (process.argv.includes('--revoke-playing')) {
     revokeRelease(); await evaluate('window.dispatchEvent(new Event("online"))');
     await until(() => evaluate('!document.querySelector("iframe") && Boolean(document.querySelector("[role=alert]"))'), 'revocation removes the active hand game');
@@ -106,6 +113,11 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   }
   await until(async () => {
     if (await game('Boolean(document.querySelector(".experiment-results"))')) return true;
+    const encounter = await game(`(() => {const enemy=document.querySelector('.motor-enemy');return {
+      count:document.querySelectorAll('.motor-enemy').length,number:Number(enemy.dataset.enemyNumber),
+      defeated:enemy.classList.contains('is-defeated'),kills:Number(document.querySelectorAll('.motor-cortex-hud strong')[3].textContent)};})()`);
+    assert.equal(encounter.count, 1);
+    assert.equal(encounter.number, encounter.kills + (encounter.defeated ? 0 : 1), 'A defeat scores once before the next enemy appears.');
     // Move the recorded camera image towards the target; inference and gameplay stay real.
     const offset = await game(`(() => {const hand=document.querySelector('.motor-cortex-hand-cursor');if(!hand?.classList.contains('is-visible'))return null;const h=hand.getBoundingClientRect(),t=document.querySelector('.motor-cortex-target').getBoundingClientRect(),s=document.querySelector('.motor-cortex-stage').getBoundingClientRect();return {x:((h.left+h.right)-(t.left+t.right))/2/s.width,y:((t.top+t.bottom)-(h.top+h.bottom))/2/s.height};})()`);
     if (offset) await evaluate(`(() => {window.handFixtureOffset.x=Math.max(-.18,Math.min(.18,window.handFixtureOffset.x+${offset.x}*.3));window.handFixtureOffset.y=Math.max(-.18,Math.min(.18,window.handFixtureOffset.y+${offset.y}*.3));})()`);
@@ -113,6 +125,8 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   }, 'real 45-second tracking session completes', 60000);
   assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true, 'Completion stops the camera.');
   await CheckResultsPresentation(game, { defaultMetric: 'accuracy', alternateMetric: 'holdSeconds', english, capture });
+  assert.ok(await game('Number(document.querySelectorAll(".score-key-metric dd")[2].textContent)>0'), 'Real tracked hand movement defeats at least one enemy.');
+  assert.ok(requests.some(url => url.includes('/assets/laser-hero/laser.ogg')), 'The laser uses its packaged CC0 sound.');
   const resultText = await body(); assert.match(resultText, english ? /Interrupted|Success/ : /中斷|成功/);
   assert.ok(await game('Boolean(document.querySelector(".score-chart circle"))'), 'At least one actual hold event reaches the chart.');
   if (standalone) {

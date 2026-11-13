@@ -63,7 +63,7 @@ test('gesture-battler: strictness and hold time are sliders that show their valu
 
 test('motor-cortex-rehab: target size and speed are sliders that show their value', async () => {
   const { input, attribute, label } = await Load('motor-cortex-rehab', 'MotorCortexRehabGame.tsx');
-  assert.equal(await Version('motor-cortex-rehab'), '2.0.5');
+  assert.equal(await Version('motor-cortex-rehab'), '2.1.0');
   for (const [name, range] of [['targetSizePercent', ['{75}', '{130}', '{5}']], ['speedPercent', ['{70}', '{140}', '{5}']]]) {
     const control = input(name);
     assert.equal(attribute(control, 'type'), '"range"', name);

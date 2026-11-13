@@ -1,0 +1,50 @@
+[
+  {
+    "file": "enemy.png",
+    "original": "Tiles/Characters/tile_0022.png",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/pixel-platformer",
+    "license": "CC0-1.0",
+    "sha256": "e215b5f72dbaeec900f20017bf0b2ded1a32c809970f4771df9ab8e6620d7ece"
+  },
+  {
+    "file": "enemy-step.png",
+    "original": "Tiles/Characters/tile_0023.png",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/pixel-platformer",
+    "license": "CC0-1.0",
+    "sha256": "3e701b98ac29bdcb38c17c6ea1cb78e4ce6db8aca34a3e4c2e5148d2ad09fb51"
+  },
+  {
+    "file": "palm.png",
+    "original": "Tiles/tile_0138.png",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/cursor-pixel-pack",
+    "license": "CC0-1.0",
+    "sha256": "1a0ff8a140befc1c54879e29fb3745803df0bdfc2037d796a94b1a29df76ac5e"
+  },
+  {
+    "file": "laser.ogg",
+    "original": "Audio/laserRetro_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/sci-fi-sounds",
+    "license": "CC0-1.0",
+    "sha256": "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c"
+  },
+  {
+    "file": "hit.ogg",
+    "original": "Audio/explosionCrunch_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/sci-fi-sounds",
+    "license": "CC0-1.0",
+    "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+  },
+  {
+    "file": "complete.ogg",
+    "original": "Audio/forceField_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/sci-fi-sounds",
+    "license": "CC0-1.0",
+    "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c"
+  }
+]

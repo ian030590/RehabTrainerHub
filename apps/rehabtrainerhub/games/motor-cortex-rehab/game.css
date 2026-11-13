@@ -16,27 +16,61 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 button:disabled { opacity: .6; cursor: default; }
 .motor-cortex-rehab-game { position: fixed; inset: 0; width: 100%; height: 100dvh; overflow: hidden; background: var(--arena); }
 .motor-jspsych-host { display: none; }
-.motor-cortex-play { display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100%; padding: 16px; gap: 12px; }
-.motor-cortex-hud { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; border-radius: var(--radius); background: var(--surface); padding: 12px; }
+.motor-cortex-play { display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100%; padding: 16px; gap: 12px; background: #111a2e; color: #eef5ff; }
+.motor-cortex-hud { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; border: 2px solid #50627c; background: #1e2d46; padding: 12px; }
 .motor-cortex-hud p { margin: 0; text-align: center; }
 .motor-cortex-hud span, .motor-cortex-hud strong { display: block; }
 .motor-cortex-hud span { font-size: .85rem; }
-.motor-cortex-stage { position: relative; min-height: 0; width: 100%; height: 100%; overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.motor-cortex-hud strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.motor-cortex-hud p:nth-child(4) strong { color: #ffd17c; }
+.motor-cortex-stage { position: relative; min-height: 0; width: 100%; height: 100%; overflow: hidden; border: 3px solid #50627c; background: #28435f; }
 .motor-cortex-path { position: absolute; background: var(--border); display: none; }
 .motor-cortex-path-vertical { width: 2px; height: 100%; left: 50%; }
 .motor-cortex-path-horizontal { height: 2px; width: 100%; top: 50%; }
 .motor-cortex-drill-vertical .motor-cortex-path-vertical, .motor-cortex-drill-horizontal .motor-cortex-path-horizontal { display: block; }
-.motor-cortex-target { position: absolute; left: var(--motor-target-x); top: var(--motor-target-y); width: var(--motor-target-size); height: var(--motor-target-size); transform: translate(-50%,-50%); border: 4px solid var(--target); border-radius: 50%; background: var(--target-soft); display: grid; place-items: center; }
-.motor-cortex-target p { margin: 0; color: var(--target); }
-.motor-cortex-target.is-hit { border-color: var(--success); }
-.motor-cortex-hand-cursor { position: absolute; left: var(--motor-hand-x); top: var(--motor-hand-y); width: 36px; height: 36px; transform: translate(-50%,-50%); border-radius: 50%; background: var(--primary); opacity: 0; }
+.motor-cortex-target { position: absolute; z-index: 3; left: var(--motor-target-x); top: var(--motor-target-y); width: var(--motor-target-size); height: var(--motor-target-size); transform: translate(-50%,-50%); }
+.motor-cortex-hand-cursor { position: absolute; z-index: 5; left: var(--motor-hand-x); top: var(--motor-hand-y); width: 36px; height: 36px; transform: translate(-50%,-50%); border: 2px solid #86efff; background: #14233bc9; opacity: 0; }
 .motor-cortex-hand-cursor.is-visible { opacity: 1; }
-.motor-cortex-hand-cursor p { position: absolute; left: 50%; top: 36px; transform: translateX(-50%); white-space: nowrap; margin: 0; font-size: .85rem; }
+.motor-cortex-hand-cursor img { width: 100%; height: 100%; image-rendering: pixelated; }
+.motor-cortex-hand-cursor.is-firing { border-color: #ffd17c; }
+.motor-cortex-hand-cursor p { position: absolute; left: 50%; top: 38px; transform: translateX(-50%); white-space: nowrap; margin: 0; padding: 2px 5px; background: #111a2e; color: #eef5ff; font-size: .75rem; }
 .motor-cortex-instruction { text-align: center; padding: 4px max(190px,18vw); }
 .motor-cortex-instruction h2 { margin: 0; font-size: 1.2rem; }
-.motor-cortex-instruction p { margin: 4px 0; }
-.motor-cortex-hold-meter { height: 16px; background: var(--border); border-radius: var(--radius); overflow: hidden; width: min(300px,100%); margin: 8px auto; }
-.motor-cortex-hold-meter i { display: block; height: 100%; width: var(--motor-hold-progress); background: var(--primary); }
+.motor-cortex-instruction p { margin: 4px 0; font-size: clamp(.85rem,1.6vw,1rem); }
+.motor-cortex-hold-meter { height: 18px; background: #344761; border: 2px solid #86efff; overflow: hidden; width: min(300px,100%); margin: 8px auto; }
+.motor-cortex-hold-meter i { display: block; height: 100%; width: var(--motor-hold-progress); background: #86efff; }
+.motor-city { position: absolute; inset: 0; pointer-events: none; }
+.motor-skyline { position: absolute; inset: 12% 0 38%; display: flex; align-items: end; gap: 3px; opacity: .8; }
+.motor-skyline i { width: 12.5%; background: repeating-linear-gradient(0deg,transparent 0 14px,#6a859b 14px 18px),#1b2b43; border: 6px solid #1b2b43; }
+.motor-skyline i:nth-child(even) { background-color: #263950; }
+.motor-street { position: absolute; bottom: 0; width: 100%; height: 43%; background: repeating-linear-gradient(0deg,#15233b 0 34px,#425670 34px 38px); clip-path: polygon(38% 0,62% 0,100% 100%,0 100%); }
+.motor-mission-title { position: absolute; z-index: 1; top: 8px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); margin: 0; padding: 4px 10px; background: #111a2e; color: #ffd17c; text-align: center; font-size: clamp(.8rem,2vw,1.15rem); }
+.motor-enemy-body { position: absolute; inset: 0; animation: motor-enemy-run 220ms steps(2,end) infinite; }
+.motor-enemy-sprite { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; animation: motor-enemy-stride 320ms steps(1,end) infinite; }
+.motor-enemy-step { position: absolute; inset: 0; animation-delay: -160ms; }
+.motor-enemy-shadow { position: absolute; left: 15%; bottom: 0; width: 70%; height: 10%; background: #0a112b80; }
+.motor-enemy-health { position: absolute; top: -10px; left: 10%; width: 80%; height: 8px; border: 2px solid #f8e8d0; background: #111a2e; }
+.motor-enemy-health i { display: block; width: var(--motor-enemy-health); height: 100%; background: #ff8e72; }
+.motor-enemy.is-hit .motor-enemy-sprite { filter: brightness(1.2); }
+.motor-enemy-burst { display: none; position: absolute; inset: 5%; background: #ffd17c; clip-path: polygon(40% 0,60% 0,60% 30%,100% 40%,100% 60%,65% 60%,60% 100%,40% 100%,35% 65%,0 60%,0 40%,35% 35%); }
+.motor-enemy.is-defeated .motor-enemy-body { animation: motor-enemy-defeat 400ms steps(4,end) forwards; }
+.motor-enemy.is-defeated .motor-enemy-sprite { animation: none; }
+.motor-enemy.is-defeated .motor-enemy-step { display: none; }
+.motor-enemy.is-defeated .motor-enemy-health { visibility: hidden; }
+.motor-enemy.is-defeated .motor-enemy-burst { display: block; animation: motor-enemy-defeat 400ms steps(4,end) forwards; }
+.motor-laser-beam { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.motor-laser-beam.is-firing { opacity: 1; }
+.motor-laser-edge { stroke: #ff9e57; stroke-width: 10px; vector-effect: non-scaling-stroke; }
+.motor-laser-core { stroke: #fff6c8; stroke-width: 4px; vector-effect: non-scaling-stroke; }
+.motor-hero-hand { position: absolute; z-index: 5; bottom: -8px; left: 50%; width: clamp(88px,18vmin,140px); transform: translateX(-50%) rotate(-8deg); }
+.motor-hero-hand img { display: block; width: 100%; image-rendering: pixelated; filter: sepia(.5) saturate(4); }
+.motor-hero-hand i { position: absolute; left: 28%; bottom: 0; width: 48%; height: 30%; background: #2375b6; border: 5px solid #19365a; }
+.motor-hero-hand[data-hand=left] { transform: translateX(-50%) scaleX(-1) rotate(-8deg); }
+.motor-hero-hand.is-firing img { filter: sepia(.3) drop-shadow(0 -3px #ffd17c); }
+@keyframes motor-enemy-run { 0% { transform: translateY(0) rotate(-3deg); } 100% { transform: translateY(-4px) rotate(3deg); } }
+@keyframes motor-enemy-stride { 0%,49.99% { opacity: 1; } 50%,100% { opacity: 0; } }
+@keyframes motor-enemy-defeat { to { opacity: 0; transform: scale(1.25); } }
+@media(prefers-reduced-motion:reduce) { .motor-enemy-body,.motor-enemy-sprite { animation: none; } .motor-enemy-step { display: none; } .motor-enemy.is-defeated .motor-enemy-body { animation: none; opacity: 0; } }
 .motor-cortex-camera { position: absolute; bottom: 16px; left: 16px; width: 168px; background: var(--heading); color: var(--surface); border-radius: var(--radius); overflow: hidden; }
 .motor-cortex-camera canvas { display: block; width: 100%; aspect-ratio: 4/3; }
 .motor-cortex-camera p { margin: 0; padding: 4px; font-size: .8rem; text-align: center; }

@@ -7,7 +7,7 @@ interface SearchGameDefinition {
 
 export const gameDefinition: SearchGameDefinition = {
   id: 'conjunction-search',
-  title: { zh: '視覺搜尋：顏色與字形', en: 'Visual Search: Conjunction' },
+  title: { zh: '顏色與字形', en: 'Visual Search: Conjunction' },
   description: { zh: '判斷散布的字母中有沒有中央圓圈裡的綠色目標字，其他字與目標同色或同形。十二級視覺搜尋的第 9 到 12 級。', en: 'Decide whether the green letter shown in the centre circle is among the scattered letters. The others share its colour or its shape. Levels 9 to 12 of 12.' },
   next: null,
 };

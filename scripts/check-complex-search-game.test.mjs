@@ -104,7 +104,7 @@ test('four data-only levels match the specified global levels, glyphs and next g
   ]);
   assert.equal(gameDefinition.id, gameId);
   assert.equal(gameDefinition.next.id, 'conjunction-search');
-  assert.equal(gameDefinition.title.zh, '視覺搜尋：相似字形');
+  assert.equal(gameDefinition.title.zh, '相似字形');
   for (const glyph of ['S', 'C', 'O', 'G', 'B', 'D', 'P', 'R']) assert.equal(typeof glyphs[glyph].path, 'string');
   for (const language of ['zh', 'en']) {
     const source = await readFile(`${GameRoot(gameId)}/i18n/${language}.ts`, 'utf8');

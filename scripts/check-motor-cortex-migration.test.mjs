@@ -72,9 +72,138 @@ test('tracking configuration retains presets, bounds and hand selection', async 
   }
 });
 
+test('laser difficulty requires a steady 1.5 to 2.5 second aim, including after adaptation', async () => {
+  const { difficulties } = await LoadModule('config.ts');
+  const engine = await LoadModule('engine.ts');
+  assert.deepEqual(difficulties.map(item => item.holdMs), [1500, 2000, 2500]);
+  for (const difficulty of difficulties) {
+    const target = engine.CreateInitialTarget('bounce', difficulty, 1, 1, 900, 480);
+    engine.AdaptTarget(target, difficulty, 1, 1, { ...engine.CreateEmptyMetrics(), streak: 4, handVisibleMs: 1000, inTargetMs: 1000 });
+    assert.ok(target.holdTargetMs >= difficulty.holdMs, 'Adaptive enemies keep the selected minimum hold.');
+  }
+});
+
+test('laser enemies require a raised hand and a continuous hold; one defeat scores once before the next enemy', async () => {
+  const engine = await LoadModule('engine.ts');
+  const difficulty = { radius: 66, speed: 165, holdMs: 760 };
+  const target = engine.CreateInitialTarget('random', difficulty, 1, 1, 900, 480);
+  const enemy = engine.CreateLaserEncounter();
+  const metrics = { ...engine.CreateEmptyMetrics(), startedAt: 1000, lastTickAt: 1000 };
+  let now = 1000, completed = 0, kills = 0;
+  const tick = ({ raised = true, hit = true, visible = true, stale = false } = {}) => {
+    now += 90;
+    target.x = 450; target.y = raised ? 200 : 550;
+    engine.UpdateLaserEncounter({ now, rect: { width: 900, height: 600 }, drill: 'random', activeDifficulty: difficulty,
+      durationSec: 45, targetSizeScale: 1, speedScale: 1, target, enemy, metrics,
+      hand: { x: hit ? target.x : 0, y: target.y, visible, lastSeenAt: stale ? now - 300 : now },
+      labels: { drillNames: { random: 'Random targets' } }, onSuccess() { kills++; }, onComplete() { completed++; } });
+  };
+  for (let index = 0; index < 16; index++) tick({ raised: false });
+  assert.equal(metrics.successes, 0, 'An on-target lowered hand cannot deal damage.');
+  assert.ok(metrics.handVisibleMs > 0, 'A lowered but tracked hand still counts as visible.');
+  for (let index = 0; index < 5; index++) tick();
+  assert.ok(metrics.currentHoldMs > 0);
+  tick({ hit: false });
+  assert.equal(metrics.currentHoldMs, 0, 'Moving off the enemy resets the continuous hold.');
+  assert.equal(metrics.events.at(-1).Result, 'interrupted');
+  for (let index = 0; index < 5; index++) tick();
+  tick({ stale: true });
+  assert.equal(metrics.currentHoldMs, 0, 'A stale sensor frame cannot keep the laser locked.');
+  assert.equal(metrics.successes, 0, 'Separate short holds cannot add up to a kill.');
+  for (let index = 0; index < 4; index++) tick();
+  now += 1000; tick();
+  assert.equal(metrics.currentHoldMs, 0, 'Returning after a background gap starts a new continuous hold.');
+  for (let index = 0; index < 12; index++) tick();
+  assert.equal(metrics.successes, 1);
+  assert.equal(kills, 1);
+  assert.equal(enemy.number, 1);
+  assert.ok(enemy.defeatedUntil > now);
+  for (let index = 0; index < 3; index++) tick();
+  assert.equal(metrics.successes, 1, 'The dissolving enemy cannot score twice.');
+  assert.equal(enemy.number, 1, 'The next enemy waits for the defeat animation.');
+  for (let index = 0; index < 3; index++) tick({ visible: false });
+  assert.equal(enemy.number, 2);
+  assert.equal(metrics.currentHoldMs, 0);
+  now = 45950; tick();
+  assert.equal(completed, 1);
+});
+
+test('the approaching enemy remains inside a small or resized play field', async () => {
+  const engine = await LoadModule('engine.ts');
+  const difficulty = { radius: 82, speed: 120, holdMs: 560 };
+  const target = engine.CreateInitialTarget('bounce', difficulty, 1.3, .7, 900, 480);
+  const enemy = { ...engine.CreateLaserEncounter(), spawnedAt: 1000, baseRadius: target.radius };
+  const metrics = { ...engine.CreateEmptyMetrics(), startedAt: 1000, lastTickAt: 5990 };
+  for (const [width, height] of [[900,600],[358,220],[640,130]]) {
+    engine.UpdateLaserEncounter({ now: 6000, rect: { width, height }, drill: 'bounce', activeDifficulty: difficulty,
+      durationSec: 45, targetSizeScale: 1.3, speedScale: .7, target, enemy, metrics,
+      hand: { x: 0, y: height, visible: false, lastSeenAt: 0 }, labels: { drillNames: { bounce: 'Roaming' } }, onSuccess() {}, onComplete() {} });
+    assert.ok(target.x - target.radius >= 0 && target.x + target.radius <= width, 'The whole enemy fits horizontally.');
+    assert.ok(target.y - target.radius >= 0 && target.y + target.radius <= height, 'The whole enemy fits vertically.');
+  }
+});
+
+test('laser presentation stops firing for a lowered or stale hand and while the enemy dissolves', async () => {
+  const engine = await LoadModule('engine.ts');
+  const metrics = { ...engine.CreateEmptyMetrics(), startedAt: 1000 };
+  const target = engine.CreateInitialTarget('random', { radius: 66, speed: 165, holdMs: 760 }, 1, 1, 900, 480);
+  target.x = 450; target.y = 200;
+  const enemy = { ...engine.CreateLaserEncounter(), spawnedAt: 1000 };
+  const hand = { x: 450, y: 200, visible: true, lastSeenAt: 2000 };
+  const state = () => engine.BuildLaserLiveState(2000, 45, { width: 900, height: 600 }, target, hand, metrics, enemy);
+  assert.equal(state().laserActive, true);
+  assert.equal(state().insideTarget, true);
+  hand.y = 550;
+  assert.equal(state().laserActive, false);
+  hand.y = 200; hand.lastSeenAt = 1700;
+  assert.equal(state().laserActive, false);
+  hand.lastSeenAt = 2000; enemy.defeatedUntil = 2200;
+  assert.equal(state().enemyPhase, 'defeated');
+  assert.equal(state().insideTarget, false);
+  assert.equal(state().laserActive, false);
+});
+
+test('laser audio stops on lowered hands and cancellation, including a late play promise', async () => {
+  const { CreateLaserAudio } = await LoadModule('runtime/laserAudio.ts');
+  const samples = [];
+  let finishPlay;
+  const audio = CreateLaserAudio(url => {
+    const sample = { src: url, paused: true, currentTime: 0, plays: 0, loop: false,
+      play() { this.plays++; return new Promise(done => { finishPlay = () => { this.paused = false; done(); }; }); },
+      pause() { this.paused = true; }, removeAttribute() { this.src = ''; }, load() {} };
+    samples.push(sample); return sample;
+  });
+  audio.setFiring(true);
+  assert.equal(samples[0].loop, true);
+  audio.setFiring(false);
+  finishPlay(); await new Promise(done => setImmediate(done));
+  assert.equal(samples[0].paused, true, 'A delayed play cannot restart a lowered hand laser.');
+  audio.playHit();
+  audio.dispose();
+  finishPlay(); await new Promise(done => setImmediate(done));
+  assert.ok(samples.every(sample => sample.paused && !sample.src), 'Exit releases all samples.');
+  const count = samples.reduce((sum, sample) => sum + sample.plays, 0);
+  audio.setFiring(true); audio.playHit(); audio.playComplete();
+  assert.equal(samples.reduce((sum, sample) => sum + sample.plays, 0), count, 'Disposed audio cannot restart.');
+});
+
+test('pixel hero art and sound are packaged CC0 files with verified source hashes', async () => {
+  const directory = resolve(gameRoot, 'public/assets/laser-hero');
+  const sources = JSON.parse(await readFile(resolve(directory, 'SOURCES.json'), 'utf8'));
+  assert.deepEqual(sources.map(item => item.file).sort(), ['complete.ogg', 'enemy-step.png', 'enemy.png', 'hit.ogg', 'laser.ogg', 'palm.png']);
+  for (const source of sources) {
+    assert.equal(source.license, 'CC0-1.0');
+    assert.equal(new URL(source.source).origin, 'https://kenney.nl');
+    const bytes = await readFile(resolve(directory, source.file));
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), source.sha256);
+    assert.equal(bytes.subarray(0, 4).toString(source.file.endsWith('.png') ? 'hex' : 'ascii'), source.file.endsWith('.png') ? '89504e47' : 'OggS');
+  }
+  assert.match(await readFile(resolve(directory, 'LICENSES.txt'), 'utf8'), /Creative Commons Zero, CC0/);
+});
+
 test('tracking is self-contained with private input, own modal and real-scene spotlight, full results and original preview', async () => {
   const packageJson = JSON.parse(await readFile(resolve(gameRoot,'package.json'),'utf8'));
-  assert.equal(packageJson.version,'2.0.5');
+  assert.equal(packageJson.version,'2.1.0');
   assert.deepEqual(Object.keys(packageJson.dependencies).sort(),['jspsych','react','react-dom','tone']);
   assert.ok(packageJson.rehabTrainer.capabilities.includes('hand-tracking'));
   for (const file of (await readdir(gameRoot,{recursive:true})).filter(file=>/\.(tsx?|css)$/.test(file)&&!file.startsWith('dist'))) {

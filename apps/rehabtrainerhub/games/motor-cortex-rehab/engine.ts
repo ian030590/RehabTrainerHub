@@ -1,5 +1,5 @@
 import { Clamp } from './gameUtils';
-import type { DrillId, HandChoice, DifficultyDefinition, TargetState, HandState, SessionMetrics, DrillEventRecord } from './types';
+import type { DrillId, HandChoice, DifficultyDefinition, TargetState, HandState, SessionMetrics, DrillEventRecord, LaserEncounter } from './types';
 import type { copy } from './labels';
 const trackingGraceMs = 240;
 const handCursorRadius = 18;
@@ -43,9 +43,9 @@ export function CreateInitialTarget(drill: DrillId, difficulty: DifficultyDefini
     holdTargetMs: difficulty.holdMs,
   };
 }
-export function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, durationSec, targetSizeScale, speedScale, target, hand, metrics, labels, onSuccess, onComplete, }: {
+export function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, durationSec, targetSizeScale, speedScale, target, hand, metrics, labels, onSuccess, onComplete, canScore = true, }: {
   now: number;
-  rect: DOMRect;
+  rect: Pick<DOMRect, 'width' | 'height'>;
   drill: DrillId;
   activeDifficulty: DifficultyDefinition;
   durationSec: number;
@@ -57,6 +57,7 @@ export function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, duratio
   labels: (typeof copy)['zh'] | (typeof copy)['en'];
   onSuccess: () => void;
   onComplete: (completedAt: number) => void;
+  canScore?: boolean;
 }) {
   if (!metrics.startedAt) {
     metrics.startedAt = now;
@@ -73,7 +74,7 @@ export function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, duratio
   const handVisible = hand.visible && now - hand.lastSeenAt <= trackingGraceMs;
   if (handVisible)
     metrics.handVisibleMs += deltaMs;
-  const insideTarget = handVisible && Distance2d(hand, target) <= target.radius + handCursorRadius;
+  const insideTarget = handVisible && canScore && Distance2d(hand, target) <= target.radius + handCursorRadius;
   if (insideTarget) {
     metrics.inTargetMs += deltaMs;
     metrics.currentHoldMs += deltaMs;
@@ -110,6 +111,62 @@ export function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, duratio
     if (drill === 'random') {
       PlaceRandomTarget(target, rect.width, rect.height);
     }
+  }
+}
+export function CreateLaserEncounter(): LaserEncounter {
+  return { number: 1, spawnedAt: 0, baseRadius: 0, defeatedUntil: 0 };
+}
+
+function FitEnemy(target: TargetState, arena: Pick<DOMRect, 'width' | 'height'>) {
+  target.radius = Math.min(target.radius, Math.max(12, Math.min(arena.width, arena.height) / 2 - 28));
+  const padding = target.radius + 24;
+  target.x = Clamp(target.x, padding, arena.width - padding);
+  target.y = Clamp(target.y, padding, arena.height - padding);
+}
+
+export function UpdateLaserEncounter(args: Parameters<typeof UpdateTrainingLoop>[0] & { enemy: LaserEncounter }) {
+  const { now, rect, target, hand, metrics, enemy } = args;
+  if (metrics.startedAt && now - metrics.startedAt >= args.durationSec * 1000) {
+    args.onComplete(now);
+    return;
+  }
+  const arena = { width: rect.width, height: rect.height * .8 };
+  if (enemy.defeatedUntil > now) {
+    FitEnemy(target, arena);
+    const deltaMs = Math.min(90, Math.max(0, now - metrics.lastTickAt));
+    metrics.lastTickAt = now;
+    if (hand.visible && now - hand.lastSeenAt <= trackingGraceMs) metrics.handVisibleMs += deltaMs;
+    return;
+  }
+  if (enemy.defeatedUntil) {
+    const next = CreateInitialTarget(args.drill, args.activeDifficulty, args.targetSizeScale, args.speedScale, arena.width, arena.height);
+    next.level = target.level;
+    next.holdTargetMs = target.holdTargetMs;
+    next.radius = enemy.baseRadius;
+    next.vx = Math.sign(next.vx) * Math.abs(target.vx);
+    next.vy = Math.sign(next.vy) * Math.abs(target.vy);
+    Object.assign(target, next);
+    enemy.number++;
+    enemy.defeatedUntil = 0;
+    enemy.spawnedAt = now;
+    metrics.lastTickAt = now;
+  }
+  if (!enemy.spawnedAt) enemy.spawnedAt = now;
+  if (!enemy.baseRadius) enemy.baseRadius = target.radius;
+  const approach = Clamp((now - enemy.spawnedAt) / (4200 / args.speedScale), 0, 1);
+  target.radius = enemy.baseRadius * (.4 + .6 * approach);
+  FitEnemy(target, arena);
+  const continuousFrame = !metrics.lastTickAt || now - metrics.lastTickAt <= trackingGraceMs;
+  let defeatedPosition: Pick<TargetState, 'x' | 'y' | 'radius'> | null = null;
+  UpdateTrainingLoop({ ...args, rect: arena, canScore: hand.y <= arena.height && continuousFrame,
+    onSuccess: () => {
+      defeatedPosition = { x: target.x, y: target.y, radius: target.radius };
+      enemy.defeatedUntil = now + 400;
+      args.onSuccess();
+    } });
+  if (defeatedPosition) {
+    enemy.baseRadius = target.radius;
+    Object.assign(target, defeatedPosition);
   }
 }
 export function MoveTarget(drill: DrillId, target: TargetState, width: number, height: number, deltaMs: number) {
@@ -149,7 +206,7 @@ export function AdaptTarget(target: TargetState, difficulty: DifficultyDefinitio
   target.vx = directionX * speed;
   target.vy = directionY * speed * 0.78;
   target.radius = Clamp(difficulty.radius * targetSizeScale * (1 - (target.level - 1) * 0.035), 38, 110);
-  target.holdTargetMs = Clamp(difficulty.holdMs + (target.level - 1) * 40, 420, 1400);
+  target.holdTargetMs = Clamp(difficulty.holdMs + (target.level - 1) * 40, 420, Math.max(1400, difficulty.holdMs + 400));
 }
 export function PlaceRandomTarget(target: TargetState, width: number, height: number): TargetState {
   const padding = target.radius + 28;
@@ -176,7 +233,7 @@ export function ToEventRecord({ metrics, drillName, result, target, elapsedMs, }
     Adaptive_Level: target.level,
   };
 }
-export function BuildLiveState(now: number, durationSec: number, rect: DOMRect, target: TargetState, hand: HandState, metrics: SessionMetrics) {
+export function BuildLiveState(now: number, durationSec: number, rect: Pick<DOMRect, 'width' | 'height'>, target: TargetState, hand: HandState, metrics: SessionMetrics) {
   const elapsedMs = metrics.startedAt ? now - metrics.startedAt : 0;
   const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
   const visibility = elapsedMs > 0 ? metrics.handVisibleMs / elapsedMs : 0;
@@ -198,6 +255,12 @@ export function BuildLiveState(now: number, durationSec: number, rect: DOMRect, 
     handVisible,
     insideTarget,
   };
+}
+export function BuildLaserLiveState(now: number, durationSec: number, rect: Pick<DOMRect, 'width' | 'height'>, target: TargetState, hand: HandState, metrics: SessionMetrics, enemy: LaserEncounter) {
+  const live = BuildLiveState(now, durationSec, rect, target, hand, metrics);
+  const enemyPhase = enemy.defeatedUntil > now ? 'defeated' as const : 'active' as const;
+  const laserActive = live.handVisible && hand.y <= rect.height * .8 && enemyPhase === 'active';
+  return { ...live, laserActive, enemyPhase, enemyNumber: enemy.number, insideTarget: live.insideTarget && laserActive };
 }
 export function GetHandCursorPoint(landmarks: {x:number;y:number;z:number}[], width: number, height: number): {
   x: number;

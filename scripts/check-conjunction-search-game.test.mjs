@@ -104,7 +104,7 @@ test('four data-only levels match the specified global levels, glyphs and next g
   ]);
   assert.equal(gameDefinition.id, gameId);
   assert.equal(gameDefinition.next, null);
-  assert.equal(gameDefinition.title.zh, '視覺搜尋：顏色與字形');
+  assert.equal(gameDefinition.title.zh, '顏色與字形');
   for (const glyph of ['X', 'R', 'b', 'p', 'T', 'upsideDownT', 'd']) assert.equal(typeof glyphs[glyph].path, 'string');
   for (const language of ['zh', 'en']) {
     const source = await readFile(`${GameRoot(gameId)}/i18n/${language}.ts`, 'utf8');

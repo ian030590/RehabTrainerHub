@@ -108,6 +108,26 @@ const Csv = tree => Find(tree, node => node.props?.['aria-labelledby'] === 'gaze
 const Retry = (tree, label) => Find(tree, node => node.type === 'button' && Text(node) === label);
 
 for (const language of ['en', 'zh-TW']) {
+  test(`${language}: an empty CSV list omits the storage and archival notice`, async () => {
+    const fixture = await Fixture(language);
+    fixture.Render(); fixture.Flush();
+    fixture.csvRequests[0].resolve({ ok: true, json: async () => ({ records: [], cursor: null }) });
+    await Settle();
+    const section = Csv(fixture.Render());
+    assert.ok(section, 'The CSV section remains available.');
+    assert.doesNotMatch(Text(section), /No CSV files in site storage|本站儲存區目前沒有 CSV 檔案/);
+  });
+
+  test(`${language}: confirmed progress omits the server verification note and retains the date`, async () => {
+    const fixture = await Fixture(language);
+    fixture.Render(); fixture.Flush();
+    fixture.progressRequests[0].resolve(progress);
+    await Settle();
+    const tree = fixture.Render();
+    assert.ok(Find(tree, node => node.type === 'time' && node.props.dateTime === progress.serverDate));
+    assert.doesNotMatch(Text(tree), /progress\.serverDate/);
+  });
+
   test(`${language}: progress failure shows unavailable data and retry instead of zero results`, async () => {
     const fixture = await Fixture(language);
     let tree = fixture.Render(); fixture.Flush();

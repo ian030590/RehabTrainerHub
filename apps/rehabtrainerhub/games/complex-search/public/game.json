@@ -7,7 +7,7 @@
   "preview": "preview.webp",
   "copy": {
     "zh-TW": {
-      "title": "視覺搜尋：相似字形",
+      "title": "相似字形",
       "description": "判斷散布的字母中有沒有中央圓圈裡的目標字，目標與其他字的形狀相近。十二級視覺搜尋的第 5 到 8 級。"
     },
     "en": {

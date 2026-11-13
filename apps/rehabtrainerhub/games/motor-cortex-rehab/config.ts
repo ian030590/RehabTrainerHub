@@ -10,9 +10,9 @@ export interface MotorConfig {
 }
 export const defaultConfig: MotorConfig = { drill: 'bounce', difficulty: 'intermediate', durationSec: 60, handChoice: 'any', targetSizePercent: 100, speedPercent: 100 };
 export const difficulties: readonly DifficultyDefinition[] = [
-  { id: 'beginner', radius: 82, speed: 120, holdMs: 560 },
-  { id: 'intermediate', radius: 66, speed: 165, holdMs: 760 },
-  { id: 'advanced', radius: 54, speed: 220, holdMs: 980 },
+  { id: 'beginner', radius: 82, speed: 120, holdMs: 1500 },
+  { id: 'intermediate', radius: 66, speed: 165, holdMs: 2000 },
+  { id: 'advanced', radius: 54, speed: 220, holdMs: 2500 },
 ];
 export function IsMotorConfig(config: MotorConfig) {
   return ['bounce', 'vertical', 'horizontal', 'random'].includes(config.drill)

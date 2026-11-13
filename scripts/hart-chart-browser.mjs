@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
@@ -154,6 +156,43 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
     await until(() => display(`document.querySelectorAll('.hart-display .hart-chart-cell').length === 100`), 'shared display actual chart');
     assert.equal(await display(`[...document.querySelectorAll('.hart-chart-cell')].map(cell=>cell.textContent).join('')`), chartLetters);
     assert.equal(await display(`Boolean(document.querySelector('form,.hart-code-input'))`), false);
+    const screenshots = resolve(import.meta.dirname, '../.tmp/hart-chart-validation/qr-display');
+    await mkdir(screenshots, { recursive: true });
+    for (const scale of [.9, .65, 1.25, 1.45]) {
+      if (scale !== .9) {
+        await send('Page.navigate', { url: share.replace('scale=0.9', `scale=${scale}`) }, displaySession.sessionId);
+        await send('Page.reload', {}, displaySession.sessionId);
+        await until(() => display(`document.querySelectorAll('.hart-display .hart-chart-cell').length === 100
+          && document.querySelector('.hart-chart-grid').style.getPropertyValue('--hart-font-min') === '${20 * scale}px'`), 'shared chart at selected scale');
+      }
+      for (const [width, height] of [[320,568], [360,800], [390,844], [430,932], [844,390], [820,1180], [1320,713]]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 768 }, displaySession.sessionId);
+        await display(`new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done)))`);
+        const layout = await display(`(() => {
+          const chart=document.querySelector('.hart-chart-grid'), box=chart.getBoundingClientRect();
+          const outside=r=>r.left<-.5||r.right>innerWidth+.5||r.top<-.5||r.bottom>innerHeight+.5;
+          const cells=[...chart.children];
+          const clipped=cells.filter(cell=>{
+            const range=document.createRange();range.selectNodeContents(cell);
+            const text=range.getBoundingClientRect(), slot=cell.getBoundingClientRect();
+            return outside(text)||outside(slot)||text.left<box.left-.5||text.right>box.right+.5;
+          }).map(cell=>({character:cell.textContent,index:cells.indexOf(cell)}));
+          return {width:innerWidth,height:innerHeight,chart:{left:box.left,top:box.top,width:box.width,height:box.height},
+            clipped,scrollsSideways:document.documentElement.scrollWidth>innerWidth,
+            letters:cells.map(cell=>cell.textContent).join('')};
+        })()`);
+        console.log(`Hart QR ${chinese ? 'chinese' : 'english'} scale ${scale}: ${JSON.stringify({...layout,letters:undefined})}`);
+        if (scale === .9 || layout.clipped.length) {
+          const screenshot = await send('Page.captureScreenshot', { format: 'png' }, displaySession.sessionId);
+          await writeFile(resolve(screenshots, `${chinese ? 'chinese' : 'english'}-${width}x${height}-${scale}.png`), Buffer.from(screenshot.data, 'base64'));
+        }
+        assert.equal(layout.width, width, 'The QR page uses the phone viewport.');
+        assert.deepEqual(layout.clipped, [], 'All 100 characters, including the rightmost column, fit fully inside the screen and chart.');
+        assert.equal(layout.scrollsSideways, false, 'The shared chart never needs horizontal scrolling.');
+        assert.ok(Math.abs(layout.chart.width-layout.chart.height)<=1, 'The shared 10 by 10 chart stays square.');
+        assert.equal(layout.letters, chartLetters, 'Resizing and rotating preserve the shared chart.');
+      }
+    }
   } finally { await send('Target.closeTarget', { targetId: displayTarget.targetId }); }
   await capture('qr');
   await game(`document.querySelector('.hart-qr-dialog .btn-primary').click()`);

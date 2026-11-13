@@ -21,7 +21,7 @@ const games = {
   'gabor-patching': { version: '2.0.4', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
   'asteroid-shield': { version: '2.0.13', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
   'gesture-battler': { version: '2.0.8', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
-  'motor-cortex-rehab': { version: '2.0.5', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
+  'motor-cortex-rehab': { version: '2.1.0', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
   'drawing-defense': { version: '2.0.9', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },
   'moving-card': { version: '2.0.5', file: 'MovingCardGame.tsx', settings: 'settings.ts' },
   'oculomotor-training': { version: '2.1.4', file: 'OculomotorTrainingGame.tsx', settings: 'settings.ts' },

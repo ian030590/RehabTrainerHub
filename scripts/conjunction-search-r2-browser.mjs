@@ -2,7 +2,7 @@ import { CheckFieldGrowth, CheckSmallSearchField, InstallFieldGrowth, ResizeFiel
 import assert from 'node:assert/strict';
 
 export const conjunctionSearchBrowserSpec = {
-    title: { zh: '視覺搜尋：顏色與字形', en: 'Visual Search: Conjunction' },
+    title: { zh: '顏色與字形', en: 'Visual Search: Conjunction' },
     trainer: 'vision', purpose: 'vision', phasePrefix: 'search',
     settings: { level: 1, timeLimitMs: 1500, trialsPerBlock: 20, symbolSizeDeg: 1.4, screenWidthCm: 30 },
     tutorialTargets: ['.search-target-circle', '.search-pads', '.search-hud'],

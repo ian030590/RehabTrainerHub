@@ -7,9 +7,9 @@ interface SearchGameDefinition {
 
 export const gameDefinition: SearchGameDefinition = {
   id: 'complex-search',
-  title: { zh: '視覺搜尋：相似字形', en: 'Visual Search: Complex' },
+  title: { zh: '相似字形', en: 'Visual Search: Complex' },
   description: { zh: '判斷散布的字母中有沒有中央圓圈裡的目標字，目標與其他字的形狀相近。十二級視覺搜尋的第 5 到 8 級。', en: 'Decide whether the letter shown in the centre circle is among the scattered letters. The target looks similar to the others. Levels 5 to 8 of 12.' },
-  next: { id: 'conjunction-search', title: { zh: '視覺搜尋：顏色與字形', en: 'Visual Search: Conjunction' } },
+  next: { id: 'conjunction-search', title: { zh: '顏色與字形', en: 'Visual Search: Conjunction' } },
 };
 
 export const levels: SearchLevel[] = [

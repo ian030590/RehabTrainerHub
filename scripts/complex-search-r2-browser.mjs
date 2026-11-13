@@ -2,7 +2,7 @@ import { CheckFieldGrowth, CheckSmallSearchField, InstallFieldGrowth, ResizeFiel
 import assert from 'node:assert/strict';
 
 export const complexSearchBrowserSpec = {
-    title: { zh: '視覺搜尋：相似字形', en: 'Visual Search: Complex' },
+    title: { zh: '相似字形', en: 'Visual Search: Complex' },
     trainer: 'vision', purpose: 'vision', phasePrefix: 'search',
     settings: { level: 1, timeLimitMs: 1500, trialsPerBlock: 20, symbolSizeDeg: 1.4, screenWidthCm: 30 },
     tutorialTargets: ['.search-target-circle', '.search-pads', '.search-hud'],

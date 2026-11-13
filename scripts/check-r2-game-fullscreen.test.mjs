@@ -40,6 +40,7 @@ test('motor camera consent and initialization finish in windowed mode before the
   const camera = Deferred();
   const fullscreen = Deferred();
   const actions = [];
+  let audioInitializations = 0;
   const context = {
     phaseRef: { current: 'ready' }, generationRef: { current: 0 }, handInputReady: false,
     config: { handChoice: 'left' }, IsMotorConfig: () => true,
@@ -49,6 +50,8 @@ test('motor camera consent and initialization finish in windowed mode before the
     rootRef: { current: { requestFullscreen: () => { actions.push('fullscreen'); return fullscreen.promise; } } },
     StartHandInput: hand => { actions.push(`camera:${hand}`); return camera.promise; },
     PrepareAudioFeedback() {}, jsPsychRef: {}, metricsRef: {}, targetRef: {},
+    laserAudioRef: { current: null }, CreateLaserAudio: () => { audioInitializations++; return { dispose() {} }; },
+    enemyRef: {}, CreateLaserEncounter: () => ({}),
     CreateEmptyMetrics: () => ({}), performance: { now: () => 10 },
     jsPsychLifecycleRef: { current: { start: async ({ onStart }) => { actions.push('timer'); onStart(); } } },
     SendGameEvent: type => actions.push(type), requestAnimationFrame: () => 1, animationRef: {},
@@ -60,12 +63,14 @@ test('motor camera consent and initialization finish in windowed mode before the
   await preparing;
   assert.equal(context.phaseRef.current, 'ready', 'A fresh Start click preserves browser user activation after camera loading.');
   assert.equal(context.handInputReady, true);
+  assert.equal(audioInitializations, 0, 'Camera permission and preparation cannot start game audio.');
   const playing = start();
   assert.deepEqual(actions, ['camera:left', 'fullscreen']);
   fullscreen.resolve();
   await playing;
   assert.equal(context.phaseRef.current, 'playing');
   assert.deepEqual(actions, ['camera:left', 'fullscreen', 'timer', 'active']);
+  assert.equal(audioInitializations, 1);
 });
 
 test('motor cancellation while camera permission is pending cannot enter fullscreen or start a timer', async () => {
@@ -117,6 +122,7 @@ test('motor return during a pending fullscreen request cancels play and exits a 
     phaseRef: { current: 'ready' }, generationRef: { current: 0 }, handInputReady: true,
     config: {}, IsMotorConfig: () => true, setError() {},
     setPhase: phase => { context.phaseRef.current = phase; }, PrepareAudioFeedback() {}, jsPsychRef: {},
+    laserAudioRef: { current: null }, CreateLaserAudio: () => ({ dispose() {} }),
     rootRef: { current: { requestFullscreen: () => fullscreen.promise } },
     document: { fullscreenElement: {}, exitFullscreen: async () => actions.push('exit-fullscreen') },
   };

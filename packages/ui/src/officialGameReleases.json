@@ -205,15 +205,15 @@
   },
   "popout-search": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
-    "name": "視覺搜尋：突顯目標"
+    "name": "突顯目標"
   },
   "complex-search": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
-    "name": "視覺搜尋：相似字形"
+    "name": "相似字形"
   },
   "conjunction-search": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
-    "name": "視覺搜尋：顏色與字形"
+    "name": "顏色與字形"
   },
   "exploratory-saccade": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",

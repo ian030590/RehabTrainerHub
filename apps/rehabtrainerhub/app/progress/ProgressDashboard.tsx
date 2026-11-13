@@ -357,7 +357,6 @@ export function ProgressDashboard() {
           </div>}
           {gazeLoading && <p role="status">{language === 'en' ? 'Loading CSV files…' : '正在載入 CSV 檔案…'}</p>}
           {gazeArchived && <p role="status">{language === 'en' ? 'This per-sample file is no longer in site storage. Synced files are kept in the site archive; the session summary is still here.' : '此逐筆檔案已不在本站儲存區；同步的檔案保存在網站封存空間，當次摘要仍保留。'}</p>}
-          {gazeOwnerId === user.id && visibleGazeFiles.length === 0 && !gazeFailure && !gazeLoading && <p>{language === 'en' ? 'No CSV files in site storage. Archived files are no longer listed here; session summaries remain.' : '本站儲存區目前沒有 CSV 檔案。已封存的檔案不再列於此處，當次摘要仍保留。'}</p>}
           <ul>
             {visibleGazeFiles.map((file) => (
               <li key={file.recordId}>
@@ -372,9 +371,6 @@ export function ProgressDashboard() {
         </section>
       )}
 
-      {visibleProgress && (
-        <p className="server-date-note">{t('progress.serverDate', { timeZone: visibleProgress.timeZone })}</p>
-      )}
     </main>
   );
 }

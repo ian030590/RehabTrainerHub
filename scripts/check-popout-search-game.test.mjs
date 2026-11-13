@@ -104,7 +104,7 @@ test('four data-only levels define X/O, T/O, H/C and the added E/C, plus copy, g
   ]);
   assert.equal(gameDefinition.id, gameId);
   assert.equal(gameDefinition.next.id, 'complex-search');
-  assert.equal(gameDefinition.title.zh, '視覺搜尋：突顯目標');
+  assert.equal(gameDefinition.title.zh, '突顯目標');
   for (const glyph of ['X', 'O', 'T', 'H', 'C', 'E']) assert.equal(typeof glyphs[glyph].path, 'string');
   for (const language of ['zh', 'en']) {
     const source = await readFile(`${GameRoot(gameId)}/i18n/${language}.ts`, 'utf8');

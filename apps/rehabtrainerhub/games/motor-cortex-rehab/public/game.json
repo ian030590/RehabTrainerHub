@@ -8,11 +8,11 @@
   "copy": {
     "zh-TW": {
       "title": "手部目標追蹤練習",
-      "description": "追蹤手部位置，練習活動範圍、目標追蹤與隨機觸達。"
+      "description": "舉手發射鐳射，穩定跟隨逐一逼近的像素敵人，連續命中後消滅得分。"
     },
     "en": {
       "title": "Hand Target Tracking Practice",
-      "description": "Track hand position to practise range of motion, target tracking, and random reaches."
+      "description": "Raise your hand to fire a laser at approaching pixel enemies. Hold a steady aim to defeat one enemy at a time."
     }
   }
 }

@@ -2,14 +2,15 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Keyb
 import { initJsPsych } from 'jspsych';
 import { defaultConfig, difficulties, IsMotorConfig, type MotorConfig } from './config';
 import { copy } from './labels';
-import { CreateEmptyMetrics, CreateInitialTarget, UpdateTrainingLoop, GetHandCursorPoint, BuildLiveState, ToPercent, FormatHandChoice } from './engine';
+import { CreateEmptyMetrics, CreateInitialTarget, CreateLaserEncounter, UpdateLaserEncounter, GetHandCursorPoint, BuildLaserLiveState, ToPercent, FormatHandChoice } from './engine';
 import type { GamePhase, HandState, TargetState, SessionRecord, LiveState } from './types';
 import { useT } from './i18n/useT';
 import { MotorTutorial } from './rules/MotorTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { IsHubGame, OnSavedSettings, SaveGameSettings, StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
-import { PrepareAudioFeedback, PlaySuccessSound, PlayGameEndSound, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { CreateLaserAudio } from './runtime/laserAudio';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
@@ -29,6 +30,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const generationRef = useRef(0);
   const phaseRef = useRef<GamePhase>('menu');
   const targetRef = useRef<TargetState | null>(null);
+  const enemyRef = useRef(CreateLaserEncounter());
+  const laserAudioRef = useRef<ReturnType<typeof CreateLaserAudio> | null>(null);
   const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
   const metricsRef = useRef(CreateEmptyMetrics());
   const [phase, setPhaseState] = useState<GamePhase>('menu');
@@ -36,14 +39,28 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
   }, [phase]);
-  useEffect(() => DisposeAudioFeedback, []);
+  useEffect(() => {
+    const dispose = () => { laserAudioRef.current?.dispose(); DisposeAudioFeedback(); };
+    window.addEventListener('pagehide', dispose);
+    return () => { window.removeEventListener('pagehide', dispose); dispose(); };
+  }, []);
   const [config, setConfig] = useState<MotorConfig>({ ...defaultConfig });
   const [error, setError] = useState('');
   const [handInputReady, setHandInputReady] = useState(false);
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
   const [result, setResult] = useState<SessionRecord | null>(null);
   const [live, setLive] = useState<LiveState>({ timeRemaining: 60, accuracy: 0, visibility: 0, successes: 0, misses: 0,
-    currentHoldPercent: 0, level: 1, targetX: 50, targetY: 42, targetRadius: 66, handX: 64, handY: 62, handVisible: false, insideTarget: false });
+    currentHoldPercent: 0, level: 1, targetX: 50, targetY: 42, targetRadius: 66, handX: 64, handY: 62, handVisible: false, insideTarget: false,
+    laserActive: false, enemyPhase: 'active', enemyNumber: 1 });
+  useEffect(() => {
+    const update = () => laserAudioRef.current?.setFiring(phase === 'playing' && live.laserActive
+      && !document.hidden && performance.now() - handRef.current.lastSeenAt <= 240);
+    update();
+    if (phase !== 'playing' || !live.laserActive) return;
+    const timer = window.setInterval(update, 60);
+    document.addEventListener('visibilitychange', update);
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', update); laserAudioRef.current?.setFiring(false); };
+  }, [phase, live.laserActive]);
   const difficulty = difficulties.find(item => item.id === config.difficulty)!;
   const setPhase = useCallback((next: GamePhase) => { phaseRef.current = next; setPhaseState(next); }, []);
   useEffect(() => OnSavedSettings(saved => {
@@ -57,12 +74,13 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
     animationRef.current = null;
     handRef.current.visible = false;
+    laserAudioRef.current?.stop();
     handCanvasRef.current?.getContext('2d')?.clearRect(0, 0, 320, 240);
   }, []);
   const showConfiguration = useCallback(() => {
     stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'configure' });
     setLive(current => ({ ...current, accuracy: 0, visibility: 0, successes: 0, misses: 0,
-      currentHoldPercent: 0, level: 1, handVisible: false, insideTarget: false }));
+      currentHoldPercent: 0, level: 1, handVisible: false, insideTarget: false, laserActive: false, enemyPhase: 'active', enemyNumber: 1 }));
     setResult(null); setPhase('menu');
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   }, [stopInput, setPhase]);
@@ -137,7 +155,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
       Hand_Visible_Percent: ToPercent(metrics.handVisibleMs / duration), Successful_Reps: metrics.successes, Interrupted_Holds: metrics.misses,
       Best_Hold_Seconds: Number((metrics.bestHoldMs / 1000).toFixed(2)), Event_Records: metrics.events.map(item => ({ ...item })),
     };
-    stopInput(); PlayGameEndSound('Victory', jsPsychRef); jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
+    stopInput(); laserAudioRef.current?.playComplete(); jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
     setResult(session); setPhase('results'); setSaveState(IsHubGame() ? 'saving' : 'local');
     const score = BuildGameScore(session); SendGameResult({ ...config }, score.summary, score.rounds);
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
@@ -155,23 +173,26 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         return;
       }
       PrepareAudioFeedback(jsPsychRef);
+      laserAudioRef.current?.dispose();
+      laserAudioRef.current = CreateLaserAudio();
       await rootRef.current?.requestFullscreen?.().catch(() => undefined);
       if (generationRef.current !== generation) {
         if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
         return;
       }
       metricsRef.current = { ...CreateEmptyMetrics(), startedAt: performance.now(), lastTickAt: performance.now() }; targetRef.current = null;
+      enemyRef.current = CreateLaserEncounter();
       await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:motor-cortex-rehab', onStart: () => {
         setPhase('playing'); SendGameEvent('active'); let lastLive = 0;
         const tick = (now: number) => {
           if (phaseRef.current !== 'playing') return;
           const rect = stageRef.current!.getBoundingClientRect();
           if (rect.width > 0 && rect.height > 0) {
-            targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height);
-            UpdateTrainingLoop({ now, rect, drill: config.drill, activeDifficulty: difficulty, durationSec: config.durationSec,
+            targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height * .8);
+            UpdateLaserEncounter({ now, rect, drill: config.drill, activeDifficulty: difficulty, durationSec: config.durationSec, enemy: enemyRef.current,
               targetSizeScale: config.targetSizePercent / 100, speedScale: config.speedPercent / 100, target: targetRef.current, hand: handRef.current,
-              metrics: metricsRef.current, labels, onSuccess: () => PlaySuccessSound(jsPsychRef), onComplete: completeSession });
-            if (phaseRef.current === 'playing' && now - lastLive >= 45) { lastLive = now; setLive(BuildLiveState(now, config.durationSec, rect, targetRef.current, handRef.current, metricsRef.current)); }
+              metrics: metricsRef.current, labels, onSuccess: () => { laserAudioRef.current?.setFiring(false); laserAudioRef.current?.playHit(); }, onComplete: completeSession });
+            if (phaseRef.current === 'playing' && now - lastLive >= 45) { lastLive = now; setLive(BuildLaserLiveState(now, config.durationSec, rect, targetRef.current, handRef.current, metricsRef.current, enemyRef.current)); }
           }
           if (phaseRef.current === 'playing') animationRef.current = requestAnimationFrame(tick);
         };
@@ -186,15 +207,23 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const style = { '--motor-target-x': `${preview ? 50 : live.targetX}%`, '--motor-target-y': `${preview ? 42 : live.targetY}%`,
     '--motor-target-size': `${preview ? difficulty.radius * config.targetSizePercent / 50 : live.targetRadius * 2}px`,
     '--motor-hand-x': `${preview ? 67 : live.handX}%`, '--motor-hand-y': `${preview ? 66 : live.handY}%`,
-    '--motor-hold-progress': `${preview ? 55 : live.currentHoldPercent * 100}%` } as CSSProperties;
+    '--motor-hold-progress': `${preview ? 55 : live.currentHoldPercent * 100}%`,
+    '--motor-enemy-health': `${preview ? 45 : (1 - live.currentHoldPercent) * 100}%` } as CSSProperties;
   return <div ref={rootRef} className={`motor-cortex-rehab-game motor-cortex-rehab-phase-${phase} motor-cortex-drill-${config.drill}`} style={style}>
     <div ref={jsPsychHostRef} className="motor-jspsych-host" aria-hidden="true" />
     {phase !== 'results' && <div className="motor-cortex-play" aria-hidden={phase === 'menu' || phase === 'ready'}>
       <div className="motor-cortex-hud">{[[labels.timeLeft, `${preview ? config.durationSec : Math.ceil(live.timeRemaining)}s`], [labels.accuracy, `${ToPercent(live.accuracy)}%`], [labels.visible, `${ToPercent(live.visibility)}%`], [labels.reps, live.successes], [labels.level, live.level]].map(([label, value]) => <p key={label}><span>{label}</span><strong>{value}</strong></p>)}</div>
       <div ref={stageRef} className="motor-cortex-stage" aria-label={labels.followTarget}>
+        <div className="motor-city" aria-hidden="true"><div className="motor-skyline">{[35, 68, 48, 85, 55, 72, 42, 62].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div><div className="motor-street" /></div>
+        <p className="motor-mission-title">{labels.missionTitle}</p>
         <div className="motor-cortex-path motor-cortex-path-vertical" /><div className="motor-cortex-path motor-cortex-path-horizontal" />
-        <div className={`motor-cortex-target ${live.insideTarget && !preview ? 'is-hit' : ''}`}><p>{labels.target}</p></div>
-        <div className={`motor-cortex-hand-cursor ${live.handVisible || preview ? 'is-visible' : ''}`}><p>{labels.handCursor}</p></div>
+        <svg className={`motor-laser-beam ${!preview && live.laserActive ? 'is-firing' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line className="motor-laser-edge" x1="50" y1="98" x2={live.handX} y2={live.handY} /><line className="motor-laser-core" x1="50" y1="98" x2={live.handX} y2={live.handY} /></svg>
+        <div className={`motor-cortex-target motor-enemy ${live.insideTarget && !preview ? 'is-hit' : ''} ${!preview && live.enemyPhase === 'defeated' ? 'is-defeated' : ''}`} data-enemy-number={preview ? 1 : live.enemyNumber} role="img" aria-label={labels.target}>
+          <div className="motor-enemy-shadow" /><div className="motor-enemy-body"><img className="motor-enemy-sprite" src="./assets/laser-hero/enemy.png" alt="" draggable={false} /><img className="motor-enemy-sprite motor-enemy-step" src="./assets/laser-hero/enemy-step.png" alt="" draggable={false} /></div>
+          <div className="motor-enemy-health" aria-hidden="true"><i /></div><span className="motor-enemy-burst" aria-hidden="true" />
+        </div>
+        <div className={`motor-cortex-hand-cursor ${live.handVisible || preview ? 'is-visible' : ''} ${!preview && live.laserActive ? 'is-firing' : ''}`}><img src="./assets/laser-hero/palm.png" alt="" draggable={false} /><p>{!preview && live.laserActive ? labels.firing : labels.handCursor}</p></div>
+        <div className={`motor-hero-hand ${!preview && live.laserActive ? 'is-firing' : ''}`} data-hand={config.handChoice} aria-hidden="true"><img src="./assets/laser-hero/palm.png" alt="" draggable={false} /><i /></div>
       </div>
       <div className="motor-cortex-instruction"><h2>{labels.drillNames[config.drill]}</h2><p>{labels.followTarget}</p><div className="motor-cortex-hold-meter" role="progressbar" aria-label={labels.hold} aria-valuenow={Math.round(preview ? 55 : live.currentHoldPercent * 100)} aria-valuemin={0} aria-valuemax={100}><i /></div></div>
       <div className="motor-cortex-camera"><canvas ref={handCanvasRef} width={320} height={240} aria-label={en ? 'Hand landmark preview' : '手部座標預覽'} />
@@ -208,7 +237,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         <header className="training-config-header"><div className="training-config-title"><p className="training-config-label">{labels.configLabel}</p><h2 id="motor-config-title">{labels.title}</h2></div></header>
         <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Session settings' : '活動設定'}</h3>
           <label>{labels.drill}<select name="drill" value={config.drill} onChange={event => setConfig({ ...config, drill: event.target.value as MotorConfig['drill'] })}>{(['bounce', 'vertical', 'horizontal', 'random'] as const).map(value => <option key={value} value={value}>{labels.drillNames[value]}</option>)}</select></label><p>{labels.drillDescriptions[config.drill]}</p>
-          <label>{labels.difficulty}<select name="difficulty" value={config.difficulty} onChange={event => setConfig({ ...config, difficulty: event.target.value as MotorConfig['difficulty'] })}>{difficulties.map(item => <option key={item.id} value={item.id}>{labels.difficultyNames[item.id]} · {item.radius}px / {item.speed}px/s / {item.holdMs}ms</option>)}</select></label>
+          <label>{labels.difficulty}<select name="difficulty" value={config.difficulty} onChange={event => setConfig({ ...config, difficulty: event.target.value as MotorConfig['difficulty'] })}>{difficulties.map(item => <option key={item.id} value={item.id}>{labels.difficultyNames[item.id]} · {en ? 'Steady aim' : '穩定瞄準'} {item.holdMs / 1000}s</option>)}</select></label>
           <label>{labels.duration}<select name="durationSec" value={config.durationSec} onChange={event => setConfig({ ...config, durationSec: Number(event.target.value) })}>{[45, 60, 90].map(value => <option key={value} value={value}>{value}s</option>)}</select></label>
           <label>{labels.hand}<select name="handChoice" value={config.handChoice} onChange={event => setConfig({ ...config, handChoice: event.target.value as MotorConfig['handChoice'] })}>{(['any', 'left', 'right'] as const).map(value => <option key={value} value={value}>{FormatHandChoice(value, labels)}</option>)}</select></label>
           <label>{labels.targetSize}：<output>{config.targetSizePercent}%</output><input name="targetSizePercent" type="range" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
