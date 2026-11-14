@@ -159,13 +159,22 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
     assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true);
     assert.equal(getSaveAttempts(),0); return;
   }
+  let laserHitCaptured = false;
   await until(async () => {
     const encounter = await game(`(() => {
       if (document.querySelector('.experiment-results')) return { complete: true };
-      const enemy=document.querySelector('.motor-enemy');return { complete: false,
+      const enemy=document.querySelector('.motor-enemy');
+      const holdProgress=Number.parseFloat(getComputedStyle(document.querySelector('.motor-cortex-rehab-game')).getPropertyValue('--motor-hold-progress'));
+      return { complete: false,
       count:document.querySelectorAll('.motor-enemy').length,number:Number(enemy.dataset.enemyNumber),
+      laserHit:Boolean(document.querySelector('.motor-laser-beam.is-firing')) && enemy.classList.contains('is-hit')
+        && !enemy.classList.contains('is-defeated') && holdProgress>=30 && holdProgress<100,
       defeated:enemy.classList.contains('is-defeated'),kills:Number(document.querySelectorAll('.motor-cortex-hud strong')[3].textContent)};})()`);
     if (encounter.complete) return true;
+    if (!laserHitCaptured && encounter.count === 1 && encounter.laserHit) {
+      await capture('playing-laser');
+      laserHitCaptured = true;
+    }
     await CheckRaisePrompt(game);
     assert.equal(encounter.count, 1);
     assert.equal(encounter.number, encounter.kills + (encounter.defeated ? 0 : 1), 'A defeat scores once before the next enemy appears.');
@@ -174,6 +183,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
     if (offset) await evaluate(`(() => {window.handFixtureOffset.x=Math.max(-.18,Math.min(.18,window.handFixtureOffset.x+${offset.x}*.3));window.handFixtureOffset.y=Math.max(-.18,Math.min(.18,window.handFixtureOffset.y+${offset.y}*.3));})()`);
     return false;
   }, 'real 45-second tracking session completes', 60000);
+  assert.ok(laserHitCaptured, 'Captured a firing laser hitting an undefeated enemy with hold progress from 30% to below 100%.');
   assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true, 'Completion stops the camera.');
   await CheckResultsPresentation(game, { defaultMetric: 'accuracy', alternateMetric: 'holdSeconds', english, capture });
   assert.ok(await game('Number(document.querySelectorAll(".score-key-metric dd")[2].textContent)>0'), 'Real tracked hand movement defeats at least one enemy.');

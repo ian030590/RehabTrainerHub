@@ -235,12 +235,12 @@
   },
   {
     "gameId": "motor-cortex-rehab",
-    "version": "2.0.5",
-    "phase": "playing",
+    "version": "2.1.1",
+    "phase": "playing-laser",
     "screenshotWidth": 1280,
     "screenshotHeight": 720,
-    "screenshotSha256": "fdca897e9ac1875388393b42ebd974e947d3d1866f8892bdf49a7fbfbc52acb1",
-    "previewSha256": "3cdfc7354e3b746aef70faf455d5d99c4d53b832345fae810efa278df82bce79"
+    "screenshotSha256": "b9bcc49111ee47c5bae7d92d67a40a659563684e8f48c7ef49e766e887bc1ba6",
+    "previewSha256": "7981bc89ba8995e099d8af0c8e5b82922a9fe7895da166e4cf16ae18821ad074"
   },
   {
     "gameId": "moving-card",

@@ -519,7 +519,7 @@ try {
   const previewFolder = resolve(root, '.tmp/game-preview-captures', gameId);
   if (capturePreview) await mkdir(previewFolder, { recursive: true });
   const previewPhase = process.argv.includes('--preview-phase') ? process.argv[process.argv.indexOf('--preview-phase') + 1]
-    : ({ 'gesture-battler': 'combat', 'driving-rehab': 'gameplay-moving', 'motor-cortex-rehab': 'playing',
+    : ({ 'gesture-battler': 'combat', 'driving-rehab': 'gameplay-moving', 'motor-cortex-rehab': 'playing-laser',
       'every-ball-response': 'playing', 'tongue-catch': 'playing', 'seagull-flight': 'playing', 'ufov': 'gameplay-answer', 'reaction-time': 'go',
       'tic-tac-toe': 'gameplay-progress', connect4: 'gameplay-progress', hex: 'gameplay-progress', 'dots-and-boxes': 'gameplay-progress',
       'memory-match': 'gameplay-progress', 'digit-span': 'answer' }[gameId] ?? 'gameplay');
