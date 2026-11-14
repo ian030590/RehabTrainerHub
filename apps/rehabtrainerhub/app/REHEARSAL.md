@@ -15,21 +15,20 @@ Stageshow 參照 `examples/static-card` 與 `references/craft.md` 的主次、�
 - 新增指南測試先因缺少實際錨點失敗；實作後確認連結與目標存在、維持一個 H1 及明確搜尋標籤。
 - 新增平板篩選測試先因 720px 舊分界失敗；實作後與 CSS 同步為 1023px。
 - 保留遊戲開始、安裝網址與 overlay 關閉測試。修正既有瀏覽器測試對「全部遊戲同時顯示」的過期假設，驗證每頁 12 筆、總數、第三方搜尋、安裝目的地及官方 slug 衝突保護。
-- 新增 Node 測試已接到 root `test:entrypoints`，由 `test:ci` 與 `.githooks/pre-push` 間接執行。
+- 新增 Node 測試已接到 root `test:entrypoints`，由本機 `test:ci` 與 GitHub Actions `ci.yml` 的共用 matrix 間接執行；部署 workflow 透過 `workflow_call` 重用。
 
 ## 本機重驗方式
 
-推送 UI 變更前執行以下檢查；保留 pre-push 的七項 gate，不得跳過失敗測試：
+UI 變更的本機手動驗收使用以下指令；GitHub Actions 另執行七項 gate，全部通過才部署：
 
 ```powershell
-npm run prepare
 npm run test:ci
 npm run build:hub
 npm run test:game-architecture:browser
 node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --mobile
 ```
 
-瀏覽器 suite 使用本機正式 build，需要 Brave；可設定 `BRAVE_BIN` 或 `BROWSER_EXECUTABLE_PATH`。完整訓練 fixture 還需要現有 runner 輸出與該遊戲 `dist/`，只寫入本機記憶體 SQLite。這兩項屬於本機推送前驗收，不放進沒有 Brave 的 Linux CI。
+瀏覽器 suite 使用本機正式 build，需要 Brave；可設定 `BRAVE_BIN` 或 `BROWSER_EXECUTABLE_PATH`。完整訓練 fixture 還需要現有 runner 輸出與該遊戲 `dist/`，只寫入本機記憶體 SQLite。這些瀏覽器流程由本機手動執行，也可用 `npm run test:uiux-browser` 執行整合 suite；不由 Git hook 或沒有 Brave 的 Linux CI 執行。
 
 `npm run test:ci` 七項 gate、`npm run build:hub` 與 `npm run test:seo` 均通過；建置同時通過 51 款遊戲隔離架構檢查。駕駛遊戲手機 fixture 的設定、三步聚光燈、完整練習、成果保存重試與返回均通過，Hub 捲動還原，390px overlay 與遊戲沒有溢出。
 

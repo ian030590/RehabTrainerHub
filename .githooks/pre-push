@@ -1,5 +1,0 @@
-#!/bin/sh
-npm run test:ci </dev/null || exit $?
-if node -e "process.exit(require('./package.json').scripts['test:uiux-browser'] ? 0 : 1)"; then
-  npm run test:uiux-browser </dev/null || exit $?
-fi

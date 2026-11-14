@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "scripts/**"
+      - "workers/**"
+      - "package.json"
+      - "package-lock.json"
+      - "turbo.json"
+      - ".github/workflows/**"
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: naming
+            command: npm run test:naming
+          - name: pwa
+            command: npm run test:pwa
+          - name: game-architecture-types
+            command: npm run test:game-architecture:types
+          - name: game-architecture-tests
+            command: npm run test:game-architecture:tests
+          - name: hub-functions
+            command: npm run test:hub-functions
+          - name: gamerunner
+            command: npm run test:gamerunner
+          - name: trainer-entrypoints
+            command: npm run test:entrypoints
+          - name: cloudflare-deploy
+            command: npm run test:cloudflare-deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --workspaces --include-workspace-root
+
+      - name: Run verification
+        run: ${{ matrix.command }}

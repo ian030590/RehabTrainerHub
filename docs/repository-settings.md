@@ -3,16 +3,16 @@
 ## GitHub
 
 - Default branch: `main`
-- Pre-push CI: `.githooks/pre-push` 執行 `npm run test:ci`，涵蓋原 CI 的七組測試；失敗即阻擋推送
-- Hook setup: `npm install` 自動啟用；既有工作目錄執行 `npm run prepare`。只設定此 checkout 的 `core.hooksPath`，CI 與沒有 `.git` 的來源封存包略過安裝
+- CI: `.github/workflows/ci.yml` 並行執行七項 gate；遊戲架構拆成 types／tests，合計八個 matrix job。PR 使用與部署相同的 paths filter，另支援手動執行與 `workflow_call`
+- Local validation: `npm run test:ci` 執行完整七項 gate；安裝套件不設定 Git hook。`npm run test:uiux-browser` 需要 Brave 與相應 build，只在本機手動執行
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
 - Package manager: root `package.json` 指定的 npm
 - Validation: `npm run build`
 - Cloudflare build: `npm run build:cloudflare`
 
-GitHub Actions 只保留部署範圍判斷、建置與部署，不再執行測試 matrix。GitHub 網頁提交及 `git push --no-verify` 不會執行本機 hook。
+GitHub Actions 的部署 workflow 以 `verify` job 呼叫共用 `ci.yml`，與 `deployment_scope` 並行；`deploy` 必須等待兩者成功且 scope 要求部署，才執行 `build:cloudflare:only` 與部署。main push 保留既有 paths filter，純文件推送不觸發。測試 job 使用 `fetch-depth: 1`；部署範圍與 runtime asset 差異判斷仍需完整歷史。
 
-驗收：先新增 hook 回歸測試，確認因缺少 `test:ci` 與安裝程式失敗，再補上實作。`scripts/check-git-hooks.test.mjs` 以臨時本機 bare remote 驗證七組檢查全部執行、失敗後停止後續檢查且遠端 ref 不變；另驗 CI 與來源封存包略過安裝。測試涵蓋範圍與每款 R2 遊戲的檢查仍由 `check-game-directory-architecture.test.mjs` 驗證，改追蹤 `test:ci` 的呼叫鏈。
+驗收：`check-game-directory-architecture.test.mjs` 比對 `test:ci` 與共用 matrix 展開後的每項命令及測試檔案，分片不得漏跑或重複；另確認 hook 目錄、安裝程式與 prepare 已移除。部署與 scope 測試驗證 `verify` 相依關係及既有安全條件。Next `.next/cache` 與 `.turbo/cache` 以 lockfile、來源及公開建置設定摘要為 key；Turbo 只接受完整 key，Cloudflare out／dist 不列為 Actions 快取路徑。
 
 ## Cloudflare Pages
 

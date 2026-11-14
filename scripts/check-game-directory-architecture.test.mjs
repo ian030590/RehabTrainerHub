@@ -97,15 +97,19 @@ test('Hub builds per-game outputs and cannot restore a public trainer runtime', 
   assert.doesNotMatch(emitter, /resolve\(outputDirectory, 'runtimes'\)/);
 });
 
-test('root builds and pre-push retain the architecture gate', async () => {
+test('root builds and reusable CI retain the architecture gate', async () => {
   const rootPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
   assert.match(rootPackage.scripts.build, /npm run test:game-architecture/);
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.match(rootPackage.scripts['test:ci'], /npm run test:game-architecture/);
-  assert.match(await readFile(resolve(repositoryRoot, '.githooks/pre-push'), 'utf8'), /npm run test:ci/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/check-asteroid-shield-migration.test.mjs scripts/check-moving-card-migration.test.mjs scripts/check-moving-card-tutorial.test.mjs scripts/check-gesture-battler-tutorial.test.mjs scripts/check-gesture-battler-migration.test.mjs scripts/check-motor-cortex-migration.test.mjs scripts/check-motor-cortex-tutorial.test.mjs scripts/check-motor-cortex-bridge.test.mjs scripts/check-game-catalog-metadata.test.mjs scripts/publish-official-game.test.mjs scripts/check-oculomotor-migration.test.mjs scripts/check-oculomotor-tutorial.test.mjs scripts/check-gabor-patching-migration.test.mjs scripts/check-gabor-patching-tutorial.test.mjs scripts/check-reading-training-migration.test.mjs scripts/check-reading-training-tutorial.test.mjs scripts/check-r2-settings-controls.test.mjs scripts/check-r2-settings-memory.test.mjs scripts/check-driving-rehab-migration.test.mjs scripts/check-driving-pixel-view.test.mjs scripts/check-driving-rehab-tutorial.test.mjs scripts/check-codex-agent-wrapper.test.mjs scripts/check-codex-team-skills.test.mjs scripts/check-game-team-design.test.mjs',
+    'npm run test:game-architecture:types && npm run test:game-architecture:tests',
+  );
+  assert.equal(rootPackage.scripts['test:game-architecture:types'], 'tsc -p apps/rehabtrainerhub/tsconfig.games.json');
+  assert.equal(
+    rootPackage.scripts['test:game-architecture:tests'],
+    'node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/check-asteroid-shield-migration.test.mjs scripts/check-moving-card-migration.test.mjs scripts/check-moving-card-tutorial.test.mjs scripts/check-gesture-battler-tutorial.test.mjs scripts/check-gesture-battler-migration.test.mjs scripts/check-motor-cortex-migration.test.mjs scripts/check-motor-cortex-tutorial.test.mjs scripts/check-motor-cortex-bridge.test.mjs scripts/check-game-catalog-metadata.test.mjs scripts/publish-official-game.test.mjs scripts/check-oculomotor-migration.test.mjs scripts/check-oculomotor-tutorial.test.mjs scripts/check-gabor-patching-migration.test.mjs scripts/check-gabor-patching-tutorial.test.mjs scripts/check-reading-training-migration.test.mjs scripts/check-reading-training-tutorial.test.mjs scripts/check-r2-settings-controls.test.mjs scripts/check-r2-settings-memory.test.mjs scripts/check-driving-rehab-migration.test.mjs scripts/check-driving-pixel-view.test.mjs scripts/check-driving-rehab-tutorial.test.mjs scripts/check-codex-agent-wrapper.test.mjs scripts/check-codex-team-skills.test.mjs scripts/check-game-team-design.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
@@ -117,6 +121,7 @@ test('root builds and pre-push retain the architecture gate', async () => {
   );
 
   for (const workflowPath of [
+    '.github/workflows/ci.yml',
     '.github/workflows/deploy-cloudflare-pages.yml',
   ]) {
     const workflow = await readFile(resolve(repositoryRoot, workflowPath), 'utf8');
@@ -132,7 +137,57 @@ test('root builds and pre-push retain the architecture gate', async () => {
   }
 });
 
-test('CI test discovery follows the pre-push command and ignores comments, strings and script arguments', async () => {
+test('the CI matrix covers exactly the local seven gates, including every shard command', async () => {
+  const { scripts } = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
+  const gates = scripts['test:ci'].split('&&').map(command => ReadNpmScriptName(command.trim()));
+  assert.equal(gates.length, 7);
+  const matrixScripts = await ReadCiScriptNames();
+  assert.equal(new Set(matrixScripts).size, matrixScripts.length, 'matrix commands must not run twice');
+  for (const script of matrixScripts) {
+    assert.ok(gates.some(gate => script === gate || script.startsWith(`${gate}:`)), `${script} belongs to a test:ci gate`);
+  }
+  for (const gate of gates) {
+    const shards = matrixScripts.filter(script => script === gate || script.startsWith(`${gate}:`));
+    assert.deepEqual(
+      shards.flatMap(script => ExpandScriptCommands(scripts, script)).sort(),
+      ExpandScriptCommands(scripts, gate).sort(),
+      `${gate}: the matrix must execute every command exactly once`,
+    );
+  }
+  const workflow = await readFile(resolve(repositoryRoot, '.github/workflows/ci.yml'), 'utf8');
+  const deploy = await readFile(resolve(repositoryRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8');
+  for (const trigger of ['pull_request', 'workflow_dispatch', 'workflow_call']) assert.match(workflow, new RegExp(`^  ${trigger}:`, 'm'));
+  assert.doesNotMatch(workflow, /^  push:/m);
+  assert.deepEqual(
+    [...workflow.matchAll(/^      - "([^"]+)"/gm)].map(match => match[1]),
+    [...deploy.matchAll(/^      - "([^"]+)"/gm)].map(match => match[1]),
+    'PR checks and main deployment must use the same paths filter',
+  );
+  assert.match(workflow, /permissions:\s+contents: read/);
+  assert.match(workflow, /concurrency:\s+group: "ci-\$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}"\s+cancel-in-progress: true/);
+  assert.match(workflow, /fail-fast: false/);
+  assert.match(workflow, /fetch-depth: 1/);
+  assert.doesNotMatch(workflow, /fetch-depth: 0|test:uiux-browser|secrets\./);
+  assert.match(workflow, /node-version: 24\s+cache: npm/);
+  assert.match(workflow, /run: \$\{\{ matrix\.command \}\}/);
+  for (const action of ['actions/checkout@v7', 'actions/setup-node@v6']) {
+    assert.ok(workflow.includes(action) && deploy.includes(action), `${action} stays consistent across workflows`);
+  }
+});
+
+test('CI replaces the pre-push hook and leaves Brave verification as a manual local command', async () => {
+  const { scripts } = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
+  assert.equal(Object.hasOwn(scripts, 'prepare'), false);
+  assert.doesNotMatch(scripts['test:cloudflare-deploy'], /check-git-hooks/);
+  for (const path of ['.githooks', 'scripts/install-git-hooks.mjs', 'scripts/check-git-hooks.test.mjs']) {
+    await assert.rejects(access(resolve(repositoryRoot, path)), { code: 'ENOENT' });
+  }
+  assert.doesNotMatch(await readFile(resolve(repositoryRoot, '.gitattributes'), 'utf8'), /\.githooks/);
+  assert.equal(scripts['test:uiux-browser'], 'node scripts/run-hub-uiux-browser.mjs');
+  assert.doesNotMatch(ExpandScriptCommands(scripts, 'test:ci').join('\n'), /run-hub-uiux-browser/);
+});
+
+test('CI test discovery follows npm gates and shards and ignores comments, strings and script arguments', async () => {
   const { FindCiTestFiles } = await import('./ci-test-files.mjs');
   const fixture = await mkdtemp(resolve(tmpdir(), 'ci-test-files-'));
   const files = {
@@ -170,13 +225,15 @@ test('CI test discovery follows the pre-push command and ignores comments, strin
   }
   for (const path of ['scripts/argument.test.mjs', 'scripts/after.test.mjs', 'scripts/regex.test.mjs', 'scripts/commented.test.mjs', 'scripts/block.test.mjs', 'scripts/string.test.mjs',
     'scripts/local.test.mjs', 'scripts/other.test.mjs', 'scripts/orphan.test.mjs']) {
-    assert.equal(reached.has(path), false, `${path} does not run in the pre-push command`);
+    assert.equal(reached.has(path), false, `${path} does not run in the CI command`);
   }
   assert.ok(FindCiTestFiles(fixture, 'test:other').has('scripts/other.test.mjs'));
+  const matrixReached = FindCiTestFiles(fixture, ['test:all', 'test:other']);
+  assert.deepEqual([...matrixReached].sort(), [...reached, 'scripts/other.test.mjs'].sort());
   assert.throws(() => FindCiTestFiles(fixture, 'test:missing'), /runs a missing npm script: test:missing/);
 });
 
-test('every test file runs in pre-push except the documented optional suites', async () => {
+test('every test file runs in the CI matrix and local aggregate except the documented optional suites', async () => {
   const { FindCiTestFiles } = await import('./ci-test-files.mjs');
   const rootPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
   // These need a local Brave or the SEO build and remain opt-in (AGENTS.md, CI/CD).
@@ -186,16 +243,17 @@ test('every test file runs in pre-push except the documented optional suites', a
   };
   const testFiles = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '*.test.mjs'],
     { cwd: repositoryRoot, encoding: 'utf8' }).split('\0').filter(path => path && existsSync(resolve(repositoryRoot, path)));
-  const reached = FindCiTestFiles(repositoryRoot);
+  const reached = FindCiTestFiles(repositoryRoot, await ReadCiScriptNames());
+  assert.deepEqual([...reached].sort(), [...FindCiTestFiles(repositoryRoot)].sort(), 'the CI matrix and test:ci must reach the same files');
   assert.deepEqual(
     testFiles.filter(path => !reached.has(path)).sort(),
     Object.keys(localOnly).sort(),
-    'test:ci: run each new test file from a pre-push gate command, or import it from a suite that already runs there.',
+    'test:ci and ci.yml: run each new test file from a gate command, or import it from a suite that already runs there.',
   );
   for (const [path, script] of Object.entries(localOnly)) assert.ok(rootPackage.scripts[script].includes(path), `${script} runs ${path}`);
 });
 
-test('every R2 game has its own test suite in pre-push', async () => {
+test('every R2 game has its own test suite in the CI matrix', async () => {
   const { FindCiTestFiles } = await import('./ci-test-files.mjs');
   // Games migrated before the scripts/check-<gameId>-game.test.mjs convention keep their migration suite.
   const ownSuites = {
@@ -210,10 +268,33 @@ test('every R2 game has its own test suite in pre-push', async () => {
     'oculomotor-training': 'scripts/check-oculomotor-migration.test.mjs',
     'reading-training': 'scripts/check-reading-training-migration.test.mjs',
   };
-  const reached = FindCiTestFiles(repositoryRoot);
+  const reached = FindCiTestFiles(repositoryRoot, await ReadCiScriptNames());
   const missing = expectedOfficialGameIds.filter(gameId => !reached.has(ownSuites[gameId] ?? `scripts/check-${gameId}-game.test.mjs`));
-  assert.deepEqual(missing, [], 'test:ci: add scripts/check-<gameId>-game.test.mjs and run it from a pre-push gate.');
+  assert.deepEqual(missing, [], 'test:ci and ci.yml: add scripts/check-<gameId>-game.test.mjs and run it from a CI gate.');
 });
+
+async function ReadCiScriptNames() {
+  const workflow = await readFile(resolve(repositoryRoot, '.github/workflows/ci.yml'), 'utf8');
+  const commands = [...workflow.matchAll(/^\s+command: ([^\r\n]+)/gm)].map(match => match[1]);
+  assert.ok(commands.length > 0, 'ci.yml must declare matrix commands');
+  return commands.map(ReadNpmScriptName);
+}
+
+function ReadNpmScriptName(command) {
+  const match = command.match(/^npm run (test:[\w:-]+)$/);
+  assert.ok(match, `Expected an npm test gate, got: ${command}`);
+  return match[1];
+}
+
+function ExpandScriptCommands(scripts, name, parents = []) {
+  assert.ok(Object.hasOwn(scripts, name), `missing npm script: ${name}`);
+  assert.ok(!parents.includes(name), `cyclic npm script: ${name}`);
+  return scripts[name].split('&&').flatMap(part => {
+    const command = part.trim();
+    const nested = command.match(/^npm run ([\w:-]+)$/);
+    return nested ? ExpandScriptCommands(scripts, nested[1], [...parents, name]) : [command];
+  });
+}
 
 test('browser smoke checks retain Brave support on Windows and macOS', async () => {
   const windowsBravePath = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';

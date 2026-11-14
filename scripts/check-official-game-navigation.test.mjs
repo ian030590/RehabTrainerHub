@@ -41,13 +41,15 @@ test('launcher falls back to its cached response offline and activation removes 
   assert.equal(await response.text(), '<!doctype html><p>Legacy game</p>');
 });
 
-test('pre-push retains the navigation regression through the pwa gate', async () => {
+test('CI retains the navigation regression through the pwa gate', async () => {
   const pkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
   assert.match(pkg.scripts['test:pwa'], /npm run test:pwa-navigation/);
   assert.equal(pkg.scripts['test:pwa-navigation'], 'node --test scripts/check-official-game-navigation.test.mjs');
   assert.match(pkg.scripts['test:ci'], /npm run test:pwa(?: &&|$)/);
   const { FindCiTestFiles } = await import('./ci-test-files.mjs');
   assert.ok(FindCiTestFiles(root).has('scripts/check-official-game-navigation.test.mjs'));
+  const workflow = await readFile(resolve(root, '.github/workflows/ci.yml'), 'utf8');
+  assert.match(workflow, /command: npm run test:pwa(?:\r?\n|$)/);
 });
 
 async function CreateWorker(t, scope = basePath, shellUrls = [scope + 'runtime/manifest.json', scope + 'instructions.html']) {

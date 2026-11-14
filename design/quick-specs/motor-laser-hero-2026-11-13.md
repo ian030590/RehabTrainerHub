@@ -39,7 +39,7 @@ No。此變更沿用既有遊戲，設計差異記錄於本文件。
 - 本機候選 `motor-cortex-rehab@2.1.0`，13 檔，`contentSha256: 4698ab6a2488f731ab363145ef996f758dcf6b109d3a0e23d7c89200d1a9776a`。只執行 `node scripts/publish-official-game.mjs motor-cortex-rehab --dry-run`，未發布、部署、commit 或 push。
 - TDD 先失敗於缺少敵人狀態／音效模組；另重現背景間隔仍累積 450 ms、縮小場景時敵人超出邊界，以及原 560／760／980 ms 不符合新維持時間。修正後，下列相關回歸 153/153 通過：`node --test scripts/check-motor-cortex-migration.test.mjs scripts/check-motor-cortex-tutorial.test.mjs scripts/check-motor-cortex-bridge.test.mjs scripts/check-r2-game-fullscreen.test.mjs scripts/check-r2-settings-controls.test.mjs scripts/check-r2-settings-memory.test.mjs`。
 - 遊戲 build、`tsc -p apps/rehabtrainerhub/tsconfig.games.json`、`npm run test:naming`、套件 dry run 通過。
-- 本機 Brave：`node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab` 加上 `--standalone --mobile`、`--standalone --wide --english --right`、`--standalone --tablet --left --vertical` 三組全部通過。涵蓋 CC0 圖像載入與步伐交替、設定、五步教學、相機同意、全螢幕、45 秒模型推論、穩定命中擊殺、單一敵人計分、成果圖表、返回及相機停止。三組已接入 `npm run test:uiux-browser`，由既有 pre-push hook 執行；需安裝 Brave，Linux 一般 gate 不包含感測瀏覽器流程。
+- 本機 Brave：`node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab` 加上 `--standalone --mobile`、`--standalone --wide --english --right`、`--standalone --tablet --left --vertical` 三組全部通過。涵蓋 CC0 圖像載入與步伐交替、設定、五步教學、相機同意、全螢幕、45 秒模型推論、穩定命中擊殺、單一敵人計分、成果圖表、返回及相機停止。三組已接入 `npm run test:uiux-browser`，需安裝 Brave 並在本機手動執行；GitHub CI 的一般 gate 不包含感測瀏覽器流程。
 - 完整 `test:game-architecture` 首次為 1400 通過／6 失敗；其中本次新增音效相依造成的兩項全螢幕測試缺少 mock 已修復，該檔 18/18 通過。另四項是既有 `check-codex-agent-wrapper.test.mjs` 的 Windows Bash 環境／路徑／暫存清理失敗，未修改 wrapper 或略過測試，不宣稱完整 gate 通過。
 - 截圖與執行紀錄保留於 `.tmp/motor-laser-validation/`；原始素材授權、來源及六個素材的 SHA-256 位於遊戲自己的 `public/assets/laser-hero/`。
 

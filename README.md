@@ -55,9 +55,9 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 npm install
 ```
 
-安裝完成後會自動啟用 `.githooks/pre-push`，每次 `git push` 前執行原 CI 的七組測試；任何一組失敗就停止推送。已有相依套件的工作目錄可執行 `npm run prepare` 啟用，或用 `npm run test:ci` 手動執行相同檢查。GitHub Actions 保留建置與部署，不再重跑這些測試。
+七項 gate 由 GitHub Actions 的 `.github/workflows/ci.yml` 並行執行；部署 workflow 透過 `workflow_call` 重用，全部通過才建置與部署。本機可用 `npm run test:ci` 執行完整檢查。`npm run test:uiux-browser` 需要 Brave 與相應 build，請在本機手動執行；安裝套件不設定 Git hook。
 
-Dependency installation enables `.githooks/pre-push`. Every push runs all seven former CI gates and stops on failure. Run `npm run prepare` to enable it in an existing checkout, or `npm run test:ci` to run the same checks manually. GitHub Actions handles builds and deployment.
+GitHub Actions runs all seven gates in `.github/workflows/ci.yml`; deployment reuses that workflow and waits for every gate to pass. Run `npm run test:ci` for the complete local checks. Run `npm run test:uiux-browser` manually with local Brave and the required builds. Dependency installation does not configure Git hooks.
 
 > [!NOTE]
 > **雲端硬碟 / 無 Symlink 支援環境注意事項（例如 Windows pCloud、網路磁碟等）**：
@@ -82,7 +82,7 @@ Dependency installation enables `.githooks/pre-push`. Every push runs all seven 
 
 | 測試指令 / Command | 驗證項目 |
 | --- | --- |
-| `npm run test:ci` | 執行 pre-push 的完整七組測試：命名、PWA、遊戲架構、Hub Functions、runner、入口流程及部署檢查 |
+| `npm run test:ci` | 本機執行與 GitHub Actions 相同的完整七組測試：命名、PWA、遊戲架構、Hub Functions、runner、入口流程及部署檢查 |
 | `npm run test:entrypoints` | 驗證入口流程、白畫面防護、訓練流程、jsPsych 生命週期與 i18n 字典完整性 |
 | `npm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
 | `npm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
@@ -90,6 +90,7 @@ Dependency installation enables `.githooks/pre-push`. Every push runs all seven 
 | `npm run test:game-architecture` | 驗證逐遊戲目錄、settings schema、統一 config UI、iframe 與 postMessage 架構契約 |
 | `npm run test:game-architecture:built` | 驗證 Hub 建置產物只有獨立 `/games/{gameId}/`，且沒有 `/runtimes/*` |
 | `npm run test:game-architecture:browser` | 使用本機 Brave 驗證大廳可開啟由 `settings.json` 生成的統一 config UI |
+| `npm run test:uiux-browser` | 需要本機 Brave 與相應 build 的手動 UI／遊戲流程驗收，不在 GitHub CI 執行 |
 | `npm run test:pwa` | 驗證 Hub 及各練習模組的 PWA Manifest 與 Assets |
 | `npm run test:naming` | 檢查程式碼命名規範與保留字元衝突 |
 | `npm run test:seo` | 檢查可索引頁面之 SEO Meta、Canonical、JSON-LD 與繁中預渲染結構 |

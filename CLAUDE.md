@@ -30,7 +30,7 @@ npm run sync:games              # 修改 games/catalog.ts 或遊戲 workspace �
 npm run sync:team-skills        # 修改 .claude/skills 後同步 Codex 團隊技能轉接器
 ```
 
-七項 CI gate（`ci.yml` 與 `deploy-cloudflare-pages.yml` 的 matrix 相同，新增 gate 須兩份同步並更新 `AGENTS.md` CI 節）：
+七項 CI gate 由 `ci.yml` 的共用 matrix 執行；`deploy-cloudflare-pages.yml` 透過 `verify` job 以 `workflow_call` 重用，全部通過才部署。本機完整執行用 `npm run test:ci`；新增 gate 須同步 root `test:ci`、`ci.yml` matrix 與 `AGENTS.md` CI 節。遊戲架構拆成 types／tests 兩個 job，合計八個並行 job，涵蓋原七項 gate：
 
 ```bash
 npm run test:naming
@@ -49,6 +49,7 @@ npm run test:cloudflare-deploy
 
 其他：
 - `npm run test:seo`：SEO／文章預渲染（不在 CI matrix，SEO 變更須本機跑）。
+- `npm run test:uiux-browser`：本機手動 Brave 驗收，需先有相應 build；不由 Git hook 或 GitHub CI 執行。
 - 本機 Brave 整合（不進 Linux CI，只寫本機 SQLite）：`node scripts/check-r2-game-browser.mjs --game <gameId> --lobby`，常用旗標 `--mobile`、`--tablet`、`--signed-in --english`、`--session-failure`、`--revoke`、`--standalone`；`--remote`／`--production-hub` 才讀正式站。並行 build 時用 `HUB_OUTPUT_ROOT`／`RUNNER_OUTPUT_ROOT` 指向固定輸出副本。
 - 發布：`node scripts/publish-official-game.mjs <gameId> --dry-run`（直接呼叫腳本，避免 npm 吞掉旗標）；回退 `--activate-version <ver>`。同遊戲發布／回退不可平行。
 - Workers（Worker `trainerhub`／`trainerhubgames`，設定在 `apps/*/wrangler.workers.jsonc`）：CI 以 `scripts/deploy-cloudflare-workers.mjs` 部署（`--dry-run` 只列指令），`npm run build:workers` 編譯 Functions，本機 `npm run test:workers-local`。Pages 專案已於 2026-10-19 刪除，`wrangler.toml` 留作 binding 對照；回退方式（Worker 版本回退）見 `docs/workers-migration-report.md`。

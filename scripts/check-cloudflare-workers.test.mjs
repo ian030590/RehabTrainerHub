@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import test from 'node:test';
@@ -479,7 +479,66 @@ test('the deploy workflow deploys Workers by default and Pages only when the rep
     'ANONYMOUS_RECORDS_ENABLED', 'TRAINING_PLANS_ENABLED']) {
     assert.match(workersStep, new RegExp(`${name}: \\$\\{\\{ (?:secrets|vars)\\.${name} \\}\\}`), name);
   }
-  assert.doesNotMatch(deploy, /^  verify:|matrix\.command/m);
+  assert.match(deploy, /^  verify:\n    uses: \.\/\.github\/workflows\/ci\.yml$/m);
+  assert.match(deploy, /needs: \[verify, deployment_scope\]/);
+  assert.doesNotMatch(deploy, /matrix\.command|run: npm run test:/);
+});
+
+test('deployment caches build intermediates with dependency, source and public configuration keys', () => {
+  const deploy = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
+  const nextCache = StepBlock(deploy, 'Cache Next.js build');
+  const turboCache = StepBlock(deploy, 'Cache Turbo build');
+  for (const step of [nextCache, turboCache]) {
+    assert.match(step, /uses: actions\/cache@v5/);
+    assert.match(step, /hashFiles\('package-lock\.json'\)/);
+    assert.match(step, /steps\.build-cache\.outputs\.sources/);
+    assert.match(step, /steps\.build-cache\.outputs\.config/);
+    assert.doesNotMatch(step, /path:.*(?:out|dist|node_modules)/);
+  }
+  assert.match(nextCache, /path: apps\/rehabtrainerhub\/\.next\/cache\n/);
+  assert.match(nextCache, /restore-keys:/);
+  assert.match(turboCache, /path: \.turbo\/cache\n/);
+  assert.doesNotMatch(turboCache, /restore-keys:/);
+  const fingerprint = StepBlock(deploy, 'Fingerprint build inputs');
+  assert.match(fingerprint, /BUILD_SETTINGS: \|/);
+  for (const name of ['TURNSTILE_SITE_KEY', 'TURNSTILE_REQUIRED', 'TURNSTILE_RECORDS_REQUIRED', 'CF_WEB_ANALYTICS_TOKEN', 'AI_ASSET_BASE_URL']) {
+    assert.ok(fingerprint.includes(`toJSON(vars.${name})`), `${name} affects the build cache`);
+  }
+  assert.doesNotMatch(fingerprint, /toJSON\(vars\)|secrets\.|GAME_RELEASE_OWNER_USER_ID|TRAINING_PLANS_ENABLED/);
+  assert.match(fingerprint, /git.*ls-files/);
+  const build = StepBlock(deploy, 'Build all apps');
+  assert.match(build, /run: npm run build:cloudflare:only/);
+  assert.ok(deploy.indexOf('Cache Next.js build') < deploy.indexOf('Build all apps'));
+  assert.ok(deploy.indexOf('Cache Turbo build') < deploy.indexOf('Build all apps'));
+});
+
+test('Next output cleanup retains incremental cache and removes stale build and export files', (context) => {
+  const fixture = mkdtempSync(join(tmpdir(), 'rehab-next-cleanup-'));
+  context.after(() => rmSync(fixture, { recursive: true, force: true }));
+  mkdirSync(join(fixture, 'scripts'), { recursive: true });
+  const script = join(fixture, 'scripts/clean-next-output.mjs');
+  copyFileSync(resolve(defaultRepoRoot, 'apps/rehabtrainerhub/scripts/clean-next-output.mjs'), script);
+  const clean = () => {
+    const result = spawnSync(process.execPath, [script], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  };
+  clean();
+  for (const [file, content] of Object.entries({
+    '.next/cache/webpack/incremental.bin': 'retained cache bytes',
+    '.next/server/app/index.html': 'stale server output',
+    '.next/build-manifest.json': 'stale manifest',
+    '.next/lock': 'stale lock',
+    'out/index.html': 'stale export',
+  })) {
+    mkdirSync(dirname(join(fixture, file)), { recursive: true });
+    writeFileSync(join(fixture, file), content);
+  }
+  clean();
+  assert.equal(readFileSync(join(fixture, '.next/cache/webpack/incremental.bin'), 'utf8'), 'retained cache bytes');
+  assert.deepEqual(readdirSync(join(fixture, '.next')), ['cache']);
+  assert.equal(existsSync(join(fixture, 'out')), false);
+  clean();
+  assert.equal(readFileSync(join(fixture, '.next/cache/webpack/incremental.bin'), 'utf8'), 'retained cache bytes');
 });
 
 function StepBlock(workflow, name) {

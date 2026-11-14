@@ -7,8 +7,6 @@ apps/usergamerunner/runtime/eye-tracking-model/*/*.bin -text
 # The released legacy bridge has one immutable byte sequence on every OS.
 apps/usergamerunner/runtime/gameBridge-1.0.0.js text eol=lf
 
-.githooks/* text eol=lf
-
 # Game team (CCGS) LF line endings
 .claude/**/*.sh text eol=lf
 .claude/**/*.awk text eol=lf

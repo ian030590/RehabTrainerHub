@@ -22,6 +22,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
   deployment_scope:
     runs-on: ubuntu-latest
     outputs:
@@ -39,7 +42,7 @@ jobs:
         run: node scripts/pages-deployment-scope.mjs
 
   deploy:
-    needs: [deployment_scope]
+    needs: [verify, deployment_scope]
     if: ${{ github.ref == 'refs/heads/main' && needs.deployment_scope.outputs.pages_required == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -97,6 +100,41 @@ jobs:
           R2_AI_ASSET_BUCKET: ${{ vars.R2_AI_ASSET_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Fingerprint build inputs
+        id: build-cache
+        env:
+          BUILD_SETTINGS: |
+            ${{ toJSON(vars.TURNSTILE_SITE_KEY) }}
+            ${{ toJSON(vars.TURNSTILE_REQUIRED) }}
+            ${{ toJSON(vars.TURNSTILE_RECORDS_REQUIRED) }}
+            ${{ toJSON(vars.CF_WEB_ANALYTICS_TOKEN) }}
+            ${{ toJSON(vars.AI_ASSET_BASE_URL) }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { createHash } from 'node:crypto';
+          import { appendFileSync, readFileSync } from 'node:fs';
+          const files = execFileSync('git', ['ls-files', '-z', '--', 'apps', 'packages', 'scripts', 'package.json', 'turbo.json', '.npmrc', '.github/workflows/deploy-cloudflare-pages.yml'], { encoding: 'utf8' }).split('\0').filter(Boolean).sort();
+          const sources = createHash('sha256');
+          for (const file of files) sources.update(file).update('\0').update(readFileSync(file)).update('\0');
+          const config = createHash('sha256').update(process.env.BUILD_SETTINGS).digest('hex');
+          appendFileSync(process.env.GITHUB_OUTPUT, `sources=${sources.digest("hex")}\nconfig=${config}\n`);
+          NODE
+
+      - name: Cache Next.js build
+        uses: actions/cache@v5
+        with:
+          path: apps/rehabtrainerhub/.next/cache
+          key: ${{ runner.os }}-node24-next-v1-${{ hashFiles('package-lock.json') }}-${{ steps.build-cache.outputs.config }}-${{ steps.build-cache.outputs.sources }}
+          restore-keys: |
+            ${{ runner.os }}-node24-next-v1-${{ hashFiles('package-lock.json') }}-${{ steps.build-cache.outputs.config }}-
+
+      - name: Cache Turbo build
+        uses: actions/cache@v5
+        with:
+          path: .turbo/cache
+          key: ${{ runner.os }}-node24-turbo-v1-${{ hashFiles('package-lock.json') }}-${{ steps.build-cache.outputs.config }}-${{ steps.build-cache.outputs.sources }}
 
       - name: Build all apps
         run: npm run build:cloudflare:only
