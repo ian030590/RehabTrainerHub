@@ -433,6 +433,8 @@ try {
   await until(() => evaluate('Boolean(document.querySelector("iframe"))'), 'Hub game iframe');
   console.log('Hub iframe ready.');
   if (!standalone) {
+    // Reduced motion turns the gutter release into a one-frame width transition.
+    await until(() => evaluate("document.querySelector('dialog[open]')?.getAnimations().every(animation => animation.playState !== 'running')"), 'Hub game dialog animations settled before viewport measurement');
     const layout = await evaluate(`(() => {
       const frame = document.querySelector('dialog iframe').getBoundingClientRect();
       const documentWidth = document.documentElement.clientWidth;

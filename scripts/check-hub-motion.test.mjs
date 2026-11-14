@@ -32,6 +32,36 @@ function InstallGlobals(values) {
   return () => { for (const [key, descriptor] of old) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else delete globalThis[key]; } };
 }
 
+function CssRules(source) {
+  const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selectors, declarations]) => ({
+    selectors: selectors.split(',').map(selector => selector.trim().replace(/\s*([()[\]])\s*/g, '$1')),
+    declarations: Object.fromEntries(declarations.split(';')
+      .map(declaration => declaration.trim().split(/\s*:\s*/, 2))
+      .filter(parts => parts.length === 2)),
+  }));
+}
+
+test('open game overlays release the stable lobby gutter and lock root scrolling', async context => {
+  const [motionCss, globalsCss] = await Promise.all([
+    readFile(new URL('hubMotion.css', appRoot), 'utf8'),
+    readFile(new URL('globals.css', appRoot), 'utf8'),
+  ]);
+  const motionRules = CssRules(motionCss);
+  const globalRules = CssRules(globalsCss);
+  assert.ok(motionRules.some(rule => rule.selectors.includes('html')
+    && rule.declarations['scrollbar-gutter'] === 'stable'), 'The lobby keeps its stable gutter when no game overlay is open.');
+  for (const overlayClass of ['training-overlay', 'package-game-overlay']) {
+    await context.test(overlayClass, () => {
+      const selector = `html:has(dialog.${overlayClass}[open])`;
+      const rule = globalRules.find(candidate => candidate.selectors.includes(selector));
+      assert.ok(rule, `${overlayClass} needs a root scroll-lock rule while open.`);
+      assert.equal(rule.declarations.overflow, 'hidden', `${overlayClass} must hide the lobby scrollbar.`);
+      assert.equal(rule.declarations['scrollbar-gutter'], 'auto', `${overlayClass} must release the reserved gutter to fill the visible viewport.`);
+    });
+  }
+});
+
 test('card stagger animates only newly visible results and keeps every action available', async () => {
   const motion = await LoadModule(new URL('hubMotion.ts', appRoot));
   const cards = [Element('retained'), Element('first', 20), Element('second', 240), Element('offscreen', 1200)];

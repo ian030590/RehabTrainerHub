@@ -483,9 +483,11 @@ summary:focus-visible {
   font-weight: 800;
 }
 
-/* Training overlay: full-viewport native <dialog> rendered over the lobby */
-html:has(dialog.training-overlay[open]) {
+/* Release the stable gutter so game dialogs fill the visible viewport. */
+html:has(dialog.training-overlay[open]),
+html:has(dialog.package-game-overlay[open]) {
   overflow: hidden;
+  scrollbar-gutter: auto;
 }
 
 .training-overlay {

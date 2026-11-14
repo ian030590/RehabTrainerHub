@@ -160,11 +160,13 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
     assert.equal(getSaveAttempts(),0); return;
   }
   await until(async () => {
-    if (await game('Boolean(document.querySelector(".experiment-results"))')) return true;
-    await CheckRaisePrompt(game);
-    const encounter = await game(`(() => {const enemy=document.querySelector('.motor-enemy');return {
+    const encounter = await game(`(() => {
+      if (document.querySelector('.experiment-results')) return { complete: true };
+      const enemy=document.querySelector('.motor-enemy');return { complete: false,
       count:document.querySelectorAll('.motor-enemy').length,number:Number(enemy.dataset.enemyNumber),
       defeated:enemy.classList.contains('is-defeated'),kills:Number(document.querySelectorAll('.motor-cortex-hud strong')[3].textContent)};})()`);
+    if (encounter.complete) return true;
+    await CheckRaisePrompt(game);
     assert.equal(encounter.count, 1);
     assert.equal(encounter.number, encounter.kills + (encounter.defeated ? 0 : 1), 'A defeat scores once before the next enemy appears.');
     // Move the recorded camera image towards the target; inference and gameplay stay real.
@@ -195,8 +197,14 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
     const record=JSON.parse(rows[0].payload_json);
     assert.deepEqual(record.config,{drill,difficulty:'beginner',durationSec:45,handChoice:hand,targetSizePercent:130,speedPercent:70,raiseLinePercent});
     assert.ok(record.score.summary.raised>0&&record.score.summary.raised<=record.score.summary.tracking);
-    assert.equal(record.score.rounds.length,record.score.summary.reps+record.score.summary.interrupted);
-    assert.ok(record.score.rounds.length>0);assert.ok(record.score.summary.duration>=45);assert.ok(record.score.summary.tracking>0);
+    assert.deepEqual(record.score.rounds, []);
+    assert.equal(record.scoreRoundCount, record.score.summary.reps + record.score.summary.interrupted);
+    assert.ok(record.scoreRoundCount > 0);
+    const roundFile = record.rawFiles.find(file => file.kind === 'rounds');
+    assert.equal(roundFile.rows, record.scoreRoundCount);
+    assert.match(roundFile.sha256, /^[a-f0-9]{64}$/);
+    assert.ok(roundFile.key.includes('motor-cortex-rehab'));
+    assert.ok(record.score.summary.duration>=45);assert.ok(record.score.summary.tracking>0);
     assert.equal(record.metadata.release_version,version.replaceAll('.','_'));assert.ok(getSaveAttempts()>=2);
     assert.equal(getSessionAttempts(),sessionFailure?2:1);
   }
