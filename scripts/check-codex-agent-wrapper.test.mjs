@@ -53,14 +53,14 @@ test('invalid arguments and empty briefs exit 2', () => {
     ['gameplay-programmer', '--task-file'],
     [],
   ]) {
-    const result = Run(args);
+    const result = Run(args, null);
     assert.equal(result.status, 2, result.stderr);
   }
   assert.equal(Run(['gameplay-programmer', '--dry-run'], ' \n\t').status, 2);
 });
 
 test('workers cannot start another worker', () => {
-  const result = Run(['gameplay-programmer', '--dry-run'], undefined, { CCGS_CODEX_WORKER: '1' });
+  const result = Run(['gameplay-programmer', '--dry-run'], null, { CCGS_CODEX_WORKER: '1' });
   assert.equal(result.status, 3);
   assert.match(result.stderr, /a Codex worker cannot start another agent/);
 });
@@ -155,7 +155,7 @@ test('workspace writes produce guard observations and audit records without chan
     assert.match(audit, /\d{8}_\d{6} \| codex \| Agent invoked: gameplay-programmer \(sandbox workspace-write\)/);
     assert.match(audit, /\| codex \| Agent completed: gameplay-programmer \(exit 0\)/);
     writeFileSync(path.join(tempDir, '.claude/agents/gameplay-programmer.md'), '---\ntools: Read, Grep\n---\n');
-    const noWriteTools = Run(['gameplay-programmer', '--sandbox', 'workspace-write', '--dry-run'], 'Review only.', {}, tempDir);
+    const noWriteTools = Run(['gameplay-programmer', '--sandbox', 'workspace-write', '--dry-run'], null, {}, tempDir);
     assert.equal(noWriteTools.status, 2, noWriteTools.stderr);
     assert.match(noWriteTools.stderr, /has no Write\/Edit tools/);
   } finally {
