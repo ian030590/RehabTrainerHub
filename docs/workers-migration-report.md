@@ -27,13 +27,13 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 | `apps/usergamerunner/package.json`、`packages/ui/src/officialGameReleases.json`、`functions/api/games.js` | runner origin 改為 `https://trainerhubgames.rainbowh9490.workers.dev`（十款 R2 遊戲的可信 origin 與 Hub 預設值）。 |
 | `apps/*/worker/index.js`、`workers/shared/pagesAssetCompat.js` | Worker 入口載入 `wrangler pages functions build` 編譯的原 Functions；相容層只包住 `ASSETS`，補回 Pages 對靜態檔的預設標頭、308 轉址與 404 `no-store`。 |
 | `scripts/workers-apps.mjs`、`build-workers.mjs`、`deploy-cloudflare-workers.mjs` | 設定比對、Functions 編譯、部署（D1 migrations → runner → Hub，Hub secrets 以 `--secrets-file` 隨同一版本上傳）。缺少 Hub routes、runner origin 與 registry 不一致或 runner 綁到私人資源時拒絕部署。 |
-| `.github/workflows/deploy-cloudflare-pages.yml` | 預設執行 Workers 步驟，只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=pages` 時改跑 Pages 步驟，拿掉變數不會重建已刪除的 Pages 專案；Workers 步驟只在 `main` 執行，手動從其他分支觸發不會覆蓋正式站。 |
+| `.github/workflows/deploy-cloudflare-pages.yml` | 只部署 Workers，Pages 備援已移除。`build` 與 `verify`、`deployment_scope` 並行，將建置與 Functions 輸出存入含隱藏檔的 `worker-build` artifact；`deploy` 等待三者成功且需部署時下載，以 `--skip-functions-build` 部署。只有 `main` 可部署正式站，缺少編譯輸出時拒絕部署。 |
 | `packages/ui/src/embeddedTraining.ts` | `IsHubOrigin` 不再信任 `*.rehabtrainerhub.pages.dev`。Pages 專案刪除後這個名稱可能被他人取得；遊戲頁本身有 `frame-ancestors 'self'`，原本就不能被其他網站嵌入。 |
-| `scripts/pages-apps.mjs`、`sync-cloudflare-pages-domains.mjs` | Pages 回退流程遇到 workers.dev origin 時不嘗試綁成 Pages 自訂網域。 |
+| `scripts/pages-apps.mjs`、`write-pages-env.mjs`、`pages-deployment-scope.mjs` | Workers 流程仍使用 app 探索、環境與部署範圍判斷；Pages 部署、網域與環境同步腳本已移除。 |
 | `scripts/check-r2-game-browser.mjs` | runner origin 改由 `apps/usergamerunner/package.json` 讀取。 |
 | RehabBuilder 移除 | 刪除 `functions/api/builder/*` 與 `_lib/builderAuth.js`、帳號選單的「活動編輯器」連結、投稿頁的 `builder_ticket` 接收流程與開發者文件中的 Builder 文案。原生 HTML 套件投稿保留，原本 Builder 測試中的「原生套件投稿 → 審核 → 保存成績」流程移到 `functions/api/game-submissions.native.test.mjs`。D1 表 `builder_auth_codes` 保留不刪（只存 5 分鐘有效的授權碼，刪表需另一個 migration）。 |
 
-兩個 Pages 專案已於 2026-10-19 刪除（第 5 節）。`wrangler.toml` 留作 binding 對照；Pages 部署腳本只在 `CLOUDFLARE_DEPLOY_TARGET=pages` 時執行，並會重新建立專案。
+兩個 Pages 專案已於 2026-10-19 刪除（第 5 節）。`wrangler.toml` 留作 binding 對照；Pages 備援路徑與腳本已移除，只支援 Workers。`CLOUDFLARE_DEPLOY_TARGET` 已無作用，可刪除；回退使用 Worker 版本（第 6 節）。
 
 ## 3. Pages 與 Workers 的行為差異
 
@@ -84,6 +84,6 @@ Pages 專案 `rehabtrainerhub` 另外設定、CI 沒有同步的變數：擁有�
 
 ## 7. 後續
 
-- Pages 專案刪除後，`BUILDER_CLIENT_SECRET` 等 Pages 變數也一併消失。repo variable `CLOUDFLARE_DEPLOY_TARGET=workers` 已不影響部署結果，可以保留或刪除；不要設成 `pages`。
+- Pages 專案刪除後，`BUILDER_CLIENT_SECRET` 等 Pages 變數也一併消失。Pages 備援路徑已移除，repo variable `CLOUDFLARE_DEPLOY_TARGET` 已無任何作用，可刪除。
 - 舊 runner 的 Pages 專案 `trainerhub-user-games` 曾綁自訂網域 `games.trainerhub.cc`，違反 runner 不得使用 `trainerhub.cc` 子網域的規範；擁有者已於 2026-10-19 移除。
 - 兩個 Worker 都建立後，CI token 的 Workers 權限可以改成只對 `trainerhub`、`trainerhubgames` 的 `Editor`；之後若要新增 Worker，再暫時改回 `Admin`。

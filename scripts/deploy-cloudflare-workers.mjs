@@ -19,6 +19,7 @@ const wranglerPrefix = ['--yes', 'wrangler@4'];
 const assetFileLimitBytes = 25 * 1024 * 1024;
 const deployTimeoutMs = 5 * 60 * 1000;
 const dryRun = process.argv.includes('--dry-run');
+const skipFunctionsBuild = process.argv.includes('--skip-functions-build');
 const validateOutput = !dryRun || process.argv.includes('--validate-output');
 const only = process.argv.find((arg) => arg.startsWith('--only='))?.slice('--only='.length);
 if (only && !['hub', 'gamehost'].includes(only)) throw new Error('--only must be hub or gamehost.');
@@ -40,7 +41,7 @@ const hubSecrets = hub ? CreateHubWorkerSecrets(process.env, apps, { dryRun }) :
 console.log(`Deploying Cloudflare Workers: ${selected.map((app) => `${app.workerName} (${app.configFile})`).join(', ')}`);
 if (validateOutput) for (const app of selected) ValidateOutput(app);
 
-RunNode(['scripts/build-workers.mjs', ...(only ? [`--only=${only}`] : [])]);
+if (!skipFunctionsBuild) RunNode(['scripts/build-workers.mjs', ...(only ? [`--only=${only}`] : [])]);
 
 if (hub) {
   const database = hub.config.d1_databases[0];
@@ -68,6 +69,12 @@ for (const app of selected) {
 function ValidateOutput(app) {
   const output = relative(defaultRepoRoot, app.assetsDirectory).replaceAll('\\', '/');
   if (!existsSync(app.assetsDirectory)) throw new Error(`${output} does not exist. Build ${app.appPath} before deploying.`);
+  if (skipFunctionsBuild && !existsSync(join(app.appDir, '.worker/functions/index.js'))) {
+    throw new Error(`${app.appPath}/.worker/functions/index.js is missing. Run node scripts/build-workers.mjs before deploying.`);
+  }
+  if (skipFunctionsBuild && !existsSync(join(app.assetsDirectory, '.assetsignore'))) {
+    throw new Error(`${output}/.assetsignore is missing. Run node scripts/build-workers.mjs before deploying.`);
+  }
   const forbidden = FindForbiddenAssetFiles(app.assetsDirectory);
   if (forbidden.length > 0) throw new Error(`${output} must not publish: ${forbidden.join(', ')}`);
   const oversized = [];

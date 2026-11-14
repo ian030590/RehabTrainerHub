@@ -55,9 +55,9 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 npm install
 ```
 
-七項 gate 由 GitHub Actions 的 `.github/workflows/ci.yml` 並行執行；部署 workflow 透過 `workflow_call` 重用，全部通過才建置與部署。本機可用 `npm run test:ci` 執行完整檢查。`npm run test:uiux-browser` 需要 Brave 與相應 build，請在本機手動執行；安裝套件不設定 Git hook。
+七項 gate 由 GitHub Actions 的 `.github/workflows/ci.yml` 以九個 matrix job 並行執行，遊戲架構分為 types／tests／games；部署 workflow 透過 `workflow_call` 重用，build 與驗證並行，全部通過且需部署時才下載 artifact 部署 Workers。本機可用 `npm run test:ci` 執行完整檢查。`npm run test:uiux-browser` 需要 Brave 與相應 build，請在本機手動執行；安裝套件不設定 Git hook。
 
-GitHub Actions runs all seven gates in `.github/workflows/ci.yml`; deployment reuses that workflow and waits for every gate to pass. Run `npm run test:ci` for the complete local checks. Run `npm run test:uiux-browser` manually with local Brave and the required builds. Dependency installation does not configure Git hooks.
+GitHub Actions runs all seven gates in nine matrix jobs in `.github/workflows/ci.yml`, with types, tests and games shards for game architecture. Builds run alongside verification; deployment waits for verification, scope and build, then downloads the artifact to deploy Workers. Run `npm run test:ci` for the complete local checks. Run `npm run test:uiux-browser` manually with local Brave and the required builds. Dependency installation does not configure Git hooks.
 
 > [!NOTE]
 > **雲端硬碟 / 無 Symlink 支援環境注意事項（例如 Windows pCloud、網路磁碟等）**：
@@ -75,7 +75,7 @@ GitHub Actions runs all seven gates in `.github/workflows/ci.yml`; deployment re
 | `npm run build` | 執行所有測試驗證與全站 Production 建置 | Run full test gates and build all apps |
 | `npm run build:hub` | 建置 Hub 主平台與每款官方遊戲的獨立 `/games/{gameId}/` 輸出 | Build the Hub and independent `/games/{gameId}/` official game outputs |
 | `npm run build:gamerunner` | 建置隔離遊戲執行器靜態殼層 | Build isolated game runner static shell |
-| `npm run build:cloudflare` | 執行本機完整驗證並建置 Cloudflare Pages 輸出 | Run full local verification and build Cloudflare Pages output |
+| `npm run build:cloudflare` | 執行本機完整驗證並建置 Cloudflare Workers 靜態輸出 | Run full local verification and build Cloudflare Workers static output |
 | `npm run preview:hub` | 預覽 Hub 建置輸出 | Preview built Hub output |
 
 ### 測試與驗證指令 / Verification & Test Commands

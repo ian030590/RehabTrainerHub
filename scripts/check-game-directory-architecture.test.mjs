@@ -104,7 +104,7 @@ test('root builds and reusable CI retain the architecture gate', async () => {
   assert.match(rootPackage.scripts['test:ci'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'npm run test:game-architecture:types && npm run test:game-architecture:tests',
+    'npm run test:game-architecture:types && npm run test:game-architecture:tests && npm run test:game-architecture:games',
   );
   assert.equal(rootPackage.scripts['test:game-architecture:types'], 'tsc -p apps/rehabtrainerhub/tsconfig.games.json');
   assert.equal(
@@ -119,7 +119,19 @@ test('root builds and reusable CI retain the architecture gate', async () => {
     rootPackage.scripts['test:game-architecture:browser'],
     'node --test scripts/check-game-architecture-browser.test.mjs',
   );
+});
 
+test('game suites run as separate Node test processes without static suite imports', async () => {
+  const source = await readFile(resolve(repositoryRoot, 'scripts/check-self-contained-game.test.mjs'), 'utf8');
+  const tree = ts.createSourceFile('check-self-contained-game.test.mjs', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const suiteImports = tree.statements.filter(node => ts.isImportDeclaration(node)
+    && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text.endsWith('.test.mjs'));
+  assert.deepEqual(suiteImports.map(node => node.moduleSpecifier.text), [], 'Pass suites to node --test instead of importing them into one process.');
+  const { scripts } = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
+  assert.equal(scripts['test:game-architecture:games'], 'node --test scripts/check-r2-game-results.test.mjs scripts/check-r2-game-ui.test.mjs scripts/check-r2-game-fullscreen.test.mjs scripts/check-r2-sensor-host.test.mjs scripts/check-r2-game-audio.test.mjs scripts/check-r2-browser-fixtures.test.mjs scripts/check-hart-chart-migration.test.mjs scripts/check-hart-chart-tutorial.test.mjs scripts/check-sart-game.test.mjs scripts/check-ufov-game.test.mjs scripts/check-every-ball-response-game.test.mjs scripts/check-every-ball-response-core.test.mjs scripts/check-tongue-catch-game.test.mjs scripts/check-seagull-flight-game.test.mjs scripts/check-seagull-flight-runtime.test.mjs scripts/check-plus-minus-game.test.mjs scripts/check-letter-memory-game.test.mjs scripts/check-keep-track-game.test.mjs scripts/check-antisaccade-game.test.mjs scripts/check-minesweeper-game.test.mjs scripts/check-whack-a-mole-game.test.mjs scripts/check-simon-says-game.test.mjs scripts/check-memory-match-game.test.mjs scripts/check-sudoku-game.test.mjs scripts/check-maze-game.test.mjs scripts/check-sliding-puzzle-game.test.mjs scripts/check-lights-out-game.test.mjs scripts/check-dots-and-boxes-game.test.mjs scripts/check-hex-game.test.mjs scripts/check-connect4-game.test.mjs scripts/check-tic-tac-toe-game.test.mjs scripts/check-reaction-time-game.test.mjs scripts/check-tower-of-london-game.test.mjs scripts/check-spatial-span-game.test.mjs scripts/check-digit-span-game.test.mjs scripts/check-number-letter-game.test.mjs scripts/check-n-back-game.test.mjs scripts/check-attention-network-task-game.test.mjs scripts/check-stop-signal-game.test.mjs scripts/check-go-nogo-game.test.mjs scripts/check-flanker-game.test.mjs scripts/check-popout-search-game.test.mjs scripts/check-complex-search-game.test.mjs scripts/check-conjunction-search-game.test.mjs scripts/check-exploratory-saccade-game.test.mjs scripts/check-stroop-game.test.mjs scripts/check-pattern-memory-game.test.mjs scripts/check-divided-attention-game.test.mjs scripts/check-time-perception-game.test.mjs scripts/check-attentional-blink-game.test.mjs scripts/check-card-sorting-game.test.mjs scripts/check-simon-task-game.test.mjs scripts/check-continuous-performance-game.test.mjs scripts/check-hex-schulte-game.test.mjs scripts/check-schulte-grid-game.test.mjs');
+});
+
+test('CI installs root and workspace dependencies without audit or funding requests', async () => {
   for (const workflowPath of [
     '.github/workflows/ci.yml',
     '.github/workflows/deploy-cloudflare-pages.yml',
@@ -128,7 +140,7 @@ test('root builds and reusable CI retain the architecture gate', async () => {
     const installSteps = workflow.match(/run: npm ci[^\r\n]*/g) ?? [];
     assert.ok(installSteps.length > 0, `${workflowPath} must install dependencies.`);
     assert.equal(
-      installSteps.every((step) => step === 'run: npm ci --workspaces --include-workspace-root'),
+      installSteps.every((step) => step === 'run: npm ci --workspaces --include-workspace-root --no-audit --no-fund'),
       true,
       `${workflowPath} must install root Vite/runtime dependencies as well as workspaces.`,
     );
@@ -142,6 +154,8 @@ test('the CI matrix covers exactly the local seven gates, including every shard 
   const gates = scripts['test:ci'].split('&&').map(command => ReadNpmScriptName(command.trim()));
   assert.equal(gates.length, 7);
   const matrixScripts = await ReadCiScriptNames();
+  assert.equal(matrixScripts.length, 9);
+  assert.deepEqual(matrixScripts.slice(2, 5), ['test:game-architecture:types', 'test:game-architecture:tests', 'test:game-architecture:games']);
   assert.equal(new Set(matrixScripts).size, matrixScripts.length, 'matrix commands must not run twice');
   for (const script of matrixScripts) {
     assert.ok(gates.some(gate => script === gate || script.startsWith(`${gate}:`)), `${script} belongs to a test:ci gate`);

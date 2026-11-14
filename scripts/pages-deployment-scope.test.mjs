@@ -29,7 +29,7 @@ test('Cloudflare build excludes migrated R2 bundles and workflow gates deploymen
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /--filter=!@rehab-trainer\/game-drawing-defense/);
   const workflow = await readFile(new URL('../.github/workflows/deploy-cloudflare-pages.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /needs: \[verify, deployment_scope\]/);
+  assert.match(workflow, /needs: \[verify, deployment_scope, build\]/);
   assert.match(workflow, /verify:\s+uses: \.\/\.github\/workflows\/ci\.yml/);
   assert.match(workflow, /needs\.deployment_scope\.outputs\.pages_required == 'true'/);
 });

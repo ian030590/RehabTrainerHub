@@ -11,8 +11,8 @@ environment:
 
 Never point the runner at `games.trainerhub.cc`, add it to
 `AUTH_ALLOWED_ORIGINS`, or give it an auth secret, D1 binding, or quarantine
-bucket. `scripts/sync-cloudflare-auth-env.mjs` intentionally excludes the
-`gamehost` application role.
+bucket. `CreateHubWorkerSecrets` in `scripts/workers-apps.mjs` supplies runtime
+secrets only to the Hub; runner deployment strips the auth environment.
 
 ## Cloudflare resources
 
@@ -26,12 +26,12 @@ rehab-game-releases    # immutable approved files, Hub + runner bindings
 Apply the D1 migration before deploying code that exposes the upload API:
 
 ```powershell
-npx wrangler d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.toml
+npx wrangler d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.workers.jsonc
 ```
 
-Set `GAME_RUNNER_ORIGIN` on the Hub Pages project to the exact HTTPS origin of
-the runner. Do not include a path, query, credentials, wildcard, or trailing
-subdomain under `trainerhub.cc`.
+`CreateHubWorkerSecrets` sets `GAME_RUNNER_ORIGIN` on the Hub Worker from the
+runner homepage. It must be the exact HTTPS origin of the runner. Do not include
+a path, query, credentials, wildcard, or trailing subdomain under `trainerhub.cc`.
 
 The runner project needs only this binding:
 

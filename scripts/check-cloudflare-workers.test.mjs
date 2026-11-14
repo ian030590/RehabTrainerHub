@@ -42,7 +42,7 @@ test('Workers use the owner-confirmed names and reuse every Pages binding unchan
   assert.deepEqual(FindWorkerConfigProblems(apps), []);
 
   const pagesHub = DiscoverPagesApps().find((app) => app.role === 'hub');
-  assert.equal(hub.pagesApp.projectName, pagesHub.projectName, 'Pages config stays as the rollback deployment');
+  assert.equal(hub.pagesApp.projectName, pagesHub.projectName, 'Pages config stays as the binding reference');
   assert.deepEqual(hub.config.d1_databases, [{
     binding: 'REHAB_DB',
     database_name: 'rehab_db',
@@ -194,7 +194,7 @@ test('production entry points match the owner-approved C02 origins', () => {
   assert.deepEqual(hub.config.routes, [
     { pattern: hub.hostname, custom_domain: true, zone_id: '5851e45310addcd4587d15f8356340e5' },
   ]);
-  // pages-apps.mjs still names the deleted Pages runner for an explicit CLOUDFLARE_DEPLOY_TARGET=pages deploy.
+  // Discovery retains the deleted Pages runner name as a binding reference.
   assert.equal(runner.pagesApp.deploymentUrl, 'https://trainerhub-user-games.pages.dev');
 
   const unroutedHub = WithConfig(hub, (config) => { delete config.routes; });
@@ -419,6 +419,58 @@ test('deploy dry-run migrates D1, deploys the runner before the Hub, and hands s
   assert.doesNotMatch(runnerOnly.stdout, /rehabtrainerhub\/wrangler\.workers\.jsonc|d1 migrations/);
 });
 
+test('precompiled deploy dry-run skips compilation and keeps migrations, runner and Hub in order', (context) => {
+  const fixture = CreateDeployFixture(context);
+  const result = spawnSync(process.execPath, [join(fixture, 'scripts/deploy-cloudflare-workers.mjs'), '--dry-run', '--skip-functions-build'],
+    { cwd: fixture, encoding: 'utf8' });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  assert.doesNotMatch(output, /\$ node scripts\/build-workers\.mjs/);
+  const migrations = output.indexOf('$ npx --yes wrangler@4 d1 migrations apply');
+  const runner = output.indexOf('$ npx --yes wrangler@4 deploy --config=apps/usergamerunner/');
+  const hub = output.indexOf('$ npx --yes wrangler@4 deploy --config=apps/rehabtrainerhub/');
+  assert.ok(migrations >= 0 && runner > migrations && hub > runner, output);
+});
+
+test('precompiled deploy validates each selected app entry before migrations or deployment', (context) => {
+  for (const [role, appPath, outputDirectory] of [
+    ['gamehost', 'apps/usergamerunner', 'dist'],
+    ['hub', 'apps/rehabtrainerhub', 'out'],
+  ]) {
+    const fixture = CreateDeployFixture(context);
+    const outputPath = join(fixture, appPath, outputDirectory);
+    mkdirSync(outputPath, { recursive: true });
+    writeFileSync(join(outputPath, 'index.html'), '<!doctype html>');
+    const args = [join(fixture, 'scripts/deploy-cloudflare-workers.mjs'), '--dry-run', '--validate-output', '--skip-functions-build', `--only=${role}`];
+    const missing = spawnSync(process.execPath, args, { cwd: fixture, encoding: 'utf8' });
+    const missingOutput = `${missing.stdout}\n${missing.stderr}`;
+    assert.notEqual(missing.status, 0, `${appPath} must reject missing compiled functions`);
+    assert.ok(missingOutput.includes(`${appPath}/.worker/functions/index.js`), missingOutput);
+    assert.match(missingOutput, /node scripts\/build-workers\.mjs/, 'the failure must explain how to compile the missing entry');
+    assert.doesNotMatch(missingOutput, /\$ node|\$ npx/);
+
+    const entryPath = join(fixture, appPath, '.worker/functions/index.js');
+    mkdirSync(dirname(entryPath), { recursive: true });
+    writeFileSync(entryPath, 'export default {};\n');
+    const missingIgnore = spawnSync(process.execPath, args, { cwd: fixture, encoding: 'utf8' });
+    const missingIgnoreOutput = `${missingIgnore.stdout}\n${missingIgnore.stderr}`;
+    assert.notEqual(missingIgnore.status, 0, `${appPath} must reject missing .assetsignore`);
+    assert.ok(missingIgnoreOutput.includes(`${appPath}/${outputDirectory}/.assetsignore`), missingIgnoreOutput);
+    assert.match(missingIgnoreOutput, /node scripts\/build-workers\.mjs/, 'the failure must explain how to create the missing ignore file');
+    assert.doesNotMatch(missingIgnoreOutput, /\$ node|\$ npx/);
+
+    writeFileSync(join(outputPath, '.assetsignore'), '_routes.json\n');
+    const ready = spawnSync(process.execPath, args, { cwd: fixture, encoding: 'utf8' });
+    assert.equal(ready.status, 0, `${ready.stdout}\n${ready.stderr}`);
+    assert.doesNotMatch(ready.stdout, /\$ node scripts\/build-workers\.mjs/);
+    assert.match(ready.stdout, new RegExp(`deploy --config=${appPath}/wrangler\\.workers\\.jsonc`));
+
+    const compile = spawnSync(process.execPath, args.filter(arg => arg !== '--skip-functions-build'), { cwd: fixture, encoding: 'utf8' });
+    assert.equal(compile.status, 0, compile.stderr);
+    assert.match(compile.stdout, /\$ node scripts\/build-workers\.mjs --only=/);
+  }
+});
+
 test('a deploy without Hub routes is refused before wrangler runs', (context) => {
   const fixture = CreateDeployFixture(context);
   const configPath = join(fixture, 'apps/rehabtrainerhub/wrangler.workers.jsonc');
@@ -465,40 +517,88 @@ test('every workflow step receiving secrets is restricted to main', () => {
   assert.deepEqual(unguardedSteps, [], 'secret-bearing steps must require refs/heads/main');
 });
 
-test('the deploy workflow deploys Workers by default and Pages only when the repository variable asks for it', () => {
-  const deploy = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
-  const pagesStep = StepBlock(deploy, 'Ensure and deploy Cloudflare Pages projects');
+test('the deploy workflow supports only Workers and retains the Hub runtime environment', () => {
+  const workflow = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
+  assert.doesNotMatch(workflow, /Ensure and deploy Cloudflare Pages projects|CLOUDFLARE_DEPLOY_TARGET|deploy-cloudflare-pages\.mjs/);
+  const deploy = JobBlock(workflow, 'deploy');
   const workersStep = StepBlock(deploy, 'Deploy Cloudflare Workers');
-  // The Pages projects were deleted; removing the variable must not recreate them.
-  assert.match(pagesStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET == 'pages' \}\}/);
-  // workflow_dispatch can run on any branch; only main may replace the production Workers.
-  assert.match(workersStep, /if: \$\{\{ vars\.CLOUDFLARE_DEPLOY_TARGET != 'pages' && github\.ref == 'refs\/heads\/main' \}\}/);
-  assert.match(workersStep, /run: node scripts\/deploy-cloudflare-workers\.mjs\n/);
+  assert.match(deploy, /^    if: \$\{\{ github\.ref == 'refs\/heads\/main' && needs\.deployment_scope\.outputs\.pages_required == 'true' \}\}$/m);
+  assert.doesNotMatch(workersStep, /^        if:/m);
+  assert.match(workersStep, /run: node scripts\/deploy-cloudflare-workers\.mjs --skip-functions-build\n/);
   for (const name of ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'AUTH_SESSION_SECRET', 'AUTH_STATE_SECRET',
     'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'TURNSTILE_SECRET_KEY', 'GAME_RELEASE_OWNER_USER_ID',
     'ANONYMOUS_RECORDS_ENABLED', 'TRAINING_PLANS_ENABLED']) {
     assert.match(workersStep, new RegExp(`${name}: \\$\\{\\{ (?:secrets|vars)\\.${name} \\}\\}`), name);
   }
-  assert.match(deploy, /^  verify:\n    uses: \.\/\.github\/workflows\/ci\.yml$/m);
-  assert.match(deploy, /needs: \[verify, deployment_scope\]/);
-  assert.doesNotMatch(deploy, /matrix\.command|run: npm run test:/);
+  assert.match(workflow, /^  verify:\n    uses: \.\/\.github\/workflows\/ci\.yml$/m);
+  assert.match(deploy, /needs: \[verify, deployment_scope, build\]/);
+  assert.doesNotMatch(workflow, /matrix\.command|run: npm run test:/);
+  const { scripts } = JSON.parse(readFileSync(resolve(defaultRepoRoot, 'package.json'), 'utf8'));
+  assert.equal(Object.hasOwn(scripts, 'deploy:cloudflare'), false);
+  for (const file of ['deploy-cloudflare-pages.mjs', 'sync-cloudflare-pages-domains.mjs', 'sync-cloudflare-auth-env.mjs']) {
+    assert.equal(existsSync(resolve(defaultRepoRoot, 'scripts', file)), false, `${file} must stay removed`);
+  }
+});
+
+test('build runs beside verification without secrets and deploy consumes only its artifact', () => {
+  const workflow = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
+  const build = JobBlock(workflow, 'build');
+  const deploy = JobBlock(workflow, 'deploy');
+  assert.doesNotMatch(build, /secrets\.|^    (?:needs|environment):/m);
+  assert.match(build, /timeout-minutes: 20/);
+  assert.match(StepBlock(build, 'Checkout'), /fetch-depth: 1/);
+  assert.match(StepBlock(build, 'Setup Node.js'), /node-version: 24\n          cache: npm/);
+  assert.match(StepBlock(build, 'Compile Worker functions'), /run: node scripts\/build-workers\.mjs\n/);
+  assert.deepEqual([...build.matchAll(/^      - name: (.+)$/gm)].map(match => match[1]), [
+    'Checkout', 'Setup Node.js', 'Install dependencies', 'Discover Pages app environment', 'Fingerprint build inputs',
+    'Cache Next.js build', 'Build all apps', 'Compile Worker functions', 'Upload build output',
+  ]);
+  assert.match(StepBlock(build, 'Build all apps'), /VITE_AI_ASSET_BASE_URL: \$\{\{ github\.ref == 'refs\/heads\/main' && vars\.AI_ASSET_BASE_URL \|\| '' \}\}/);
+  const upload = StepBlock(build, 'Upload build output');
+  assert.match(upload, /uses: actions\/upload-artifact@v7/);
+  assert.match(upload, /name: worker-build/);
+  assert.match(upload, /path: \|\n            apps\/rehabtrainerhub\/out\n            apps\/rehabtrainerhub\/\.worker\n            apps\/usergamerunner\/dist\n            apps\/usergamerunner\/\.worker\n/);
+  for (const setting of ['include-hidden-files: true', 'if-no-files-found: error', 'retention-days: 1', 'compression-level: 1', 'overwrite: true']) {
+    assert.ok(upload.includes(setting), setting);
+  }
+
+  assert.match(deploy, /needs: \[verify, deployment_scope, build\]/);
+  assert.match(deploy, /environment: cloudflare-pages/);
+  assert.match(deploy, /timeout-minutes: 20/);
+  assert.match(StepBlock(deploy, 'Checkout'), /fetch-depth: 0/);
+  const setup = StepBlock(deploy, 'Setup Node.js');
+  assert.match(setup, /node-version: 24/);
+  assert.doesNotMatch(setup, /cache:/);
+  const download = StepBlock(deploy, 'Download build output');
+  assert.match(download, /uses: actions\/download-artifact@v8/);
+  assert.match(download, /name: worker-build\n          path: apps\n/);
+  assert.doesNotMatch(deploy, /build:cloudflare|build-workers\.mjs|actions\/cache/);
+  const install = StepBlock(deploy, 'Install runtime asset sources');
+  const sync = StepBlock(deploy, 'Sync production R2 runtime assets');
+  const installCondition = install.match(/^        if: (.+)$/m)?.[1];
+  assert.ok(installCondition);
+  assert.equal(installCondition, sync.match(/^        if: (.+)$/m)?.[1]);
+  assert.equal(installCondition, "${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' && steps.runtime-assets.outputs.changed == 'true' }}");
+  assert.match(install, /run: npm ci --workspaces --include-workspace-root --no-audit --no-fund\n/);
+  assert.equal((deploy.match(/run: npm ci/g) ?? []).length, 1, 'only conditional runtime asset sources need npm ci');
+  assert.deepEqual([...deploy.matchAll(/^      - name: (.+)$/gm)].map(match => match[1]), [
+    'Checkout', 'Setup Node.js', 'Download build output', 'Discover Pages app environment', 'Ensure private oculomotor R2 bucket',
+    'Check runtime asset changes', 'Configure production R2 runtime asset CORS', 'Install runtime asset sources',
+    'Sync production R2 runtime assets', 'Deploy Cloudflare Workers',
+  ]);
 });
 
 test('deployment caches build intermediates with dependency, source and public configuration keys', () => {
   const deploy = readFileSync(resolve(defaultRepoRoot, '.github/workflows/deploy-cloudflare-pages.yml'), 'utf8').replaceAll('\r\n', '\n');
   const nextCache = StepBlock(deploy, 'Cache Next.js build');
-  const turboCache = StepBlock(deploy, 'Cache Turbo build');
-  for (const step of [nextCache, turboCache]) {
-    assert.match(step, /uses: actions\/cache@v5/);
-    assert.match(step, /hashFiles\('package-lock\.json'\)/);
-    assert.match(step, /steps\.build-cache\.outputs\.sources/);
-    assert.match(step, /steps\.build-cache\.outputs\.config/);
-    assert.doesNotMatch(step, /path:.*(?:out|dist|node_modules)/);
-  }
+  assert.match(nextCache, /uses: actions\/cache@v5/);
+  assert.match(nextCache, /hashFiles\('package-lock\.json'\)/);
+  assert.match(nextCache, /steps\.build-cache\.outputs\.sources/);
+  assert.match(nextCache, /steps\.build-cache\.outputs\.config/);
+  assert.doesNotMatch(nextCache, /path:.*(?:out|dist|node_modules)/);
   assert.match(nextCache, /path: apps\/rehabtrainerhub\/\.next\/cache\n/);
   assert.match(nextCache, /restore-keys:/);
-  assert.match(turboCache, /path: \.turbo\/cache\n/);
-  assert.doesNotMatch(turboCache, /restore-keys:/);
+  assert.doesNotMatch(deploy, /Cache Turbo build|\.turbo\/cache/);
   const fingerprint = StepBlock(deploy, 'Fingerprint build inputs');
   assert.match(fingerprint, /BUILD_SETTINGS: \|/);
   for (const name of ['TURNSTILE_SITE_KEY', 'TURNSTILE_REQUIRED', 'TURNSTILE_RECORDS_REQUIRED', 'CF_WEB_ANALYTICS_TOKEN', 'AI_ASSET_BASE_URL']) {
@@ -509,7 +609,6 @@ test('deployment caches build intermediates with dependency, source and public c
   const build = StepBlock(deploy, 'Build all apps');
   assert.match(build, /run: npm run build:cloudflare:only/);
   assert.ok(deploy.indexOf('Cache Next.js build') < deploy.indexOf('Build all apps'));
-  assert.ok(deploy.indexOf('Cache Turbo build') < deploy.indexOf('Build all apps'));
 });
 
 test('Next output cleanup retains incremental cache and removes stale build and export files', (context) => {
@@ -540,6 +639,14 @@ test('Next output cleanup retains incremental cache and removes stale build and 
   clean();
   assert.equal(readFileSync(join(fixture, '.next/cache/webpack/incremental.bin'), 'utf8'), 'retained cache bytes');
 });
+
+function JobBlock(workflow, name) {
+  const start = workflow.indexOf(`\n  ${name}:\n`);
+  assert.ok(start >= 0, `missing workflow job ${name}`);
+  const bodyStart = workflow.indexOf('\n', start + 1) + 1;
+  const nextJob = workflow.slice(bodyStart).search(/^  [\w-]+:\n/m);
+  return workflow.slice(start + 1, nextJob < 0 ? undefined : bodyStart + nextJob);
+}
 
 function StepBlock(workflow, name) {
   const start = workflow.indexOf(`- name: ${name}\n`);

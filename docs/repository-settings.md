@@ -3,20 +3,20 @@
 ## GitHub
 
 - Default branch: `main`
-- CI: `.github/workflows/ci.yml` 並行執行七項 gate；遊戲架構拆成 types／tests，合計八個 matrix job。PR 使用與部署相同的 paths filter，另支援手動執行與 `workflow_call`
+- CI: `.github/workflows/ci.yml` 並行執行七項 gate；遊戲架構拆成 types／tests／games，合計九個 matrix job。PR 使用與部署相同的 paths filter，另支援手動執行與 `workflow_call`
 - Local validation: `npm run test:ci` 執行完整七項 gate；安裝套件不設定 Git hook。`npm run test:uiux-browser` 需要 Brave 與相應 build，只在本機手動執行
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
 - Package manager: root `package.json` 指定的 npm
 - Validation: `npm run build`
 - Cloudflare build: `npm run build:cloudflare`
 
-GitHub Actions 的部署 workflow 以 `verify` job 呼叫共用 `ci.yml`，與 `deployment_scope` 並行；`deploy` 必須等待兩者成功且 scope 要求部署，才執行 `build:cloudflare:only` 與部署。main push 保留既有 paths filter，純文件推送不觸發。測試 job 使用 `fetch-depth: 1`；部署範圍與 runtime asset 差異判斷仍需完整歷史。
+GitHub Actions 的部署 workflow 以 `verify` job 呼叫共用 `ci.yml`，與 `deployment_scope`、無 secrets／environment 的 `build` 並行；`build` 執行 `build:cloudflare:only` 與 Functions 編譯，上傳含隱藏檔的 `worker-build` artifact。`deploy` 必須 `needs: [verify, deployment_scope, build]`，等待三者成功且 scope 要求部署，只下載 artifact 並部署 Workers，不重建。main push 保留既有 paths filter，純文件推送不觸發。測試與 build job 使用 `fetch-depth: 1`；部署範圍與 runtime asset 差異判斷仍需完整歷史。
 
-驗收：`check-game-directory-architecture.test.mjs` 比對 `test:ci` 與共用 matrix 展開後的每項命令及測試檔案，分片不得漏跑或重複；另確認 hook 目錄、安裝程式與 prepare 已移除。部署與 scope 測試驗證 `verify` 相依關係及既有安全條件。Next `.next/cache` 與 `.turbo/cache` 以 lockfile、來源及公開建置設定摘要為 key；Turbo 只接受完整 key，Cloudflare out／dist 不列為 Actions 快取路徑。
+驗收：`check-game-directory-architecture.test.mjs` 比對 `test:ci` 與共用 matrix 展開後的每項命令及測試檔案，分片不得漏跑或重複；另確認 hook 目錄、安裝程式與 prepare 已移除。部署與 scope 測試驗證 `verify` 相依關係及既有安全條件。只快取 Next `.next/cache`，key 包含 lockfile、來源及公開建置設定摘要；移除 Turbo cache，Cloudflare out／dist 與 `.worker` 透過 artifact 交付。乾淨安裝使用 `npm ci --workspaces --include-workspace-root --no-audit --no-fund`；deploy 只在 runtime asset 同步條件成立時安裝來源依賴。
 
 ## Cloudflare Pages
 
-正式部署為 Workers `trainerhub`／`trainerhubgames`（見 `docs/workers-migration-report.md`）。下表兩個 Pages 專案已於 2026-10-19 刪除；只有 repo variable `CLOUDFLARE_DEPLOY_TARGET=pages` 時，部署流程才會重新建立並部署它們。
+正式部署為 Workers `trainerhub`／`trainerhubgames`（見 `docs/workers-migration-report.md`）。下表兩個 Pages 專案已於 2026-10-19 刪除，Pages 備援路徑與腳本已移除。`wrangler.toml` 僅留作 binding 對照；`CLOUDFLARE_DEPLOY_TARGET` 已無作用，可刪除。回退使用 Worker 版本。
 
 | Project | Role | Output |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ GitHub Actions 的部署 workflow 以 `verify` job 呼叫共用 `ci.yml`，與 `
 
 伺服器端訪客紀錄另由 `ANONYMOUS_RECORDS_ENABLED` 控制。production 啟用匿名寫入時，
 `ANONYMOUS_RECORDS_ENABLED` 與 `TURNSTILE_RECORDS_REQUIRED` 必須同時為 `1`；部署程序先
-套用 D1 migration，再同步旗標。`ANONYMOUS_RECORDS_ENABLED` 只同步到 Hub Pages Functions，
+套用 D1 migration，再同步旗標。`ANONYMOUS_RECORDS_ENABLED` 只同步到 Hub Worker，
 不得輸出到前端或 `usergamerunner`；發生濫用、資料安全或寫入異常時將它改回 `0`。
 
 ## Domains 與退役流程
@@ -54,8 +54,7 @@ GitHub Actions 的部署 workflow 以 `verify` job 呼叫共用 `ci.yml`，與 `
 - Runner 正式網址為 `trainerhubgames.rainbowh9490.workers.dev`，與 `trainerhub.cc` 分開，禁止使用 `trainerhub.cc` 子網域。
 - 四個退役 trainer 子網域（`motor`、`vision`、`brain`、`mouth.trainerhub.cc`）與舊 `motortrainer`、`visiontrainer`、
   `braintrainer`、`mouthtrainer` Pages projects 已完全移除，沒有 DNS 記錄、Worker route 或 301 設定。
-- 只在 Pages 部署流程（`CLOUDFLARE_DEPLOY_TARGET=pages`）中，`scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後
-  把 `trainerhub.cc` 加到 Hub 的 Pages project。此流程需要 Pages Write 權限。
+- Pages 網域與環境同步腳本已移除，部署不再建立或綁定 Pages 專案。
 
 唯一 sitemap 是 `https://trainerhub.cc/sitemap.xml`；不得重新建立 trainer
 sitemap、canonical、manifest、相關網站頁或 auth origin。
