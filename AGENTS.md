@@ -307,7 +307,7 @@ SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指�
 
 短 Conventional Commit、聚焦、命令式；常用 `feat:`、`chore:`，例如 `feat: change auth ui`、`chore: unify setting`。PR 包含摘要、受影響 apps/packages、驗證指令、視覺截圖、migration/environment variable 註記。
 
-**分支政策（2026-10-18 起）：** 只在 `main` 上進行。commit 後直接 push 到 `main`，不再開新的功能分支或 PR；Dependabot 等自動 PR 由擁有者另外決定。以前的專用分支 `feat/driving-rehab-r2`、`feat/hart-chart-r2`、`feat/reading-training-r2`、`feat/redesign-lobby-guide-sections`、`fix/oculomotor-2.1.1` 已全部併入 `main`（`ec740bf2`），留作歷史紀錄，不刪除、不再推送。本文件與 `docs/releases/*.json` 中提到的專用分支、「避免 `main` 完整部署」等，都是當時的交付紀錄。
+**分支政策（2026-10-18 起）：** 只在 `main` 上進行。commit 後直接 push 到 `main`，不再開新的功能分支或 PR；Dependabot 等自動 PR 由擁有者另外決定。以前的專用分支 `feat/driving-rehab-r2`（`aeff24a1`）、`feat/hart-chart-r2`（`ec740bf2`）、`feat/reading-training-r2`（`de8d01d7`，僅存在本機）、`feat/redesign-lobby-guide-sections`（`1541eb3d`）、`fix/oculomotor-2.1.1`（`663091e8`）已全部併入 `main`，擁有者已於 2026-11-14 刪除全部本機分支及 origin 上的四個對應分支；這些 commit 仍保留在 `main` 歷史中，可用 `git branch <name> <sha>` 還原本機分支，若需遠端副本再執行 `git push origin <name>`。本文件與 `docs/releases/*.json` 中提到的專用分支、「避免 `main` 完整部署」等，都是當時的交付紀錄。
 
 `main` push 會依 `deploy-cloudflare-pages.yml` 驗證並部署 Workers（Pages 備援已移除；純文件變更不觸發）。只改已遷移 R2 遊戲內容／版本時，`deployment_scope` 會跳過部署，可以先 push 再依核准發布；把新遊戲登記進 `packages/ui/src/officialGameReleases.json` 時，Hub 會改走 R2 入口並移除舊 bundle，必須先取得精確 version／contentSha256 核准並完成 R2 發布、current 切換，再 push。需要相容 runner 先部署的變更，依序先 push 平台變更並確認部署，再發布遊戲。
 
