@@ -1,77 +1,155 @@
-platformer
-	
-
-	Pixel Platformer (1.2)
-
-	Created/distributed by Kenney (www.kenney.nl)
-	Creation date: 07-10-2023
-
-			------------------------------
-
-	License: (Creative Commons Zero, CC0)
-	http://creativecommons.org/publicdomain/zero/1.0/
-
-	You can use this content for personal, educational, and commercial purposes.
-
-	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
-
-			------------------------------
-
-	• Website : www.kenney.nl
-	• Donate  : www.kenney.nl/donate
-
-	• Patreon : patreon.com/kenney
-	
-	Follow on social media for updates:
-
-	• Twitter:	twitter.com/KenneyNL
-	• Instagram: 	instagram.com/kenney_nl
+Kenney cursor-pixel-pack
+Source: https://kenney.nl/assets/cursor-pixel-pack
+
+
+	Cursor Pixel Pack (1.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 10-07-2024
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Patreon:  http://patreon.com/kenney/
+
+	Follow on Twitter for updates:
+	http://twitter.com/KenneyNL
+Kenney pixel-shmup
+Source: https://kenney.nl/assets/pixel-shmup
+
+
+	Pixel Shmup (1.1)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 01-11-2021
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Patreon:  http://patreon.com/kenney/
+
+	Follow on Twitter for updates:
+	http://twitter.com/KenneyNL
+Kenney pixel-platformer
+Source: https://kenney.nl/assets/pixel-platformer
+
+
+	Pixel Platformer (1.2)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 07-10-2023
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+
+	Follow on social media for updates:
+
+	• Twitter:	twitter.com/KenneyNL
+	• Instagram: 	instagram.com/kenney_nl
 	• Mastodon:	mastodon.gamedev.place/@kenney
+Kenney tiny-battle
+Source: https://kenney.nl/assets/tiny-battle
 
-cursors
-	
-
-	Cursor Pixel Pack (1.0)
-
-	Created/distributed by Kenney (www.kenney.nl)
-	Creation date: 10-07-2024
-
-			------------------------------
-
-	License: (Creative Commons Zero, CC0)
-	http://creativecommons.org/publicdomain/zero/1.0/
-
-	This content is free to use in personal, educational and commercial projects.
-	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
-
-			------------------------------
-
-	Donate:   http://support.kenney.nl
-	Patreon:  http://patreon.com/kenney/
-
-	Follow on Twitter for updates:
-	http://twitter.com/KenneyNL
 
-sounds
-	
-
-	Sci-Fi Sounds (1.0)
-
-	Created/distributed by Kenney (www.kenney.nl)
-	Creation date: 11-10-2020
-
-			------------------------------
-
-	License: (Creative Commons Zero, CC0)
-	http://creativecommons.org/publicdomain/zero/1.0/
-
-	This content is free to use in personal, educational and commercial projects.
-	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
-
-			------------------------------
-
-	Donate:   http://support.kenney.nl
-	Patreon:  http://patreon.com/kenney/
-
-	Follow on Twitter for updates:
+	Tiny Battle (1.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 08-08-2023
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+
+	Follow on social media for updates:
+
+	• Twitter:	twitter.com/KenneyNL
+	• Instagram: 	instagram.com/kenney_nl
+	• Mastodon:	mastodon.gamedev.place/@kenney
+Kenney sci-fi-sounds
+Source: https://kenney.nl/assets/sci-fi-sounds
+
+
+	Sci-Fi Sounds (1.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 11-10-2020
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Patreon:  http://patreon.com/kenney/
+
+	Follow on Twitter for updates:
 	http://twitter.com/KenneyNL
+Kenney digital-audio
+Source: https://kenney.nl/assets/digital-audio
+
+
+	Digital Audio
+
+	by  Kenney Vleugels (Kenney.nl)
+
+			------------------------------
+
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+
+	Follow on Twitter for updates:
+	@KenneyNL

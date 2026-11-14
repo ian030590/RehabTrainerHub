@@ -7,8 +7,9 @@ export interface MotorConfig {
   handChoice: HandChoice;
   targetSizePercent: number;
   speedPercent: number;
+  raiseLinePercent: number;
 }
-export const defaultConfig: MotorConfig = { drill: 'bounce', difficulty: 'intermediate', durationSec: 60, handChoice: 'any', targetSizePercent: 100, speedPercent: 100 };
+export const defaultConfig: MotorConfig = { drill: 'bounce', difficulty: 'intermediate', durationSec: 60, handChoice: 'any', targetSizePercent: 100, speedPercent: 100, raiseLinePercent: 65 };
 export const difficulties: readonly DifficultyDefinition[] = [
   { id: 'beginner', radius: 82, speed: 120, holdMs: 1500 },
   { id: 'intermediate', radius: 66, speed: 165, holdMs: 2000 },
@@ -19,5 +20,6 @@ export function IsMotorConfig(config: MotorConfig) {
     && ['beginner', 'intermediate', 'advanced'].includes(config.difficulty)
     && [45, 60, 90].includes(config.durationSec) && ['any', 'left', 'right'].includes(config.handChoice)
     && Number.isInteger(config.targetSizePercent) && config.targetSizePercent >= 75 && config.targetSizePercent <= 130 && config.targetSizePercent % 5 === 0
-    && Number.isInteger(config.speedPercent) && config.speedPercent >= 70 && config.speedPercent <= 140 && config.speedPercent % 5 === 0;
+    && Number.isInteger(config.speedPercent) && config.speedPercent >= 70 && config.speedPercent <= 140 && config.speedPercent % 5 === 0
+    && Number.isInteger(config.raiseLinePercent) && [50, 65, 80].includes(config.raiseLinePercent);
 }

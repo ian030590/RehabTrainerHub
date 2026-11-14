@@ -1,50 +1,187 @@
 [
-  {
-    "file": "enemy.png",
-    "original": "Tiles/Characters/tile_0022.png",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/pixel-platformer",
-    "license": "CC0-1.0",
-    "sha256": "e215b5f72dbaeec900f20017bf0b2ded1a32c809970f4771df9ab8e6620d7ece"
-  },
-  {
-    "file": "enemy-step.png",
-    "original": "Tiles/Characters/tile_0023.png",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/pixel-platformer",
-    "license": "CC0-1.0",
-    "sha256": "3e701b98ac29bdcb38c17c6ea1cb78e4ce6db8aca34a3e4c2e5148d2ad09fb51"
-  },
-  {
-    "file": "palm.png",
-    "original": "Tiles/tile_0138.png",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/cursor-pixel-pack",
-    "license": "CC0-1.0",
-    "sha256": "1a0ff8a140befc1c54879e29fb3745803df0bdfc2037d796a94b1a29df76ac5e"
-  },
-  {
-    "file": "laser.ogg",
-    "original": "Audio/laserRetro_000.ogg",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/sci-fi-sounds",
-    "license": "CC0-1.0",
-    "sha256": "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c"
-  },
-  {
-    "file": "hit.ogg",
-    "original": "Audio/explosionCrunch_000.ogg",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/sci-fi-sounds",
-    "license": "CC0-1.0",
-    "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
-  },
-  {
-    "file": "complete.ogg",
-    "original": "Audio/forceField_000.ogg",
-    "author": "Kenney",
-    "source": "https://kenney.nl/assets/sci-fi-sounds",
-    "license": "CC0-1.0",
-    "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c"
-  }
+    {
+        "file":  "enemy-0.png",
+        "original":  "Tiles/Characters/tile_0000.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "15df14143949310c001b09b2a00ed2278a5a9b4a10edd276af306b77b8c9d658"
+    },
+    {
+        "file":  "enemy-0-step.png",
+        "original":  "Tiles/Characters/tile_0001.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "b929b7d7d1c3175a018ff61c1240ceb6250a29ad9388ee4b03d84eedcfdb0a27"
+    },
+    {
+        "file":  "enemy-1.png",
+        "original":  "Tiles/Characters/tile_0006.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "3cca21026b26f4f6a09a1200ca2c399e6b8c9b2bc1ed0cc92d47d057a3c9feeb"
+    },
+    {
+        "file":  "enemy-1-step.png",
+        "original":  "Tiles/Characters/tile_0007.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "d136b5ca06a87f20f0ebf71c3c8de4bf5ae732a25370f29ffa61b9e7da26e011"
+    },
+    {
+        "file":  "enemy-2.png",
+        "original":  "Tiles/Characters/tile_0015.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "aca58ddc36d4e8d506111b1e580fc79b17383337b3cec27c28b0e6090435224a"
+    },
+    {
+        "file":  "enemy-2-step.png",
+        "original":  "Tiles/Characters/tile_0016.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "2decd7fc3872ba6ffc712cfeb4dd048a116db6d56399dd29d84de3af6db87261"
+    },
+    {
+        "file":  "enemy-3.png",
+        "original":  "Tiles/Characters/tile_0021.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "70b674ae599193a38dd4c6ee1c3994fa9e9090b9a52a2549685e16018734afd1"
+    },
+    {
+        "file":  "enemy-3-step.png",
+        "original":  "Tiles/Characters/tile_0022.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-platformer",
+        "license":  "CC0-1.0",
+        "sha256":  "e215b5f72dbaeec900f20017bf0b2ded1a32c809970f4771df9ab8e6620d7ece"
+    },
+    {
+        "file":  "building-0.png",
+        "original":  "Tiles/tile_0008.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/tiny-battle",
+        "license":  "CC0-1.0",
+        "sha256":  "440a9be6922cf8008c07aca42db0af2921b35452102d0031e7af12afcc8b65e4"
+    },
+    {
+        "file":  "building-1.png",
+        "original":  "Tiles/tile_0009.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/tiny-battle",
+        "license":  "CC0-1.0",
+        "sha256":  "ff679375978107dffd11fd9d9ee8ef42a108420c5424919ab3eb6cbe10d35889"
+    },
+    {
+        "file":  "building-2.png",
+        "original":  "Tiles/tile_0010.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/tiny-battle",
+        "license":  "CC0-1.0",
+        "sha256":  "9d563d9e471c096b3b8f0dee459e1e38ce3350d8fb90c0144b465e1da774ea9f"
+    },
+    {
+        "file":  "building-3.png",
+        "original":  "Tiles/tile_0015.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/tiny-battle",
+        "license":  "CC0-1.0",
+        "sha256":  "b014b3056a9be1c47f244e81e9405866d4b6676f88b0982f0be8af926037d724"
+    },
+    {
+        "file":  "burst-0.png",
+        "original":  "Tiles/tile_0004.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "54d2a47c28937772a5fdbe71436b2b20628b4d3f766fe78fe13c8e76e73395fa"
+    },
+    {
+        "file":  "burst-1.png",
+        "original":  "Tiles/tile_0005.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "22c0064220d49a2a7754571fd1f2d21df99a6679a40303e47c3222014311799a"
+    },
+    {
+        "file":  "burst-2.png",
+        "original":  "Tiles/tile_0006.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "d43d9e4b3f0247ee095931528f391d38649200d1b3693a580e7d92f02472f548"
+    },
+    {
+        "file":  "burst-3.png",
+        "original":  "Tiles/tile_0007.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "dd5a9ac816d65d55b3ce22bacc08104c4158221571fa153dcf2eda07a9c4fb43"
+    },
+    {
+        "file":  "smoke.png",
+        "original":  "Tiles/tile_0008.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "f5caed8ba0ea9d2caba23dc17576986571bff363eecb6f41a5a7290cd8b635c3"
+    },
+    {
+        "file":  "reticle.png",
+        "original":  "Tiles/tile_0027.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/pixel-shmup",
+        "license":  "CC0-1.0",
+        "sha256":  "3cf5371999edad4e64b8e5f0f3493f1ccdd9363b24f3d535bf9cee0b73d7d200"
+    },
+    {
+        "file":  "laser.ogg",
+        "original":  "Audio/laserRetro_000.ogg",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/sci-fi-sounds",
+        "license":  "CC0-1.0",
+        "sha256":  "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c"
+    },
+    {
+        "file":  "hit.ogg",
+        "original":  "Audio/explosionCrunch_000.ogg",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/sci-fi-sounds",
+        "license":  "CC0-1.0",
+        "sha256":  "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+    },
+    {
+        "file":  "charge.ogg",
+        "original":  "Audio/forceField_001.ogg",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/sci-fi-sounds",
+        "license":  "CC0-1.0",
+        "sha256":  "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
+    },
+    {
+        "file":  "complete.ogg",
+        "original":  "Audio/powerUp3.ogg",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/digital-audio",
+        "license":  "CC0-1.0",
+        "sha256":  "59e7591f7a068882767bc1fd61edabf479b78787466d3a70bc49dfa0533777d2"
+    },
+    {
+        "file":  "hero-glove.png",
+        "original":  "Tiles/tile_0138.png",
+        "author":  "Kenney",
+        "source":  "https://kenney.nl/assets/cursor-pixel-pack",
+        "license":  "CC0-1.0",
+        "sha256":  "04aa9cbd07e58d65e800f3808d0d7be28cc49779e173c27e0e088aae27cb57d5",
+        "modification":  "Recoloured original opaque pixels to a red glove with a gold cuff and navy outline. Original 16x16 grid and alpha preserved; no resampling or smoothing."
+    }
 ]

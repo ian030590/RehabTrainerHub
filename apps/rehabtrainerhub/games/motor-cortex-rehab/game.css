@@ -5,6 +5,12 @@
   --arena: #e5eee8; --target: #277956; --target-soft: #27795625; --success: #35ae70;
   --hand-line: #67e8f9; --hand-point: #fef08a; --text-on-accent: #ffffff; --radius: 8px;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --scene-night: #111a2e; --scene-panel: #1e2d46; --scene-border: #869ab4;
+  --scene-sky: #28435f; --scene-text: #eef5ff; --scene-score: #ffd17c;
+  --scene-track: #86efff; --scene-meter: #344761; --scene-road: #15233b;
+  --scene-road-mark: #7085a2; --scene-ground: #263950; --scene-shadow: #0a112b80;
+  --scene-laser-edge: #ff9e57; --scene-laser-core: #fff6c8;
+  --scene-suit: #28435f; --scene-suit-edge: #1b2b43;
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; width: 100%; height: 100%; color: var(--text); }
@@ -16,63 +22,85 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 button:disabled { opacity: .6; cursor: default; }
 .motor-cortex-rehab-game { position: fixed; inset: 0; width: 100%; height: 100dvh; overflow: hidden; background: var(--arena); }
 .motor-jspsych-host { display: none; }
-.motor-cortex-play { display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100%; padding: 16px; gap: 12px; background: #111a2e; color: #eef5ff; }
-.motor-cortex-hud { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; border: 2px solid #50627c; background: #1e2d46; padding: 12px; }
+.motor-cortex-play { display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100%; padding: 16px; gap: 12px; background: var(--scene-night); color: var(--scene-text); }
+.motor-cortex-hud { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; border: 2px solid var(--scene-border); background: var(--scene-panel); padding: 12px; }
 .motor-cortex-hud p { margin: 0; text-align: center; }
 .motor-cortex-hud span, .motor-cortex-hud strong { display: block; }
 .motor-cortex-hud span { font-size: .85rem; }
 .motor-cortex-hud strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
-.motor-cortex-hud p:nth-child(4) strong { color: #ffd17c; }
-.motor-cortex-stage { position: relative; min-height: 0; width: 100%; height: 100%; overflow: hidden; border: 3px solid #50627c; background: #28435f; }
+.motor-cortex-hud p:nth-child(4) strong { color: var(--scene-score); }
+.motor-cortex-hud .is-scored { animation: motor-score-hit 400ms steps(3,end); }
+.motor-cortex-stage { position: relative; min-height: 0; width: 100%; height: 100%; overflow: hidden; border: 3px solid var(--scene-border); background: var(--scene-sky); }
 .motor-cortex-path { position: absolute; background: var(--border); display: none; }
-.motor-cortex-path-vertical { width: 2px; height: 100%; left: 50%; }
-.motor-cortex-path-horizontal { height: 2px; width: 100%; top: 50%; }
+.motor-cortex-path-vertical { top: 15%; width: 2px; height: calc(var(--motor-raise-line) - 15%); left: 50%; opacity: .2; }
+.motor-cortex-path-horizontal { height: 2px; width: 100%; top: var(--motor-patrol-y); opacity: .2; }
 .motor-cortex-drill-vertical .motor-cortex-path-vertical, .motor-cortex-drill-horizontal .motor-cortex-path-horizontal { display: block; }
 .motor-cortex-target { position: absolute; z-index: 3; left: var(--motor-target-x); top: var(--motor-target-y); width: var(--motor-target-size); height: var(--motor-target-size); transform: translate(-50%,-50%); }
-.motor-cortex-hand-cursor { position: absolute; z-index: 5; left: var(--motor-hand-x); top: var(--motor-hand-y); width: 36px; height: 36px; transform: translate(-50%,-50%); border: 2px solid #86efff; background: #14233bc9; opacity: 0; }
+.motor-cortex-hand-cursor { position: absolute; z-index: 7; left: var(--motor-hand-x); top: var(--motor-hand-y); width: 36px; height: 36px; transform: translate(-50%,-50%); opacity: 0; pointer-events: none; }
 .motor-cortex-hand-cursor.is-visible { opacity: 1; }
 .motor-cortex-hand-cursor img { width: 100%; height: 100%; image-rendering: pixelated; }
-.motor-cortex-hand-cursor.is-firing { border-color: #ffd17c; }
-.motor-cortex-hand-cursor p { position: absolute; left: 50%; top: 38px; transform: translateX(-50%); white-space: nowrap; margin: 0; padding: 2px 5px; background: #111a2e; color: #eef5ff; font-size: .75rem; }
+.motor-aim-label { position: absolute; z-index: 8; bottom: 4px; left: 8px; max-width: calc(100% - 16px); margin: 0; padding: 2px 5px; background: var(--scene-night); color: var(--scene-text); font-size: .8rem; }
+.motor-aim-label.needs-raise { top: var(--motor-prompt-y); left: var(--motor-prompt-x); right: auto; bottom: auto; width: var(--motor-prompt-width); min-height: 24px; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; }
 .motor-cortex-instruction { text-align: center; padding: 4px max(190px,18vw); }
 .motor-cortex-instruction h2 { margin: 0; font-size: 1.2rem; }
 .motor-cortex-instruction p { margin: 4px 0; font-size: clamp(.85rem,1.6vw,1rem); }
-.motor-cortex-hold-meter { height: 18px; background: #344761; border: 2px solid #86efff; overflow: hidden; width: min(300px,100%); margin: 8px auto; }
-.motor-cortex-hold-meter i { display: block; height: 100%; width: var(--motor-hold-progress); background: #86efff; }
+.motor-cortex-hold-meter { height: 18px; background: var(--scene-meter); border: 2px solid var(--scene-track); overflow: hidden; width: min(300px,100%); margin: 8px auto; }
+.motor-cortex-hold-meter i { display: block; height: 100%; width: var(--motor-hold-progress); background: var(--scene-track); }
+.motor-interruption-cue { min-height: 1.5em; color: var(--scene-score); }
 .motor-city { position: absolute; inset: 0; pointer-events: none; }
-.motor-skyline { position: absolute; inset: 12% 0 38%; display: flex; align-items: end; gap: 3px; opacity: .8; }
-.motor-skyline i { width: 12.5%; background: repeating-linear-gradient(0deg,transparent 0 14px,#6a859b 14px 18px),#1b2b43; border: 6px solid #1b2b43; }
-.motor-skyline i:nth-child(even) { background-color: #263950; }
-.motor-street { position: absolute; bottom: 0; width: 100%; height: 43%; background: repeating-linear-gradient(0deg,#15233b 0 34px,#425670 34px 38px); clip-path: polygon(38% 0,62% 0,100% 100%,0 100%); }
-.motor-mission-title { position: absolute; z-index: 1; top: 8px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); margin: 0; padding: 4px 10px; background: #111a2e; color: #ffd17c; text-align: center; font-size: clamp(.8rem,2vw,1.15rem); }
-.motor-enemy-body { position: absolute; inset: 0; animation: motor-enemy-run 220ms steps(2,end) infinite; }
-.motor-enemy-sprite { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; animation: motor-enemy-stride 320ms steps(1,end) infinite; }
-.motor-enemy-step { position: absolute; inset: 0; animation-delay: -160ms; }
-.motor-enemy-shadow { position: absolute; left: 15%; bottom: 0; width: 70%; height: 10%; background: #0a112b80; }
-.motor-enemy-health { position: absolute; top: -10px; left: 10%; width: 80%; height: 8px; border: 2px solid #f8e8d0; background: #111a2e; }
-.motor-enemy-health i { display: block; width: var(--motor-enemy-health); height: 100%; background: #ff8e72; }
-.motor-enemy.is-hit .motor-enemy-sprite { filter: brightness(1.2); }
-.motor-enemy-burst { display: none; position: absolute; inset: 5%; background: #ffd17c; clip-path: polygon(40% 0,60% 0,60% 30%,100% 40%,100% 60%,65% 60%,60% 100%,40% 100%,35% 65%,0 60%,0 40%,35% 35%); }
-.motor-enemy.is-defeated .motor-enemy-body { animation: motor-enemy-defeat 400ms steps(4,end) forwards; }
-.motor-enemy.is-defeated .motor-enemy-sprite { animation: none; }
-.motor-enemy.is-defeated .motor-enemy-step { display: none; }
+.motor-skyline { position: absolute; inset: 0 0 85%; display: flex; align-items: end; gap: 0; overflow: hidden; }
+.motor-skyline img { width: var(--motor-building-size); height: var(--motor-building-size); flex: 0 0 var(--motor-building-size); image-rendering: pixelated; }
+.motor-road-plane { position: absolute; top: 15%; height: calc(var(--motor-raise-line) - 15%); width: 100%; background: var(--scene-ground); }
+.motor-street { position: absolute; inset: 0; background: var(--scene-road); clip-path: polygon(50% 0,50% 0,100% 100%,0 100%); }
+.motor-road-centre { position: absolute; inset: 0 48%; background: repeating-linear-gradient(0deg,var(--scene-road-mark) 0 12px,transparent 12px 30px); clip-path: polygon(50% 0,50% 0,100% 100%,0 100%); }
+.motor-mission-title { position: absolute; z-index: 1; top: 8px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); margin: 0; padding: 4px 10px; background: var(--scene-night); color: var(--scene-score); text-align: center; font-size: clamp(.8rem,2vw,1.15rem); }
+.motor-firing-line { position: absolute; z-index: 6; top: var(--motor-raise-line); left: 0; width: 100%; border-top: 3px dashed var(--scene-track); }
+.motor-firing-line.needs-raise { border-top: 5px dashed var(--scene-score); }
+.motor-firing-line p { position: absolute; top: 4px; right: 8px; max-width: calc(100% - 16px); padding: 2px 5px; margin: 0; background: var(--scene-night); color: var(--scene-track); font-size: clamp(.7rem,1.5vw,.85rem); }
+.motor-firing-line.needs-raise p { color: var(--scene-score); }
+.motor-enemy-facing,.motor-enemy-body { position: absolute; inset: 0; }
+.motor-enemy[data-facing=left] .motor-enemy-facing { transform: scaleX(-1); }
+.motor-enemy-sprite { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.motor-enemy-step { position: absolute; inset: 0; opacity: 0; }
+.motor-enemy.is-moving .motor-enemy-body { animation: motor-enemy-run 220ms steps(2,end) infinite; }
+.motor-enemy.is-moving .motor-enemy-sprite { animation: motor-enemy-stride 320ms steps(1,end) infinite; }
+.motor-enemy.is-moving .motor-enemy-step { animation-delay: -160ms; }
+.motor-enemy-shadow { position: absolute; left: 15%; bottom: 0; width: 70%; height: 10%; background: var(--scene-shadow); }
+.motor-enemy-health { position: absolute; top: -10px; left: 10%; width: 80%; height: 8px; border: 2px solid var(--scene-text); background: var(--scene-night); }
+.motor-enemy-health i { display: block; width: var(--motor-enemy-health); height: 100%; background: var(--scene-score); }
+.motor-enemy.is-hit .motor-enemy-body { animation: motor-enemy-shake 120ms steps(2,end) infinite; }
+.motor-enemy.is-hit .motor-enemy-facing { animation: motor-enemy-flash 160ms steps(1,end) infinite; }
+.motor-enemy-burst { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.motor-reduced-burst { display: none; }
+.motor-enemy-pop { position: absolute; top: 0; left: 50%; color: var(--scene-score); background: var(--scene-night); padding: 0 4px; animation: motor-enemy-point 400ms steps(4,end) forwards; }
+.motor-enemy.is-defeated .motor-enemy-facing,.motor-enemy.is-defeated .motor-enemy-shadow { visibility: hidden; }
 .motor-enemy.is-defeated .motor-enemy-health { visibility: hidden; }
-.motor-enemy.is-defeated .motor-enemy-burst { display: block; animation: motor-enemy-defeat 400ms steps(4,end) forwards; }
-.motor-laser-beam { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.motor-laser-beam { position: absolute; z-index: 6; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; image-rendering: pixelated; shape-rendering: crispEdges; filter: drop-shadow(0 0 3px var(--scene-laser-edge)); }
 .motor-laser-beam.is-firing { opacity: 1; }
-.motor-laser-edge { stroke: #ff9e57; stroke-width: 10px; vector-effect: non-scaling-stroke; }
-.motor-laser-core { stroke: #fff6c8; stroke-width: 4px; vector-effect: non-scaling-stroke; }
-.motor-hero-hand { position: absolute; z-index: 5; bottom: -8px; left: 50%; width: clamp(88px,18vmin,140px); transform: translateX(-50%) rotate(-8deg); }
-.motor-hero-hand img { display: block; width: 100%; image-rendering: pixelated; filter: sepia(.5) saturate(4); }
-.motor-hero-hand i { position: absolute; left: 28%; bottom: 0; width: 48%; height: 30%; background: #2375b6; border: 5px solid #19365a; }
-.motor-hero-hand[data-hand=left] { transform: translateX(-50%) scaleX(-1) rotate(-8deg); }
-.motor-hero-hand.is-firing img { filter: sepia(.3) drop-shadow(0 -3px #ffd17c); }
-@keyframes motor-enemy-run { 0% { transform: translateY(0) rotate(-3deg); } 100% { transform: translateY(-4px) rotate(3deg); } }
+.motor-laser-edge { stroke: var(--scene-laser-edge); stroke-width: 10px; vector-effect: non-scaling-stroke; }
+.motor-laser-core { stroke: var(--scene-laser-core); stroke-width: 4px; vector-effect: non-scaling-stroke; }
+.motor-hero-foreground { position: absolute; z-index: 5; top: var(--motor-raise-line); bottom: 0; width: 100%; background: var(--scene-night); }
+.motor-hero-hand { position: absolute; top: 50%; left: var(--motor-hero-x); height: min(85%,120px); aspect-ratio: 1; max-width: 40%; transform: translate(-50%,-50%); }
+.motor-hero-hand img { position: relative; display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.motor-hero-sleeve { position: absolute; left: 28%; top: 80%; width: 48%; height: 160%; background: var(--scene-suit); border: 4px solid var(--scene-suit-edge); border-top: 5px solid var(--scene-score); }
+.motor-hero-hand[data-hand=left] { transform: translate(-50%,-50%) scaleX(-1); }
+.motor-muzzle-spark,.motor-impact-spark { position: absolute; z-index: 7; width: clamp(20px,4vmin,36px); height: clamp(20px,4vmin,36px); transform: translate(-50%,-50%); image-rendering: pixelated; pointer-events: none; }
+.motor-muzzle-spark { left: var(--motor-hero-x); top: var(--motor-hero-y); }
+.motor-impact-spark { left: var(--motor-beam-x); top: var(--motor-beam-y); }
+@keyframes motor-enemy-run { 0% { transform: translateY(0); } 100% { transform: translateY(-2px); } }
 @keyframes motor-enemy-stride { 0%,49.99% { opacity: 1; } 50%,100% { opacity: 0; } }
-@keyframes motor-enemy-defeat { to { opacity: 0; transform: scale(1.25); } }
-@media(prefers-reduced-motion:reduce) { .motor-enemy-body,.motor-enemy-sprite { animation: none; } .motor-enemy-step { display: none; } .motor-enemy.is-defeated .motor-enemy-body { animation: none; opacity: 0; } }
+@keyframes motor-enemy-shake { 0% { transform: translate(-2px,0); } 100% { transform: translate(2px,0); } }
+@keyframes motor-enemy-flash { 50% { filter: brightness(1.6); } }
+@keyframes motor-enemy-point { from { transform: translate(-50%,0); } to { transform: translate(-50%,-28px); } }
+@keyframes motor-score-hit { 50% { background: var(--scene-meter); outline: 2px solid var(--scene-score); } }
+@media(prefers-reduced-motion:reduce) {
+  .motor-enemy.is-moving .motor-enemy-body,.motor-enemy.is-moving .motor-enemy-sprite,.motor-enemy.is-hit .motor-enemy-body,.motor-enemy.is-hit .motor-enemy-facing,.motor-enemy-pop,.motor-cortex-hud .is-scored { animation: none; }
+  .motor-enemy-step { display: none; }
+  .motor-enemy-burst { display: none; }
+  .motor-reduced-burst { display: block; }
+}
 .motor-cortex-camera { position: absolute; bottom: 16px; left: 16px; width: 168px; background: var(--heading); color: var(--surface); border-radius: var(--radius); overflow: hidden; }
-.motor-cortex-camera canvas { display: block; width: 100%; aspect-ratio: 4/3; }
+.motor-cortex-camera canvas { position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 4/3; }
 .motor-cortex-camera p { margin: 0; padding: 4px; font-size: .8rem; text-align: center; }
 .motor-hand-placeholder { position: absolute; width: 65%; height: 65%; top: 6%; left: 17%; fill: var(--hand-line); }
 .motor-exit-button { position: absolute; bottom: 16px; right: 16px; }
@@ -98,6 +126,7 @@ button:disabled { opacity: .6; cursor: default; }
   .motor-cortex-instruction { padding: 4px 0 140px; }
   .motor-cortex-camera { width: 130px; left: 8px; bottom: 8px; }
   .motor-exit-button { right: 8px; bottom: 8px; }
+  .motor-firing-line p { font-size: .75rem; }
 }
 @media(max-height:500px) {
   .motor-cortex-play { grid-template-columns: minmax(0,1fr) 180px; grid-template-rows: auto minmax(0,1fr); }
@@ -105,4 +134,7 @@ button:disabled { opacity: .6; cursor: default; }
   .motor-cortex-stage { grid-column: 1; grid-row: 2; }
   .motor-cortex-instruction { grid-column: 2; grid-row: 1; padding: 0; font-size: .85rem; }
   .motor-cortex-camera { left: auto; right: 16px; bottom: 72px; width: 130px; }
+  .motor-firing-line p { top: auto; bottom: 4px; left: 4px; right: auto; font-size: .7rem; }
+  .motor-aim-label { left: auto; right: 4px; font-size: .7rem; }
+  .motor-mission-title { font-size: .7rem; top: 2px; padding: 0 4px; }
 }

@@ -5,6 +5,7 @@ export function BuildGameScore(result: SessionRecord) {
   return { schema: 'rehab-trainer.game-score/v1', gameId: 'motor-cortex-rehab', summary: {
     duration: numeric(result.Duration_Seconds), reps: numeric(result.Successful_Reps), interrupted: numeric(result.Interrupted_Holds),
     timeInTarget: numeric(result.Accuracy_Percent), tracking: numeric(result.Hand_Visible_Percent), bestHold: numeric(result.Best_Hold_Seconds), level: numeric(result.Adaptive_Level),
+    raised: numeric(result.Raised_Percent),
   }, rounds: result.Event_Records.map(event => ({
     event: numeric(event.Event_Number), outcome: event.Result === 'success' ? 1 : 0,
     atSeconds: numeric(event.Time_Seconds), holdSeconds: numeric(event.Hold_Seconds),

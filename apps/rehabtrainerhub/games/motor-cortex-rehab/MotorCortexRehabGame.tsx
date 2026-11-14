@@ -14,6 +14,7 @@ import { CreateLaserAudio } from './runtime/laserAudio';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
+import { Clamp } from './gameUtils';
 
 export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const { lang } = useT();
@@ -51,16 +52,29 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const [result, setResult] = useState<SessionRecord | null>(null);
   const [live, setLive] = useState<LiveState>({ timeRemaining: 60, accuracy: 0, visibility: 0, successes: 0, misses: 0,
     currentHoldPercent: 0, level: 1, targetX: 50, targetY: 42, targetRadius: 66, handX: 64, handY: 62, handVisible: false, insideTarget: false,
-    laserActive: false, enemyPhase: 'active', enemyNumber: 1 });
+    handRaised: false, laserActive: false, enemyPhase: 'active', enemyNumber: 1, enemyMoving: true, enemyFacingLeft: false, defeatFrame: 0, interrupted: false, patrolY: 42 });
   useEffect(() => {
-    const update = () => laserAudioRef.current?.setFiring(phase === 'playing' && live.laserActive
-      && !document.hidden && performance.now() - handRef.current.lastSeenAt <= 240);
+    const update = () => {
+      const hand = handRef.current;
+      const height = stageRef.current?.clientHeight ?? 0;
+      if (document.hidden) { laserAudioRef.current?.stop(); return; }
+      if (phase === 'playing' && (!hand.visible || performance.now() - hand.lastSeenAt > 240
+        || hand.y > height * config.raiseLinePercent / 100)) { laserAudioRef.current?.setFiring(false); return; }
+      laserAudioRef.current?.setFiring(phase === 'playing' && live.laserActive, live.insideTarget, live.currentHoldPercent);
+    };
     update();
-    if (phase !== 'playing' || !live.laserActive) return;
-    const timer = window.setInterval(update, 60);
+    const timer = phase === 'playing' ? window.setInterval(update, 60) : null;
     document.addEventListener('visibilitychange', update);
-    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', update); laserAudioRef.current?.setFiring(false); };
-  }, [phase, live.laserActive]);
+    return () => { if (timer !== null) window.clearInterval(timer); document.removeEventListener('visibilitychange', update); };
+  }, [phase, live.laserActive, live.insideTarget, live.currentHoldPercent, config.raiseLinePercent]);
+  useEffect(() => {
+    if (phase !== 'playing') DrawHand(handCanvasRef.current, [], config.raiseLinePercent);
+  }, [phase, config.raiseLinePercent]);
+  useEffect(() => {
+    const resize = () => setLive(current => ({ ...current }));
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
   const difficulty = difficulties.find(item => item.id === config.difficulty)!;
   const setPhase = useCallback((next: GamePhase) => { phaseRef.current = next; setPhaseState(next); }, []);
   useEffect(() => OnSavedSettings(saved => {
@@ -80,7 +94,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const showConfiguration = useCallback(() => {
     stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'configure' });
     setLive(current => ({ ...current, accuracy: 0, visibility: 0, successes: 0, misses: 0,
-      currentHoldPercent: 0, level: 1, handVisible: false, insideTarget: false, laserActive: false, enemyPhase: 'active', enemyNumber: 1 }));
+      currentHoldPercent: 0, level: 1, handVisible: false, handRaised: false, insideTarget: false, laserActive: false, enemyPhase: 'active', enemyNumber: 1,
+      enemyMoving: true, enemyFacingLeft: false, defeatFrame: 0, interrupted: false }));
     setResult(null); setPhase('menu');
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   }, [stopInput, setPhase]);
@@ -107,16 +122,17 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         setError(message.payload.reason === 'permission' ? labels.permission : message.payload.reason === 'disconnected' ? labels.disconnected : labels.initialization);
       }
       if (message.type !== 'frame' || phaseRef.current !== 'playing') return;
-      const rect = stageRef.current?.getBoundingClientRect();
+      const stage = stageRef.current;
+      const rect = stage ? { width: stage.clientWidth, height: stage.clientHeight } : null;
       const points = message.payload.landmarks as { x: number; y: number; z: number }[];
-      DrawHand(handCanvasRef.current, points);
+      DrawHand(handCanvasRef.current, points, config.raiseLinePercent);
       if (points.length && rect) {
         handRef.current = { ...GetHandCursorPoint(points, rect.width, rect.height), visible: true, handedness: null, lastSeenAt: performance.now() };
       } else if (performance.now() - handRef.current.lastSeenAt > 240) handRef.current.visible = false;
     };
     window.addEventListener('game:input', receive);
     return () => window.removeEventListener('game:input', receive);
-  }, [labels, showConfiguration]);
+  }, [labels, config.raiseLinePercent, showConfiguration]);
   useEffect(() => {
     const abort = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape' && ['playing', 'initializing'].includes(phaseRef.current)) { event.preventDefault(); showConfiguration(); }
@@ -124,10 +140,12 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     window.addEventListener('keydown', abort);
     return () => window.removeEventListener('keydown', abort);
   }, [showConfiguration]);
+  const firingLineOptions = [{ value: 80, label: labels.raiseLow }, { value: 65, label: labels.raiseMiddle }, { value: 50, label: labels.raiseHigh }];
   const summaryItems = [
     { label: labels.drill, value: labels.drillNames[config.drill] }, { label: labels.difficulty, value: labels.difficultyNames[config.difficulty] },
     { label: labels.duration, value: `${config.durationSec}s` }, { label: labels.hand, value: FormatHandChoice(config.handChoice, labels) },
     { label: labels.targetSize, value: `${config.targetSizePercent}%` }, { label: labels.speed, value: `${config.speedPercent}%` },
+    { label: labels.raiseLine, value: firingLineOptions.find(item => item.value === config.raiseLinePercent)!.label },
   ];
   const confirm = () => {
     if (!formRef.current?.reportValidity() || !IsMotorConfig(config)) return;
@@ -153,6 +171,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
       Target_Size_Scale: config.targetSizePercent / 100, Speed_Scale: config.speedPercent / 100,
       Adaptive_Level: targetRef.current?.level ?? 1, Accuracy_Percent: ToPercent(metrics.handVisibleMs ? metrics.inTargetMs / metrics.handVisibleMs : 0),
       Hand_Visible_Percent: ToPercent(metrics.handVisibleMs / duration), Successful_Reps: metrics.successes, Interrupted_Holds: metrics.misses,
+      Raise_Line_Percent: config.raiseLinePercent, Raised_Percent: ToPercent(metrics.raisedMs / duration),
       Best_Hold_Seconds: Number((metrics.bestHoldMs / 1000).toFixed(2)), Event_Records: metrics.events.map(item => ({ ...item })),
     };
     stopInput(); laserAudioRef.current?.playComplete(); jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
@@ -186,13 +205,14 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         setPhase('playing'); SendGameEvent('active'); let lastLive = 0;
         const tick = (now: number) => {
           if (phaseRef.current !== 'playing') return;
-          const rect = stageRef.current!.getBoundingClientRect();
+          const rect = { width: stageRef.current!.clientWidth, height: stageRef.current!.clientHeight };
           if (rect.width > 0 && rect.height > 0) {
-            targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height * .8);
+            targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height * config.raiseLinePercent / 100);
             UpdateLaserEncounter({ now, rect, drill: config.drill, activeDifficulty: difficulty, durationSec: config.durationSec, enemy: enemyRef.current,
+              raiseLinePercent: config.raiseLinePercent,
               targetSizeScale: config.targetSizePercent / 100, speedScale: config.speedPercent / 100, target: targetRef.current, hand: handRef.current,
               metrics: metricsRef.current, labels, onSuccess: () => { laserAudioRef.current?.setFiring(false); laserAudioRef.current?.playHit(); }, onComplete: completeSession });
-            if (phaseRef.current === 'playing' && now - lastLive >= 45) { lastLive = now; setLive(BuildLaserLiveState(now, config.durationSec, rect, targetRef.current, handRef.current, metricsRef.current, enemyRef.current)); }
+            if (phaseRef.current === 'playing' && now - lastLive >= 45) { lastLive = now; setLive(BuildLaserLiveState(now, config.durationSec, rect, targetRef.current, handRef.current, metricsRef.current, enemyRef.current, config.raiseLinePercent)); }
           }
           if (phaseRef.current === 'playing') animationRef.current = requestAnimationFrame(tick);
         };
@@ -204,28 +224,66 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     }
   };
   const preview = phase !== 'playing';
-  const style = { '--motor-target-x': `${preview ? 50 : live.targetX}%`, '--motor-target-y': `${preview ? 42 : live.targetY}%`,
-    '--motor-target-size': `${preview ? difficulty.radius * config.targetSizePercent / 50 : live.targetRadius * 2}px`,
+  const heroX = Math.max(20, Math.min(80, preview ? 67 : live.handX));
+  const stageHeight = stageRef.current?.clientHeight || 600;
+  const stageWidth = stageRef.current?.clientWidth || 900;
+  const previewRadius = Math.max(1, Math.min(difficulty.radius * config.targetSizePercent / 100,
+    stageWidth / 2 - 12, stageHeight * config.raiseLinePercent / 200 - 12));
+  const stageRect = stageRef.current?.getBoundingClientRect?.();
+  const stageTop = (stageRect?.top ?? 0) + (stageRef.current?.clientTop ?? 0);
+  const stageLeft = (stageRect?.left ?? 0) + (stageRef.current?.clientLeft ?? 0);
+  const titleBottom = (rootRef.current?.querySelector('.motor-mission-title')?.getBoundingClientRect().bottom ?? stageTop + 40) - stageTop;
+  const previewMinimum = Math.max(stageHeight * .15, titleBottom + 18 + previewRadius);
+  const previewMaximum = stageHeight * config.raiseLinePercent / 100 - previewRadius - 12;
+  const previewY = previewMinimum <= previewMaximum ? Clamp(stageHeight * config.raiseLinePercent / 200, previewMinimum, previewMaximum) : stageHeight * config.raiseLinePercent / 200;
+  const buildingSize = Math.max(16, Math.round(Math.min(stageHeight * .15, stageWidth / 8) / 16) * 16);
+  const buildingCount = Math.ceil(stageWidth / buildingSize) + 1;
+  const gloveHeight = Math.min(stageHeight * (1 - config.raiseLinePercent / 100) * .85, 120);
+  const heroY = config.raiseLinePercent + (100 - config.raiseLinePercent) * .5 - gloveHeight * .05 / stageHeight * 100;
+  const beamX = live.insideTarget ? live.targetX : live.handX;
+  const beamY = live.insideTarget ? live.targetY : live.handY;
+  const enemyVariant = ((preview ? 1 : live.enemyNumber) - 1) % 4;
+  const defeated = !preview && live.enemyPhase === 'defeated';
+  const needsRaise = !preview && live.handVisible && !live.handRaised;
+  const promptWidth = Math.min(en ? 190 : 112, stageWidth - 16);
+  const promptX = Clamp(stageWidth * live.handX / 100, 8 + promptWidth / 2, stageWidth - 8 - promptWidth / 2);
+  let promptY = Clamp(stageHeight * live.handY / 100 - 48, 8, stageHeight - 32);
+  if (needsRaise) for (const selector of ['.motor-cortex-camera', '.motor-exit-button']) {
+    const obstacle = rootRef.current?.querySelector(selector)?.getBoundingClientRect();
+    if (obstacle && stageLeft + promptX - promptWidth / 2 < obstacle.right && stageLeft + promptX + promptWidth / 2 > obstacle.left
+      && stageTop + promptY < obstacle.bottom && stageTop + promptY + 24 > obstacle.top) promptY = Math.max(8, obstacle.top - stageTop - 32);
+  }
+  const style = { '--motor-target-x': `${preview ? 50 : live.targetX}%`, '--motor-target-y': `${preview ? previewY / stageHeight * 100 : live.targetY}%`,
+    '--motor-target-size': `${preview ? previewRadius * 2 : live.targetRadius * 2}px`,
     '--motor-hand-x': `${preview ? 67 : live.handX}%`, '--motor-hand-y': `${preview ? 66 : live.handY}%`,
     '--motor-hold-progress': `${preview ? 55 : live.currentHoldPercent * 100}%`,
-    '--motor-enemy-health': `${preview ? 45 : (1 - live.currentHoldPercent) * 100}%` } as CSSProperties;
+    '--motor-enemy-health': `${preview ? 45 : (1 - live.currentHoldPercent) * 100}%`,
+    '--motor-raise-line': `${config.raiseLinePercent}%`, '--motor-hero-x': `${heroX}%`, '--motor-hero-y': `${heroY}%`,
+    '--motor-beam-x': `${beamX}%`, '--motor-beam-y': `${beamY}%`, '--motor-building-size': `${buildingSize}px`,
+    '--motor-patrol-y': `${preview ? previewY / stageHeight * 100 : live.patrolY}%`,
+    '--motor-prompt-x': `${promptX}px`, '--motor-prompt-y': `${promptY}px`, '--motor-prompt-width': `${promptWidth}px` } as CSSProperties;
   return <div ref={rootRef} className={`motor-cortex-rehab-game motor-cortex-rehab-phase-${phase} motor-cortex-drill-${config.drill}`} style={style}>
     <div ref={jsPsychHostRef} className="motor-jspsych-host" aria-hidden="true" />
     {phase !== 'results' && <div className="motor-cortex-play" aria-hidden={phase === 'menu' || phase === 'ready'}>
-      <div className="motor-cortex-hud">{[[labels.timeLeft, `${preview ? config.durationSec : Math.ceil(live.timeRemaining)}s`], [labels.accuracy, `${ToPercent(live.accuracy)}%`], [labels.visible, `${ToPercent(live.visibility)}%`], [labels.reps, live.successes], [labels.level, live.level]].map(([label, value]) => <p key={label}><span>{label}</span><strong>{value}</strong></p>)}</div>
+      <div className="motor-cortex-hud">{[[labels.timeLeft, `${preview ? config.durationSec : Math.ceil(live.timeRemaining)}s`], [labels.accuracy, `${ToPercent(live.accuracy)}%`], [labels.visible, `${ToPercent(live.visibility)}%`], [labels.reps, live.successes], [labels.level, live.level]].map(([label, value]) => <p key={label} className={label === labels.reps && defeated ? 'is-scored' : ''}><span>{label}</span><strong>{value}</strong></p>)}</div>
       <div ref={stageRef} className="motor-cortex-stage" aria-label={labels.followTarget}>
-        <div className="motor-city" aria-hidden="true"><div className="motor-skyline">{[35, 68, 48, 85, 55, 72, 42, 62].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div><div className="motor-street" /></div>
+        <div className="motor-city" aria-hidden="true"><div className="motor-skyline">{Array.from({ length: buildingCount }, (_, index) => <img key={index} src={`./assets/laser-hero/building-${[0, 1, 2, 3, 1, 0, 3, 2][index % 8]}.png`} alt="" draggable={false} />)}</div><div className="motor-road-plane"><div className="motor-street" /><div className="motor-road-centre" /></div></div>
         <p className="motor-mission-title">{labels.missionTitle}</p>
         <div className="motor-cortex-path motor-cortex-path-vertical" /><div className="motor-cortex-path motor-cortex-path-horizontal" />
-        <svg className={`motor-laser-beam ${!preview && live.laserActive ? 'is-firing' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line className="motor-laser-edge" x1="50" y1="98" x2={live.handX} y2={live.handY} /><line className="motor-laser-core" x1="50" y1="98" x2={live.handX} y2={live.handY} /></svg>
-        <div className={`motor-cortex-target motor-enemy ${live.insideTarget && !preview ? 'is-hit' : ''} ${!preview && live.enemyPhase === 'defeated' ? 'is-defeated' : ''}`} data-enemy-number={preview ? 1 : live.enemyNumber} role="img" aria-label={labels.target}>
-          <div className="motor-enemy-shadow" /><div className="motor-enemy-body"><img className="motor-enemy-sprite" src="./assets/laser-hero/enemy.png" alt="" draggable={false} /><img className="motor-enemy-sprite motor-enemy-step" src="./assets/laser-hero/enemy-step.png" alt="" draggable={false} /></div>
-          <div className="motor-enemy-health" aria-hidden="true"><i /></div><span className="motor-enemy-burst" aria-hidden="true" />
+        <div className={`motor-firing-line ${needsRaise ? 'needs-raise' : ''}`}><p>{labels.raiseLineHint}</p></div>
+        <svg className={`motor-laser-beam ${!preview && live.laserActive ? 'is-firing' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line className="motor-laser-edge" x1={heroX} y1={heroY} x2={beamX} y2={beamY} /><line className="motor-laser-core" x1={heroX} y1={heroY} x2={beamX} y2={beamY} /></svg>
+        <div className={`motor-cortex-target motor-enemy ${live.insideTarget && !preview ? 'is-hit' : ''} ${defeated ? 'is-defeated' : ''} ${(preview ? phase === 'rules' : live.enemyMoving) ? 'is-moving' : ''}`} data-enemy-number={preview ? 1 : live.enemyNumber} data-facing={live.enemyFacingLeft ? 'left' : 'right'} role="img" aria-label={labels.target}>
+          <div className="motor-enemy-shadow" /><div className="motor-enemy-facing"><div className="motor-enemy-body"><img className="motor-enemy-sprite" src={`./assets/laser-hero/enemy-${enemyVariant}.png`} alt="" draggable={false} /><img className="motor-enemy-sprite motor-enemy-step" src={`./assets/laser-hero/enemy-${enemyVariant}-step.png`} alt="" draggable={false} /></div></div>
+          <div className="motor-enemy-health" aria-hidden="true"><i /></div>
+          {defeated && <><img className="motor-enemy-burst" src={`./assets/laser-hero/${live.defeatFrame < 4 ? `burst-${live.defeatFrame}` : 'smoke'}.png`} alt="" /><img className="motor-enemy-burst motor-reduced-burst" src="./assets/laser-hero/burst-1.png" alt="" /><span className="motor-enemy-pop" aria-hidden="true">+1</span></>}
         </div>
-        <div className={`motor-cortex-hand-cursor ${live.handVisible || preview ? 'is-visible' : ''} ${!preview && live.laserActive ? 'is-firing' : ''}`}><img src="./assets/laser-hero/palm.png" alt="" draggable={false} /><p>{!preview && live.laserActive ? labels.firing : labels.handCursor}</p></div>
-        <div className={`motor-hero-hand ${!preview && live.laserActive ? 'is-firing' : ''}`} data-hand={config.handChoice} aria-hidden="true"><img src="./assets/laser-hero/palm.png" alt="" draggable={false} /><i /></div>
+        <div className={`motor-cortex-hand-cursor ${live.handVisible || preview ? 'is-visible' : ''} ${!preview && live.laserActive ? 'is-firing' : ''}`}><img src="./assets/laser-hero/reticle.png" alt="" draggable={false} /></div>
+        <div className="motor-hero-foreground" aria-hidden="true"><div className="motor-hero-hand" data-hand={config.handChoice}><i className="motor-hero-sleeve" /><img src="./assets/laser-hero/hero-glove.png" alt="" draggable={false} /></div></div>
+        {!preview && live.laserActive && <img className="motor-muzzle-spark" src="./assets/laser-hero/burst-3.png" alt="" />}
+        {!preview && live.insideTarget && <img className="motor-impact-spark" src="./assets/laser-hero/burst-2.png" alt="" />}
+        <p className={`motor-aim-label ${needsRaise ? 'needs-raise' : ''}`} role="status">{needsRaise ? labels.raiseHigher : !preview && live.laserActive ? labels.firing : labels.handCursor}</p>
       </div>
-      <div className="motor-cortex-instruction"><h2>{labels.drillNames[config.drill]}</h2><p>{labels.followTarget}</p><div className="motor-cortex-hold-meter" role="progressbar" aria-label={labels.hold} aria-valuenow={Math.round(preview ? 55 : live.currentHoldPercent * 100)} aria-valuemin={0} aria-valuemax={100}><i /></div></div>
+      <div className="motor-cortex-instruction"><h2>{labels.drillNames[config.drill]}</h2><p>{labels.followTarget}</p><div className="motor-cortex-hold-meter" role="progressbar" aria-label={labels.hold} aria-valuenow={Math.round(preview ? 55 : live.currentHoldPercent * 100)} aria-valuemin={0} aria-valuemax={100}><i /></div><p className="motor-interruption-cue" role="status">{!preview && live.interrupted ? labels.aimAgain : ''}</p></div>
       <div className="motor-cortex-camera"><canvas ref={handCanvasRef} width={320} height={240} aria-label={en ? 'Hand landmark preview' : '手部座標預覽'} />
         {preview && <svg className="motor-hand-placeholder" viewBox="0 0 100 100" aria-hidden="true"><path d="M35 80L15 50Q10 40 20 42L30 52V22Q30 12 38 22V44V12Q44 2 48 12V44V18Q56 8 58 18V48V30Q66 20 68 30V66Q64 88 35 80Z" /></svg>}
         <p>{preview ? (en ? 'Hand landmark preview' : '手部座標預覽') : live.handVisible ? labels.tracking : labels.finding}</p>
@@ -240,6 +298,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
           <label>{labels.difficulty}<select name="difficulty" value={config.difficulty} onChange={event => setConfig({ ...config, difficulty: event.target.value as MotorConfig['difficulty'] })}>{difficulties.map(item => <option key={item.id} value={item.id}>{labels.difficultyNames[item.id]} · {en ? 'Steady aim' : '穩定瞄準'} {item.holdMs / 1000}s</option>)}</select></label>
           <label>{labels.duration}<select name="durationSec" value={config.durationSec} onChange={event => setConfig({ ...config, durationSec: Number(event.target.value) })}>{[45, 60, 90].map(value => <option key={value} value={value}>{value}s</option>)}</select></label>
           <label>{labels.hand}<select name="handChoice" value={config.handChoice} onChange={event => setConfig({ ...config, handChoice: event.target.value as MotorConfig['handChoice'] })}>{(['any', 'left', 'right'] as const).map(value => <option key={value} value={value}>{FormatHandChoice(value, labels)}</option>)}</select></label>
+          <label>{labels.raiseLine}<select name="raiseLinePercent" aria-describedby="motor-firing-line-description" value={config.raiseLinePercent} onChange={event => setConfig({ ...config, raiseLinePercent: Number(event.target.value) })}>{firingLineOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><p id="motor-firing-line-description">{labels.raiseLineDesc}</p>
           <label>{labels.targetSize}：<output>{config.targetSizePercent}%</output><input name="targetSizePercent" type="range" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
           <label>{labels.speed}：<output>{config.speedPercent}%</output><input name="speedPercent" type="range" required min={70} max={140} step={5} value={config.speedPercent} onChange={event => setConfig({ ...config, speedPercent: event.target.valueAsNumber })} /></label>
         </section><section className="training-setting"><h3>{labels.privacyTitle}</h3><p>{labels.privacyDesc}</p></section>{error && <p role="alert" className="motor-input-error">{error}</p>}</div>
@@ -256,7 +315,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     {phase === 'results' && result && <div className="experiment-container motor-results-container"><section className="experiment-results">
       <h1>{labels.resultsTitle}</h1><p>{en ? 'Records from this session' : '本次活動紀錄'}</p>
       <section className="score-priority"><h2 className="score-priority-title">{en ? 'Key results' : '主要統計'}</h2><dl className="score-key-grid">{[[labels.accuracy, `${result.Accuracy_Percent}%`], [labels.visible, `${result.Hand_Visible_Percent}%`], [labels.reps, result.Successful_Reps]].map(([label, value]) => <div className="score-key-metric" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
-      <section className="score-context"><h2>{en ? 'Session overview' : '當次概況'}</h2><dl className="score-context-list">{[...summaryItems, { label: labels.bestHold, value: `${result.Best_Hold_Seconds}s` }, { label: labels.interrupted, value: result.Interrupted_Holds }, { label: labels.level, value: result.Adaptive_Level }, { label: en ? 'Actual activity duration' : '實際活動時間', value: `${result.Duration_Seconds}s` }].map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>
+      <section className="score-context"><h2>{en ? 'Session overview' : '當次概況'}</h2><dl className="score-context-list">{[...summaryItems, { label: labels.raisedTime, value: `${result.Raised_Percent}%` }, { label: labels.bestHold, value: `${result.Best_Hold_Seconds}s` }, { label: labels.interrupted, value: result.Interrupted_Holds }, { label: labels.level, value: result.Adaptive_Level }, { label: en ? 'Actual activity duration' : '實際活動時間', value: `${result.Duration_Seconds}s` }].map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>
       <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang} />
       <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Results stay on this device.' : '獨立遊玩，成果保留於本機畫面。') : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
       {saveState === 'error' && <button className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
@@ -265,7 +324,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   </div>;
 }
 
-function DrawHand(canvas: HTMLCanvasElement | null, points: { x: number; y: number }[]) {
+function DrawHand(canvas: HTMLCanvasElement | null, points: { x: number; y: number }[], raiseLinePercent: number) {
   const context = canvas?.getContext('2d');
   if (!context || !canvas) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -275,4 +334,11 @@ function DrawHand(canvas: HTMLCanvasElement | null, points: { x: number; y: numb
     context.beginPath(); indices.forEach((index, order) => { const point = points[index]; if (!point) return; if (!order) context.moveTo((1 - point.x) * canvas.width, point.y * canvas.height); else context.lineTo((1 - point.x) * canvas.width, point.y * canvas.height); }); context.stroke();
   }
   for (const point of points) { context.beginPath(); context.arc((1 - point.x) * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI); context.fill(); }
+  const palm = points.length ? GetHandCursorPoint(points.map(point => ({ ...point, z: 0 })), canvas.width, canvas.height) : null;
+  const belowLine = palm !== null && palm.y > canvas.height * raiseLinePercent / 100;
+  context.strokeStyle = styles.getPropertyValue(belowLine ? '--hand-point' : '--hand-line').trim();
+  context.lineWidth = belowLine ? 4 : 2;
+  context.setLineDash([8, 6]); context.beginPath();
+  context.moveTo(0, canvas.height * raiseLinePercent / 100); context.lineTo(canvas.width, canvas.height * raiseLinePercent / 100);
+  context.stroke(); context.setLineDash([]);
 }

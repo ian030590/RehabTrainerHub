@@ -24,6 +24,7 @@ export interface TargetState {
   radius: number;
   level: number;
   holdTargetMs: number;
+  laneY?: number;
 }
 export interface HandState {
   x: number;
@@ -37,11 +38,18 @@ export interface LaserEncounter {
   spawnedAt: number;
   baseRadius: number;
   defeatedUntil: number;
+  destinationX: number | null;
+  destinationY: number | null;
+  arrived: boolean;
+  moving: boolean;
+  facingLeft: boolean;
+  interruptedUntil: number;
 }
 export interface SessionMetrics {
   startedAt: number;
   lastTickAt: number;
   handVisibleMs: number;
+  raisedMs: number;
   inTargetMs: number;
   successes: number;
   misses: number;
@@ -73,6 +81,8 @@ export interface SessionRecord {
   Adaptive_Level: number;
   Accuracy_Percent: number;
   Hand_Visible_Percent: number;
+  Raise_Line_Percent: number;
+  Raised_Percent: number;
   Successful_Reps: number;
   Interrupted_Holds: number;
   Best_Hold_Seconds: number;
@@ -92,8 +102,14 @@ export interface LiveState {
   handX: number;
   handY: number;
   handVisible: boolean;
+  handRaised: boolean;
   insideTarget: boolean;
   laserActive: boolean;
   enemyPhase: 'active' | 'defeated';
   enemyNumber: number;
+  enemyMoving: boolean;
+  enemyFacingLeft: boolean;
+  defeatFrame: number;
+  interrupted: boolean;
+  patrolY: number;
 }

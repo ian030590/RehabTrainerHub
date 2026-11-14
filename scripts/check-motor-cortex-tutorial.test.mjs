@@ -11,9 +11,15 @@ test('motor tutorials explain every real target in both languages', async () => 
   for(const language of ['zh','en']) {
     const steps=GetMotorTutorialSteps(language);
     assert.deepEqual(steps.map(step=>step.target),['.motor-cortex-target','.motor-cortex-hand-cursor','.motor-cortex-hold-meter','.motor-cortex-hud','.motor-cortex-camera']);
-    assert.match(steps[0].text,language==='en'?/Random/:/隨機/);
+    assert.match(steps[0].text,language==='en'?/random spot/:/隨機/);
+    if(language==='en')assert.doesNotMatch(steps[0].text,/Random spot/);
     assert.match(steps[2].text,language==='en'?/interrupt/:/中斷/);
     assert.match(steps[4].text,/MediaPipe/);
+    assert.match(steps[0].text,language==='en'?/road|horizon/:/道路|地平線/);
+    assert.match(steps[1].text,language==='en'?/dashed line/:/虛線/);
+    assert.match(steps[1].text,language==='en'?/settings|height/:/設定|高度/);
+    assert.doesNotMatch(steps[1].text,/upper 80%|上方 80%/);
+    assert.match(steps[2].text,language==='en'?/health|flash/:/血條|閃爍/);
   }
 });
 
