@@ -3,9 +3,68 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
+import ts from 'typescript';
+import { MergeHubGames } from '../apps/rehabtrainerhub/app/hubGames.js';
 import './game-preview-capture.test.mjs';
 
 const gameRoot = new URL('../apps/rehabtrainerhub/games/drawing-defense/', import.meta.url);
+
+async function HubCatalog() {
+  const dependencies = {
+    '@rehab-trainer/hub-modules/catalog': {
+      BuildTrainingGameInstallHref: module => `/games/${module.runtimeId}/`,
+      GetTrainingModuleCopy: (module, locale) => module.copy[locale],
+      GetTrainingModuleCategoryLabel: module => module.category,
+      GetTrainingModuleSubcategoryLabel: module => module.purpose,
+      GetPublishedGameCategoryLabel: category => category,
+      GetPublishedGameSubcategoryLabel: category => category,
+      GetTrainingModuleTheme: () => ({}),
+      GetTrainingThemeId: category => category,
+    },
+    './hubGames.js': { MergeHubGames },
+    './hubBrand': { hubName: 'Hub', hubLocalName: 'Hub' },
+    '@rehab-trainer/ui/officialGameReleases.json': { default: { 'drawing-defense': {} } },
+  };
+  const source = await readFile(new URL('../apps/rehabtrainerhub/app/gameCatalog.ts', import.meta.url), 'utf8');
+  const loaded = { exports: {} };
+  new Function('exports', 'require', ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText)(loaded.exports, name => dependencies[name]);
+  return loaded.exports.BuildHubGameCatalog;
+}
+
+for (const mediaPermission of ['none', 'camera', 'camera-optional', 'camera-or-microphone']) {
+  test(`official cards use ${mediaPermission} from their launch module even when reviewed metadata is present`, async () => {
+    const build = await HubCatalog();
+    const module = { runtimeId: 'drawing-defense', mediaPermission, purpose: 'attention', category: 'brain',
+      copy: { en: { title: 'Drawing', description: 'Practice' } } };
+    const reviewed = { slug: 'drawing-defense', trainer: 'motor', category: 'hand', developerName: 'Studio',
+      copy: { en: { title: 'Reviewed drawing', description: 'Reviewed practice' } },
+      release: { presentation: 'game', capabilities: ['eye-tracking', 'microphone-level'], installUrl: '/install/' } };
+    for (const releases of [[], [reviewed]]) {
+      const [game] = build([module], releases, 'en');
+      assert.equal(game.requirement, mediaPermission);
+      assert.equal(game.requirement, game.launch.module.mediaPermission);
+      assert.equal(game.launch.contract, 'catalog-v1');
+    }
+  });
+}
+
+test('developer cards derive camera and microphone requirements from approved release capabilities', async () => {
+  const build = await HubCatalog();
+  const cameraCapabilities = ['hand-tracking', 'eye-tracking', 'pose-tracking', 'tongue-tracking', 'head-tracking'];
+  const cases = [[[], 'none'], [['pointer', 'keyboard'], 'none'], [['microphone-level'], 'microphone'],
+    ...cameraCapabilities.flatMap(capability => [
+      [[capability], 'camera'], [[capability, 'microphone-level'], 'camera-and-microphone'],
+    ])];
+  for (const [capabilities, expected] of cases) {
+    const release = { slug: 'developer-activity', title: 'Activity', summary: 'Practice', category: 'attention',
+      release: { capabilities, installUrl: '/install/', version: '1.0.0' } };
+    const [game] = build([], [release], 'en');
+    assert.equal(game.requirement, expected, `Capabilities ${capabilities.join(', ')} must describe the required equipment.`);
+    assert.equal(game.launch.contract, 'package-v1');
+  }
+});
 
 test('every official Hub preview has a matching gameplay capture', async () => {
   const registry = JSON.parse(await readFile(new URL('../packages/ui/src/officialGameReleases.json', import.meta.url), 'utf8'));

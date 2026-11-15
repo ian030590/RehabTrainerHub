@@ -249,9 +249,33 @@ test('a delayed assigned plan stays collapsed until requested and a failed refre
   fixture.planRequests[1].reject(Error('offline')); await Settle(); tree = fixture.Render();
   assert.ok(Find(tree, node => node.type === 'plan-details'));
   assert.ok(Find(tree, node => node.type === 'game-overlay'), 'A failed progress refresh keeps the current game result mounted.');
-  assert.ok(Find(tree, node => node.props?.role === 'alert'));
+  const alert = Find(tree, node => node.props?.role === 'alert');
+  assert.ok(alert);
+  assert.equal(Elements(Find(tree, node => node.type === 'details')).includes(alert), false,
+    'A failed refresh must be visible outside the collapsed list.');
+  assert.ok(Elements(alert).includes(Retry(tree, fixture.copy.practicePlans.retry)),
+    'The visible alert must contain its retry control.');
   Retry(tree, fixture.copy.practicePlans.retry).props.onClick(); fixture.Render(); fixture.Flush();
   assert.equal(fixture.planRequests.length, 3);
+});
+
+test('an assigned list refresh announces loading outside its collapsed details without interactive summary controls', async () => {
+  const fixture = await Fixture(); fixture.UsePlan();
+  fixture.Render(); fixture.Flush();
+  const item = { id: 'item-1', gameId: 'reading-training', settings: null };
+  fixture.planRequests[0].resolve({ id: 'plan-1', title: 'Assigned activities', items: [item], week: {}, titles: [] });
+  await Settle(); let tree = fixture.Render();
+  Find(tree, node => node.type === 'plan-details').props.onStart(item);
+  tree = fixture.Render(); Find(tree, node => node.type === 'game-overlay').props.onSaved();
+  fixture.Render(); fixture.Flush(); tree = fixture.Render();
+  const details = Find(tree, node => node.type === 'details');
+  const status = Find(tree, node => node.props?.role === 'status');
+  assert.ok(status);
+  assert.ok(!details.props.open);
+  assert.equal(Elements(details).includes(status), false, 'A pending refresh must be visible while the list is collapsed.');
+  assert.ok(Text(status).includes(fixture.copy.practicePlans.loading));
+  const summary = Find(details, node => node.type === 'summary');
+  assert.equal(Elements(summary).some(node => ['button', 'a', 'input', 'select'].includes(node.type)), false);
 });
 
 test('a failed assigned-list lookup stays in the same row and retries without guessing that no plan exists', async () => {

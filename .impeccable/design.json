@@ -1,0 +1,637 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T17:19:23.436Z",
+  "title": "Design System: 居家訓練網",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "炭墨灰",
+        "canonical": "oklch(26.9% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "深墨黑",
+        "canonical": "oklch(14.5% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "淡墨灰",
+        "canonical": "oklch(93.7% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "heading": {
+        "role": "primary",
+        "displayName": "標題墨",
+        "canonical": "oklch(20.5% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "category-movement": {
+        "role": "secondary",
+        "displayName": "動作藍",
+        "canonical": "oklch(48.9% 0.161 254.9)",
+        "tonalRamp": [
+          "oklch(15% 0.044 254.9)",
+          "oklch(25% 0.073 254.9)",
+          "oklch(35% 0.102 254.9)",
+          "oklch(45% 0.132 254.9)",
+          "oklch(58% 0.152 254.9)",
+          "oklch(72% 0.111 254.9)",
+          "oklch(85% 0.073 254.9)",
+          "oklch(95% 0.044 254.9)"
+        ]
+      },
+      "category-movement-dark": {
+        "role": "secondary",
+        "displayName": "動作藍（深）",
+        "canonical": "oklch(40.3% 0.132 254.7)",
+        "tonalRamp": [
+          "oklch(15% 0.036 254.7)",
+          "oklch(25% 0.060 254.7)",
+          "oklch(35% 0.084 254.7)",
+          "oklch(45% 0.108 254.7)",
+          "oklch(58% 0.124 254.7)",
+          "oklch(72% 0.091 254.7)",
+          "oklch(85% 0.060 254.7)",
+          "oklch(95% 0.036 254.7)"
+        ]
+      },
+      "category-vision": {
+        "role": "secondary",
+        "displayName": "視覺綠",
+        "canonical": "oklch(46.9% 0.104 161.1)",
+        "tonalRamp": [
+          "oklch(15% 0.028 161.1)",
+          "oklch(25% 0.047 161.1)",
+          "oklch(35% 0.066 161.1)",
+          "oklch(45% 0.085 161.1)",
+          "oklch(58% 0.099 161.1)",
+          "oklch(72% 0.072 161.1)",
+          "oklch(85% 0.047 161.1)",
+          "oklch(95% 0.028 161.1)"
+        ]
+      },
+      "category-vision-dark": {
+        "role": "secondary",
+        "displayName": "視覺綠（深）",
+        "canonical": "oklch(38.7% 0.086 161.2)",
+        "tonalRamp": [
+          "oklch(15% 0.023 161.2)",
+          "oklch(25% 0.039 161.2)",
+          "oklch(35% 0.055 161.2)",
+          "oklch(45% 0.070 161.2)",
+          "oklch(58% 0.081 161.2)",
+          "oklch(72% 0.059 161.2)",
+          "oklch(85% 0.039 161.2)",
+          "oklch(95% 0.023 161.2)"
+        ]
+      },
+      "category-cognition": {
+        "role": "secondary",
+        "displayName": "認知棕",
+        "canonical": "oklch(45.7% 0.084 56.9)",
+        "tonalRamp": [
+          "oklch(15% 0.023 56.9)",
+          "oklch(25% 0.038 56.9)",
+          "oklch(35% 0.053 56.9)",
+          "oklch(45% 0.068 56.9)",
+          "oklch(58% 0.079 56.9)",
+          "oklch(72% 0.058 56.9)",
+          "oklch(85% 0.038 56.9)",
+          "oklch(95% 0.023 56.9)"
+        ]
+      },
+      "category-cognition-dark": {
+        "role": "secondary",
+        "displayName": "認知棕（深）",
+        "canonical": "oklch(36.8% 0.067 55.8)",
+        "tonalRamp": [
+          "oklch(15% 0.018 55.8)",
+          "oklch(25% 0.031 55.8)",
+          "oklch(35% 0.043 55.8)",
+          "oklch(45% 0.055 55.8)",
+          "oklch(58% 0.064 55.8)",
+          "oklch(72% 0.046 55.8)",
+          "oklch(85% 0.031 55.8)",
+          "oklch(95% 0.018 55.8)"
+        ]
+      },
+      "category-oral": {
+        "role": "secondary",
+        "displayName": "口腔紫",
+        "canonical": "oklch(49.6% 0.130 293.7)",
+        "tonalRamp": [
+          "oklch(15% 0.036 293.7)",
+          "oklch(25% 0.059 293.7)",
+          "oklch(35% 0.083 293.7)",
+          "oklch(45% 0.107 293.7)",
+          "oklch(58% 0.123 293.7)",
+          "oklch(72% 0.090 293.7)",
+          "oklch(85% 0.059 293.7)",
+          "oklch(95% 0.036 293.7)"
+        ]
+      },
+      "category-oral-dark": {
+        "role": "secondary",
+        "displayName": "口腔紫（深）",
+        "canonical": "oklch(41.0% 0.134 292.7)",
+        "tonalRamp": [
+          "oklch(15% 0.036 292.7)",
+          "oklch(25% 0.061 292.7)",
+          "oklch(35% 0.085 292.7)",
+          "oklch(45% 0.109 292.7)",
+          "oklch(58% 0.126 292.7)",
+          "oklch(72% 0.092 292.7)",
+          "oklch(85% 0.061 292.7)",
+          "oklch(95% 0.036 292.7)"
+        ]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "焦點藍",
+        "canonical": "oklch(54.9% 0.169 256.1)",
+        "tonalRamp": [
+          "oklch(15% 0.046 256.1)",
+          "oklch(25% 0.077 256.1)",
+          "oklch(35% 0.108 256.1)",
+          "oklch(45% 0.138 256.1)",
+          "oklch(58% 0.160 256.1)",
+          "oklch(72% 0.117 256.1)",
+          "oklch(85% 0.077 256.1)",
+          "oklch(95% 0.046 256.1)"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "成功綠",
+        "canonical": "oklch(49.4% 0.101 161.6)",
+        "tonalRamp": [
+          "oklch(15% 0.028 161.6)",
+          "oklch(25% 0.046 161.6)",
+          "oklch(35% 0.065 161.6)",
+          "oklch(45% 0.083 161.6)",
+          "oklch(58% 0.096 161.6)",
+          "oklch(72% 0.070 161.6)",
+          "oklch(85% 0.046 161.6)",
+          "oklch(95% 0.028 161.6)"
+        ]
+      },
+      "success-soft": {
+        "role": "tertiary",
+        "displayName": "成功淡底",
+        "canonical": "oklch(94.7% 0.025 164.4)",
+        "tonalRamp": [
+          "oklch(15% 0.007 164.4)",
+          "oklch(25% 0.011 164.4)",
+          "oklch(35% 0.016 164.4)",
+          "oklch(45% 0.020 164.4)",
+          "oklch(58% 0.024 164.4)",
+          "oklch(72% 0.017 164.4)",
+          "oklch(85% 0.011 164.4)",
+          "oklch(95% 0.007 164.4)"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "警示褐",
+        "canonical": "oklch(51.6% 0.109 74.8)",
+        "tonalRamp": [
+          "oklch(15% 0.030 74.8)",
+          "oklch(25% 0.050 74.8)",
+          "oklch(35% 0.069 74.8)",
+          "oklch(45% 0.089 74.8)",
+          "oklch(58% 0.103 74.8)",
+          "oklch(72% 0.075 74.8)",
+          "oklch(85% 0.050 74.8)",
+          "oklch(95% 0.030 74.8)"
+        ]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "錯誤紅",
+        "canonical": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "oklch(15% 0.049 28.7)",
+          "oklch(25% 0.081 28.7)",
+          "oklch(35% 0.113 28.7)",
+          "oklch(45% 0.146 28.7)",
+          "oklch(58% 0.169 28.7)",
+          "oklch(72% 0.123 28.7)",
+          "oklch(85% 0.081 28.7)",
+          "oklch(95% 0.049 28.7)"
+        ]
+      },
+      "gold": {
+        "role": "tertiary",
+        "displayName": "成就金",
+        "canonical": "oklch(58.1% 0.124 73.2)",
+        "tonalRamp": [
+          "oklch(15% 0.034 73.2)",
+          "oklch(25% 0.056 73.2)",
+          "oklch(35% 0.079 73.2)",
+          "oklch(45% 0.101 73.2)",
+          "oklch(58% 0.117 73.2)",
+          "oklch(72% 0.085 73.2)",
+          "oklch(85% 0.056 73.2)",
+          "oklch(95% 0.034 73.2)"
+        ]
+      },
+      "gold-soft": {
+        "role": "tertiary",
+        "displayName": "成就淡底",
+        "canonical": "oklch(95.9% 0.056 91.8)",
+        "tonalRamp": [
+          "oklch(15% 0.015 91.8)",
+          "oklch(25% 0.026 91.8)",
+          "oklch(35% 0.036 91.8)",
+          "oklch(45% 0.046 91.8)",
+          "oklch(58% 0.053 91.8)",
+          "oklch(72% 0.039 91.8)",
+          "oklch(85% 0.026 91.8)",
+          "oklch(95% 0.015 91.8)"
+        ]
+      },
+      "accent-blue": {
+        "role": "tertiary",
+        "displayName": "資訊藍",
+        "canonical": "oklch(48.2% 0.134 256.7)",
+        "tonalRamp": [
+          "oklch(15% 0.037 256.7)",
+          "oklch(25% 0.061 256.7)",
+          "oklch(35% 0.085 256.7)",
+          "oklch(45% 0.110 256.7)",
+          "oklch(58% 0.127 256.7)",
+          "oklch(72% 0.093 256.7)",
+          "oklch(85% 0.061 256.7)",
+          "oklch(95% 0.037 256.7)"
+        ]
+      },
+      "accent-blue-soft": {
+        "role": "tertiary",
+        "displayName": "資訊淡底",
+        "canonical": "oklch(95.2% 0.017 256.3)",
+        "tonalRamp": [
+          "oklch(15% 0.005 256.3)",
+          "oklch(25% 0.008 256.3)",
+          "oklch(35% 0.011 256.3)",
+          "oklch(45% 0.014 256.3)",
+          "oklch(58% 0.016 256.3)",
+          "oklch(72% 0.012 256.3)",
+          "oklch(85% 0.008 256.3)",
+          "oklch(95% 0.005 256.3)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "灰綠紙底",
+        "canonical": "oklch(97.4% 0.002 165.1)",
+        "tonalRamp": [
+          "oklch(15% 0.001 165.1)",
+          "oklch(25% 0.001 165.1)",
+          "oklch(35% 0.002 165.1)",
+          "oklch(45% 0.002 165.1)",
+          "oklch(58% 0.002 165.1)",
+          "oklch(72% 0.002 165.1)",
+          "oklch(85% 0.001 165.1)",
+          "oklch(95% 0.001 165.1)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "白表面",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "surface-muted": {
+        "role": "neutral",
+        "displayName": "淺灰綠面",
+        "canonical": "oklch(95.7% 0.007 160.1)",
+        "tonalRamp": [
+          "oklch(15% 0.002 160.1)",
+          "oklch(25% 0.003 160.1)",
+          "oklch(35% 0.004 160.1)",
+          "oklch(45% 0.005 160.1)",
+          "oklch(58% 0.006 160.1)",
+          "oklch(72% 0.005 160.1)",
+          "oklch(85% 0.003 160.1)",
+          "oklch(95% 0.002 160.1)"
+        ]
+      },
+      "surface-strong": {
+        "role": "neutral",
+        "displayName": "冷灰面",
+        "canonical": "oklch(92.3% 0.007 247.9)",
+        "tonalRamp": [
+          "oklch(15% 0.002 247.9)",
+          "oklch(25% 0.003 247.9)",
+          "oklch(35% 0.004 247.9)",
+          "oklch(45% 0.006 247.9)",
+          "oklch(58% 0.007 247.9)",
+          "oklch(72% 0.005 247.9)",
+          "oklch(85% 0.003 247.9)",
+          "oklch(95% 0.002 247.9)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "細邊線",
+        "canonical": "oklch(89.6% 0.011 158.8)",
+        "tonalRamp": [
+          "oklch(15% 0.003 158.8)",
+          "oklch(25% 0.005 158.8)",
+          "oklch(35% 0.007 158.8)",
+          "oklch(45% 0.009 158.8)",
+          "oklch(58% 0.010 158.8)",
+          "oklch(72% 0.008 158.8)",
+          "oklch(85% 0.005 158.8)",
+          "oklch(95% 0.003 158.8)"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "控制輪廓",
+        "canonical": "oklch(61.5% 0.016 244.9)",
+        "tonalRamp": [
+          "oklch(15% 0.004 244.9)",
+          "oklch(25% 0.007 244.9)",
+          "oklch(35% 0.010 244.9)",
+          "oklch(45% 0.013 244.9)",
+          "oklch(58% 0.015 244.9)",
+          "oklch(72% 0.011 244.9)",
+          "oklch(85% 0.007 244.9)",
+          "oklch(95% 0.004 244.9)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "輔助文字",
+        "canonical": "oklch(43.9% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(58% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "overlay": {
+        "role": "neutral",
+        "displayName": "遮罩",
+        "canonical": "rgba(20, 24, 28, 0.54)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "每頁唯一的 H1（--type-display）；大廳以 clamp(var(--type-headline), 3.5vw, var(--type-display)) 縮放。"
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "區段 H2（--type-headline），含大廳結果標題。"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "卡片標題、篩選面板標題與次區段 H3（--type-title）。"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "內文、表單、按鈕、品牌名稱（--type-body）；至少 16px，字重 500。"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "分類標籤、篩選計數（tabular-nums）、品牌英文副名、頁尾（--type-label）；全站最小字級。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px rgba(20, 33, 43, 0.08)",
+        "purpose": "嵌入訓練頂欄、關於頁區塊、共用設定與成績元件的輕微分層。"
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 8px 24px rgba(20, 33, 43, 0.12)",
+        "purpose": "浮動面板、共用設定表單、帳號 popover 與 1024px 以下的篩選底部 sheet。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "control",
+        "value": "180ms ease",
+        "purpose": "通用控制的背景、邊框、顏色、外框轉場。"
+      },
+      {
+        "name": "route-enter",
+        "value": "260ms cubic-bezier(0.2, 0.75, 0.25, 1)",
+        "purpose": "路由進場。"
+      },
+      {
+        "name": "card-stagger",
+        "value": "160ms; 6px; 24ms step; 96ms max delay",
+        "purpose": "只用於畫面內新出現的結果卡。"
+      },
+      {
+        "name": "shared-element",
+        "value": "220ms cubic-bezier(0.2, 0.75, 0.25, 1)",
+        "purpose": "選定卡片與訓練視窗背景的 view transition；不含遊戲 iframe。"
+      },
+      {
+        "name": "frame-ready",
+        "value": "320ms ease",
+        "purpose": "遊戲 iframe 準備好後淡入、載入層淡出。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone-narrow",
+        "value": "600px"
+      },
+      {
+        "name": "phone",
+        "value": "767px"
+      },
+      {
+        "name": "tablet",
+        "value": "1023px"
+      },
+      {
+        "name": "desktop-compact",
+        "value": "1180px"
+      },
+      {
+        "name": "page-max",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "卡片主要操作",
+      "kind": "button",
+      "refersTo": "button-card-action",
+      "description": "遊戲卡唯一的實心主要操作，顏色取分類主色。",
+      "html": "<button class=\"ds-btn-card\" type=\"button\">開始訓練</button>",
+      "css": ".ds-btn-card { --trainer-color: #005eb8; --trainer-color-dark: #00478d; display: inline-flex; min-height: 44px; width: 100%; align-items: center; justify-content: center; padding: 10px 12px; border: none; border-radius: var(--radius, 8px); color: var(--text-on-accent, #fff); background: var(--trainer-color); font: 700 1rem/1.6 var(--font-body, \"Noto Sans TC\", sans-serif); cursor: pointer; transition: background-color 200ms ease, transform 200ms ease; } .ds-btn-card:hover { background: var(--trainer-color-dark); } .ds-btn-card:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; } .ds-btn-card:active { transform: translateY(1px) scale(0.98); }"
+    },
+    {
+      "name": "外框按鈕",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "頁首「網站導覽」等次要操作。",
+      "html": "<button class=\"ds-btn-outline\" type=\"button\">網站導覽</button>",
+      "css": ".ds-btn-outline { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid var(--border, #d7dfda); border-radius: var(--radius, 8px); color: var(--text, #262626); background: var(--surface, #fff); font: 600 16px/1.6 var(--font-body, \"Noto Sans TC\", sans-serif); cursor: pointer; transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease; } .ds-btn-outline:hover, .ds-btn-outline:focus-visible { color: var(--primary, #262626); border-color: var(--primary, #262626); background: var(--primary-soft, #eaeaea); } .ds-btn-outline:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; } .ds-btn-outline:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "搜尋框",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "大廳即時搜尋，56px 高、左側圖示、右側 44px 清除鈕。",
+      "html": "<label class=\"ds-search\"><span class=\"ds-search-icon\" aria-hidden=\"true\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"M15.5 15.5 20 20\"/></svg></span><span class=\"ds-sr\">搜尋遊戲</span><input type=\"search\" placeholder=\"搜尋遊戲名稱或練習類別\"></label>",
+      "css": ".ds-search { position: relative; display: block; max-width: 560px; } .ds-search-icon { position: absolute; top: 50%; left: 16px; color: var(--text-muted, #525252); transform: translateY(-50%); pointer-events: none; } .ds-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); } .ds-search input { width: 100%; height: 56px; padding: 12px 56px 12px 48px; border: 1px solid var(--border-strong, #7d868e); border-radius: var(--radius, 8px); color: var(--text, #262626); background: var(--surface, #fff); font: 500 1rem/1.6 var(--font-body, \"Noto Sans TC\", sans-serif); transition: border-color 180ms ease; } .ds-search input::placeholder { color: var(--text-muted, #525252); } .ds-search input:focus-visible { border-color: var(--primary, #262626); outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; }"
+    },
+    {
+      "name": "主導覽",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "桌面頁首四個文字目的地；目前頁淡墨灰底與 3px 底線。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主要導覽\"><a href=\"#\" aria-current=\"page\">訓練大廳</a><a href=\"#\">進度追蹤</a><a href=\"#\">衛教資訊</a><a href=\"#\">下載程式</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 6px; font-family: var(--font-body, \"Noto Sans TC\", sans-serif); } .ds-nav a { position: relative; display: inline-flex; min-height: 44px; align-items: center; padding: 10px 16px; border-radius: var(--radius, 8px); color: var(--text-muted, #525252); font-weight: 700; text-decoration: none; transition: color 200ms ease, background-color 200ms ease; } .ds-nav a::after { position: absolute; right: 18px; bottom: 2px; left: 18px; height: 3px; background: var(--primary, #262626); content: \"\"; transform: scaleX(0); transition: transform 180ms ease; } .ds-nav a:hover { color: var(--primary, #262626); } .ds-nav a[aria-current=\"page\"] { color: var(--primary, #262626); background: var(--primary-soft, #eaeaea); } .ds-nav a[aria-current=\"page\"]::after { transform: scaleX(1); } .ds-nav a:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; }"
+    },
+    {
+      "name": "分類標籤與篩選 chip",
+      "kind": "chip",
+      "refersTo": "chip-filter-active",
+      "description": "分類標籤只標示類別；啟用中的篩選 chip 可點按移除。",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-tag\">視覺訓練</span><button class=\"ds-chip\" type=\"button\"><span>注意力訓練</span><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6 6 18\"/></svg></button></div>",
+      "css": ".ds-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--font-body, \"Noto Sans TC\", sans-serif); } .ds-tag { display: inline-flex; padding: 2px 8px; border-radius: 999px; color: var(--heading, #171717); background: color-mix(in srgb, #006c47 8%, var(--surface, #fff)); font-size: 0.875rem; font-weight: 700; } .ds-chip { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #5a3519; border-radius: var(--radius, 8px); color: var(--text, #262626); background: color-mix(in srgb, #7a4a24 10%, var(--surface, #fff)); font: inherit; cursor: pointer; transition: background-color 180ms ease; } .ds-chip:hover { background: var(--surface-muted, #edf2ef); } .ds-chip:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; }"
+    },
+    {
+      "name": "遊戲卡",
+      "kind": "card",
+      "refersTo": "card-game",
+      "description": "16:9 預覽區以分類淡底襯底；白表面、細邊線、16px 圓角。官方卡依序放分類、名稱、玩法、裝置需求，一個實心主要操作，安裝為旁邊的文字連結。",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-visual\" aria-hidden=\"true\"><svg width=\"56\" height=\"56\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></div><div class=\"ds-card-body\"><span class=\"ds-card-tag\">視覺訓練</span><h3>[遊戲名稱]</h3><p>[遊戲簡介，取自 game.json]</p><p class=\"ds-card-need\">不需攝影機</p><div class=\"ds-card-actions\"><button class=\"ds-card-action\" type=\"button\">開始訓練</button><a class=\"ds-card-install\" href=\"#\"><span>安裝遊戲</span></a></div></div></article>",
+      "css": ".ds-card { --trainer-color: #006c47; --trainer-color-dark: #005235; display: flex; max-width: 360px; flex-direction: column; overflow: hidden; border: 1px solid var(--border, #d7dfda); border-radius: 16px; background: var(--surface, #fff); font-family: var(--font-body, \"Noto Sans TC\", sans-serif); transition: border-color 200ms ease; } .ds-card:hover, .ds-card:focus-within { border-color: color-mix(in srgb, var(--trainer-color) 44%, var(--border, #d7dfda)); } .ds-card:focus-within { outline: 3px solid var(--trainer-color); outline-offset: 4px; } .ds-card-visual { display: grid; aspect-ratio: 16 / 9; place-items: center; color: var(--trainer-color-dark); background: color-mix(in srgb, var(--trainer-color) 8%, var(--surface, #fff)); } .ds-card-body { display: flex; flex-direction: column; padding: 20px; } .ds-card-tag { align-self: flex-start; margin-bottom: 12px; padding: 2px 8px; border-radius: 999px; color: var(--heading, #171717); background: color-mix(in srgb, var(--trainer-color) 8%, var(--surface, #fff)); font-size: 0.875rem; font-weight: 700; } .ds-card h3 { margin: 0 0 8px; color: var(--heading, #171717); font-size: 1.375rem; font-weight: 700; line-height: 1.4; letter-spacing: -0.015em; } .ds-card p { margin: 0 0 16px; color: var(--text-muted, #525252); font-size: 1rem; line-height: 1.6; } .ds-card .ds-card-need { margin: 0 0 12px; } .ds-card-actions { display: flex; align-items: center; gap: 8px; } .ds-card-action { flex: 1 1 0; min-height: 44px; padding: 10px 12px; border: none; border-radius: 8px; color: var(--text-on-accent, #fff); background: var(--trainer-color); font: 700 1rem/1.6 var(--font-body, \"Noto Sans TC\", sans-serif); cursor: pointer; transition: background-color 200ms ease; } .ds-card-action:hover { background: var(--trainer-color-dark); } .ds-card-action:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; } .ds-card-install { display: inline-flex; min-height: 44px; align-items: center; padding: 10px 4px; color: var(--text, #262626); font-weight: 600; text-decoration: none; } .ds-card-install span { text-decoration: underline; text-underline-offset: 4px; } .ds-card-install:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; }"
+    },
+    {
+      "name": "分頁",
+      "kind": "custom",
+      "refersTo": "pagination-current",
+      "description": "44px 方鈕；目前頁深墨黑實心。",
+      "html": "<nav class=\"ds-pages\" aria-label=\"分頁\"><button type=\"button\" disabled>上一頁</button><button type=\"button\" aria-current=\"page\">1</button><button type=\"button\">2</button><button type=\"button\">下一頁</button></nav>",
+      "css": ".ds-pages { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-body, \"Noto Sans TC\", sans-serif); } .ds-pages button { min-width: 44px; min-height: 44px; padding: 8px; border: 1px solid var(--border-strong, #7d868e); border-radius: 8px; color: var(--primary-hover, #0a0a0a); background: var(--surface, #fff); font: 700 1rem/1.6 var(--font-body, \"Noto Sans TC\", sans-serif); cursor: pointer; transition: background-color 180ms ease; } .ds-pages button:hover:not(:disabled):not([aria-current=\"page\"]) { background: var(--primary-soft, #eaeaea); } .ds-pages button[aria-current=\"page\"] { color: var(--text-on-accent, #fff); background: var(--primary-hover, #0a0a0a); border-color: var(--primary-hover, #0a0a0a); } .ds-pages button:disabled { color: var(--text-muted, #525252); background: var(--surface-muted, #edf2ef); cursor: default; } .ds-pages button:focus-visible { outline: 3px solid var(--focus, #1d6fd1); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "標示清楚的工具箱（The Labelled Toolbox）",
+    "overview": "Hub 是一個整理好的工具箱：箱子本身是墨灰與白色，安靜、可信、易讀；顏色只出現在「這件工具屬於哪一類」的標示上。使用者打開大廳，先看到標題、搜尋與分類，再看到一排排以預覽圖為主的遊戲卡；分類色告訴他這是動作、視覺、認知還是口腔練習，墨灰色告訴他哪裡可以操作。練習內容和操作永遠比裝飾醒目。\n\n密度依頁面目的調整：大廳是可掃描的工具目錄，進度頁是資訊層級清楚的紀錄，衛教與關於頁是單欄閱讀。介面面向居家使用者與年長讀者，字級在程式中已整體放大 1.25 倍，觸控區至少 44px。圖片優先瀏覽取自 Instagram、明確導覽與搜尋取自 X、單欄閱讀節奏取自 Threads；不把任何頁面做成社群時間線。",
+    "keyCharacteristics": [
+      "墨灰中性介面，唯一的色彩來源是四個練習分類。",
+      "遊戲預覽圖是卡片的視覺重心，16:9 一致比例。",
+      "扁平分組：1px 邊線、表面明度差與留白；陰影只給浮在內容上的層。",
+      "大字級（內文 16px／500、H1 45px）與至少 44px 的觸控區。",
+      "轉場只說明「從哪裡來、到哪裡去」，不進入遊戲刺激與計分。"
+    ],
+    "rules": [
+      {
+        "name": "The Category-Owns-Color Rule",
+        "body": "只有練習分類能帶來色彩；導覽、一般連結、篩選文字、分頁與表單永遠是墨灰。新增元件若想用色，先問它是否在標示分類。",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Hardcode Rule",
+        "body": "所有顏色來自 `globals.css` 的 CSS 變數或分類主題變數；元件內不寫色碼。深色按鈕上的白字使用 `--text-on-accent`。",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Floor Rule",
+        "body": "必要資訊不小於 14px，內文、表單、按鈕不小於 16px；不照搬參照文件的 14 到 15px 貼文內文或 11 到 13px 關鍵標籤。必要資料不可只靠圖示或 tooltip 傳達。",
+        "section": "typography"
+      },
+      {
+        "name": "The Semantic Heading Rule",
+        "body": "每頁一個 H1，區段 H2，卡片與次區段 H3；層級由語意決定，視覺縮放不改變標籤。",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "靜止的內容不浮起；hover 與焦點以邊框色、底色或外框表達，不以加陰影、放大或漂浮表達。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Visible Focus Rule",
+        "body": "焦點一律 3px `focus` 外框、外距 3px（卡片 4px，並改用分類色）；不可照搬「只換背景而取消 outline」的做法。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** 讓分類色只標示練習類別（The Category-Owns-Color Rule）；介面其餘部分用 `primary`、`heading`、`text-muted` 三階墨灰。",
+      "**Do** 以遊戲預覽圖作為卡片視覺重心，16:9、`object-fit: contain`，並提供替代文字。",
+      "**Do** 保持內文、表單、按鈕至少 16px，觸控區至少 44 × 44px。",
+      "**Do** 以 1px 邊線、表面明度差與留白分組；陰影只給帳號選單、對話框、訓練 overlay 等浮層。",
+      "**Do** 讓每個焦點都有 3px 可見外框；選取、錯誤與成功同時有文字或形狀輔助。",
+      "**Do** 在手機底部分頁同時顯示圖示與文字，並預留 `env(safe-area-inset-bottom)`。",
+      "**Do** 為每個顯示資料的區塊提供載入、空白與錯誤狀態，與實際資料同步。",
+      "**Do** 以 live region／status 呈現必要更新並避免反覆朗讀；支援減少動態及系統高對比（`forced-colors`）。"
+    ],
+    "donts": [
+      "**Don't** 在元件或 `globals.css` 內寫死色碼（The No-Hardcode Rule）；頁首、頁尾與大廳已全數改用 token，進度頁通知與獎盃的十餘處色碼是待改為 token 的例外，不是範例。",
+      "**Don't** 讓導覽、一般連結、篩選文字或分頁使用分類色或品牌藍。",
+      "**Don't** 使用 Instagram 漸層、X 品牌藍或黑底、Threads 社群身份元素、圖示獨佔分頁、14 到 15px 正文、三欄時間線、無限捲動、Story／按讚／追蹤／留言／轉發、虛構熱度與個人化推薦。",
+      "**Don't** 新增暗色模式；目前沒有需求，`color-scheme` 固定為 light。",
+      "**Don't** 給靜止的卡片加陰影、漂浮或放大動畫。",
+      "**Don't** 移除 outline 而只換背景作為焦點樣式。",
+      "**Don't** 讓 Hub 的轉場、stagger 或任何動態進入遊戲 iframe、刺激、計時與計分。"
+    ]
+  }
+}

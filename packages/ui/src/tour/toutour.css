@@ -5,15 +5,15 @@
  * Senior-friendly: large, high-contrast, legible typography for elderly users.
  */
 :root {
-  --tt-surface: #ffffff;
-  --tt-text: #202428;
-  --tt-muted: #4e565f;
-  --tt-accent: #146c5b;
-  --tt-accent-hover: #0d5547;
-  --tt-accent-bg: #e1f1ec;
-  --tt-border: #ccd2d8;
-  --tt-radius: 10px;
-  --tt-mask: rgba(20, 24, 28, 0.55);
+  --tt-surface: var(--surface, #ffffff);
+  --tt-text: var(--text, #262626);
+  --tt-muted: var(--text-muted, #525252);
+  --tt-accent: var(--primary, #262626);
+  --tt-accent-hover: var(--primary-hover, #0a0a0a);
+  --tt-accent-bg: var(--primary-soft, #eaeaea);
+  --tt-border: var(--border-strong, #7d868e);
+  --tt-radius: var(--radius-lg, 12px);
+  --tt-mask: var(--bg-overlay, rgba(20, 24, 28, 0.54));
   --tt-halo: rgba(255, 255, 255, 0.9);
 }
 

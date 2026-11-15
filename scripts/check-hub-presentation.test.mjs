@@ -12,6 +12,91 @@ function StyleRules(css, selector) {
     .map(([, , declarations]) => declarations);
 }
 
+const lobbySelectorPrefixes = [
+  '.hub-', '.lobby-', '.module-', '.filter-', '.pagination', '.result-', '.active-filter',
+  '.catalog-load-notice', '.community-game', '.official-game', '.assigned-practice',
+  '.account-menu', '.account-button', '.account-popover', '.account-avatar',
+];
+
+function LobbyRules(css) {
+  const code = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  return [...code.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap(([, selectors, body]) => selectors.split(',')
+    .map(selector => selector.trim())
+    .filter(selector => ['h1', 'h2', 'h3', 'body'].includes(selector)
+      || lobbySelectorPrefixes.some(prefix => selector.includes(prefix)))
+    .map(selector => ({ selector, body })));
+}
+
+test('the Hub declares five type roles in its first root block and reuses them for lobby text', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const root = css.match(/:root\s*\{([^}]*)\}/)[1];
+  for (const [role, value] of Object.entries({ display: '2.8125rem', headline: '1.875rem', title: '1.375rem', body: '1rem', label: '0.875rem' })) {
+    assert.match(root, new RegExp(`--type-${role}:\\s*${value.replace('.', '\\.')}\\s*;`));
+  }
+  const modern = css.match(/@supports\s*\(color:\s*oklch\([^)]*\)\)\s*\{\s*:root\s*\{([^}]+)\}/)[1];
+  assert.doesNotMatch(modern, /--type-/);
+  assert.match(StyleRules(css, '.lobby-welcome h1').join('\n'), /clamp\(var\(--type-headline\),\s*3\.5vw,\s*var\(--type-display\)\)/);
+});
+
+test('every lobby text size uses a type role while icon glyphs retain their own sizes', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const failures = [];
+  for (const { selector, body } of LobbyRules(css)) {
+    for (const [, value] of body.matchAll(/\bfont-size:\s*([^;]+);/g)) {
+      if (/material-symbols-outlined|-icon/.test(selector)) continue;
+      const token = /^var\(--type-(display|headline|title|body|label)\)$/;
+      const clamp = /^clamp\(var\(--type-(display|headline|title|body|label)\),\s*[\d.]+vw,\s*var\(--type-(display|headline|title|body|label)\)\)$/;
+      if (!token.test(value.trim()) && !clamp.test(value.trim())) failures.push(`${selector}: ${value}`);
+    }
+  }
+  assert.deepEqual(failures, [], 'Lobby text must use the five type roles, including its phone and tablet rules.');
+});
+
+test('lobby corners use the radius scale instead of literal pixel radii', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const failures = [];
+  for (const { selector, body } of LobbyRules(css)) {
+    for (const [, value] of body.matchAll(/\bborder(?:-[\w-]+)?-radius:\s*([^;]+);/g)) {
+      if (/\d(?:\.\d+)?px\b/.test(value)) failures.push(`${selector}: ${value}`);
+    }
+  }
+  assert.deepEqual(failures, []);
+  const root = css.match(/:root\s*\{([^}]*)\}/)[1];
+  for (const [role, value] of Object.entries({ sm: '4px', lg: '12px', xl: '16px', pill: '999px' })) {
+    assert.match(root, new RegExp(`--radius-${role}:\\s*${value};`));
+  }
+  assert.match(root, /--radius-s:\s*var\(--radius\);/);
+  assert.match(root, /--radius-l:\s*var\(--radius\);/);
+});
+
+test('lobby colors and shadows use Hub tokens outside the palette declarations', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const failures = LobbyRules(css).filter(({ body }) => /#[\da-f]{3,8}\b|\brgba?\(/i.test(body))
+    .map(({ selector }) => selector);
+  assert.deepEqual(failures, []);
+});
+
+test('lobby help, install, retry and result focus use the same visible site ring', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of ['.lobby-tour-button:focus-visible', '.lobby-guide-link:focus-visible',
+    '.module-card-footer a:focus-visible', '.catalog-load-notice button:focus-visible', '#result-title:focus-visible']) {
+    const rule = StyleRules(css, selector).join('\n');
+    assert.match(rule, /outline:\s*3px solid var\(--focus\);/, selector);
+    assert.match(rule, /outline-offset:\s*3px;/, selector);
+    assert.doesNotMatch(rule, /outline:\s*(?:none|0)\b/);
+  }
+});
+
+test('disabled lobby filters stay muted without hover tint and use an unavailable cursor', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of ['.filter-option:has(input:disabled)', '.filter-category-header:has(input:disabled)']) {
+    const rule = StyleRules(css, selector).join('\n');
+    assert.match(rule, /color:\s*var\(--text-muted\);/);
+    assert.match(rule, /cursor:\s*not-allowed;/);
+    assert.match(rule, /background:\s*transparent;/);
+  }
+});
+
 test('Hub headings, body, secondary text and ordinary links use neutral dark colors', async () => {
   const css = await readFile(new URL('globals.css', appRoot), 'utf8');
   const root = css.match(/:root\s*\{([^}]*)\}/)[1];
@@ -74,7 +159,8 @@ test('navigation icons keep one glyph of space while the webfont loads', async (
 
 const games = Array.from({ length: 14 }, (_, index) => ({
   id: `game-${index}`, title: `Activity ${index}`, summary: 'Practice at home', author: 'Hub',
-  purpose: index < 4 ? 'attention' : 'memory', theme: { icon: { type: 'symbol', value: 'grid_view' } },
+  version: '1.0.0', requirement: 'none', imageSrc: '/preview.webp',
+  purpose: index < 4 ? 'attention' : 'memory', theme: { icon: { type: 'svg', value: '/logo.svg', alt: 'MotorTrainer' } },
   installUrl: `/games/game-${index}/`, launch: { contract: 'catalog-v1', module: {} },
 }));
 
@@ -91,11 +177,23 @@ function Text(tree) {
   return Text(tree.props?.children);
 }
 
-async function Lobby(language = 'en') {
+function Deferred() {
+  let resolve, reject;
+  const promise = new Promise((accept, fail) => { resolve = accept; reject = fail; });
+  return { promise, resolve, reject };
+}
+
+async function Settle() {
+  for (let index = 0; index < 10; index += 1) await Promise.resolve();
+}
+
+async function Lobby(language = 'en', catalog = games, { fetchCatalog = false } = {}) {
   const slots = [];
   const effects = [];
+  const requests = [];
   let cursor = 0;
-  const jsx = (type, props) => ({ type, props });
+  const jsx = (type, props) => typeof type === 'function' ? type(props) : ({ type, props });
+  const tourCalls = [];
   const react = {
     useState(initial) {
       const index = cursor++;
@@ -105,10 +203,14 @@ async function Lobby(language = 'en') {
     useRef(initial) { const index = cursor++; return slots[index] ??= { current: initial }; },
     useEffect(effect, deps) {
       const index = cursor++;
-      if (!slots[index] || deps.some((value, i) => value !== slots[index][i])) {
-        slots[index] = deps;
-        // Only state effects run here; network and document setup belong to browser checks.
-        if (deps.length) effects.push(effect);
+      const previous = slots[index];
+      if (!previous || deps.some((value, i) => value !== previous.deps[i])) {
+        const entry = { deps };
+        slots[index] = entry;
+        const isCatalogFetch = effect.toString().includes('FetchPublishedGames');
+        if ((deps.length || isCatalogFetch) && (!isCatalogFetch || fetchCatalog)) {
+          effects.push(() => { previous?.cleanup?.(); entry.cleanup = effect(); });
+        }
       }
     },
     useCallback: callback => callback,
@@ -124,15 +226,23 @@ async function Lobby(language = 'en') {
     './hubMotion': { AnimateVisibleGameCards: () => () => {}, CancelHubGameTransition() {}, TransitionGameSurface: (_source, update) => update() },
     './i18n': { GetHubUiCopy: () => copy },
     './i18n/HubLanguage': { useHubLanguage: () => ({ language: language === 'en' ? 'en' : 'zh', locale: language, t: key => key }) },
-    './gameCatalog': { BuildHubGameCatalog: () => games },
+    './gameCatalog': { BuildHubGameCatalog: (_modules, published) => [...catalog, ...published] },
+    './publishedGames': { FetchPublishedGames: signal => {
+      const request = { ...Deferred(), signal, previousAbortedOnStart: requests.map(previous => previous.signal.aborted) };
+      requests.push(request);
+      return request.promise;
+    } },
+    './tour/hubTour': { StartHubTour: (...args) => tourCalls.push(args) },
+    'next/image': { default: props => ({ type: 'img', props }) },
+    '@rehab-trainer/ui/components/CardImagePlaceholder': { CardImagePlaceholder: props => ({ type: 'img', props }) },
     './lobbyResults.js': results,
     './trainingThemeStyle': { BuildTrainingThemeStyle: () => ({}) },
     '@rehab-trainer/ui/hooks/useBottomSheet': { useBottomSheet: () => ({ dialogRef: {}, isMobile: false }) },
     '@rehab-trainer/hub-modules/catalog': {
       trainingCatalog: [], trainingPurposes: [{ id: 'attention' }, { id: 'memory' }],
-      trainerCategoryTags: [{ id: 'brain', label: { en: 'Cognition' } }],
-      categorySubcategories: { brain: ['attention', 'memory'] },
-      trainingThemes: Object.fromEntries(['attention', 'memory'].map(id => [id, { label: { en: id }, icon: {} }])),
+      trainerCategoryTags: [{ id: 'brain', label: { en: 'Cognition', 'zh-TW': '認知' } }, { id: 'motor', label: { en: 'Movement', 'zh-TW': '動作' } }],
+      categorySubcategories: { brain: ['attention', 'memory'], motor: ['hand'] },
+      trainingThemes: Object.fromEntries(['attention', 'memory', 'hand'].map(id => [id, { label: { en: id, 'zh-TW': id }, icon: {} }])),
       GetTrainerCategoryTheme: () => ({}),
     },
   };
@@ -141,10 +251,358 @@ async function Lobby(language = 'en') {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX,
   } }).outputText;
   const loaded = { exports: {} };
-  new Function('exports', 'require', 'document', compiled)(loaded.exports, name => dependencies[name] ?? {}, { activeElement: null, querySelector: () => null });
+  new Function('exports', 'require', 'document', compiled)(loaded.exports, name => dependencies[name] ?? {}, {
+    activeElement: null, querySelector: () => null, head: { append() {} }, createElement: () => ({ remove() {} }),
+  });
   const render = () => { cursor = 0; const tree = loaded.exports.TrainingLobby(); effects.splice(0).forEach(effect => effect()); return Elements(tree); };
-  return { render, copy, dictionary: dictionary.exports };
+  return { render, copy, dictionary: dictionary.exports, tourCalls, requests,
+    unmount: () => slots.forEach(slot => slot?.cleanup?.()),
+  };
 }
+
+for (const [language, loading, unavailable, retryLabel] of [
+  ['zh-TW', '正在載入開發者遊戲…', '部分遊戲目前無法載入，已顯示的遊戲仍可開始。', '重新載入'],
+  ['en', 'Loading developer games…', 'Some games could not be loaded. Available games can still be played.', 'Try again'],
+]) {
+  test(`${language} catalog loading is announced above the grid while official activities remain available`, async () => {
+    const { render, requests } = await Lobby(language, [games[0]], { fetchCatalog: true });
+    let elements = render();
+    const headingFocus = [];
+    elements.find(node => node.props?.id === 'result-title').props.ref.current = { focus: options => headingFocus.push(options) };
+    assert.equal(requests.length, 1);
+    const notice = elements.find(node => node.props?.className === 'catalog-load-notice');
+    assert.ok(notice, 'A pending developer catalog needs a visible loading line.');
+    assert.equal(notice.props.role, 'status');
+    assert.ok(Text(notice).includes(loading));
+    assert.ok(!Elements(notice).some(node => node.type === 'button'));
+    assert.ok(elements.indexOf(notice) > elements.findIndex(node => node.props?.className === 'result-header'));
+    assert.ok(elements.indexOf(notice) < elements.findIndex(node => node.props?.className === 'module-grid'));
+    assert.equal(elements.filter(node => node.type === 'article').length, 1);
+    const developer = { ...games[1], title: 'Developer activity', launch: { contract: 'package-v1', game: {} },
+      release: { launchUrl: 'https://runner.example/games/developer/1.0.0/' } };
+    requests[0].resolve([developer]); await Settle(); elements = render();
+    assert.ok(!elements.some(node => node.props?.className === 'catalog-load-notice'));
+    assert.ok(elements.some(node => node.type === 'h3' && Text(node) === developer.title));
+    assert.deepEqual(headingFocus, [], 'The initial catalog response must not move focus.');
+  });
+
+  test(`${language} catalog errors expose a retry that aborts the old request and preserves notice focus while loading`, async () => {
+    const { render, requests } = await Lobby(language, [games[0]], { fetchCatalog: true });
+    render(); requests[0].reject(Error('offline')); await Settle();
+    let elements = render();
+    const notice = elements.find(node => node.props?.className === 'catalog-load-notice');
+    assert.ok(Text(notice).includes(unavailable));
+    const retry = Elements(notice).find(node => node.type === 'button' && Text(node).includes(retryLabel));
+    assert.ok(retry, 'A catalog failure needs a retry button.');
+    assert.equal(retry.props.type, 'button');
+    assert.ok(Elements(retry).some(node => node.props?.['aria-hidden'] === 'true' && Text(node) === 'refresh'));
+    assert.ok(Elements(notice).some(node => node.props?.['aria-hidden'] === 'true' && Text(node) === 'warning'));
+    assert.equal(notice.props.tabIndex, -1);
+    let focused = 0;
+    const headingFocus = [];
+    elements.find(node => node.props?.id === 'result-title').props.ref.current = { focus: options => headingFocus.push(options) };
+    notice.props.ref.current = { focus() { focused += 1; } };
+    retry.props.onClick(); elements = render();
+    assert.equal(requests.length, 2);
+    assert.deepEqual(requests[1].previousAbortedOnStart, [true], 'The prior request is aborted before its replacement starts.');
+    const pendingNotice = elements.find(node => node.props?.className === 'catalog-load-notice');
+    assert.ok(pendingNotice, 'Retry must keep the existing region mounted.');
+    assert.equal(pendingNotice.type, notice.type);
+    assert.equal(pendingNotice.props.ref, notice.props.ref);
+    assert.equal(focused, 1);
+    assert.ok(Text(pendingNotice).includes(loading));
+    assert.ok(!Text(pendingNotice).includes(unavailable));
+    requests[1].resolve([]); await Settle(); elements = render();
+    assert.ok(!elements.some(node => node.props?.className === 'catalog-load-notice'));
+    assert.equal(elements.filter(node => node.type === 'article').length, 1);
+    assert.deepEqual(headingFocus, [{ preventScroll: true }], 'A successful retry must move focus to the results heading.');
+  });
+}
+
+test('unmount aborts the pending developer catalog request', async () => {
+  const { render, requests, unmount } = await Lobby('en', [games[0]], { fetchCatalog: true });
+  render();
+  assert.equal(requests[0].signal.aborted, false);
+  unmount();
+  assert.equal(requests[0].signal.aborted, true);
+  requests[0].reject(Error('aborted')); await Settle();
+});
+
+test('catalog failures use a neutral surface and a 44px retry without side stripes or gold fill', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const notice = StyleRules(css, '.catalog-load-notice').join('\n');
+  assert.doesNotMatch(notice, /border-left:\s*(?:[2-9]|\d{2,})px/);
+  assert.doesNotMatch(notice, /--gold/);
+  assert.match(notice, /background:\s*var\(--surface-muted\);/);
+  assert.match(notice, /border:\s*1px solid var\(--border\);/);
+  assert.match(notice, /border-radius:\s*var\(--radius\);/);
+  assert.match(notice, /color:\s*var\(--text\);/);
+  assert.match(StyleRules(css, '.catalog-load-notice > .material-symbols-outlined').join('\n'), /color:\s*var\(--warning\);/);
+  assert.match(StyleRules(css, '.catalog-load-notice button').join('\n'), /min-height:\s*44px;/);
+  assert.match(StyleRules(css, '.catalog-load-notice button:focus-visible').join('\n'), /outline:\s*3px solid var\(/);
+  assert.match(css, /@media\s*\(max-width:\s*600px\)\s*\{\s*\.catalog-load-notice\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\);/);
+  assert.match(StyleRules(css, '.catalog-load-notice button').join('\n'), /grid-column:\s*2;/);
+});
+
+test('catalog loading stays a single quiet text line without extra padding or margins', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const loading = StyleRules(css, '.catalog-load-notice[data-state="loading"]').join('\n');
+  assert.match(loading, /margin:\s*0;/);
+  assert.match(loading, /padding:\s*0;/);
+  assert.match(loading, /border:\s*0;/);
+  assert.match(loading, /color:\s*var\(--text-muted\);/);
+  assert.match(StyleRules(css, '.catalog-load-notice p').join('\n'), /margin:\s*0;/);
+});
+
+for (const [language, firstVisit, startTour, readGuide, noneYet] of [
+  ['zh-TW', '第一次使用？', '開始網站導覽', '閱讀練習指南', '尚無'],
+  ['en', 'First time here?', 'Start the site tour', 'Read the practice guide', 'None yet'],
+]) {
+  test(`${language} lobby link labels carry their underline separately from the icons`, async () => {
+    const { render } = await Lobby(language);
+    const elements = render();
+    for (const node of [elements.find(node => node.props?.className === 'lobby-tour-button'),
+      elements.find(node => node.type === 'a' && node.props.href === '#lobby-guide'),
+      elements.find(node => node.type === 'a' && node.props.href === games[0].installUrl)]) {
+      const label = Elements(node).find(child => child.props?.className === 'lobby-link-label');
+      assert.ok(label, 'Only the label, rather than the neighboring icon glyph, should carry an underline.');
+      assert.equal(label.type, 'span');
+      assert.equal(Elements(label).some(child => child.props?.className?.includes('material-symbols-outlined')), false);
+      assert.ok(Text(label).trim().length > 0);
+    }
+  });
+  test(`${language} first visit offers a working tour and guide with the safety note visible`, async () => {
+    const { render, copy, tourCalls } = await Lobby(language);
+    const elements = render();
+    const heading = elements.find(node => node.props?.className === 'lobby-heading');
+    const content = Elements(heading);
+    assert.ok(content.some(node => Text(node).includes(firstVisit)), 'The first-visit invitation stays visible.');
+    const tour = content.find(node => node.type === 'button' && Text(node).includes(startTour));
+    assert.ok(tour, 'The first-visit line needs a tour button.');
+    assert.equal(tour.props.type, 'button');
+    assert.ok(Elements(tour).some(node => node.props?.['aria-hidden'] === 'true' && Text(node) === 'explore'));
+    tour.props.onClick();
+    assert.deepEqual(tourCalls, [[language === 'en' ? 'en' : 'zh', { force: true }]]);
+    const guide = content.find(node => node.type === 'a' && node.props.href === '#lobby-guide');
+    assert.ok(Text(guide).includes(readGuide));
+    assert.ok(Elements(guide).some(node => node.props?.['aria-hidden'] === 'true' && Text(node) === 'menu_book'));
+    assert.ok(Text(content.find(node => node.type === 'aside')).includes(copy.lobby.intro));
+    assert.equal(elements.filter(node => node.props?.className === 'page-kicker').length, 0);
+    const h1 = content.find(node => node.type === 'h1');
+    assert.equal(h1.props.id, 'lobby-title');
+    assert.deepEqual(h1.props.children[0].props.children, [copy.lobby.kicker, ' ']);
+    assert.equal(h1.props.children[0].props.className, 'sr-only');
+    assert.equal(h1.props.children[1], copy.lobby.title);
+    assert.ok(elements.some(node => node.type === 'nav' && node.props['aria-label'] === copy.lobby.guide.kicker));
+    assert.equal(Object.hasOwn(copy.lobby, 'beforeStarting'), false);
+  });
+
+  test(`${language} cards show equipment and keep developer attribution only on developer cards`, async () => {
+    const requirementCopy = language === 'en' ? {
+      none: 'No camera needed', camera: 'Camera required', 'camera-optional': 'Camera optional',
+      'camera-or-microphone': 'Camera or microphone required', 'camera-and-microphone': 'Camera and microphone required',
+      microphone: 'Microphone required',
+    } : {
+      none: '不需攝影機', camera: '需要攝影機', 'camera-optional': '可選用攝影機',
+      'camera-or-microphone': '需要攝影機或麥克風', 'camera-and-microphone': '需要攝影機和麥克風', microphone: '需要麥克風',
+    };
+    for (const [requirement, label] of Object.entries(requirementCopy)) {
+      const official = { ...games[0], requirement };
+      const developer = { ...games[1], requirement, launch: { contract: 'package-v1', game: {} } };
+      const { render } = await Lobby(language, [official, developer]);
+      const cards = render().filter(node => node.type === 'article');
+      for (const [index, card] of cards.entries()) {
+        const content = Elements(card);
+        const equipment = content.find(node => node.props?.className === 'module-card-requirement');
+        assert.ok(equipment, 'Every card must state its equipment requirement.');
+        assert.ok(Text(equipment).includes(label));
+        assert.ok(Elements(equipment).some(node => node.props?.['aria-hidden'] === 'true' &&
+          Text(node) === (requirement === 'none' ? 'check_circle' : 'info')));
+        assert.ok(content.indexOf(equipment) < content.findIndex(node => node.props?.className?.includes('module-card-footer')));
+        const details = content.find(node => node.type === 'dl');
+        if (index === 0) assert.equal(details, undefined, 'Official cards must omit author and version.');
+        else {
+          assert.ok(Text(details).includes(language === 'en' ? 'Author' : '作者'));
+          assert.ok(Text(details).includes(language === 'en' ? 'Version' : '版本'));
+          assert.ok(Text(details).includes(developer.author));
+          assert.ok(Text(details).includes(developer.version));
+        }
+        const install = content.find(node => node.type === 'a');
+        assert.equal(install.props.href, [official, developer][index].installUrl);
+        assert.equal(install.props.target, '_blank');
+        assert.equal(install.props.rel, 'noopener noreferrer');
+        assert.ok(install.props['aria-label'].includes([official, developer][index].title));
+        const preview = content.find(node => node.type === 'img' && node.props.src === '/preview.webp');
+        assert.equal(preview.props.alt, `${[official, developer][index].title} ${language === 'en' ? 'activity screen' : '活動畫面'}`);
+        assert.ok(!preview.props.alt.includes(official.summary));
+        assert.ok(content.filter(node => node.type === 'img' && node.props.src === '/logo.svg').every(node => node.props.alt === ''));
+      }
+    }
+  });
+
+  test(`${language} search updates facets without using the purpose selection and disables empty options`, async () => {
+    const { render } = await Lobby(language);
+    let elements = render();
+    const purposes = () => elements.filter(node => node.props?.className === 'filter-option filter-subcategory-option');
+    const categories = () => elements.filter(node => node.props?.className === 'filter-category-header');
+    assert.equal(Elements(purposes()[2]).find(node => node.type === 'input').props.disabled, true);
+    assert.equal(Text(Elements(purposes()[2]).find(node => node.type === 'small')), noneYet);
+    assert.equal(Elements(categories()[1]).find(node => node.type === 'input').props.disabled, true);
+    Elements(purposes()[0]).find(node => node.type === 'input').props.onChange();
+    elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: '  ACTIVITY 4  ' } });
+    elements = render();
+    assert.equal(Text(Elements(purposes()[0]).find(node => node.type === 'small')), '0');
+    const selected = Elements(purposes()[0]).find(node => node.type === 'input');
+    assert.equal(selected.props.checked, true);
+    assert.equal(selected.props.disabled, false, 'A selected empty purpose stays removable.');
+    assert.equal(Text(Elements(purposes()[1]).find(node => node.type === 'small')), '1');
+    assert.equal(Text(Elements(categories()[0]).find(node => node.type === 'small')), '1');
+    selected.props.onChange();
+    elements = render();
+    assert.equal(Elements(purposes()[0]).find(node => node.type === 'input').props.disabled, true);
+    assert.equal(Text(Elements(purposes()[0]).find(node => node.type === 'small')), noneYet);
+    assert.equal(elements.filter(node => node.type === 'article').length, 1);
+    Elements(purposes()[1]).find(node => node.type === 'input').props.onChange();
+    elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: 'unavailable' } });
+    elements = render();
+    const category = Elements(categories()[0]).find(node => node.type === 'input');
+    assert.equal(category.props.disabled, false, 'A category containing a selection must stay enabled.');
+    category.props.onChange();
+    elements = render();
+    assert.equal(purposes().some(option => Elements(option).find(node => node.type === 'input').props.checked), false,
+      'An empty category can remove its remaining selection without selecting disabled purposes.');
+    assert.equal(Elements(categories()[0]).find(node => node.type === 'input').props.disabled, true);
+  });
+}
+
+test('search facets match descriptions and authors as well as titles', async () => {
+  const { render } = await Lobby('en', [games[0], { ...games[4], summary: 'Balance practice', author: 'Contributor' }]);
+  for (const query of ['balance', 'contributor']) {
+    let elements = render();
+    elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: query } });
+    elements = render();
+    const purposes = elements.filter(node => node.props?.className === 'filter-option filter-subcategory-option');
+    assert.equal(Text(Elements(purposes[1]).find(node => node.type === 'small')), '1');
+    assert.equal(Elements(purposes[0]).find(node => node.type === 'input').props.disabled, true);
+    assert.equal(elements.filter(node => node.type === 'article').length, 1);
+  }
+});
+
+test('search counts exclude nonmatching activities while ignoring the selected purpose', async () => {
+  const { render } = await Lobby();
+  let elements = render();
+  elements.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange();
+  elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: 'Activity 4' } });
+  elements = render();
+  const counts = elements.filter(node => node.props?.className === 'filter-option filter-subcategory-option')
+    .map(node => Text(Elements(node).find(child => child.type === 'small')));
+  assert.deepEqual(counts.slice(0, 2), ['0', '1']);
+  const category = elements.find(node => node.props?.className === 'filter-category-header');
+  assert.equal(Text(Elements(category).find(node => node.type === 'small')), '1');
+});
+
+test('official cards omit author and version while developer cards retain both', async () => {
+  const { render } = await Lobby('en', [games[0], { ...games[1], launch: { contract: 'package-v1', game: {} } }]);
+  const cards = render().filter(node => node.type === 'article');
+  assert.equal(Elements(cards[0]).some(node => node.type === 'dl'), false);
+  const details = Elements(cards[1]).find(node => node.type === 'dl');
+  assert.ok(Text(details).includes('Author'));
+  assert.ok(Text(details).includes('Version'));
+  assert.ok(Text(details).includes(games[1].author));
+  assert.ok(Text(details).includes(games[1].version));
+});
+
+test('preview alternatives identify the activity without repeating its description', async () => {
+  for (const language of ['zh-TW', 'en']) {
+    const { render } = await Lobby(language);
+    const preview = render().find(node => node.type === 'img' && node.props.src === '/preview.webp');
+    assert.equal(preview.props.alt, `${games[0].title} ${language === 'en' ? 'activity screen' : '活動畫面'}`);
+    assert.ok(!preview.props.alt.includes(games[0].summary));
+  }
+});
+
+test('category artwork is decorative beside the visible category labels', async () => {
+  const { render } = await Lobby();
+  const logos = render().filter(node => node.type === 'img' && node.props.src === '/logo.svg');
+  assert.ok(logos.length > 0);
+  assert.ok(logos.every(node => node.props.alt === ''));
+});
+
+test('lobby and guide headings omit the repeated visible eyebrow', async () => {
+  const { render } = await Lobby();
+  assert.equal(render().filter(node => node.props?.className === 'page-kicker').length, 0);
+});
+
+test('category selection does not turn on empty disabled purposes', async () => {
+  const { render } = await Lobby();
+  let elements = render();
+  elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: 'Activity 4' } });
+  elements = render();
+  Elements(elements.find(node => node.props?.className === 'filter-category-header')).find(node => node.type === 'input').props.onChange();
+  elements = render();
+  const selected = elements.filter(node => node.props?.className === 'filter-option filter-subcategory-option')
+    .map(node => Elements(node).find(child => child.type === 'input').props.checked);
+  assert.deepEqual(selected, [false, true, false]);
+});
+
+test('lobby dictionaries describe activities in search, results and pagination', async () => {
+  for (const [language, expected] of [
+    ['zh-TW', ['搜尋活動名稱', '搜尋練習活動', '所有練習活動', '共 {count} 個活動', '活動分頁', '查看 {count} 個活動', '找不到符合條件的活動']],
+    ['en', ['Search activity names', 'Search activities', 'All activities', '{count} activities', 'Activity pages', 'View {count} activities', 'No matching activities']],
+  ]) {
+    const { copy } = await Lobby(language);
+    assert.deepEqual(['searchLabel', 'searchPlaceholder', 'allModules', 'moduleCount', 'paginationLabel', 'viewResults', 'noResultsTitle']
+      .map(key => copy.lobby[key]), expected);
+    assert.equal(copy.lobby.start, language === 'en' ? 'Start training' : '開始訓練');
+  }
+});
+
+test('the first view compacts spacing while preserving readable text and 44px help actions', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const heading = StyleRules(css, '.lobby-heading')[0];
+  assert.ok(Number(heading.match(/padding:\s*(\d+)px/)[1]) <= 24, 'The heading top padding must be at most 24px.');
+  assert.ok(Number(heading.match(/gap:\s*(\d+)px/)[1]) <= 16, 'The heading row gap must be at most 16px.');
+  assert.ok(Number(StyleRules(css, '.lobby-search-row')[0].match(/padding-top:\s*(\d+)px/)[1]) <= 16);
+  assert.ok(Number(StyleRules(css, '.lobby-start-note')[0].match(/padding:\s*(\d+)px/)[1]) <= 16);
+  assert.match(StyleRules(css, '.lobby-start-note p')[0], /font-size:\s*var\(--type-body\);/);
+  for (const selector of ['.lobby-tour-button', '.lobby-guide-link']) {
+    assert.match(StyleRules(css, selector).join('\n'), /min-height:\s*44px;/);
+    assert.match(StyleRules(css, `${selector}:focus-visible`).join('\n'), /outline:\s*3px solid var\(/);
+  }
+});
+
+test('install is an underlined neutral link beside a wider primary start button', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const link = StyleRules(css, '.official-game-actions > a').join('\n');
+  assert.match(link, /text-decoration:\s*none;/);
+  for (const selector of ['.lobby-tour-button', '.lobby-guide-link']) {
+    assert.match(StyleRules(css, selector).join('\n'), /text-decoration:\s*none;/);
+  }
+  const label = StyleRules(css, '.lobby-link-label').join('\n');
+  assert.match(label, /text-decoration:\s*underline;/);
+  assert.match(label, /text-decoration-thickness:\s*1px;/);
+  assert.match(label, /text-underline-offset:\s*4px;/);
+  assert.match(link, /color:\s*var\(--text\);/);
+  assert.match(link, /background:\s*transparent;/);
+  assert.match(link, /border:\s*0;/);
+  assert.match(link, /flex:\s*0 0 auto;/);
+  assert.match(link, /min-height:\s*44px;/);
+  assert.match(StyleRules(css, '.official-game-actions > button').join('\n'), /flex:\s*1 1 (?:0|auto);/);
+  assert.match(StyleRules(css, '.module-card-footer a:focus-visible').join('\n'), /outline:\s*3px solid var\(/);
+});
+
+test('filters use tinted selections and bold neutral labels without colored side stripes', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const [, selectors, declarations] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!selectors.includes('.filter-')) continue;
+    assert.doesNotMatch(declarations, /border-left:\s*(?:[2-9]|\d{2,})px/);
+    assert.doesNotMatch(declarations, /inset\s+3px\s+0\s+0/);
+  }
+  assert.match(StyleRules(css, '.filter-option:has(input:checked)').join('\n'), /font-weight:\s*700;/);
+  for (const selector of ['.filter-option:has(input:disabled)', '.filter-category-header:has(input:disabled)']) {
+    assert.match(StyleRules(css, selector).join('\n'), /color:\s*var\(--text-muted\);/);
+  }
+});
 
 test('clearing a search returns focus to the field while keeping selected categories', async () => {
   const { render, copy } = await Lobby();

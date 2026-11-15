@@ -36,6 +36,7 @@ import {
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
 import { BuildLobbyFilterChips, BuildLobbyPageNumbers, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
 import { AnimateVisibleGameCards, CancelHubGameTransition, TransitionGameSurface } from './hubMotion';
+import { StartHubTour } from './tour/hubTour';
 
 const prefetchedTrainingUrls = new Set<string>();
 
@@ -109,7 +110,9 @@ export function TrainingLobby() {
   const { dialogRef, isMobile, isExpanded, toggleDetent } = useBottomSheet(isMobileFilterOpen, dismissFilters);
   const [activeGame, setActiveGame] = useState<HubGame | null>(null);
   const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
-  const [publishedGamesError, setPublishedGamesError] = useState(false);
+  const [publishedGamesStatus, setPublishedGamesStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [catalogRefresh, setCatalogRefresh] = useState(0);
+  const catalogNoticeRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const previousGameIds = useRef<ReadonlySet<string>>(new Set());
   const launchCardRef = useRef<HTMLElement | null>(null);
@@ -123,14 +126,12 @@ export function TrainingLobby() {
   const copy = GetHubUiCopy(language).lobby;
   const platformCopy = language === 'en'
     ? {
-        catalogUnavailable: 'Some games could not be loaded. Available games can still be played.',
         author: 'Author',
         install: 'Install game',
         summaryFallback: 'A home-practice activity.',
         version: 'Version',
       }
     : {
-        catalogUnavailable: '部分遊戲目前無法載入，已顯示的遊戲仍可開始。',
         author: '作者',
         install: '安裝遊戲',
         summaryFallback: '居家練習活動。',
@@ -138,13 +139,17 @@ export function TrainingLobby() {
       };
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const games = useMemo(() => BuildHubGameCatalog(trainingCatalog, publishedGames, locale), [publishedGames, locale]);
+  const searchGames = useMemo(() => games.filter((game) => {
+    const searchable = (game.title + ' ' + game.summary + ' ' + game.author).toLocaleLowerCase(locale);
+    return !normalizedQuery || searchable.includes(normalizedQuery);
+  }), [games, locale, normalizedQuery]);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
       purpose.id,
-      games.filter((game) => game.purpose === purpose.id).length,
+      searchGames.filter((game) => game.purpose === purpose.id).length,
     ]),
-  ), [games]);
+  ), [searchGames]);
 
   const categoryCounts = useMemo(() => new Map(
     trainerCategoryTags.map((category) => {
@@ -155,7 +160,8 @@ export function TrainingLobby() {
   ), [purposeCounts]);
 
   const toggleCategory = (categoryId: TrainerCategoryId) => {
-    const subs = categorySubcategories[categoryId] ?? [];
+    const subs = (categorySubcategories[categoryId] ?? [])
+      .filter(subId => (purposeCounts.get(subId) ?? 0) > 0 || selectedPurposes.includes(subId));
     const allSelected = subs.length > 0 && subs.every((subId) => selectedPurposes.includes(subId));
     if (allSelected) {
       setSelectedPurposes((current) => current.filter((id) => !subs.includes(id)));
@@ -164,11 +170,9 @@ export function TrainingLobby() {
     }
   };
 
-  const visibleGames = useMemo(() => games.filter((game) => {
-    const searchable = (game.title + ' ' + game.summary + ' ' + game.author).toLocaleLowerCase(locale);
-    return (!normalizedQuery || searchable.includes(normalizedQuery))
-      && (selectedPurposes.length === 0 || (game.purpose !== null && selectedPurposes.includes(game.purpose)));
-  }), [games, locale, normalizedQuery, selectedPurposes]);
+  const visibleGames = useMemo(() => searchGames.filter((game) => (
+    selectedPurposes.length === 0 || (game.purpose !== null && selectedPurposes.includes(game.purpose))
+  )), [searchGames, selectedPurposes]);
 
   const activeFilters = useMemo(() => BuildLobbyFilterChips(selectedPurposes, query, categorySubcategories), [selectedPurposes, query]);
   const pagination = PaginateLobbyGames(visibleGames, page);
@@ -201,14 +205,19 @@ export function TrainingLobby() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setPublishedGamesError(false);
+    setPublishedGamesStatus('loading');
     void FetchPublishedGames(controller.signal)
-      .then(setPublishedGames)
+      .then((games) => {
+        if (controller.signal.aborted) return;
+        setPublishedGames(games);
+        setPublishedGamesStatus('ready');
+        if (catalogRefresh > 0) resultTitleRef.current?.focus({ preventScroll: true });
+      })
       .catch(() => {
-        if (!controller.signal.aborted) setPublishedGamesError(true);
+        if (!controller.signal.aborted) setPublishedGamesStatus('error');
       });
     return () => controller.abort();
-  }, []);
+  }, [catalogRefresh]);
 
   useEffect(() => {
     const origins = new Set(trainingCatalog.map((module) => (
@@ -278,16 +287,19 @@ export function TrainingLobby() {
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
         <div className="lobby-welcome">
-          <p className="page-kicker">{copy.kicker}</p>
-          <h1 id="lobby-title">
-            <span className="sr-only">{copy.kicker} </span>
-            {copy.title}
-          </h1>
+          <h1 id="lobby-title"><span className="sr-only">{copy.kicker} </span>{copy.title}</h1>
           <p className="lobby-description">{copy.description}</p>
-          <a className="lobby-guide-link" href="#lobby-guide">
-            <span className="material-symbols-outlined" aria-hidden="true">help</span>
-            {copy.beforeStarting}
-          </a>
+          <div className="lobby-first-visit">
+            <span>{copy.firstVisit}</span>
+            <button className="lobby-tour-button" onClick={() => StartHubTour(language, { force: true })} type="button">
+              <span className="material-symbols-outlined" aria-hidden="true">explore</span>
+              <span className="lobby-link-label">{copy.startTour}</span>
+            </button>
+            <a className="lobby-guide-link" href="#lobby-guide">
+              <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
+              <span className="lobby-link-label">{copy.readGuide}</span>
+            </a>
+          </div>
         </div>
 
         <aside className="lobby-start-note" aria-label={copy.practiceNote}>
@@ -392,9 +404,11 @@ export function TrainingLobby() {
           <div className="filter-category-groups" data-bottom-sheet-content>
             {trainerCategoryTags.map((category) => {
               const subs = categorySubcategories[category.id] ?? [];
-              const isCategoryChecked = subs.length > 0 && subs.every((subId) => selectedPurposes.includes(subId));
+              const availableSubs = subs.filter(subId => (purposeCounts.get(subId) ?? 0) > 0 || selectedPurposes.includes(subId));
+              const isCategoryChecked = availableSubs.length > 0 && availableSubs.every((subId) => selectedPurposes.includes(subId));
               const isCategoryIndeterminate = !isCategoryChecked && subs.some((subId) => selectedPurposes.includes(subId));
               const categoryTotalCount = categoryCounts.get(category.id) ?? 0;
+              const isCategoryDisabled = categoryTotalCount === 0 && !subs.some(subId => selectedPurposes.includes(subId));
               const categoryTheme = GetTrainerCategoryTheme(category.id);
               const categoryLabel = language === 'en' ? category.label.en : category.label['zh-TW'];
 
@@ -409,6 +423,7 @@ export function TrainingLobby() {
                     <label className="filter-category-header">
                       <input
                         checked={isCategoryChecked}
+                        disabled={isCategoryDisabled}
                         onChange={() => toggleCategory(category.id)}
                         ref={(el) => {
                           if (el) el.indeterminate = isCategoryIndeterminate;
@@ -416,7 +431,7 @@ export function TrainingLobby() {
                         type="checkbox"
                       />
                       <span className="filter-category-name">{categoryLabel}</span>
-                      <small>{categoryTotalCount}</small>
+                      <small>{isCategoryDisabled ? copy.noneYet : categoryTotalCount}</small>
                     </label>
                   </legend>
 
@@ -425,6 +440,8 @@ export function TrainingLobby() {
                       const theme = trainingThemes[subId];
                       const subLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
                       const subCount = purposeCounts.get(subId) ?? 0;
+                      const isSelected = selectedPurposes.includes(subId);
+                      const isDisabled = subCount === 0 && !isSelected;
                       return (
                         <label
                           className="filter-option filter-subcategory-option"
@@ -432,12 +449,13 @@ export function TrainingLobby() {
                           style={BuildTrainingThemeStyle(theme)}
                         >
                           <input
-                            checked={selectedPurposes.includes(subId)}
+                            checked={isSelected}
+                            disabled={isDisabled}
                             onChange={() => togglePurpose(subId)}
                             type="checkbox"
                           />
                           <span>{subLabel}</span>
-                          <small>{subCount}</small>
+                          <small>{isDisabled ? copy.noneYet : subCount}</small>
                         </label>
                       );
                     })}
@@ -493,10 +511,21 @@ export function TrainingLobby() {
             </div>
           )}
 
-          {publishedGamesError && (
-            <p className="catalog-load-notice" role="status">
-              {platformCopy.catalogUnavailable}
-            </p>
+          {publishedGamesStatus !== 'ready' && (
+            <div className="catalog-load-notice" data-state={publishedGamesStatus} ref={catalogNoticeRef} role="status" tabIndex={-1}>
+              {publishedGamesStatus === 'loading' ? <p>{copy.catalogLoading}</p> : <>
+                <span className="material-symbols-outlined" aria-hidden="true">warning</span>
+                <p>{copy.catalogUnavailable}</p>
+                <button onClick={() => {
+                  catalogNoticeRef.current?.focus();
+                  setPublishedGamesStatus('loading');
+                  setCatalogRefresh(value => value + 1);
+                }} type="button">
+                  <span className="material-symbols-outlined" aria-hidden="true">refresh</span>
+                  {copy.catalogRetry}
+                </button>
+              </>}
+            </div>
           )}
 
           <div className="module-grid" ref={gridRef}>
@@ -516,7 +545,7 @@ export function TrainingLobby() {
                   <div className="module-card-visual">
                     {game.imageSrc ? (
                       <CardImagePlaceholder
-                        alt={game.title + (language === 'en' ? ' activity preview: ' : '活動畫面：') + game.summary}
+                        alt={game.title + (language === 'en' ? ' activity screen' : ' 活動畫面')}
                         height={360} loading="lazy" src={game.imageSrc} width={640}
                       />
                     ) : (
@@ -533,15 +562,19 @@ export function TrainingLobby() {
                       </div>
                       <span className="module-card-theme-adornments">
                         <TrainingThemeBadge language={language} theme={game.theme} />
-                        <TrainingThemeIcon label={game.subcategoryLabel} theme={game.theme} />
+                        <TrainingThemeIcon decorative label={game.subcategoryLabel} theme={game.theme} />
                       </span>
                     </div>
                     <h3>{game.title}</h3>
                     <p>{game.summary || platformCopy.summaryFallback}</p>
-                    <dl className="community-game-details">
+                    {game.launch.contract === 'package-v1' && <dl className="community-game-details">
                       <div><dt>{platformCopy.author}</dt><dd>{game.author}</dd></div>
                       {game.version && <div><dt>{platformCopy.version}</dt><dd>{game.version}</dd></div>}
-                    </dl>
+                    </dl>}
+                    <p className="module-card-requirement">
+                      <span className="material-symbols-outlined" aria-hidden="true">{game.requirement === 'none' ? 'check_circle' : 'info'}</span>
+                      {copy.requirements[game.requirement]}
+                    </p>
                     <div className="module-card-footer official-game-actions">
                       <button
                         aria-label={copy.start + ': ' + game.title}
@@ -561,7 +594,7 @@ export function TrainingLobby() {
                         <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                       </button>
                       <a aria-label={platformCopy.install + ': ' + game.title} href={game.installUrl} rel="noopener noreferrer" target="_blank">
-                        {platformCopy.install}
+                        <span className="lobby-link-label">{platformCopy.install}</span>
                         <span className="material-symbols-outlined" aria-hidden="true">download</span>
                       </a>
                     </div>
@@ -609,7 +642,6 @@ export function TrainingLobby() {
 
       <section className="lobby-guide" id="lobby-guide" aria-labelledby="lobby-guide-title">
         <header>
-          <p className="page-kicker">{copy.guide.kicker}</p>
           <h2 id="lobby-guide-title">{copy.guide.title}</h2>
           <p>{copy.guide.definition}</p>
         </header>

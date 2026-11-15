@@ -38,6 +38,15 @@
   --shadow-md: 0 8px 24px rgba(20, 33, 43, 0.12);
   --page-max: 1440px;
   --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --type-display: 2.8125rem;
+  --type-headline: 1.875rem;
+  --type-title: 1.375rem;
+  --type-body: 1rem;
+  --type-label: 0.875rem;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Microsoft JhengHei UI", Arial, sans-serif;
 
   /* Shared AuthPanel tokens */
@@ -98,7 +107,7 @@ body {
   color: var(--text);
   background: var(--background);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: var(--type-body);
   font-weight: 500;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
@@ -173,21 +182,21 @@ p {
 h1 {
   margin-bottom: 10px;
   /* Increased from 2.25rem by 1.25x for elderly readability */
-  font-size: 2.8125rem;
+  font-size: var(--type-display);
   line-height: 1.2;
 }
 
 h2 {
   margin-bottom: 12px;
   /* Increased from 1.5rem by 1.25x for elderly readability */
-  font-size: 1.875rem;
+  font-size: var(--type-headline);
   line-height: 1.3;
 }
 
 h3 {
   margin-bottom: 8px;
   /* Increased from 1.1rem by 1.25x for elderly readability */
-  font-size: 1.375rem;
+  font-size: var(--type-title);
   line-height: 1.4;
 }
 
@@ -570,7 +579,7 @@ html:has(dialog.package-game-overlay[open]) {
   margin: 0 auto;
   gap: 12px;
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: var(--type-label);
 }
 
 .hub-footer-inner strong {
@@ -631,7 +640,7 @@ html:has(dialog.package-game-overlay[open]) {
 .hub-brand strong {
   overflow: hidden;
   color: var(--heading);
-  font-size: 1.05rem;
+  font-size: var(--type-body);
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -639,7 +648,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .hub-brand small {
   color: var(--primary);
-  font-size: 0.78rem;
+  font-size: var(--type-label);
   font-weight: 700;
   line-height: 1.3;
 }
@@ -728,7 +737,7 @@ html:has(dialog.package-game-overlay[open]) {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
-  font-size: 16px;
+  font-size: var(--type-body);
   font-weight: 600;
   cursor: pointer;
   transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
@@ -791,8 +800,8 @@ html:has(dialog.package-game-overlay[open]) {
   width: 26px;
   height: 20px;
   border: 1px solid color-mix(in srgb, var(--heading) 20%, transparent);
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(20, 33, 43, 0.16);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   object-fit: cover;
 }
 
@@ -816,7 +825,7 @@ html:has(dialog.package-game-overlay[open]) {
 .account-button-label {
   max-width: 120px;
   overflow: hidden;
-  font-size: 1rem;
+  font-size: var(--type-body);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -863,9 +872,9 @@ html:has(dialog.package-game-overlay[open]) {
   width: min(340px, calc(100vw - 32px));
   padding: 18px;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) * 2);
+  border-radius: var(--radius-xl);
   background: var(--surface);
-  box-shadow: 0 20px 20px rgba(20, 33, 43, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .account-popover::before {
@@ -990,32 +999,60 @@ html:has(dialog.package-game-overlay[open]) {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: center;
-  gap: 28px 64px;
-  padding: 40px 32px 28px;
+  gap: 12px 64px;
+  padding: 24px 32px 20px;
 }
 
 .lobby-welcome h1 {
   margin: 4px 0 12px;
-  font-size: clamp(2rem, 3.5vw, 2.8125rem);
+  font-size: clamp(var(--type-headline), 3.5vw, var(--type-display));
 }
 
 .lobby-description {
   margin-bottom: 12px;
   color: var(--text-muted);
-  font-size: 1.125rem;
+  font-size: var(--type-body);
 }
 
+.lobby-first-visit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  font-size: var(--type-body);
+}
+
+.lobby-tour-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+}
+
+.lobby-tour-button,
 .lobby-guide-link {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   gap: 8px;
-  color: var(--primary);
-  font-size: 1rem;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 5px;
+  color: var(--text);
+  font-size: var(--type-body);
+  text-decoration: none;
 }
 
+.lobby-link-label {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.lobby-tour-button:focus-visible,
+.lobby-guide-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.lobby-tour-button .material-symbols-outlined,
 .lobby-guide-link .material-symbols-outlined {
   font-size: 20px;
 }
@@ -1023,10 +1060,10 @@ html:has(dialog.package-game-overlay[open]) {
 .lobby-start-note {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 24px;
-  border-radius: 12px;
-  background: #e8efeb;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
 }
 
 .lobby-start-note > .material-symbols-outlined {
@@ -1037,7 +1074,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .lobby-start-note strong {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   color: var(--heading);
   font-weight: 700;
 }
@@ -1045,8 +1082,8 @@ html:has(dialog.package-game-overlay[open]) {
 .lobby-start-note p {
   margin-bottom: 0;
   color: var(--text-muted);
-  font-size: 1rem;
-  line-height: 1.75;
+  font-size: var(--type-body);
+  line-height: 1.6;
 }
 
 .lobby-search-row {
@@ -1054,14 +1091,14 @@ html:has(dialog.package-game-overlay[open]) {
   grid-column: 1 / -1;
   align-items: center;
   gap: 24px;
-  padding-top: 24px;
+  padding-top: 12px;
   border-top: 1px solid var(--border);
 }
 
 .lobby-search-hint {
   margin: 0;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--type-body);
 }
 
 .module-search {
@@ -1104,7 +1141,7 @@ html:has(dialog.package-game-overlay[open]) {
   padding: 0;
   place-items: center;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--text-muted);
   background: var(--surface-muted);
 }
@@ -1182,7 +1219,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .lobby-guide h3 {
   margin: 0 0 8px;
-  font-size: 1.08rem;
+  font-size: var(--type-title);
 }
 
 .lobby-guide-steps p,
@@ -1211,7 +1248,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .lobby-guide-details summary h3 {
   display: inline;
-  font-size: 1rem;
+  font-size: var(--type-body);
 }
 
 .lobby-guide-details summary:hover,
@@ -1293,7 +1330,7 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-heading h2,
 .filter-header h2 {
   margin-bottom: 0;
-  font-size: 1.2rem;
+  font-size: var(--type-title);
 }
 
 .filter-heading button,
@@ -1331,7 +1368,6 @@ html:has(dialog.package-game-overlay[open]) {
   padding: 10px 12px;
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--trainer-color) 25%, var(--border));
-  border-left: 4px solid var(--trainer-color);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--trainer-color) 3%, var(--surface));
 }
@@ -1372,7 +1408,7 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-category-header small {
   min-width: 22px;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -1400,7 +1436,6 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-subcategory-option:has(input:checked) {
   color: var(--text);
   background: color-mix(in srgb, var(--trainer-color) 12%, var(--surface));
-  box-shadow: inset 3px 0 0 var(--trainer-color);
 }
 
 .filter-subcategory-option input {
@@ -1427,7 +1462,16 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-option:has(input:checked) {
   color: var(--primary-hover);
   background: var(--primary-soft);
-  box-shadow: inset 3px 0 0 var(--primary);
+  font-weight: 700;
+}
+
+.filter-category-group .filter-category-header:has(input:disabled),
+.filter-category-header:has(input:disabled),
+.filter-option:has(input:disabled) {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: transparent;
+  border-color: var(--border);
 }
 
 .filter-option input {
@@ -1440,7 +1484,7 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-option small {
   min-width: 24px;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -1464,17 +1508,17 @@ html:has(dialog.package-game-overlay[open]) {
 
 .result-heading p {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
 }
 
 .result-header h2 {
-  font-size: 1.5rem;
+  font-size: var(--type-headline);
 }
 
 .result-header p {
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--type-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1533,7 +1577,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 #result-title:focus-visible {
   outline: 3px solid var(--focus);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .lobby-pagination {
@@ -1609,7 +1653,7 @@ html:has(dialog.package-game-overlay[open]) {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) * 2);
+  border-radius: var(--radius-xl);
   background: var(--surface);
   cursor: pointer;
   outline: none;
@@ -1636,7 +1680,7 @@ html:has(dialog.package-game-overlay[open]) {
   overflow: hidden;
   color: color-mix(in srgb, var(--trainer-color) 74%, var(--heading));
   background: var(--trainer-surface);
-  font-size: 0.8rem;
+  font-size: var(--type-label);
   font-weight: 700;
 }
 
@@ -1671,7 +1715,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .module-card-meta > span {
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: var(--type-label);
   font-weight: 700;
 }
 
@@ -1686,10 +1730,10 @@ html:has(dialog.package-game-overlay[open]) {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--trainer-surface);
   color: var(--heading);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -1699,9 +1743,9 @@ html:has(dialog.package-game-overlay[open]) {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1722,7 +1766,7 @@ html:has(dialog.package-game-overlay[open]) {
 .module-theme-badge {
   padding: 3px 7px;
   border: 1px solid color-mix(in srgb, var(--trainer-color) 42%, var(--border));
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--text);
   background: var(--surface);
   white-space: nowrap;
@@ -1737,15 +1781,30 @@ html:has(dialog.package-game-overlay[open]) {
 
 .module-card h3 {
   margin-bottom: 8px;
-  font-size: 1.375rem;
+  font-size: var(--type-title);
 }
 
 .module-card-content > p {
   flex: 1 1 auto;
   margin-bottom: 16px;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--type-body);
   line-height: 1.6;
+}
+
+.module-card-content > .module-card-requirement {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: var(--type-body);
+}
+
+.module-card-requirement .material-symbols-outlined {
+  flex-shrink: 0;
+  font-size: 20px;
 }
 
 .module-card-footer {
@@ -1768,11 +1827,11 @@ html:has(dialog.package-game-overlay[open]) {
   gap: 5px;
   padding: 10px 12px;
   border-radius: var(--radius);
-  color: #ffffff;
+  color: var(--text-on-accent);
   background: var(--trainer-color);
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--type-body);
   font-weight: 700;
   text-decoration: none;
   transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
@@ -1787,7 +1846,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .module-card-footer a:focus-visible,
 .module-card-footer button:focus-visible {
-  outline: 3px solid var(--trainer-color);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -1811,7 +1870,6 @@ html:has(dialog.package-game-overlay[open]) {
   gap: 8px;
 }
 
-.official-game-actions > a,
 .official-game-actions > button {
   flex: 1 1 0;
   width: auto;
@@ -1819,13 +1877,21 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 .official-game-actions > a {
-  border: 1px solid var(--trainer-color);
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 44px;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: 0;
   color: var(--text);
-  background: var(--surface);
+  background: transparent;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .official-game-actions > a:hover {
-  color: var(--text-on-accent);
+  color: var(--text);
+  background: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2963,7 +3029,7 @@ html:has(dialog.package-game-overlay[open]) {
   }
 
   .hub-brand strong {
-    font-size: 0.92rem;
+    font-size: var(--type-body);
   }
 
   .hub-nav {
@@ -2977,7 +3043,7 @@ html:has(dialog.package-game-overlay[open]) {
     min-width: 0;
     flex: 1 1 0;
     padding: 7px 4px 10px;
-    font-size: 0.88rem;
+    font-size: var(--type-label);
   }
 
   .hub-nav a::after {
@@ -3021,7 +3087,7 @@ html:has(dialog.package-game-overlay[open]) {
   }
 
   h1 {
-    font-size: 1.9rem;
+    font-size: var(--type-headline);
   }
 }
 
@@ -3048,7 +3114,7 @@ html:has(dialog.package-game-overlay[open]) {
     border-radius: var(--radius);
     background: var(--surface);
     color: var(--heading);
-    font-size: 1rem;
+    font-size: var(--type-body);
     font-weight: 700;
     cursor: pointer;
     transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
@@ -3070,10 +3136,10 @@ html:has(dialog.package-game-overlay[open]) {
     min-width: 22px;
     height: 22px;
     padding: 0 6px;
-    border-radius: 9999px;
+    border-radius: var(--radius-pill);
     background: var(--primary);
-    color: #fff;
-    font-size: 0.78rem;
+    color: var(--text-on-accent);
+    font-size: var(--type-label);
     font-weight: 750;
     line-height: 1;
   }
@@ -3084,7 +3150,7 @@ html:has(dialog.package-game-overlay[open]) {
     border: 0;
     background: transparent;
     color: var(--primary);
-    font-size: 0.9rem;
+    font-size: var(--type-body);
     font-weight: 700;
     text-decoration: underline;
     text-underline-offset: 4px;
@@ -3111,9 +3177,9 @@ html:has(dialog.package-game-overlay[open]) {
     border-width: 1px 1px 0;
     border-style: solid;
     border-color: var(--border);
-    border-radius: 20px 20px 0 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     background: var(--surface);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
   }
 
   .filter-heading,
@@ -3131,7 +3197,7 @@ html:has(dialog.package-game-overlay[open]) {
   .filter-heading h2,
   .filter-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--type-title);
     font-weight: 750;
   }
 
@@ -3212,7 +3278,7 @@ html:has(dialog.package-game-overlay[open]) {
     min-height: 44px;
     padding: 8px 14px;
     border: 1px solid color-mix(in srgb, var(--trainer-color) 25%, var(--border));
-    border-radius: 9999px;
+    border-radius: var(--radius-pill);
     background: var(--surface);
     cursor: pointer;
     transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
@@ -3246,8 +3312,8 @@ html:has(dialog.package-game-overlay[open]) {
     border: 0;
     border-radius: var(--radius);
     background: var(--primary);
-    color: #fff;
-    font-size: 1rem;
+    color: var(--text-on-accent);
+    font-size: var(--type-body);
     font-weight: 750;
     cursor: pointer;
     box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 30%, transparent);
@@ -3395,7 +3461,7 @@ html:has(dialog.package-game-overlay[open]) {
   }
 
   .lobby-description {
-    font-size: 1rem;
+    font-size: var(--type-body);
   }
 
   .lobby-start-note {
@@ -3453,12 +3519,12 @@ html:has(dialog.package-game-overlay[open]) {
     flex-direction: column;
     gap: 2px;
     padding: 4px 2px;
-    font-size: 0.875rem;
+    font-size: var(--type-label);
     line-height: 1.15;
     text-align: center;
     white-space: normal;
     overflow-wrap: anywhere;
-    border-radius: 6px;
+    border-radius: var(--radius);
   }
 
   .hub-nav a::after {
@@ -4795,12 +4861,68 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 .catalog-load-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 8px;
   padding: 12px 14px;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--gold);
   border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface-muted);
+  font-size: var(--type-body);
+  line-height: 1.6;
+}
+
+.catalog-load-notice p {
+  min-width: 0;
+  margin: 0;
+}
+
+.catalog-load-notice > .material-symbols-outlined {
+  color: var(--warning);
+}
+
+.catalog-load-notice button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.catalog-load-notice:focus-visible,
+.catalog-load-notice button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.catalog-load-notice[data-state="loading"] {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
   color: var(--text-muted);
-  background: var(--gold-soft);
+  background: transparent;
+}
+
+@media (max-width: 600px) {
+  .catalog-load-notice {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .catalog-load-notice button {
+    grid-column: 2;
+    justify-self: start;
+  }
 }
 
 .community-game-card {
@@ -4862,14 +4984,14 @@ html:has(dialog.package-game-overlay[open]) {
 
 .community-game-details dt {
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
 }
 
 .community-game-details dd {
   overflow: hidden;
   margin: 0;
   color: var(--heading);
-  font-size: 0.875rem;
+  font-size: var(--type-label);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;

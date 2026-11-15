@@ -97,6 +97,7 @@ const state: TourState = {
 
 let tourElements: TourElements | null = null;
 let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+let returnFocusTarget: HTMLElement | null = null;
 
 function ClampValue(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -577,6 +578,20 @@ export function EndTour(done: boolean = false) {
   }
 
   document.removeEventListener('keydown', HandleKeyDown, true);
+  const focusTarget = returnFocusTarget;
+  returnFocusTarget = null;
+  try {
+    if (focusTarget?.isConnected
+      && !focusTarget.matches(':disabled')
+      && !focusTarget.closest('[hidden], [inert]')
+      && (focusTarget.tabIndex >= 0 || focusTarget.hasAttribute('tabindex') || focusTarget.isContentEditable)
+      && focusTarget.getClientRects().length > 0
+      && window.getComputedStyle(focusTarget).visibility === 'visible') {
+      focusTarget.focus({ preventScroll: true });
+    }
+  } catch {
+    // Headless environments may reject focus.
+  }
   MarkTourSeen(state.options);
   ClearPosition(state.options);
   EmitTourEvent(done ? 'tour_done' : 'tour_skip', {
@@ -586,6 +601,12 @@ export function EndTour(done: boolean = false) {
 }
 
 export function StartTour(steps: TourStep[], options?: TourOptions): boolean {
+  const activeElement = document.activeElement;
+  const previousFocus = typeof HTMLElement !== 'undefined'
+    && activeElement instanceof HTMLElement
+    && activeElement !== document.body
+    && !activeElement.closest('#ttBlock, #ttSpot, #ttTip')
+    ? activeElement : returnFocusTarget;
   if (state.active) {
     EndTour(false);
   }
@@ -599,6 +620,7 @@ export function StartTour(steps: TourStep[], options?: TourOptions): boolean {
     return false;
   }
 
+  returnFocusTarget = previousFocus;
   state.active = true;
   state.fresh = true;
 

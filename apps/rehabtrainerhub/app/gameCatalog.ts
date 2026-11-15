@@ -17,6 +17,7 @@ export interface HubGame {
   summary: string;
   author: string;
   version?: string;
+  requirement: TrainingCatalogModule['mediaPermission'] | 'camera-and-microphone' | 'microphone';
   purpose: TrainingPurposeId | null;
   categoryLabel: string;
   subcategoryLabel: string;
@@ -39,6 +40,7 @@ export function BuildHubGameCatalog(modules: readonly TrainingCatalogModule[], r
       id: module.runtimeId, title: copy.title, summary: copy.description,
       author: approved?.developerName ?? (locale === 'en' ? hubName : hubLocalName),
       version: approved?.release.version, purpose: launchModule.purpose,
+      requirement: launchModule.mediaPermission,
       categoryLabel: GetTrainingModuleCategoryLabel(launchModule, locale),
       subcategoryLabel: GetTrainingModuleSubcategoryLabel(launchModule, locale),
       theme: GetTrainingModuleTheme(launchModule), imageSrc: approved?.previewUrl ?? module.imagePath,
@@ -49,10 +51,18 @@ export function BuildHubGameCatalog(modules: readonly TrainingCatalogModule[], r
   const publishedGames: HubGame[] = releases.map(game => ({
     id: game.slug, title: game.title, summary: game.summary, author: game.developerName,
     version: game.release.version, purpose: GetTrainingThemeId(game.category),
+    requirement: GetPackageRequirement(game.release.capabilities),
     categoryLabel: GetPublishedGameCategoryLabel(game.category, locale),
     subcategoryLabel: GetPublishedGameSubcategoryLabel(game.category, locale),
     theme: GetTrainingModuleTheme(game.category), installUrl: game.release.installUrl,
     launch: { contract: 'package-v1', game },
   }));
   return MergeHubGames(catalogGames, publishedGames);
+}
+
+function GetPackageRequirement(capabilities: readonly string[]): HubGame['requirement'] {
+  const camera = ['hand-tracking', 'eye-tracking', 'pose-tracking', 'tongue-tracking', 'head-tracking']
+    .some(capability => capabilities.includes(capability));
+  const microphone = capabilities.includes('microphone-level');
+  return camera ? (microphone ? 'camera-and-microphone' : 'camera') : (microphone ? 'microphone' : 'none');
 }

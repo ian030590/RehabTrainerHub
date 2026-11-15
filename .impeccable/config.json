@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "material symbols outlined",
+        "createdAt": "2026-11-15T16:24:53.032Z",
+        "reason": "Claude: icon glyph font (self-hosted subset /fonts/material-symbols-hub.woff2), documented under DESIGN.md Typography 'Icon Font'; not a text face"
+      }
+    ]
+  }
+}

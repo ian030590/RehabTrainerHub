@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  IsTourSeen,
   ResumeTour,
   StartTour,
   type TourStep,
@@ -14,20 +13,6 @@ export function CreateHubTourSteps(language: 'zh' | 'en'): TourStep[] {
   const copy = GetHubUiCopy(language).tour;
 
   return [
-    {
-      target: '.hub-brand',
-      icon: 'home',
-      title: copy.steps.welcome.title,
-      text: copy.steps.welcome.text,
-      place: 'bottom',
-    },
-    {
-      target: '.hub-nav',
-      icon: 'navigation',
-      title: copy.steps.navigation.title,
-      text: copy.steps.navigation.text,
-      place: 'bottom',
-    },
     {
       target: '.module-search',
       icon: 'search',
@@ -48,6 +33,13 @@ export function CreateHubTourSteps(language: 'zh' | 'en'): TourStep[] {
       icon: 'sports_esports',
       title: copy.steps.activityCards.title,
       text: copy.steps.activityCards.text,
+      place: 'bottom',
+    },
+    {
+      target: '.hub-nav',
+      icon: 'navigation',
+      title: copy.steps.navigation.title,
+      text: copy.steps.navigation.text,
       place: 'bottom',
     },
     {
@@ -104,12 +96,5 @@ export function useHubTourAutoStart(language: 'zh' | 'en') {
       // Ignore location search errors
     }
 
-    // Auto-show for first-time visitors on the home lobby
-    if (!IsTourSeen({ storageKey: hubTourStorageKey })) {
-      const timer = window.setTimeout(() => {
-        StartHubTour(language);
-      }, 800);
-      return () => window.clearTimeout(timer);
-    }
   }, [language, pathname]);
 }
