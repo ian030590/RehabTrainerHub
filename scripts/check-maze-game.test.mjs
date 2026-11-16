@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'maze';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/maze.ts');
@@ -11,6 +11,26 @@ const Sequence = (...values) => { let index = 0; return () => values[index++ % v
 function WalkToGoal(match, from) {
   return ['right', 'down', 'down', 'left', 'up', 'left', 'down'].map((direction, step) => match.move(direction, from + step * 100));
 }
+
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
 
 test('Maze keeps the original board sizes, time limits and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -106,7 +126,7 @@ test('Maze results save one numeric row per step through the private channel', a
 });
 
 test('Maze owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'MazeGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'MazeGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Maze private bridge accepts only its own parent and replays settings and language', async () => {

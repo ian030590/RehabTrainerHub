@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Feedback = { kind: 'drawn' } | { kind: 'claimed'; boxes: number } | null;
@@ -23,10 +24,21 @@ export function DotsAndBoxesGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<DotsAndBoxesSettings>({ ...defaultSettings });
   useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
@@ -44,7 +56,7 @@ export function DotsAndBoxesGame() {
   const matchRef = useRef<DotsMatch | null>(null);
   const startedAtRef = useRef(0);
   const endedAtRef = useRef<number | null>(null);
-  const timerRef = useRef(0);
+  const timerRef = useRef<ReturnType<PauseClock['set']>>(null);
   const randomRef = useRef(CreateRandom(Date.now()));
   const generationRef = useRef(0);
   const phaseRef = useRef(phase);
@@ -55,32 +67,54 @@ export function DotsAndBoxesGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
+    pauseClockRef.current?.stop();
+    pauseClockRef.current = null;
     generationRef.current++;
     matchRef.current = null;
-    window.clearTimeout(timerRef.current);
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    pauseClockRef.current?.resume();
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setScore(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
-      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved);
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -88,7 +122,8 @@ export function DotsAndBoxesGame() {
   }, [phase]);
 
   const finish = useCallback((match: DotsMatch) => {
-    const result = BuildGameScore(match, (endedAtRef.current ?? performance.now()) - startedAtRef.current);
+    endingRef.current = true;
+    const result = BuildGameScore(match, (endedAtRef.current ?? pauseClockRef.current!.now()) - startedAtRef.current);
     jsPsychLifecycleRef.current?.finish({ outcome: match.outcome, moves: result.summary.moves, errors: result.summary.errors });
     matchRef.current = null;
     setScore(result);
@@ -99,18 +134,18 @@ export function DotsAndBoxesGame() {
   }, [settings]);
   // The final board stays on screen briefly so the player sees the last boxes before the results.
   const end = useCallback((match: DotsMatch, outcome: Outcome) => {
-    endedAtRef.current = performance.now();
+    endedAtRef.current = pauseClockRef.current!.now();
     PlayGameEndSound(outcome);
     setVersion(version => version + 1);
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
+    timerRef.current = pauseClockRef.current!.set(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
   }, [finish]);
   // The computer keeps drawing, one line per second, for as long as each line closes a box.
   const scheduleComputer = (match: DotsMatch) => {
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => {
+    timerRef.current = pauseClockRef.current!.set(() => {
       if (generation !== generationRef.current || matchRef.current !== match) return;
-      const reply = match.computerTurn(randomRef.current, performance.now());
+      const reply = match.computerTurn(randomRef.current, pauseClockRef.current!.now());
       setVersion(version => version + 1);
       if (reply.outcome) end(match, reply.outcome);
       else if (match.turn === 'computer') scheduleComputer(match);
@@ -122,8 +157,11 @@ export function DotsAndBoxesGame() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:dots-and-boxes', onStart: () => {
-      startedAtRef.current = performance.now();
+      startedAtRef.current = clock.now();
       endedAtRef.current = null;
       randomRef.current = CreateRandom(Date.now());
       matchRef.current = new DotsMatch(settings.difficulty, startedAtRef.current);
@@ -133,25 +171,27 @@ export function DotsAndBoxesGame() {
     } });
     return () => {
       matchRef.current = null;
+      clock.stop();
+      if (pauseClockRef.current === clock) pauseClockRef.current = null;
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, [phase, settings.difficulty]);
   // The visible clock reads the match start time, so it never drifts from the recorded duration.
   useEffect(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || paused) return;
     const timer = window.setInterval(() => {
       if (clockRef.current && matchRef.current && endedAtRef.current === null) {
-        clockRef.current.textContent = `${((performance.now() - startedAtRef.current) / 1000).toFixed(1)} ${en ? 's' : '秒'}`;
+        clockRef.current.textContent = `${((pauseClockRef.current!.now() - startedAtRef.current) / 1000).toFixed(1)} ${en ? 's' : '秒'}`;
       }
     }, 100);
     return () => window.clearInterval(timer);
-  }, [phase, en]);
+  }, [phase, en, paused]);
 
   const drawLine = (line: string) => {
     const match = matchRef.current;
-    if (phaseRef.current !== 'running' || !match || match.turn !== 'player') return;
-    const move = match.play(line, performance.now());
+    if (phaseRef.current !== 'running' || pausedRef.current || !match || match.turn !== 'player') return;
+    const move = match.play(line, pauseClockRef.current!.now());
     if (!move.accepted) {
       PlayFailureSound();
       setFeedback({ kind: 'drawn' });
@@ -171,6 +211,7 @@ export function DotsAndBoxesGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     SetSoundEnabled(settings.soundEnabled);
     PrepareAudioFeedback();
@@ -231,19 +272,19 @@ export function DotsAndBoxesGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="db-stage db-running" aria-label={title}>
+    {phase === 'running' && <><main className="db-stage db-running" aria-label={title} inert={paused}>
       <header className="db-hud">
         <p className="db-score"><span className="db-score-side"><span className="db-mark-icon" data-owner="P" />{en ? 'You' : '你'} <strong>{match?.playerBoxes ?? 0}</strong></span>
           <span className="db-score-side"><span className="db-mark-icon" data-owner="A" />{en ? 'Computer' : '電腦'} <strong>{match?.opponentBoxes ?? 0}</strong></span></p>
         <p className="db-turn" role="status" data-turn={match?.turn ?? 'player'}>{!match || match.turn === 'player' ? (en ? 'Your turn' : '輪到你')
           : match.turn === 'computer' ? (en ? 'Computer is drawing' : '電腦畫線中') : (en ? 'Game over' : '棋局結束')}</p>
         <p ref={clockRef} className="db-clock">0.0 {en ? 's' : '秒'}</p>
-        <button type="button" className="btn btn-ghost db-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost db-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p className={`db-feedback${match?.outcome ? ' db-outcome' : feedback?.kind === 'claimed' ? ' db-claimed' : ''}`} role="status"
         data-outcome={match?.outcome ?? undefined}>{feedbackText}</p>
@@ -252,14 +293,27 @@ export function DotsAndBoxesGame() {
           label={en ? 'Game board' : '棋盤'} focusLine={focusLine} ownerLabel={lineLabel(match.size)}
           onLine={drawLine} onFocusLine={setFocusLine} onKeyDown={event => MoveLineFocus(event, match.size)} />
       </div>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="db-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="db-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && score && summary && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Result' : '結果'}</p><strong>{summary.completed ? (en ? 'You won' : '勝利') : summary.draw ? (en ? 'Draw' : '平手') : (en ? 'Computer won' : '電腦獲勝')}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Boxes (you : computer)' : '方格（你：電腦）'}</p><strong>{summary.playerBoxes} : {summary.opponentBoxes}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean time per line' : '平均每條線思考時間'}</p><strong>{ms(summary.meanThinkMs)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Lines you drew' : '你畫的線'}</dt><dd>{summary.moves}</dd></div>
@@ -268,10 +322,7 @@ export function DotsAndBoxesGame() {
         <div className="score-context-item"><dt>{en ? 'Total time' : '總用時'}</dt><dd>{seconds(summary.duration)}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

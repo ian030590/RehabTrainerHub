@@ -292,6 +292,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   connect4: {
+    interruptPanel: true,
     title: { zh: '四子棋', en: 'Connect 4' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'hard', soundEnabled: true },
@@ -361,6 +362,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   hex: {
+    interruptPanel: true,
     title: { zh: 'Hex 連線棋', en: 'Hex' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', soundEnabled: true },
@@ -431,6 +433,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'dots-and-boxes': {
+    interruptPanel: true,
     title: { zh: '點格成盒', en: 'Dots and Boxes' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', soundEnabled: true },
@@ -505,6 +508,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'lights-out': {
+    interruptPanel: true,
     title: { zh: '熄燈解題', en: 'Lights Out' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', timeLimitSec: 60, soundEnabled: true },
@@ -646,6 +650,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   maze: {
+    interruptPanel: true,
     title: { zh: '迷宮', en: 'Maze' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', timeLimitSec: 180, soundEnabled: true },
@@ -1022,6 +1027,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   minesweeper: {
+    interruptPanel: true,
     title: { zh: '踩地雷', en: 'Minesweeper' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', boardSize: 'small', soundEnabled: true },

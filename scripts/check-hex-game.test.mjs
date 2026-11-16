@@ -1,11 +1,31 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'hex';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/hex.ts');
 // Rows are written top to bottom; P is the player (top to bottom), A the computer (left to right).
 const Board = (...rows) => rows.join('').split('').map(mark => mark === '.' ? null : mark);
+
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
 
 test('Hex keeps the original board sizes and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -101,7 +121,7 @@ test('Hex results save one numeric row per move through the private channel', as
 });
 
 test('Hex owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'HexGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'HexGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Hex private bridge accepts only its own parent and replays settings and language', async () => {

@@ -1,11 +1,30 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'lights-out';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/lightsOut.ts');
 const On = lights => lights.flatMap((on, index) => on ? [index] : []);
 const Sequence = (...values) => { let index = 0; return () => values[index++ % values.length]; };
+
+test('pause freezes the elapsed clock and time limit until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('time up'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['time up']);
+  pausedClock.stop();
+});
 
 test('Lights Out keeps the original boards, scramble lengths, time limits and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -95,7 +114,7 @@ test('Lights Out results save one numeric row per press through the private chan
 });
 
 test('Lights Out owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'LightsOutGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'LightsOutGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Lights Out private bridge accepts only its own parent and replays settings and language', async () => {

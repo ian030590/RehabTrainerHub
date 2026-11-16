@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 const outcomeHoldMs = 1600;
@@ -22,10 +23,21 @@ export function MinesweeperGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<MinesweeperSettings>({ ...defaultSettings });
   useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
@@ -48,7 +60,7 @@ export function MinesweeperGame() {
   const zoomAnchorRef = useRef<{ x: number; y: number } | null>(null);
   const startedAtRef = useRef(0);
   const endedAtRef = useRef<number | null>(null);
-  const timerRef = useRef(0);
+  const timerRef = useRef<ReturnType<PauseClock['set']>>(null);
   const generationRef = useRef(0);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -58,32 +70,54 @@ export function MinesweeperGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
+    pauseClockRef.current?.stop();
+    pauseClockRef.current = null;
     generationRef.current++;
     fieldRef.current = null;
-    window.clearTimeout(timerRef.current);
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    pauseClockRef.current?.resume();
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setScore(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
-      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved);
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -91,7 +125,8 @@ export function MinesweeperGame() {
   }, [phase]);
 
   const finish = useCallback((field: MineField) => {
-    const result = BuildGameScore(field, (endedAtRef.current ?? performance.now()) - startedAtRef.current);
+    endingRef.current = true;
+    const result = BuildGameScore(field, (endedAtRef.current ?? pauseClockRef.current!.now()) - startedAtRef.current);
     jsPsychLifecycleRef.current?.finish({ outcome: field.outcome, moves: result.summary.moves, revealedSafe: result.summary.revealedSafe });
     fieldRef.current = null;
     setScore(result);
@@ -102,11 +137,11 @@ export function MinesweeperGame() {
   }, [settings]);
   // The final board stays on screen briefly so the player sees it before the results.
   const end = useCallback((field: MineField) => {
-    endedAtRef.current = performance.now();
+    endedAtRef.current = pauseClockRef.current!.now();
     PlayGameEndSound(field.outcome === 'Victory' ? 'Victory' : 'Defeat');
     setVersion(version => version + 1);
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) finish(field); }, outcomeHoldMs);
+    timerRef.current = pauseClockRef.current!.set(() => { if (generation === generationRef.current) finish(field); }, outcomeHoldMs);
   }, [finish]);
   useEffect(() => {
     const host = jsPsychHostRef.current;
@@ -114,8 +149,11 @@ export function MinesweeperGame() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:minesweeper', onStart: () => {
-      startedAtRef.current = performance.now();
+      startedAtRef.current = clock.now();
       endedAtRef.current = null;
       const field = new MineField(settings.difficulty, settings.boardSize, CreateRandom(Date.now()), startedAtRef.current);
       fieldRef.current = field;
@@ -128,19 +166,21 @@ export function MinesweeperGame() {
     } });
     return () => {
       fieldRef.current = null;
+      clock.stop();
+      if (pauseClockRef.current === clock) pauseClockRef.current = null;
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, [phase, settings.difficulty, settings.boardSize]);
   // The visible clock reads the start time, so it never drifts from the recorded duration.
   useEffect(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || paused) return;
     const timer = window.setInterval(() => {
       if (!clockRef.current || !fieldRef.current || endedAtRef.current !== null) return;
-      clockRef.current.textContent = FormatElapsed(performance.now() - startedAtRef.current, en);
+      clockRef.current.textContent = FormatElapsed(pauseClockRef.current!.now() - startedAtRef.current, en);
     }, 250);
     return () => window.clearInterval(timer);
-  }, [phase, en]);
+  }, [phase, en, paused]);
 
   // Zooming keeps the middle of the visible board in place.
   const applyZoom = useCallback((value: number) => {
@@ -189,8 +229,8 @@ export function MinesweeperGame() {
   // Taps, right clicks and keys all go through here.
   const act = (index: number, flag: boolean) => {
     const field = fieldRef.current;
-    if (phaseRef.current !== 'running' || !field || field.outcome) return;
-    const now = performance.now();
+    if (phaseRef.current !== 'running' || pausedRef.current || !field || field.outcome) return;
+    const now = pauseClockRef.current!.now();
     setFocusCell(index);
     if (flag) {
       if (field.toggleFlag(index, now).accepted) { setFlaggedTap(false); setVersion(version => version + 1); }
@@ -220,6 +260,7 @@ export function MinesweeperGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     SetSoundEnabled(settings.soundEnabled);
     PrepareAudioFeedback();
@@ -279,16 +320,16 @@ export function MinesweeperGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="ms-stage ms-running" aria-label={title}>
+    {phase === 'running' && <><main className="ms-stage ms-running" aria-label={title} inert={paused}>
       <header className="ms-hud">
         <MineCounter flags={field?.flags ?? 0} mines={field?.mineCount ?? CalculateMineCount(runningSize, runningSize, mineDensity[settings.difficulty])} en={en} />
         <p ref={clockRef} className="ms-clock">{FormatElapsed(0, en)}</p>
-        <button type="button" className="btn btn-ghost ms-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost ms-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p className={`ms-feedback${field?.outcome ? ' ms-outcome' : ''}`} role="status" data-outcome={field?.outcome ?? undefined}>{feedback}</p>
       <div className="ms-board-slot">
@@ -305,14 +346,27 @@ export function MinesweeperGame() {
         <button type="button" className={`btn ms-flag-mode${flagMode ? ' btn-primary' : ''}`} aria-pressed={flagMode}
           onClick={() => setFlagMode(mode => !mode)}>{flagMode ? (en ? 'Flag mode on' : '標記模式中') : (en ? 'Flag mode' : '標記模式')}</button>
       </footer>
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="ms-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="ms-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && score && summary && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Result' : '結果'}</p><strong>{summary.completed ? (en ? 'Cleared' : '完成') : (en ? 'Hit a mine' : '踩到地雷')}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Safe cells opened' : '打開的安全格'}</p><strong>{summary.revealedSafe} / {summary.safeCells}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Total time' : '總用時'}</p><strong>{seconds(summary.duration)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Flags on mines' : '插在地雷上的旗'}</dt><dd>{summary.correctFlags}</dd></div>
@@ -321,10 +375,7 @@ export function MinesweeperGame() {
         <div className="score-context-item"><dt>{en ? 'Mean time per action' : '平均每次操作時間'}</dt><dd>{ms(summary.meanThinkMs)}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

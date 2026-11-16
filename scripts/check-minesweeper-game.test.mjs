@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'minesweeper';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/minesweeper.ts');
@@ -14,6 +14,26 @@ const Neighbors = (field, index) => {
   }
   return found;
 };
+
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
 
 test('Minesweeper keeps the original densities, board sizes, mine counts, zoom range and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -130,7 +150,7 @@ test('safe cells chime, a mine buzzes, and the board zooms by buttons, wheel and
 });
 
 test('Minesweeper owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'MinesweeperGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'MinesweeperGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Minesweeper private bridge accepts only its own parent and replays settings and language', async () => {
