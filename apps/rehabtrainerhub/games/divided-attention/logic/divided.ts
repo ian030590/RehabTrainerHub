@@ -107,3 +107,12 @@ export function SummarizeDivided(rows: DividedRow[], tracking: TrackingPercentag
     meanRtMs: answered.length ? Math.round(answered.reduce((sum, row) => sum + row.rtMs!, 0) / answered.length) : null,
   };
 }
+
+export function ResumeRunClock(run: { start: number; end: number; lastFrame: number; nextAt: number; problem: { shownAt: number } | null }, pausedAt: number, now: number) {
+  const elapsed = Math.max(0, now - pausedAt);
+  run.start += elapsed;
+  run.end += elapsed;
+  run.nextAt += elapsed;
+  run.lastFrame = now;
+  if (run.problem) run.problem.shownAt += elapsed;
+}

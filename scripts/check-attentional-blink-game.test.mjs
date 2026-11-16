@@ -64,6 +64,24 @@ test('stopping the stream cancels its timers', async () => {
   assert.equal(clock.pending(), 0);
 });
 
+test('pausing replays the interrupted stream, discards a partial answer and retains completed rounds', async () => {
+  const { BlinkRun } = await LoadLogic();
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const trials = [{ lag: 1, t1: 2, t2: 3, t1Index: 0, items: ['2', '3'] }, { lag: 1, t1: 4, t2: 5, t1Index: 0, items: ['4', '5'] }];
+  const run = new BlinkRun(trials, { fixationMs: 50, itemMs: 100, feedbackMs: 50 }, {
+    fixation() {}, show: item => shown.push(item), blank() {}, step() {}, feedback() {},
+  }, clock, rows => { finished = rows; });
+  run.start(); clock.advance(250); run.answer(2); run.answer(3); clock.advance(50);
+  clock.advance(250); run.answer(4); run.pause(); clock.advance(2000); run.answer(5);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(250); run.answer(4); run.answer(5); clock.advance(50);
+  assert.deepEqual(shown, ['2', '3', '4', '5', '4', '5']);
+  assert.equal(finished.length, 2);
+  assert.deepEqual(finished.map(row => [row.t1Response, row.t2Response]), [[2, 3], [4, 5]]);
+});
+
 test('answers score each digit and the summary reports second-digit accuracy when the first was right', async () => {
   const { ScoreBlinkTrial, SummarizeBlink } = await LoadLogic();
   const trial = (lag, t1, t2) => ({ lag, t1, t2, t1Index: 5, items: [] });
@@ -91,7 +109,7 @@ test('attentional blink results save bounded numeric rows through the private ch
 });
 
 test('attentional blink owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'AttentionalBlinkGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'AttentionalBlinkGame', category: 'attention', version: '1.1.0' });
 });
 
 test('attentional blink private bridge accepts only its own parent and replays settings and language', async () => {

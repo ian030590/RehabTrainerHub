@@ -14,6 +14,7 @@ export class CptRun {
   private onset = 0;
   private startedAt = 0;
   private stopped = false;
+  private paused = false;
 
   constructor(private trials: CptTrial[], private timing: CptTiming, private view: CptView,
     private clock: CptClock, private onFinish: (rows: CptRow[]) => void) {}
@@ -25,7 +26,7 @@ export class CptRun {
 
   respond() {
     const row = this.rows[this.current];
-    if (this.stopped || !row || row.responded) return;
+    if (this.stopped || this.paused || !row || row.responded) return;
     row.responded = true;
     row.rtMs = Math.round(this.clock.now() - this.onset);
   }
@@ -34,6 +35,24 @@ export class CptRun {
     this.stopped = true;
     for (const timer of this.timers) this.clock.clear(timer);
     this.timers.clear();
+  }
+
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    for (const timer of this.timers) this.clock.clear(timer);
+    this.timers.clear();
+    if (this.current >= 0) this.rows.pop();
+    this.current = -1;
+    this.view.blank();
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    const index = this.rows.length;
+    this.startedAt = this.clock.now() - this.timing.leadInMs - index * (this.timing.letterMs + this.timing.isiMs);
+    this.showTrial(index);
   }
 
   private schedule(callback: () => void, delay: number) {

@@ -19,10 +19,20 @@ export function SchulteGridGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SchulteSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<SchulteRow[]>([]);
@@ -50,32 +60,55 @@ export function SchulteGridGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     roundRef.current = null;
     window.clearTimeout(wrongTimerRef.current);
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    roundRef.current?.pause(performance.now());
+    window.clearTimeout(wrongTimerRef.current);
+    setWrong(null);
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    roundRef.current?.resume(performance.now());
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
-      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved);
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -85,6 +118,7 @@ export function SchulteGridGame() {
   const beginRound = useCallback((index: number, random: () => number) => {
     setGrid(CreateSchulteGrid(settings.gridSize, random));
     roundRef.current = new SchulteRound(settings.gridSize, settings.order, performance.now());
+    if (pausedRef.current) roundRef.current.pause(performance.now());
     setRoundIndex(index);
     setInterlude(null);
     setWrong(null);
@@ -92,6 +126,7 @@ export function SchulteGridGame() {
   }, [settings]);
   const randomRef = useRef(CreateRandom(Date.now()));
   const finish = useCallback((completed: SchulteRow[]) => {
+    endingRef.current = true;
     roundRef.current = null;
     const score = BuildGameScore(completed, settings.rounds);
     jsPsychLifecycleRef.current?.finish({ rounds: completed.length, total_time_ms: score.summary.totalTimeMs, errors: score.summary.totalErrors });
@@ -121,17 +156,17 @@ export function SchulteGridGame() {
   }, [phase, beginRound]);
   // The visible clock reads the round's own start time, so it never drifts from the recorded time.
   useEffect(() => {
-    if (phase !== 'running' || interlude) return;
+    if (phase !== 'running' || interlude || paused) return;
     const timer = window.setInterval(() => {
       const round = roundRef.current;
       if (round && clockRef.current) clockRef.current.textContent = `${((performance.now() - round.startedAt) / 1000).toFixed(1)} ${en ? 's' : '秒'}`;
     }, 100);
     return () => window.clearInterval(timer);
-  }, [phase, interlude, en]);
+  }, [phase, interlude, en, paused]);
 
   const tapCell = (value: number) => {
     const round = roundRef.current;
-    if (phaseRef.current !== 'running' || !round || interlude) return;
+    if (phaseRef.current !== 'running' || pausedRef.current || !round || interlude) return;
     const outcome = round.tap(value, performance.now());
     if (outcome.ignored) return;
     window.clearTimeout(wrongTimerRef.current);
@@ -170,6 +205,7 @@ export function SchulteGridGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -232,21 +268,21 @@ export function SchulteGridGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="schulte-stage schulte-running" aria-label={title}>
+    {phase === 'running' && <><main className="schulte-stage schulte-running" aria-label={title} inert={paused}>
       <header className="schulte-hud">
         <p className="schulte-round">{en ? `Round ${roundIndex + 1} of ${settings.rounds}` : `第 ${roundIndex + 1} 回合，共 ${settings.rounds} 回合`}</p>
         <p className="schulte-next">{en ? 'Find' : '下一個'} <strong>{round && !round.done ? round.next : ''}</strong></p>
         <p ref={clockRef} className="schulte-clock">0.0 {en ? 's' : '秒'}</p>
-        <button type="button" className="btn btn-ghost schulte-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost schulte-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p className="schulte-feedback" role="status">{wrong !== null && round
         ? (en ? `${wrong} is not next. Find ${round.next}.` : `${wrong} 不是下一個，請找 ${round.next}。`) : ''}</p>
-      <div className="schulte-board">
+      <div className="schulte-board" style={{ visibility: paused ? 'hidden' : 'visible' }}>
         <div className="schulte-grid" style={{ '--grid-size': settings.gridSize } as CSSProperties} onKeyDown={moveFocus}
           role="group" aria-label={en ? 'Number grid' : '數字方格'}>
           {grid.map(value => {
@@ -265,14 +301,27 @@ export function SchulteGridGame() {
             onClick={() => beginRound(interlude.round, randomRef.current)}>{en ? 'Next round' : '下一回合'}</button>
         </div>
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="schulte-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="schulte-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Mean time per round' : '平均每回合時間'}</p><strong>{seconds(summary.meanRoundMs)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Fastest round' : '最快回合'}</p><strong>{seconds(summary.bestRoundMs)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Wrong taps' : '點錯次數'}</p><strong>{summary.totalErrors}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Rounds completed' : '完成回合'}</dt><dd>{summary.roundsCompleted} / {summary.roundsPlanned}</dd></div>
@@ -280,10 +329,7 @@ export function SchulteGridGame() {
         <div className="score-context-item"><dt>{en ? 'Total time' : '總用時'}</dt><dd>{seconds(summary.totalTimeMs)}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

@@ -67,6 +67,15 @@ test('tracking samples split time on the dot into stretches with and without a s
   assert.equal(log.percentSince(window), 50);
 });
 
+test('resuming shifts the movement, deadline and active answer clocks by the pause duration', async () => {
+  const { ResumeRunClock } = await LoadLogic();
+  const run = { start: 100, end: 60100, lastFrame: 1200, nextAt: 2000, problem: { shownAt: 1000 } };
+  ResumeRunClock(run, 1200, 6200);
+  assert.deepEqual(run, { start: 5100, end: 65100, lastFrame: 6200, nextAt: 7000, problem: { shownAt: 6000 } });
+  assert.equal(6200 - run.problem.shownAt, 200);
+  assert.equal(6200 - run.start, 1100);
+});
+
 test('the summary sets sum accuracy beside how well the dot was followed', async () => {
   const { ScoreProblem, SummarizeDivided } = await LoadLogic();
   const problem = { a: 3, b: 4, operation: '+', answer: 7, options: [6, 7, 8] };
@@ -90,7 +99,7 @@ test('divided attention results save bounded numeric rows through the private ch
 });
 
 test('divided attention owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'DividedAttentionGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'DividedAttentionGame', category: 'attention', version: '1.1.0' });
 });
 
 test('divided attention private bridge accepts only its own parent and replays settings and language', async () => {

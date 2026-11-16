@@ -57,6 +57,21 @@ test('a press starts the wait, a press while waiting is a false start, and a pre
   assert.equal(next.row, null);
 });
 
+test('interrupting a waiting or visible signal discards only the active attempt', async () => {
+  const { CreateSession, Press, ShowGo, InterruptReaction } = await LoadTrials();
+  let current = Press(CreateSession(), 100, 2000).session;
+  current = Press(current, 500, 2000).session;
+  const waiting = Press(current, 1000, 2000).session;
+  for (const interrupted of [waiting, ShowGo(waiting, 3000)]) {
+    const resumed = InterruptReaction(interrupted);
+    assert.equal(resumed.status, 'idle');
+    assert.deepEqual(resumed.rows, current.rows);
+    assert.equal(resumed.goMs, null);
+    assert.equal(resumed.waitStartMs, null);
+  }
+  assert.equal(InterruptReaction(current), current);
+});
+
 test('the summary keeps the original fields and adds the median, the fastest response and the spread', async () => {
   const { SummarizeReaction } = await LoadGameModule(gameId, 'logic/reactionScore.ts');
   const success = (trial, responseMs) => ({ trial, falseStart: false, responseMs, earlyMs: null, waitMs: 2000 });
@@ -83,7 +98,7 @@ test('reaction rows keep the original columns, add the planned wait and save thr
 });
 
 test('Reaction time owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'ReactionSignal', category: 'attention', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'ReactionSignal', category: 'attention', version: '2.1.0' });
 });
 
 test('Reaction time private bridge accepts only its own parent and replays settings and language', async () => {

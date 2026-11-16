@@ -71,6 +71,70 @@ export function ScoreBlinkTrial(trial: BlinkTrial, number: number, t1Response: n
     t1Correct: t1Response === trial.t1, t2Correct: t2Response === trial.t2 };
 }
 
+export class BlinkRun {
+  private rows: BlinkRow[] = [];
+  private first: number | null = null;
+  private stage: 'fixation' | 'stream' | 'answer1' | 'answer2' | 'feedback' = 'fixation';
+  private timer = 0;
+  private stopStream: () => void = () => undefined;
+  private paused = false;
+  private stopped = false;
+
+  constructor(private trials: BlinkTrial[], private timing: { fixationMs: number; itemMs: number; feedbackMs: number },
+    private view: { fixation(index: number): void; show(item: string): void; blank(): void; step(stage: 'stream' | 'answer1' | 'answer2'): void; feedback(row: BlinkRow): void },
+    private clock: StreamClock, private onFinish: (rows: BlinkRow[]) => void) {}
+
+  start() { this.begin(); }
+
+  answer(digit: number) {
+    if (this.stopped || this.paused) return;
+    if (this.stage === 'answer1') { this.first = digit; this.stage = 'answer2'; this.view.step('answer2'); return; }
+    if (this.stage !== 'answer2' || this.first === null) return;
+    const row = ScoreBlinkTrial(this.trials[this.rows.length], this.rows.length + 1, this.first, digit);
+    this.rows.push(row);
+    this.stage = 'feedback';
+    this.view.feedback(row);
+    this.timer = this.clock.set(() => this.begin(), this.timing.feedbackMs);
+  }
+
+  stop() {
+    this.stopped = true;
+    this.clock.clear(this.timer);
+    this.stopStream();
+  }
+
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    this.clock.clear(this.timer);
+    this.stopStream();
+    this.view.blank();
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    this.begin();
+  }
+
+  private begin() {
+    if (this.stopped || this.paused) return;
+    if (this.rows.length === this.trials.length) { this.stopped = true; this.onFinish(this.rows.map(row => ({ ...row }))); return; }
+    const index = this.rows.length;
+    this.first = null;
+    this.stage = 'fixation';
+    this.view.fixation(index);
+    this.timer = this.clock.set(() => {
+      this.stage = 'stream';
+      this.view.step('stream');
+      this.stopStream = PlayStream(this.trials[index].items, this.timing.itemMs, this.view, this.clock, () => {
+        this.stage = 'answer1';
+        this.view.step('answer1');
+      });
+    }, this.timing.fixationMs);
+  }
+}
+
 const Percent = (part: number, whole: number) => whole ? Math.round(part / whole * 1000) / 10 : null;
 
 // Second-digit accuracy counts only streams where the first digit was right, the usual measure of the blink.

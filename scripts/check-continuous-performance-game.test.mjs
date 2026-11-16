@@ -82,6 +82,21 @@ test('the run shows each letter for its display time and keeps the first press i
   assert.equal(clock.pending(), 0);
 });
 
+test('pause restarts the interrupted letter with a fresh clock and retains prior letters', async () => {
+  const { CptRun } = await LoadGameModule(gameId, 'logic/cptRun.ts', { './cptTrials': await LoadGameModule(gameId, 'logic/cptTrials.ts') });
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const run = new CptRun([{ letter: 'B', kind: 0 }, { letter: 'X', kind: 1 }], { letterMs: 200, isiMs: 1000, leadInMs: 0 },
+    { show: trial => shown.push(trial.letter), blank() {} }, clock, rows => { finished = rows; });
+  run.start(); clock.advance(1200); clock.advance(100); run.respond(); run.pause(); clock.advance(5000); run.respond();
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(300); run.respond(); clock.advance(900);
+  assert.deepEqual(shown, ['B', 'X', 'X']);
+  assert.equal(finished.length, 2);
+  assert.equal(finished[1].rtMs, 300);
+});
+
 test('stopping the run cancels every timer and ignores later presses', async () => {
   const { CptRun } = await LoadGameModule(gameId, 'logic/cptRun.ts', { './cptTrials': await LoadGameModule(gameId, 'logic/cptTrials.ts') });
   const clock = FakeClock();
@@ -124,7 +139,7 @@ test('CPT results save bounded numeric rows through the private channel', async 
 });
 
 test('CPT owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'ContinuousPerformanceGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'ContinuousPerformanceGame', category: 'attention', version: '1.1.0' });
 });
 
 test('CPT private bridge accepts only its own parent and replays settings and language', async () => {

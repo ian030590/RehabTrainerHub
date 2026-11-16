@@ -29,17 +29,21 @@ export class SchulteRound {
   errors = 0;
   next: number;
   private finishedAt: number | null = null;
+  private pausedAt: number | null = null;
   private readonly cells: number;
 
-  constructor(size: number, private order: SchulteOrder, readonly startedAt: number) {
+  constructor(size: number, private order: SchulteOrder, public startedAt: number) {
     this.cells = size * size;
     this.next = order === 'ascending' ? 1 : this.cells;
   }
 
   get done() { return this.finishedAt !== null; }
 
+  pause(now: number) { if (!this.done && this.pausedAt === null) this.pausedAt = now; }
+  resume(now: number) { if (this.pausedAt !== null) { this.startedAt += Math.max(0, now - this.pausedAt); this.pausedAt = null; } }
+
   tap(value: number, now: number): SchulteTap {
-    if (this.done || this.found.has(value)) return { correct: false, done: this.done, ignored: true };
+    if (this.done || this.pausedAt !== null || this.found.has(value)) return { correct: false, done: this.done, ignored: true };
     if (value !== this.next) { this.errors++; return { correct: false, done: false }; }
     this.found.add(value);
     this.next += this.order === 'ascending' ? 1 : -1;

@@ -34,4 +34,9 @@ export function ShowGo(session: ReactionSession, timeMs: number): ReactionSessio
   return session.status === 'wait' ? { ...session, status: 'go', goMs: timeMs } : session;
 }
 
+export function InterruptReaction(session: ReactionSession): ReactionSession {
+  if (session.status !== 'wait' && session.status !== 'go') return session;
+  return { ...session, status: 'idle', waitStartMs: null, goMs: null, foreperiodMs: null, lastMs: null };
+}
+
 export const Successes = (session: ReactionSession) => session.rows.filter(row => !row.falseStart).length;

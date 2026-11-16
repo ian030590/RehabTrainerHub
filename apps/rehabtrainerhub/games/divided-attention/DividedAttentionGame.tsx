@@ -5,7 +5,7 @@ import { defaultSettings, mathLevels, speeds, ValidateSettings, type DividedSett
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { DividedTutorial } from './rules/DividedTutorial';
-import { CreatePath, CreateProblem, CreateRandom, ScoreProblem, TrackingLog, type DividedRow, type Point, type Problem, type TrackingPercentages } from './logic/divided';
+import { CreatePath, CreateProblem, CreateRandom, ResumeRunClock, ScoreProblem, TrackingLog, type DividedRow, type Point, type Problem, type TrackingPercentages } from './logic/divided';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic, PlaySuccessSound, PrepareAudioFeedback, StopMidiMusic } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
@@ -29,10 +29,21 @@ export function DividedAttentionGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pausedAtRef = useRef(0);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<DividedSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<DividedRow[]>([]);
@@ -72,17 +83,41 @@ export function DividedAttentionGame() {
     heldKeysRef.current.clear();
   }, []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     stopLoop();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, [stopLoop]);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pausedAtRef.current = performance.now();
+    if (runRef.current) cancelAnimationFrame(runRef.current.frame);
+    heldKeysRef.current.clear();
+    touchIdRef.current = null;
+    pointerRef.current = null;
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    const run = runRef.current;
+    if (run) { ResumeRunClock(run, pausedAtRef.current, performance.now()); run.frame = requestAnimationFrame(time => frameRef.current(time)); }
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
 
   const finishRef = useRef<() => void>(() => undefined);
   finishRef.current = () => {
     const run = runRef.current;
     if (!run) return;
+    endingRef.current = true;
     const percentages = run.log.percentages();
     const completed = run.rows;
     stopLoop();
@@ -102,7 +137,7 @@ export function DividedAttentionGame() {
   resolveRef.current = (choice: number | null) => {
     const run = runRef.current;
     const shown = run?.problem;
-    if (!run || !shown || phaseRef.current !== 'running') return;
+    if (!run || !shown || pausedRef.current || phaseRef.current !== 'running') return;
     const now = performance.now();
     const chosen = choice === null ? null : shown.value.options[choice] ?? null;
     if (choice !== null && chosen === null) return;
@@ -121,7 +156,7 @@ export function DividedAttentionGame() {
   frameRef.current = (now: number) => {
     const run = runRef.current;
     const field = fieldRef.current, target = targetRef.current;
-    if (!run || phaseRef.current !== 'running') return;
+    if (!run || pausedRef.current || phaseRef.current !== 'running') return;
     run.frame = requestAnimationFrame(time => frameRef.current(time));
     if (!field || !target) return;
     const width = field.clientWidth, height = field.clientHeight, zone = target.offsetWidth / 2;
@@ -168,14 +203,17 @@ export function DividedAttentionGame() {
     inputRef.current = 'pointer';
     runRef.current = { path: CreatePath(seed, settings.speed), random: CreateRandom(seed + 1), log: new TrackingLog(), rows: [],
       start: now, end, lastFrame: now, nextAt: now + firstProblemMs, secondsLeft: settings.durationSec, frame: 0, problem: null };
-    runRef.current.frame = requestAnimationFrame(time => frameRef.current(time));
+    if (pausedRef.current) pausedAtRef.current = now;
+    else runRef.current.frame = requestAnimationFrame(time => frameRef.current(time));
   };
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (event.type === 'keydown' && !event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       if (event.key in arrowKeys) {
         event.preventDefault();
         if (event.type === 'keyup') { heldKeysRef.current.delete(event.key); return; }
@@ -194,6 +232,7 @@ export function DividedAttentionGame() {
     window.addEventListener('keyup', keys, true);
     window.addEventListener('blur', blur);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
@@ -201,9 +240,10 @@ export function DividedAttentionGame() {
       window.removeEventListener('keyup', keys, true);
       window.removeEventListener('blur', blur);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -230,6 +270,7 @@ export function DividedAttentionGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -310,16 +351,16 @@ export function DividedAttentionGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="divided-stage divided-running" aria-label={title}>
+    {phase === 'running' && <><main className="divided-stage divided-running" aria-label={title} inert={paused}>
       <header className="divided-hud">
         <p className="divided-progress-label">{en ? `${clock(secondsLeft)} left` : `剩 ${clock(secondsLeft)}`}</p>
         <div className="divided-progress-track"><div className="divided-progress-fill" style={{ width: `${(1 - secondsLeft / settings.durationSec) * 100}%` }} /></div>
-        <button type="button" className="btn btn-ghost divided-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost divided-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div ref={fieldRef} className="divided-field" aria-label={en ? 'Moving dot area' : '圓點移動區'} role="img"
         onPointerDown={fieldDown} onPointerMove={fieldMove} onPointerUp={fieldUp} onPointerCancel={fieldUp} onPointerLeave={fieldLeave}
@@ -336,14 +377,27 @@ export function DividedAttentionGame() {
             {problem?.options[index] ?? ''}<small>{index + 1}</small></button>)}
         </div>
       </section>
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="divided-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="divided-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Time on the dot' : '跟住圓點的時間'}</p><strong>{percent(summary.trackingPercent)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Sums right' : '算式答對率'}</p><strong>{percent(summary.accuracyPercent)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Less time on the dot during sums' : '算式出現時少跟住'}</p><strong>{points(summary.trackingCostPercent)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'On the dot with no sum showing' : '沒有算式時跟住'}</dt><dd>{percent(summary.trackingAlonePercent)}</dd></div>
@@ -355,10 +409,7 @@ export function DividedAttentionGame() {
         <p className="score-note">{en ? 'Less time on the dot during sums is the gap between the two rows above. A larger number means the sums pulled more attention away from the dot.'
           : '「算式出現時少跟住」是上面兩列的差距；數字越大，表示算算式時越少顧到圓點。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

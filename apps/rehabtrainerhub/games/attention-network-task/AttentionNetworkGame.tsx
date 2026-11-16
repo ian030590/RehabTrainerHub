@@ -38,10 +38,20 @@ export function AttentionNetworkGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<AntSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<AntRow[]>([]);
@@ -72,6 +82,9 @@ export function AttentionNetworkGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     runRef.current?.stop();
     runRef.current = null;
@@ -79,6 +92,22 @@ export function AttentionNetworkGame() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    runRef.current?.pause();
+    if (areaRef.current) areaRef.current.dataset.state = 'ready';
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    runRef.current?.resume();
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   const continueAfterRest = useCallback(() => {
     const current = restRef.current;
@@ -87,9 +116,11 @@ export function AttentionNetworkGame() {
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setRest(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       if (restRef.current) {
         if ((event.key === 'Enter' || event.key === ' ') && !event.repeat && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); continueAfterRest(); }
         return;
@@ -103,14 +134,16 @@ export function AttentionNetworkGame() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime, continueAfterRest]);
+  }, [pause, resume, stopRuntime, continueAfterRest]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -129,6 +162,7 @@ export function AttentionNetworkGame() {
     const allRows: AntRow[] = [];
     const setState = (state: string) => { if (areaRef.current) areaRef.current.dataset.state = state; };
     const finish = () => {
+      endingRef.current = true;
       runRef.current = null;
       runSegmentRef.current = null;
       const score = BuildGameScore(allRows, settings);
@@ -195,6 +229,7 @@ export function AttentionNetworkGame() {
       }, leadInMs);
       runRef.current = run;
       run.start();
+      if (pausedRef.current) { run.pause(); setState('ready'); }
     };
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:attention-network-task', onStart: () => {
       runSegmentRef.current = runSegment;
@@ -216,6 +251,7 @@ export function AttentionNetworkGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -275,16 +311,16 @@ export function AttentionNetworkGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="ant-stage ant-running" aria-label={title}>
+    {phase === 'running' && <><main className="ant-stage ant-running" aria-label={title} inert={paused}>
       <header className="ant-hud">
         <p ref={progressLabelRef} className="ant-progress-label" aria-live="off">{en ? 'Get ready' : '準備開始'}</p>
         <div className="ant-progress-track"><div ref={progressFillRef} className="ant-progress-fill" /></div>
-        <button type="button" className="btn btn-ghost ant-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost ant-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div ref={areaRef} className="ant-stimulus-area" data-state="ready" data-cue="nocue" data-location="up" aria-hidden="true">
         <div className="ant-slot ant-slot-up"><span className="ant-star ant-star-up">*</span><ArrowRow slot="up" /></div>
@@ -315,14 +351,27 @@ export function AttentionNetworkGame() {
           </div></footer>
         </div>
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="ant-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="ant-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Correct' : '正確率'}</p><strong>{percent(summary.accuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean time on correct answers' : '答對的平均時間'}</p><strong>{ms(summary.meanCorrectRtMs)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Conflict difference' : '衝突差異'}</p><strong>{ms(summary.conflictMs)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.slice(0, -1).map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Alerting difference' : '警覺差異'}</dt><dd>{ms(summary.alertingMs)}</dd></div>
@@ -333,10 +382,7 @@ export function AttentionNetworkGame() {
         <p className="score-note">{en ? 'Each difference compares mean times on correct answers. Alerting: no cue minus two stars. Orienting: centre star minus a star at the row position. Conflict: opposite flankers minus same-direction flankers. Practice items are listed below but not counted here.'
           : '各項差異都比較答對題目的平均時間。警覺差異＝沒有星號減去上下兩個星號；定向差異＝中央星號減去箭頭位置的星號；衝突差異＝兩側箭頭反方向減去同方向。練習題列在下方明細，但不計入這些統計。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

@@ -142,6 +142,7 @@ export const brainGameSpecs = {
     rows: 45,
   },
   'schulte-grid': {
+    interruptPanel: true,
     title: { zh: '舒爾特方格', en: 'Schulte Grid' },
     purpose: 'attention',
     settings: { gridSize: 3, rounds: 2, order: 'ascending', markFound: true },
@@ -245,6 +246,7 @@ export const brainGameSpecs = {
     rows: 2,
   },
   'continuous-performance': {
+    interruptPanel: true,
     title: { zh: '連續表現作業（CPT）', en: 'Continuous Performance Task (CPT)' },
     purpose: 'attention',
     settings: { variant: 'ax', trials: 100, targetPercent: 10, letterMs: 100, isiMs: 800 },
@@ -387,6 +389,7 @@ export const brainGameSpecs = {
     rows: 32,
   },
   'attention-network-task': {
+    interruptPanel: true,
     title: { zh: '注意力網絡練習（ANT）', en: 'Attention Network Task (ANT)' },
     purpose: 'attention',
     settings: { responseWindowMs: 1000, rounds: 48, practice: true },
@@ -870,6 +873,7 @@ export const brainGameSpecs = {
     rows: 13,
   },
   'reaction-time': {
+    interruptPanel: true,
     title: { zh: '反應時間', en: 'Reaction Time' },
     purpose: 'attention',
     settings: { difficulty: 'easy', rounds: 5, timeLimitSec: 0, soundEnabled: true },
@@ -1175,6 +1179,7 @@ export const brainGameSpecs = {
     rows: 20,
   },
   'attentional-blink': {
+    interruptPanel: true,
     title: { zh: '注意力眨眼', en: 'Attentional Blink' },
     purpose: 'attention',
     settings: { trials: 24, itemMs: 150 },
@@ -1271,6 +1276,7 @@ export const brainGameSpecs = {
     rows: 12,
   },
   'divided-attention': {
+    interruptPanel: true,
     title: { zh: '分配注意力', en: 'Divided Attention' },
     purpose: 'attention',
     settings: { durationSec: 60, speed: 'fast', mathLevel: 'harder' },

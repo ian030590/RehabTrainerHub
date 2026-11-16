@@ -49,6 +49,18 @@ test('a round accepts numbers in order, counts wrong taps and ignores numbers al
   assert.equal(descending.next, 8);
 });
 
+test('pause freezes the grid clock and ignores taps while preserving found numbers', async () => {
+  const { SchulteRound } = await LoadGameModule(gameId, 'logic/schulteGrid.ts');
+  const round = new SchulteRound(2, 'ascending', 1000);
+  round.tap(1, 1200);
+  round.pause(1500);
+  assert.equal(round.tap(2, 3000).ignored, true);
+  assert.equal(round.next, 2);
+  round.resume(6500);
+  round.tap(2, 6600); round.tap(3, 6700); round.tap(4, 7000);
+  assert.deepEqual(round.result(), { timeMs: 1000, errors: 0, meanStepMs: 250 });
+});
+
 test('the summary reports total, mean and best round times with errors', async () => {
   const { SummarizeSchulte } = await LoadGameModule(gameId, 'logic/schulteGrid.ts');
   const rows = [{ round: 1, gridSize: 5, timeMs: 30000, errors: 2, meanStepMs: 1200 }, { round: 2, gridSize: 5, timeMs: 24000, errors: 0, meanStepMs: 960 },
@@ -70,7 +82,7 @@ test('Schulte results save bounded numeric rows through the private channel', as
 });
 
 test('Schulte grid owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SchulteGridGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'SchulteGridGame', category: 'attention', version: '1.1.0' });
 });
 
 test('Schulte grid private bridge accepts only its own parent and replays settings and language', async () => {
