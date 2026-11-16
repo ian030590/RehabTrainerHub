@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-export async function CheckResultsPresentation(game, { defaultMetric, alternateMetric, english = false, capture }) {
+export async function CheckResultsPresentation(game, { defaultMetric, alternateMetric, english = false, capture, checkChartNavigation = false }) {
   assert.equal(await game('document.querySelectorAll(".experiment-results div:not([class])").length'), 0, 'Result containers have meaningful classes.');
   assert.equal(await game('document.querySelectorAll(".score-return-button").length'), 1);
   assert.equal(await game('Boolean(document.querySelector(".score-save-status[role=status]"))'), true);
@@ -35,6 +35,11 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
     await game('document.querySelector(".score-details").open = true');
     assert.equal(await game('document.querySelector(".score-chart svg").getAttribute("tabindex")'), '0');
     assert.equal(await game('document.querySelectorAll(".score-chart circle[tabindex]").length'), 0);
+    if (checkChartNavigation && await game('document.querySelectorAll(".score-chart circle").length > 1')) {
+      const before = await game('document.querySelector(".score-chart [aria-live=polite]").textContent');
+      await game(`document.querySelector('.score-chart svg').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
+      assert.notEqual(await game('document.querySelector(".score-chart [aria-live=polite]").textContent'), before, 'ArrowRight reads the next point.');
+    }
   }
   assert.equal(await game('Boolean(document.querySelector(".score-context dl"))'), true);
   assert.equal(await game('document.querySelector(".score-analysis select").value'), defaultMetric);

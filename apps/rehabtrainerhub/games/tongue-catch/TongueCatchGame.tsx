@@ -10,7 +10,7 @@ import { TongueCue } from './TongueCue';
 import { TongueTutorial } from './rules/TongueTutorial';
 import { calibrationSteps, CreateCalibration } from './logic/calibration';
 import {
-  CreateTongueSession, MapVideoPointToStage, RecognitionFromFrame, StepTongueSession, SummarizeTongueSession,
+  CreateTongueSession, MapVideoPointToStage, RecognitionFromFrame, ResumeTongueSession, StepTongueSession, SummarizeTongueSession,
   type Recognition, type SessionSummary, type TongueFrame, type TongueSession,
 } from './logic/tongueCatch';
 import { CreateTongueScene, DestroyTongueScene, DrawTongueScene, ReadScenePalette, type TongueScene } from './scene';
@@ -57,10 +57,23 @@ export function TongueCatchGame() {
   const labels = copy[lang];
   const title = t('game.title');
   const [phase, setPhaseState] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [cameraLost, setCameraLost] = useState(false);
+  const pausedRef = useRef(false);
+  const pausedAtRef = useRef(0);
+  const cameraLostRef = useRef(false);
+  const reconnectingRef = useRef(false);
+  const resumeAfterCalibrationRef = useRef(false);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<TongueSettings>({ ...defaultSettings });
   const [error, setError] = useState('');
@@ -125,6 +138,7 @@ export function TongueCatchGame() {
   }, [sendPreview, setFaceState]);
   const stopRun = useCallback(() => {
     generationRef.current++;
+    pausedRef.current = false; cameraLostRef.current = false; resumeAfterCalibrationRef.current = false; setPaused(false); setCameraLost(false);
     clearPlay();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'stop' });
   }, [clearPlay]);
@@ -137,6 +151,40 @@ export function TongueCatchGame() {
     setPhase('menu');
   }, [setPhase, stopRun, stopSensor]);
   const exit = useCallback(() => { stopRun(); stopSensor(); void ExitGame(); }, [stopRun, stopSensor]);
+  const pause = useCallback((lost = false) => {
+    if (!['playing', 'calibration'].includes(phaseRef.current)) return;
+    if (lost) { cameraLostRef.current = true; setCameraLost(true); }
+    if (pausedRef.current) return;
+    pausedRef.current = true;
+    if (!resumeAfterCalibrationRef.current) pausedAtRef.current = performance.now();
+    if (phaseRef.current === 'calibration') {
+      const state = calibrationRef.current.State();
+      if (state.capturing) SetInputCapture(state.label, false);
+    }
+    recognitionRef.current = restingRecognition; mouthRef.current = null;
+    feedbackRef.current?.Clear(); DisposeAudioFeedback(); setPaused(true);
+  }, []);
+  const pauseManually = useCallback(() => pause(), [pause]);
+  const resume = useCallback(async () => {
+    if (!pausedRef.current || reconnectingRef.current) return;
+    PrepareAudioFeedback();
+    const generation = generationRef.current;
+    if (cameraLostRef.current) {
+      reconnectingRef.current = true;
+      try { await StartSensorInput(); } catch { return; } finally { reconnectingRef.current = false; }
+      if (generation !== generationRef.current || !pausedRef.current) return;
+      cameraLostRef.current = false; setCameraLost(false); sensorReadyRef.current = true; setSensorReady(true);
+      resumeAfterCalibrationRef.current = resumeAfterCalibrationRef.current || phaseRef.current === 'playing';
+      calibrationRef.current = CreateCalibration(); setCalibration(calibrationRef.current.State());
+      pausedRef.current = false; restoreStopRef.current = true; setPaused(false); setPhase('calibration'); return;
+    }
+    if (phaseRef.current === 'calibration') {
+      const label = calibrationRef.current.Restart(performance.now());
+      if (label) SetInputCapture(label, true);
+      setCalibration(calibrationRef.current.State());
+    } else if (sessionRef.current) ResumeTongueSession(sessionRef.current, performance.now() - pausedAtRef.current);
+    pausedRef.current = false; restoreStopRef.current = true; setPaused(false);
+  }, [setPhase]);
 
   useEffect(() => OnSavedSettings(saved => {
     const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
@@ -199,7 +247,7 @@ export function TongueCatchGame() {
     const tick = (ticker: Ticker) => {
       const session = sessionRef.current;
       const scene = sceneRef.current;
-      if (phaseRef.current !== 'playing' || !session || !scene) return;
+      if (phaseRef.current !== 'playing' || pausedRef.current || !session || !scene) return;
       const config = ToPlayConfig(settingsRef.current);
       const apples = session.apples.slice();
       const previousHold = session.holdDirection;
@@ -240,6 +288,12 @@ export function TongueCatchGame() {
 
   const beginPlay = useCallback(() => {
     feedbackRef.current?.Clear();
+    if (resumeAfterCalibrationRef.current && sessionRef.current) {
+      resumeAfterCalibrationRef.current = false;
+      ResumeTongueSession(sessionRef.current, performance.now() - pausedAtRef.current);
+      recognitionRef.current = restingRecognition; mouthRef.current = null;
+      setPhase('playing'); return;
+    }
     const app = appRef.current;
     sessionRef.current = CreateTongueSession(app?.screen.width ?? window.innerWidth, app?.screen.height ?? window.innerHeight);
     recognitionRef.current = restingRecognition;
@@ -256,10 +310,12 @@ export function TongueCatchGame() {
       const message = (event as CustomEvent).detail;
       if (!sensorReadyRef.current || !['rules', 'calibration', 'playing'].includes(phaseRef.current)) return;
       if (message.type === 'error') {
+        if (['calibration', 'playing'].includes(phaseRef.current)) { pause(true); return; }
         setError(InputErrorMessage(new Error(message.payload.reason), labelsRef.current));
         showConfiguration();
         return;
       }
+      if (pausedRef.current) return;
       if (message.type !== 'frame') return;
       const frame = message.payload as TongueFrame;
       setFaceState(frame.face);
@@ -280,18 +336,19 @@ export function TongueCatchGame() {
     };
     window.addEventListener('game:input', receive);
     return () => window.removeEventListener('game:input', receive);
-  }, [beginPlay, setFaceState, showConfiguration]);
+  }, [beginPlay, pause, setFaceState, showConfiguration]);
 
   useEffect(() => {
     if (phase !== 'initializing' && phase !== 'calibration' && phase !== 'playing') return;
     const keys = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      showConfiguration();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (!event.repeat) { if (phaseRef.current === 'initializing') showConfiguration(); else if (pausedRef.current) void resume(); else pause(); }
+      }
     };
     window.addEventListener('keydown', keys, true);
     return () => window.removeEventListener('keydown', keys, true);
-  }, [phase, showConfiguration]);
+  }, [phase, pause, resume, showConfiguration]);
 
   // The container shows the camera behind the whole game, or only in the calibration area while calibrating.
   useEffect(() => {
@@ -417,7 +474,7 @@ export function TongueCatchGame() {
     <canvas ref={feedbackCanvasRef} className="tongue-feedback" aria-hidden="true" />
     <div className="tongue-field" aria-hidden="true" />
     <div ref={jsPsychHostRef} className="tongue-jspsych-host" aria-hidden="true" />
-    <main className="tongue-stage" aria-label={title}>
+    <main className="tongue-stage" aria-label={title} inert={paused}>
       <div ref={canvasHostRef} className="tongue-canvas-host" aria-hidden="true" />
       {/* Calibration has its own card and cancel button; the original showed no play numbers there. */}
       {phase !== 'calibration' && <header className="tongue-hud">
@@ -425,13 +482,13 @@ export function TongueCatchGame() {
         <p className="tongue-hud-item"><span>{labels.caught}</span><strong>{phase === 'playing' ? hud.caught : 0}</strong></p>
         <p className="tongue-hud-item"><span>{labels.missed}</span><strong>{phase === 'playing' ? hud.missed : 0}</strong></p>
         <p className="tongue-hud-item tongue-hud-status" aria-live="polite"><span>{labels.face}</span><strong>{faceStatus}</strong></p>
-        <button type="button" className="btn btn-ghost tongue-stop" onClick={showConfiguration}>{labels.stop}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost tongue-stop" onClick={pauseManually}>{en ? 'Stop' : '停止'}</button>
       </header>}
       {phase === 'playing' && sensorReady && !faceVisible && <p className="tongue-face-warning" role="status">{labels.findFace}</p>}
       {(phase === 'menu' || phase === 'rules' || phase === 'initializing') && <TongueTutorial active={phase !== 'menu'} ready={phase === 'rules'} title={title}
         summaryItems={summaryItems} onStart={() => void startTraining()} onBack={showConfiguration} inputReady={sensorReady} status={status} />}
     </main>
-    {phase === 'calibration' && <div className="tongue-calibration-overlay">
+    {phase === 'calibration' && <div className="tongue-calibration-overlay" inert={paused}>
       <div ref={cameraSpaceRef} className="tongue-calibration-camera-space" aria-hidden="true"><div className="tongue-camera-guide" /></div>
       <section className="tongue-calibration-card" aria-labelledby="tongue-calibration-title">
         <span className="tongue-step-count">{labels.calibrationStep(Math.min(calibration.index + 1, calibrationSteps.length), calibrationSteps.length)}</span>
@@ -444,9 +501,17 @@ export function TongueCatchGame() {
         <div className="tongue-calibration-actions">
           <button className="btn btn-primary" type="button" onClick={captureMovement} disabled={calibration.capturing}>{calibration.capturing ? labels.capturing : labels.capture}</button>
           <button className="btn btn-ghost" type="button" onClick={showConfiguration}>{labels.cancel}</button>
+          <button ref={stopRef} className="btn btn-ghost tongue-stop" type="button" onClick={pauseManually}>{en ? 'Stop' : '停止'}</button>
         </div>
       </section>
     </div>}
+    {paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="tongue-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="tongue-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{cameraLost ? (en ? 'Camera input stopped. Continuing requires calibration; ending will not save this session.' : '相機輸入已中斷；繼續前需重新校正，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={() => void resume()}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={showConfiguration}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}
     {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog" aria-labelledby="tongue-settings-title"
       onCancel={event => { event.preventDefault(); exit(); }}>
       <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
@@ -468,14 +533,14 @@ export function TongueCatchGame() {
           <section className="training-setting"><h3>{labels.privacyTitle}</h3><p className="training-setting-description">{labels.privacy}</p></section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{labels.confirm}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{backLabel}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{labels.confirm}</button>
         </div></footer>
       </form>
     </dialog>}
     {phase === 'results' && summary && score && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{labels.resultsTitle}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{labels.keyResults}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{labels.caughtApples}</p><strong>{summary.score}</strong></div>
         <div className="score-key-metric"><p>{labels.missedApples}</p><strong>{summary.missed}</strong></div>
         <div className="score-key-metric"><p>{labels.averageHold}</p><strong>{labels.seconds(summary.averageHoldSeconds)}</strong></div>
@@ -483,14 +548,18 @@ export function TongueCatchGame() {
         <p className="score-note">{labels.catchRate(score.summary.catchRate)}</p>
         <p className="score-note">{labels.holdNote}</p>
       </section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{labels.sessionSettings}</h2><dl className="score-context-list">
         <div className="score-context-item"><dt>{labels.actualDuration}</dt><dd>{labels.seconds(summary.durationSeconds)}</dd></div>
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </details>
     </section></div>}
   </div>;
 }

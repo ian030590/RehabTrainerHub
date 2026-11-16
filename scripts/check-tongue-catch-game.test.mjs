@@ -59,6 +59,54 @@ async function LoadPlay() {
   return { settings, logic, config: settings.ToPlayConfig(settings.defaultSettings) };
 }
 
+test('pause excludes the interruption from tongue holds and calibration capture', async () => {
+  const { logic, config } = await LoadPlay();
+  const { CreateCalibration } = await Load('logic/calibration.ts');
+  const session = logic.CreateTongueSession(1000, 600);
+  Step(session, logic, { now: 1000, recognition: Recognition('Tongue_Right') }, { ...config, spawnIntervalSec: 1000 });
+  logic.ResumeTongueSession(session, 5000);
+  Step(session, logic, { now: 7000 }, { ...config, spawnIntervalSec: 1000 });
+  assert.ok(Math.abs(session.holdDurations[0] - 1) < 0.001);
+  const calibration = CreateCalibration();
+  calibration.Start(1000);
+  calibration.Resume(5000);
+  assert.equal(calibration.Update({ Rest: 10 }, 7000).progress, 1000 / 1900);
+});
+
+test('camera reconnection recalibrates before preserving the interrupted tongue session', async () => {
+  const { logic } = await LoadPlay();
+  const { CreateCalibration } = await Load('logic/calibration.ts');
+  const session = logic.CreateTongueSession(1000, 600);
+  session.holdStartedAt = 1000;
+  const context = {
+    pausedRef: { current: true }, pausedAtRef: { current: 2000 }, reconnectingRef: { current: false },
+    cameraLostRef: { current: true }, generationRef: { current: 1 }, phaseRef: { current: 'playing' },
+    sensorReadyRef: { current: false }, resumeAfterCalibrationRef: { current: false },
+    calibrationRef: { current: CreateCalibration() }, sessionRef: { current: session },
+    restoreStopRef: { current: false }, feedbackRef: { current: null }, recognitionRef: { current: null }, mouthRef: { current: null },
+    restingRecognition: { label: 'Rest', confidence: 0, faceVisible: false }, performance: { now: () => 8000 },
+    CreateCalibration, ResumeTongueSession: logic.ResumeTongueSession, StartSensorInput: async () => {}, SetInputCapture() {}, PrepareAudioFeedback() {},
+    setCameraLost() {}, setSensorReady() {}, setCalibration() {}, setPaused() {}, setPhase: phase => { context.phaseRef.current = phase; },
+  };
+  const resume = await LoadFunction('TongueCatchGame.tsx', 'resume', context);
+  await resume();
+  assert.equal(context.phaseRef.current, 'calibration');
+  assert.equal(context.sessionRef.current, session);
+  assert.equal(context.resumeAfterCalibrationRef.current, true);
+  const beginPlay = await LoadFunction('TongueCatchGame.tsx', 'beginPlay', context);
+  beginPlay();
+  assert.equal(context.phaseRef.current, 'playing');
+  assert.equal(context.sessionRef.current, session);
+  assert.equal(session.holdStartedAt, 7000, 'The pause and recalibration are excluded from hold time.');
+});
+
+test('tongue Stop remains at least 44 pixels high on short landscape screens', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const rule = css.match(/\.tongue-hud \.tongue-stop\s*\{([^}]*)\}/);
+  assert.ok(rule);
+  assert.match(rule[1], /min-height:\s*44px/);
+});
+
 test('Tongue Catch keeps the Hub settings and brings back the growth, fall speed and spawn options in its own form', async () => {
   const { defaultSettings, rangeSettings, ValidateSettings, ToPlayConfig } = await Load('settings.ts');
   assert.deepEqual(Object.keys(defaultSettings), ['sensitivityPercent', 'durationSec', 'edgeChancePercent', 'growthRate', 'appleSpeed', 'spawnIntervalSec']);
@@ -401,7 +449,7 @@ test('the apple picture loads through an image element, because the runner block
 test('Tongue Catch owns its runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-tongue-catch');
-  assert.equal(pkg.version, '2.0.2');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, capabilities);

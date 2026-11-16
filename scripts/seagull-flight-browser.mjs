@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+
+export async function CheckSavedSeagullFlight(row, rawDataBucket, version, settings) {
+  const saved = await ReadSavedGameRecord(row, rawDataBucket, version);
+  assert.equal(saved.gameId, 'seagull-flight');
+  assert.deepEqual(saved.config, settings);
+  assert.equal(saved.score.summary.duration, 60);
+  assert.equal(saved.score.summary.crashed, 0);
+  assert.ok(saved.score.summary.flaps > 10);
+  assert.equal(saved.score.summary.maxTurnDeg, null);
+  assert.equal(saved.score.summary.maxNodDeg, null);
+  assert.ok(saved.score.rounds.length >= 10);
+  assert.equal(saved.score.rounds.length, saved.score.summary.passed + saved.score.summary.missed);
+  return saved;
+}
 
 export function KeyboardCameraProbe(standalone) {
   const consentSelector = standalone ? '#camera-consent:not([hidden])' : '.training-overlay-camera-consent';
@@ -30,7 +45,7 @@ export function KeyboardCameraProbe(standalone) {
 }
 
 export async function CheckSeagullFlight({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
-  gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, touch = false }) {
+  gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rawDataBucket, touch = false }) {
   await evaluate(KeyboardCameraProbe(standalone));
   const settings = { inputMode: 'keyboard', durationSec: 60, turnRangeDeg: 20, nodRangeDeg: 10, glideSec: 10, ringIntervalSec: 3 };
   const inputSession = gameContext.session || session;
@@ -85,9 +100,12 @@ export async function CheckSeagullFlight({ game, evaluate, send, until, standalo
   assert.ok(await game(`[...document.querySelectorAll('.seagull-controls button,.seagull-stop')].every(button=>{const rect=button.getBoundingClientRect();return rect.width>=44 && rect.height>=44 && rect.left>=0 && rect.right<=innerWidth && rect.bottom<=innerHeight;})`));
   assert.ok(await noOverflow());
   await capture('playing');
-  // Escape discards a flight and does not save a partial record.
+  // Escape opens the interrupt panel; ending discards the flight.
   await game(`window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
-  await until(() => phaseIs('menu'), 'Escape returns to settings');
+  await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'Escape opens interrupt panel');
+  assert.equal(await game(`document.activeElement.textContent`), english ? 'Continue' : '繼續');
+  await game(`document.querySelector('.game-interrupt-panel .btn-ghost').click()`);
+  await until(() => phaseIs('menu'), 'End activity returns to settings');
   assert.equal(getSaveAttempts(), 0);
   assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
   await until(() => evaluate('document.fullscreenElement === null'), 'Escape leaves fullscreen');
@@ -97,6 +115,7 @@ export async function CheckSeagullFlight({ game, evaluate, send, until, standalo
   await waitForConfirmation();
   await tap('.training-confirmation .btn-primary');
   await until(() => phaseIs('playing'), 'second run starts');
+  await until(() => game(`(() => { const countdown = document.querySelector('.seagull-countdown'); return !countdown || Number(countdown.textContent) < 3; })()`), 'second flight countdown advances', 8000);
   await game(`window.__seagullFlapTimer=setInterval(()=>{window.dispatchEvent(new KeyboardEvent('keydown',{key:' ',bubbles:true}));window.dispatchEvent(new KeyboardEvent('keyup',{key:' ',bubbles:true}));},1800)`);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowLeft',code:'ArrowLeft',windowsVirtualKeyCode:37},inputSession);
   await new Promise(done=>setTimeout(done,500));
@@ -107,7 +126,7 @@ export async function CheckSeagullFlight({ game, evaluate, send, until, standalo
   await until(() => game(`Boolean(document.querySelector('.experiment-results'))`), 'flight time reaches results', 80000);
   await game('clearInterval(window.__seagullFlapTimer)');
   await until(() => evaluate('document.fullscreenElement === null'), 'results leave fullscreen');
-  await CheckResultsPresentation(game, {defaultMetric:'passed',alternateMetric:'headAngle',english,capture});
+  await CheckResultsPresentation(game, {defaultMetric:'passed',alternateMetric:'headAngle',english,capture,checkChartNavigation:true});
   assert.ok(await noOverflow());
   if (standalone) {
     assert.equal(getSaveAttempts(),0);
@@ -120,15 +139,7 @@ export async function CheckSeagullFlight({ game, evaluate, send, until, standalo
     assert.equal(records.length,1);
     assert.equal(records[0].user_id ?? null,accountId);
     if(accountId) assert.notEqual(records[0].subject_id,guestSubjectId); else assert.equal(records[0].subject_id,guestSubjectId);
-    const saved=JSON.parse(records[0].payload_json);
-    assert.equal(saved.gameId,'seagull-flight');
-    assert.deepEqual(saved.config,settings);
-    assert.equal(saved.score.summary.duration,60);
-    assert.equal(saved.score.summary.crashed,0);
-    assert.ok(saved.score.summary.flaps>10);
-    assert.equal(saved.score.summary.maxTurnDeg,null);
-    assert.equal(saved.score.summary.maxNodDeg,null);
-    assert.ok(saved.score.rounds.length>=10);
+    await CheckSavedSeagullFlight(records[0], rawDataBucket, version, settings);
   }
   if (!standalone) assert.equal(requests.some(url=>url.includes('/input/head-tracking-')),false,'Keyboard play never starts the camera proxy.');
   assert.equal(await evaluate('window.seagullCameraCalls'), 0, 'Keyboard play never opens the camera.');

@@ -74,6 +74,43 @@ function StartTraining(app, { module = 'vor', settings = {}, source = 'webgazer'
     get capture() { return app.api.AppState.webgazerActiveTrial; } };
 }
 
+test('OcuTrain pauses stimuli, gaze capture and activity time until continued', () => {
+  const app = LoadExperiment();
+  const run = StartTraining(app);
+  app.frame(1100);
+  run.sample(1120);
+  const count = run.capture.synchronousRecords.length;
+  app.setNow(1200);
+  app.window.dispatchEvent(new Event('oculomotor:pause'));
+  app.frame(5000);
+  run.sample(5020);
+  assert.equal(run.capture.synchronousRecords.length, count, 'paused gaze frames are ignored');
+  app.setNow(6200);
+  app.window.dispatchEvent(new Event('oculomotor:resume'));
+  app.frame(6300);
+  run.sample(6320);
+  assert.equal(run.capture.synchronousRecords.at(-1).trial_time_ms, 320, 'paused time is excluded');
+});
+
+test('stopping waits for the previous run before a camera restart', async () => {
+  const app = LoadExperiment();
+  let finish;
+  const run = new Promise(resolve => { finish = resolve; });
+  app.jsPsych.run = () => run;
+  app.jsPsych.abortExperiment = () => {};
+  const { defaultSettings } = await import(new URL('settings.ts', base));
+  app.window.oculomotorExperiment.Start({ ...defaultSettings });
+  let stopped = false;
+  const stopping = app.window.oculomotorExperiment.Stop();
+  assert.ok(stopping && typeof stopping.then === 'function');
+  stopping.then(() => { stopped = true; });
+  await Promise.resolve();
+  assert.equal(stopped, false);
+  finish();
+  await stopping;
+  assert.equal(stopped, true);
+});
+
 for (const [name, settings, validation, threshold] of [
   ['default', {}, null, 3.5],
   ['precise validation retains allowance', {}, { source: 'webgazer', dynamicThresholdDeg: 0.5 }, 3.5],
@@ -168,6 +205,21 @@ test('OcuTrain validation without enough data cannot proceed or invent a thresho
   for (let i = 0; i < 5; i++) { app.timer(350); app.timer(1050); }
   assert.doesNotMatch(display.innerHTML, /data-val-action="proceed"/);
   assert.match(display.innerHTML, /N\/A/);
+});
+
+test('paused gaze validation discards the interrupted point and restarts it on continue', () => {
+  const app = LoadExperiment(); let onGaze;
+  app.api.AppState.eyeTracking.source = 'webgazer';
+  app.api.AppState.pending = { eyeTrackingSource: 'webgazer', settings: {} };
+  app.jsPsych.extensions.webgazer = { hideVideo() {}, hidePredictions() {}, resume() {}, pause() {}, onGazeUpdate: callback => { onGaze = callback; return () => {}; } };
+  const display = { innerHTML: '', querySelector: () => ({ addEventListener() {} }) };
+  new app.api.GazeValidationPlugin(app.jsPsych).trial(display, {});
+  app.timer(350); onGaze({ x: 960, y: 540 });
+  app.window.dispatchEvent(new Event('oculomotor:pause'));
+  assert.equal(app.timers.size, 0);
+  onGaze({ x: 1, y: 1 });
+  app.window.dispatchEvent(new Event('oculomotor:resume'));
+  assert.ok([...app.timers.values()].some(timer => timer.delay === 350));
 });
 
 test('stopping after validation removes its auto-start countdown before returning to settings', () => {
@@ -369,7 +421,7 @@ for (const language of ['zh', 'en']) test(`validation instructions and all outco
   }
 });
 
-test('results prioritize original Accuracy and TFF, localize target rows and move metadata below statistics', async () => {
+test('results prioritize original Accuracy and TFF, localize target rows and place metadata before analysis', async () => {
   const scoreModule = await import(new URL('score.ts', base));
   let hub = true;
   const module = { exports: {} }; const require = createRequire(import.meta.url);
@@ -390,8 +442,8 @@ test('results prioritize original Accuracy and TFF, localize target rows and mov
     assert.match(priority, /Accuracy/); assert.match(priority, /TFF/);
     assert.match(priority, missing ? (language === 'en' ? /Missing/ : /缺測/) : /80 %/);
     if (!missing) { assert.match(priority, /0 ms/); assert.match(priority, /1 \/ 2/); }
-    assert.ok(markup.indexOf('Metadata fixture') > markup.indexOf('class="score-analysis"'));
-    assert.ok(markup.indexOf('Metadata fixture') > markup.indexOf('class="score-tff"'));
+    assert.ok(markup.indexOf('Metadata fixture') < markup.indexOf('class="score-analysis"'));
+    assert.ok(markup.indexOf('Metadata fixture') < markup.indexOf('class="score-tff"'));
     assert.match(markup, /value="accuracy" selected=""/);
     assert.doesNotMatch(markup, /rightUp|leftDown|no_confirmed_fixation|undefined|NaN/);
     hub = false;

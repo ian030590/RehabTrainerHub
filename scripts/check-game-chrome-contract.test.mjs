@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import ts from 'typescript';
 
-const chromeContractGames = ['flanker', 'stroop', 'simon-task', 'go-nogo', 'sart', 'stop-signal', 'antisaccade', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'digit-span', 'keep-track', 'letter-memory', 'n-back', 'spatial-span', 'pattern-memory', 'memory-match', 'simon-says', 'hex-schulte', 'whack-a-mole', 'ufov', 'every-ball-response', 'connect4', 'dots-and-boxes', 'hex', 'lights-out', 'maze', 'minesweeper', 'card-sorting', 'number-letter', 'plus-minus', 'sliding-puzzle', 'sudoku', 'tic-tac-toe', 'time-perception', 'tower-of-london', 'complex-search', 'conjunction-search', 'popout-search', 'exploratory-saccade', 'gabor-patching', 'moving-card', 'reading-training', 'driving-rehab', 'hart-chart', 'asteroid-shield', 'drawing-defense', 'gesture-battler', 'motor-cortex-rehab'];
+const chromeContractGames = ['flanker', 'stroop', 'simon-task', 'go-nogo', 'sart', 'stop-signal', 'antisaccade', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'digit-span', 'keep-track', 'letter-memory', 'n-back', 'spatial-span', 'pattern-memory', 'memory-match', 'simon-says', 'hex-schulte', 'whack-a-mole', 'ufov', 'every-ball-response', 'connect4', 'dots-and-boxes', 'hex', 'lights-out', 'maze', 'minesweeper', 'card-sorting', 'number-letter', 'plus-minus', 'sliding-puzzle', 'sudoku', 'tic-tac-toe', 'time-perception', 'tower-of-london', 'complex-search', 'conjunction-search', 'popout-search', 'exploratory-saccade', 'gabor-patching', 'moving-card', 'reading-training', 'driving-rehab', 'hart-chart', 'asteroid-shield', 'drawing-defense', 'gesture-battler', 'motor-cortex-rehab', 'tongue-catch', 'seagull-flight', 'oculomotor-training'];
 const componentOverrides = { 'drawing-defense': 'DrawingTowerDefenseGame', 'hart-chart': 'HartChartPage', 'tower-of-london': 'TowerPlanning', 'go-nogo': 'GoNoGoGame', 'attention-network-task': 'AttentionNetworkGame', 'reaction-time': 'ReactionSignal', 'digit-span': 'DigitSpanRecall', 'keep-track': 'KeepTrackRecall', 'letter-memory': 'LetterMemoryRecall', 'n-back': 'NBackLetters', 'spatial-span': 'SpatialSpanRecall', 'whack-a-mole': 'WhackAMoleGame', 'every-ball-response': 'EveryBallGame', 'number-letter': 'NumberLetterSwitch', 'plus-minus': 'PlusMinusSwitch' };
 const read = path => readFileSync(path, 'utf8');
 const catalog = read('apps/rehabtrainerhub/games/catalog.ts');
@@ -47,7 +47,8 @@ for (const game of chromeContractGames) {
   const css = ['game.css', 'rules.css', 'results.css'].map(file => read(`${root}/${file}`));
   const componentName = componentOverrides[game] ?? `${game.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')}Game`;
   const component = read(`${root}/${componentName}.tsx`);
-  const analysis = read(`${root}/ScoreAnalysis.tsx`);
+  const resultSource = game === 'oculomotor-training' ? read(`${root}/OculomotorResults.tsx`) : component;
+  const analysis = game === 'oculomotor-training' ? resultSource : read(`${root}/ScoreAnalysis.tsx`);
 
   test(`${game}: category theme and chrome CSS`, () => {
     assert.ok(theme, 'category theme exists');
@@ -78,16 +79,19 @@ for (const game of chromeContractGames) {
     assert.match(component, /onKeyDown=\{event => \{ if \(event\.key === 'Enter'[^\n]*confirmSettings\(\)/);
   });
   test(`${game}: result hierarchy and accessible chart`, () => {
-    const result = component.split('className="experiment-results"')[1];
+    const result = resultSource.split('className="experiment-results"')[1];
     for (const text of ['Session results', '當次成果', 'score-complete', 'score-save-status', 'score-actions', 'score-details', '查看詳細資料', 'View details']) assert.ok(result.includes(text), text);
-    const positions = ['score-header', 'score-priority', 'score-save-status', 'score-actions', 'score-details', 'score-context', '<ScoreAnalysis'].map(text => result.indexOf(text));
+    const positions = ['score-header', 'score-priority', 'score-save-status', 'score-actions', 'score-details', 'score-context', game === 'oculomotor-training' ? 'score-analysis' : '<ScoreAnalysis'].map(text => result.indexOf(text));
+    assert.ok(positions.every(position => position >= 0), 'all result sections exist');
     assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
     assert.match(result, /role="status"/);
     assert.match(result, /<details className="score-details">/);
     assert.match(analysis, /<svg[^>]*tabIndex=\{0\}/);
     assert.doesNotMatch(analysis, /<circle[^>]*tabIndex/);
-    assert.match(analysis, /ArrowLeft/);
-    assert.match(analysis, /ArrowRight/);
+    if (game !== 'oculomotor-training') {
+      assert.match(analysis, /ArrowLeft/);
+      assert.match(analysis, /ArrowRight/);
+    }
     assert.match(analysis, /aria-live="polite"/);
   });
 }

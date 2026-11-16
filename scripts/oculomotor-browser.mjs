@@ -175,13 +175,13 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   if (process.argv.includes('--camera-disconnect')) {
     assert.ok(tracking);
     await evaluate(`window.eyeFixtureStream.getVideoTracks()[0].dispatchEvent(new Event('ended'))`,eyeContext);
-    await until(() => game(`Boolean(document.querySelector('form [role=alert]'))`), 'disconnected camera returns a visible error');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'disconnected camera opens the interrupt panel');
     await until(() => game(`!document.fullscreenElement`), 'camera disconnect exits fullscreen');
-    assert.equal(await game(`document.querySelector('[name=eyeTrackingSource]').value`), 'webgazer');
+    assert.match(await game(`document.querySelector('.game-interrupt-panel p').textContent`), english ? /Camera/ : /相機/);
     assert.equal(await evaluate(`Boolean(document.querySelector('iframe[title="WebGazer camera preview"]'))`),false);
     assert.equal(getSaveAttempts(),0); assert.equal(getCsvAttempts(),0);
     await capture('camera-disconnected');
-    await game(`document.querySelector('form .btn-ghost').click()`);
+    await game(`document.querySelector('.game-interrupt-panel .btn-ghost').click()`);
     console.log('Eye camera disconnect stopped inference and fullscreen without saving or changing settings.');
     return;
   }
@@ -195,10 +195,16 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   }
   if (process.argv.includes('--stop')) {
     await game(`document.querySelector('.oculomotor-stop').click()`);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent`), english ? 'Continue' : '繼續');
+    await game(`document.querySelector('.game-interrupt-panel .btn-ghost').click()`);
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop returns without saving');
     assert.equal(getSaveAttempts(), 0); return;
   }
   await until(() => game(`Boolean(document.querySelector('.experiment-results'))`), 'complete activity');
+  assert.equal(await game(`document.activeElement === document.querySelector('.score-header h1')`), true);
+  assert.equal(await game(`document.querySelector('.score-details').open`), false);
+  await game(`document.querySelector('.score-details').open = true`);
   await until(() => game(`!document.fullscreenElement`), 'completion exits fullscreen');
   assert.equal(await game(`document.querySelectorAll('.results-table tbody tr').length`), 1);
   assert.equal(await game(`document.querySelectorAll('.results-table tbody td').length`), 12);
@@ -206,7 +212,7 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   assert.equal(await game(`document.fullscreenElement`), null);
   assert.equal(await game(`document.querySelector('.score-analysis select').value`),'accuracy','Accuracy is the default analysis');
   assert.match(await game(`document.querySelector('.score-priority').textContent`), /Accuracy[\s\S]*TFF/);
-  assert.equal(await game(`Boolean(document.querySelector('.score-context').compareDocumentPosition(document.querySelector('.score-analysis')) & Node.DOCUMENT_POSITION_PRECEDING)`),true,'Metadata follows statistics');
+  assert.equal(await game(`Boolean(document.querySelector('.score-context').compareDocumentPosition(document.querySelector('.score-analysis')) & Node.DOCUMENT_POSITION_FOLLOWING)`),true,'Metadata precedes statistics');
   await CheckTextLayout(game, '.score-priority', 'h2,p,strong');
   if (standalone) {
     const install = await evaluate(`(() => {const button=document.querySelector('#install-button');return button && !button.hidden ? button.getBoundingClientRect().toJSON() : null;})()`);

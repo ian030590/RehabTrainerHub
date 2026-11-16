@@ -4,6 +4,7 @@ import { useT } from './i18n/useT';
 import { copy, type Labels } from './labels';
 import { defaultSettings, rangeSettings, ToPlayConfig, ValidateSettings, type RangeKey, type SeagullSettings } from './settings';
 import { CreateFlightSession, StepFlight, SummarizeFlight, type FlightSession, type FlightSummary } from './logic/flight';
+import { CreateFlightClock } from './logic/flightClock';
 import { CreateFlapDetector, CreateHeadSmoother, CreateNeutralCalibration, HeadTargetX } from './logic/headInput';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
@@ -27,13 +28,26 @@ function InputErrorMessage(error: unknown, labels: Labels) {
 
 export function SeagullFlightGame() {
   const { lang } = useT();
+  const en = lang === 'en';
   const labels = copy[lang];
   const title = labels.title;
   const [phase, setPhaseState] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [cameraLost, setCameraLost] = useState(false);
+  const pausedRef = useRef(false);
+  const cameraLostRef = useRef(false);
+  const reconnectingRef = useRef(false);
+  const clockRef = useRef(CreateFlightClock(performance.now()));
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SeagullSettings>({ ...defaultSettings });
   const [error, setError] = useState('');
@@ -89,6 +103,8 @@ export function SeagullFlightGame() {
   }, []);
   const stopRun = useCallback(() => {
     generationRef.current++;
+    clockRef.current.Resume(performance.now());
+    pausedRef.current = false; cameraLostRef.current = false; setPaused(false); setCameraLost(false);
     clearPlay();
     DisposeAudioFeedback();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'stop' });
@@ -101,6 +117,32 @@ export function SeagullFlightGame() {
     setPhase('menu');
   }, [setPhase, stopRun, stopSensor]);
   const exit = useCallback(() => { stopRun(); stopSensor(); void ExitGame(); }, [stopRun, stopSensor]);
+  const pause = useCallback((lost = false) => {
+    if (!['playing', 'calibration'].includes(phaseRef.current)) return;
+    if (lost) { cameraLostRef.current = true; setCameraLost(true); }
+    if (pausedRef.current) return;
+    pausedRef.current = true;
+    clockRef.current.Pause(performance.now());
+    keysRef.current.clear(); pointersRef.current.clear(); flapRef.current = false;
+    frameRef.current = { head: null, receivedAt: -Infinity };
+    smootherRef.current.Reset(); flapDetectorRef.current.Reset();
+    DisposeAudioFeedback(); setPaused(true);
+  }, []);
+  const pauseManually = useCallback(() => pause(), [pause]);
+  const resume = useCallback(async () => {
+    if (!pausedRef.current || reconnectingRef.current) return;
+    PrepareAudioFeedback();
+    const generation = generationRef.current;
+    if (cameraLostRef.current) {
+      reconnectingRef.current = true;
+      try { await StartSensorInput(); } catch { return; } finally { reconnectingRef.current = false; }
+      if (generation !== generationRef.current || !pausedRef.current) return;
+      cameraLostRef.current = false; setCameraLost(false); sensorReadyRef.current = true; setSensorReady(true);
+    }
+    if (phaseRef.current === 'calibration') { calibrationRef.current = CreateNeutralCalibration(performance.now()); setCalibration(calibrationRef.current.State()); }
+    clockRef.current.Resume(performance.now());
+    pausedRef.current = false; restoreStopRef.current = true; setPaused(false);
+  }, []);
   useEffect(() => OnSavedSettings(saved => {
     const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
     if (restored && phaseRef.current === 'menu') setSettings(restored);
@@ -148,10 +190,12 @@ export function SeagullFlightGame() {
       const message = (event as CustomEvent).detail;
       if (!sensorReadyRef.current || !['rules', 'initializing', 'calibration', 'playing'].includes(phaseRef.current)) return;
       if (message.type === 'error') {
+        if (['calibration', 'playing'].includes(phaseRef.current)) { pause(true); return; }
         setError(InputErrorMessage(new Error(message.payload.reason), labelsRef.current));
         showConfiguration();
         return;
       }
+      if (pausedRef.current) return;
       if (message.type === 'ready' || message.type !== 'frame') return;
       const frame = message.payload as HeadFrame;
       const now = performance.now();
@@ -175,7 +219,7 @@ export function SeagullFlightGame() {
     };
     window.addEventListener('game:input', receive);
     return () => window.removeEventListener('game:input', receive);
-  }, [showConfiguration]);
+  }, [pause, showConfiguration]);
 
   useEffect(() => {
     const host = canvasHostRef.current;
@@ -186,12 +230,13 @@ export function SeagullFlightGame() {
     sceneRef.current = scene;
     setSceneReady(true);
     const preview = CreateFlightSession(ToPlayConfig({ ...defaultSettings, inputMode: 'keyboard' }), Math.random);
-    let last = performance.now();
+    clockRef.current = CreateFlightClock(performance.now());
     let crashStarted: number | null = null;
     let animation = 0;
     const tick = (now: number) => {
-      const dt = Math.min(0.1, Math.max(0, (now - last) / 1000));
-      last = now;
+      const dt = clockRef.current.Tick(now);
+      if (pausedRef.current) { animation = requestAnimationFrame(tick); return; }
+      const activeNow = clockRef.current.Now(now);
       const session = sessionRef.current;
       if (phaseRef.current === 'calibration' && now - frameRef.current.receivedAt > 250) {
         setFaceVisible(false);
@@ -216,9 +261,9 @@ export function SeagullFlightGame() {
         const key = JSON.stringify(next);
         if (key !== hudKeyRef.current) { hudKeyRef.current = key; setHud(next); }
         scene.update(session, dt);
-        if (events.crashed) { crashStarted = now; PlayGameEndSound('Defeat'); }
+        if (events.crashed) { crashStarted = activeNow; PlayGameEndSound('Defeat'); }
         if (events.finished) { PlayGameEndSound('Victory'); finishRef.current(); }
-        if (session.crashed && crashStarted !== null && now - crashStarted >= 1200) finishRef.current();
+        if (session.crashed && crashStarted !== null && activeNow - crashStarted >= 1200) finishRef.current();
       } else { crashStarted = null; if (phaseRef.current !== 'calibration') scene.update(preview, dt); }
       animation = requestAnimationFrame(tick);
     };
@@ -231,8 +276,11 @@ export function SeagullFlightGame() {
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && ['initializing', 'calibration', 'playing'].includes(phaseRef.current)) {
-        event.preventDefault(); showConfiguration(); return;
+        event.preventDefault();
+        if (!event.repeat) { if (phaseRef.current === 'initializing') showConfiguration(); else if (pausedRef.current) void resume(); else pause(); }
+        return;
       }
+      if (pausedRef.current) return;
       if (phaseRef.current !== 'playing' || settingsRef.current.inputMode !== 'keyboard') return;
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', ' '].includes(event.key)) return;
       if ((event.target as HTMLElement).tagName === 'BUTTON' && event.key === ' ') return;
@@ -246,7 +294,7 @@ export function SeagullFlightGame() {
     window.addEventListener('keyup', keyup);
     window.addEventListener('blur', blur);
     return () => { window.removeEventListener('keydown', keydown, true); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', blur); };
-  }, [showConfiguration]);
+  }, [pause, resume, showConfiguration]);
   useEffect(() => {
     if (phase !== 'calibration' || !sensorReady) { SetInputPreview(null); return; }
     const view = cameraSpaceRef.current;
@@ -332,7 +380,7 @@ export function SeagullFlightGame() {
   const faceStatus = settings.inputMode === 'keyboard' ? labels.keyboardStatus : !sensorReady ? labels.cameraOff : faceVisible ? labels.tracking : labels.noFace;
   return <div className={`seagull-root seagull-flight-phase-${phase}`}>
     <div ref={jsPsychHostRef} className="seagull-jspsych-host" aria-hidden="true" />
-    <main className="seagull-stage" aria-label={title}>
+    <main className="seagull-stage" aria-label={title} inert={paused}>
       <div ref={canvasHostRef} className="seagull-canvas-host" aria-hidden="true" />
       {phase !== 'calibration' && phase !== 'results' && <header className="seagull-hud">
         <p className="seagull-hud-item"><span>{labels.timeLeft}</span><strong>{labels.seconds(isPlaying ? hud.timeLeft : settings.durationSec)}</strong></p>
@@ -341,7 +389,7 @@ export function SeagullFlightGame() {
         <div className="seagull-height"><label htmlFor="seagull-height">{labels.altitude} <strong>{isPlaying ? hud.altitude : 80}%</strong></label>
           <meter id="seagull-height" min={0} max={100} low={25} value={isPlaying ? hud.altitude : 80} /></div>
         <p className="seagull-hud-item seagull-hud-status"><span>{labels.face}</span><strong>{faceStatus}</strong></p>
-        <button type="button" className="btn btn-ghost seagull-stop" onClick={showConfiguration}>{labels.stop}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost seagull-stop" onClick={pauseManually}>{en ? 'Stop' : '停止'}</button>
       </header>}
       {isPlaying && <>
         {hud.countdown > 0 && <p className="seagull-countdown" role="status">{hud.countdown}</p>}
@@ -358,7 +406,7 @@ export function SeagullFlightGame() {
       {(phase === 'menu' || phase === 'rules' || phase === 'initializing') && <SeagullTutorial active={phase !== 'menu'} ready={phase === 'rules' && sceneReady} title={title}
         summaryItems={summaryItems} onStart={() => void startTraining()} onBack={showConfiguration} inputReady={sensorReady} keyboard={settings.inputMode === 'keyboard'} status={status} />}
     </main>
-    {phase === 'calibration' && <div className="seagull-calibration-overlay">
+    {phase === 'calibration' && <div className="seagull-calibration-overlay" inert={paused}>
       <div ref={cameraSpaceRef} className="seagull-calibration-camera-space" aria-hidden="true"><span className="seagull-calibration-cross">+</span></div>
       <section className="seagull-calibration-card" aria-labelledby="seagull-calibration-title">
         <h1 id="seagull-calibration-title">{labels.calibrationTitle}</h1><p>{labels.calibrationInstruction}</p>
@@ -368,9 +416,17 @@ export function SeagullFlightGame() {
         <div className="seagull-calibration-actions">
           {calibration.status === 'failed' && <button className="btn btn-primary" type="button" onClick={beginCalibration}>{labels.retry}</button>}
           <button className="btn btn-ghost" type="button" onClick={showConfiguration}>{labels.cancel}</button>
+          <button ref={stopRef} type="button" className="btn btn-ghost seagull-stop" onClick={pauseManually}>{en ? 'Stop' : '停止'}</button>
         </div>
       </section>
     </div>}
+    {paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="seagull-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="seagull-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{cameraLost ? (en ? 'Camera input stopped. Ending the activity will not save this session.' : '相機輸入已中斷；結束活動後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={() => void resume()}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={showConfiguration}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}
     {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog" aria-labelledby="seagull-settings-title" onCancel={event => { event.preventDefault(); exit(); }}>
       <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
         onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
@@ -388,29 +444,33 @@ export function SeagullFlightGame() {
           <section className="training-setting"><h3>{labels.privacyTitle}</h3><p className="training-setting-description">{labels.privacy}</p></section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" disabled={!sceneReady} onClick={confirmSettings}>{labels.confirm}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{backLabel}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings} disabled={!sceneReady}>{labels.confirm}</button>
         </div></footer>
       </form>
     </dialog>}
     {phase === 'results' && summary && score && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{labels.resultsTitle}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{labels.keyResults}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         {[[labels.passed, summary.passed], [labels.missed, summary.missed], [labels.passRate, summary.passRate === null ? labels.none : `${summary.passRate}%`]].map(([label, value]) =>
           <div className="score-key-metric" key={label}><p>{label}</p><strong>{value}</strong></div>)}
       </div><dl className="score-flight-details">
         {[[labels.flaps, summary.flaps], [labels.crashLabel, summary.crashed ? labels.yes : labels.no],
           [labels.maxTurn, summary.maxTurnDeg === null ? labels.none : `${summary.maxTurnDeg}°`], [labels.maxNod, summary.maxNodDeg === null ? labels.none : `${summary.maxNodDeg}°`]].map(([label, value]) =>
-          <div className="score-context-item" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+          <div className="score-flight-item" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{labels.sessionSettings}</h2><dl className="score-context-list">
         <div className="score-context-item"><dt>{labels.actualDuration}</dt><dd>{labels.seconds(summary.durationSeconds)}</dd></div>
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </details>
     </section></div>}
   </div>;
 }

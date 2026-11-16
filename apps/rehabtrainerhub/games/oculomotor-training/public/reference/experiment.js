@@ -680,10 +680,11 @@
         let countdownInterval = null;
         let ended = false;
         let cancelled = false;
+        let validationPaused = Boolean(window.oculomotorPaused);
         let unsubscribe = null;
         if (isWebGazer && extension && typeof extension.onGazeUpdate === "function") {
           unsubscribe = extension.onGazeUpdate((prediction) => {
-            if (ended || !isCollecting) return;
+            if (ended || validationPaused || !isCollecting) return;
             if (prediction && Number.isFinite(prediction.x) && Number.isFinite(prediction.y)) {
               currentSamples.push({ x: prediction.x, y: prediction.y });
             }
@@ -711,6 +712,8 @@
           cancelled = true;
           cleanUp();
           window.removeEventListener("oculomotor:stop", stop);
+          window.removeEventListener("oculomotor:pause", pauseValidation);
+          window.removeEventListener("oculomotor:resume", resumeValidation);
         };
 
         const onKeyDown = (e) => {
@@ -877,6 +880,8 @@
             if (cancelled) return;
             cancelled = true;
             window.removeEventListener("oculomotor:stop", stop);
+            window.removeEventListener("oculomotor:pause", pauseValidation);
+            window.removeEventListener("oculomotor:resume", resumeValidation);
             if (countdownInterval !== null) clearInterval(countdownInterval);
 
               AppState.eyeTracking.calibrated = hasEnoughData;
@@ -910,6 +915,8 @@
             if (cancelled) return;
             cancelled = true;
             window.removeEventListener("oculomotor:stop", stop);
+            window.removeEventListener("oculomotor:pause", pauseValidation);
+            window.removeEventListener("oculomotor:resume", resumeValidation);
             if (countdownInterval !== null) clearInterval(countdownInterval);
 
               AppState.eyeTracking.calibrated = false;
@@ -932,6 +939,7 @@
           if (!isCalibrateOnly && passed) {
             let remainSec = 3;
             countdownInterval = setInterval(() => {
+              if (validationPaused) return;
               remainSec -= 1;
               const cdNum = displayElement.querySelector("#val-cd-num");
               if (cdNum) cdNum.textContent = String(remainSec);
@@ -943,7 +951,19 @@
           }
         };
 
+        const pauseValidation = () => {
+          validationPaused = true;
+          if (!ended && pointTimer !== null) { clearTimeout(pointTimer); pointTimer = null; isCollecting = false; currentSamples = []; }
+        };
+        const resumeValidation = () => {
+          if (!validationPaused) return;
+          validationPaused = false;
+          if (!ended && !cancelled) runPoint(pointIndex);
+        };
+        window.addEventListener("oculomotor:pause", pauseValidation);
+        window.addEventListener("oculomotor:resume", resumeValidation);
         runPoint(0);
+        if (validationPaused) pauseValidation();
       }
     }
 
@@ -1210,7 +1230,7 @@
 
             if (typeof extension.onGazeUpdate === "function") {
               unsubscribeWebgazer = extension.onGazeUpdate((prediction) => {
-                if (ended || sessionStart === null || !activeTrialCapture || !activeTrialCapture.onSample) return;
+                if (ended || pausedAt !== null || sessionStart === null || !activeTrialCapture || !activeTrialCapture.onSample) return;
                 if (activeTrialCapture.samples.length >= MAX_GAZE_SAMPLES_PER_TRIAL) {
                   activeTrialCapture.overflow += 1;
                   return;
@@ -1219,13 +1239,14 @@
                 const sourceTime = prediction?.sample_performance_ms;
                 const hasSourceTime = Number.isFinite(sourceTime) && sourceTime >= 0 && sourceTime <= receivedAt;
                 const sampleTime = hasSourceTime ? sourceTime : receivedAt;
+                if (sampleTime < resumedAt) return;
                 const valid = Boolean(prediction && Number.isFinite(prediction.x) && Number.isFinite(prediction.y));
                 const sample = {
                   valid,
                   x: valid ? prediction.x : null,
                   y: valid ? prediction.y : null,
                   device_timestamp_us: Math.round(sampleTime * 1000),
-                  sample_performance_ms: sampleTime,
+                  sample_performance_ms: sampleTime - pausedDuration,
                   transport_delay_ms: hasSourceTime ? round(receivedAt - sampleTime, 3) : null,
                   clock_mapping: hasSourceTime ? "webgazer_inference_start_to_browser_performance" : "browser_receipt_time"
                 };
@@ -1245,6 +1266,14 @@
         const ballArcmin = ballArcsec / 60;
 
         let ended = false;
+        let pausedAt = window.oculomotorPaused ? performance.now() : null;
+        let pausedDuration = 0;
+        let resumedAt = 0;
+        const requestAnimationFrame = callback => globalThis.requestAnimationFrame(function Frame(rawNow) {
+          if (ended) return;
+          if (pausedAt !== null) { rafId = globalThis.requestAnimationFrame(Frame); return; }
+          callback(rawNow - pausedDuration);
+        });
         let finishSent = false;
         let sessionStart = null;
         let deadline = null;
@@ -1295,7 +1324,7 @@
         if (activeTrialCapture) {
           activeTrialCapture.onSample = (sample) => {
             if (ended || sessionStart === null) return;
-            const nowPerf = performance.now();
+            const nowPerf = performance.now() - pausedDuration;
             const active = activeTrialCapture;
             if (!active) return;
 
@@ -1493,13 +1522,20 @@
         if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportChange);
 
         window.addEventListener("oculomotor:stop", () => endTrial("cancelled"), { once: true, signal: stopController.signal });
-        const keyboardListener = this.jsPsych.pluginAPI.getKeyboardResponse({
-          callback_function: () => endTrial("escape"),
-          valid_responses: ["Escape"],
-          rt_method: "performance",
-          persist: false,
-          allow_held_key: false
-        });
+        window.addEventListener("oculomotor:pause", () => {
+          if (ended || pausedAt !== null) return;
+          pausedAt = performance.now();
+          this.jsPsych.pluginAPI.clearAllTimeouts();
+        }, { signal: stopController.signal });
+        window.addEventListener("oculomotor:resume", () => {
+          if (ended || pausedAt === null) return;
+          resumedAt = performance.now();
+          pausedDuration += resumedAt - pausedAt;
+          pausedAt = null;
+          lastFrameAt = null;
+          if (activeTrialCapture) activeTrialCapture.lastSampleTsUs = null;
+          if (isTimed && deadline !== null) this.jsPsych.pluginAPI.setTimeout(() => endTrial("duration_complete"), Math.max(0, deadline - (resumedAt - pausedDuration)));
+        }, { signal: stopController.signal });
 
         const median = (values) => {
           if (!values.length) return null;
@@ -1519,9 +1555,8 @@
           if (ended) return;
           ended = true;
           stopController.abort();
-          const endedAt = performance.now();
+          const endedAt = (pausedAt ?? performance.now()) - pausedDuration;
           if (rafId !== null) cancelAnimationFrame(rafId);
-          this.jsPsych.pluginAPI.cancelKeyboardResponse(keyboardListener);
           this.jsPsych.pluginAPI.clearAllTimeouts();
           document.removeEventListener("visibilitychange", onVisibilityChange);
           document.removeEventListener("fullscreenchange", onFullscreenChange);
@@ -1948,6 +1983,7 @@
   }
   const jsPsych = initJsPsych(jsPsychOptions);
   window.jsPsychInstance = jsPsych;
+  let currentRun = Promise.resolve();
 
   function post(type, value = {}) {
     window.dispatchEvent(new CustomEvent("oculomotor:event", { detail: { type, ...value } }));
@@ -2118,7 +2154,7 @@
       { timeline: [{ type: GazeValidationPlugin }], conditional_function: () => Boolean(AppState.pending?.eyeTrackingEnabled && AppState.eyeTracking.calibrated) }
       ], loop_function: () => Boolean(AppState.pending?.eyeTrackingEnabled && AppState.eyeTracking.needsRecalibration) }
     ] : [];
-    jsPsych.run([
+    currentRun = jsPsych.run([
       ...setup,
       { timeline: [trial], conditional_function: () => Boolean(AppState.pending && AppState.pending.eyeTrackingSource === EYE_SOURCE_OFF) },
       { timeline: webgazerTrial ? [webgazerTrial] : [], conditional_function: () => Boolean(AppState.pending &&
@@ -2145,12 +2181,12 @@
   window.oculomotorExperiment = {
     Start: run,
     Stop() {
+      const pending = currentRun;
       const active = Boolean(AppState.pending);
       window.dispatchEvent(new Event("oculomotor:stop"));
       AppState.pending = null;
       if (active) jsPsych.abortExperiment();
-      void stopEyeTrackingRuntime();
-      void exitFullscreenSafely();
+      return Promise.all([pending, stopEyeTrackingRuntime(), exitFullscreenSafely()]).then(() => undefined);
     }
   };
 })();

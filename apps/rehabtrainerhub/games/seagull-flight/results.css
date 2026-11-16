@@ -2,6 +2,8 @@
 .experiment-container { padding: 24px; }
 .experiment-results { max-width: 78rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
 .experiment-results h1 { margin: 0; color: var(--heading); font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -.035em; }
+.experiment-results h1:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.experiment-results h1:focus:not(:focus-visible) { outline: none; }
 .experiment-results h2, .experiment-results h3 { margin: 0 0 12px; color: var(--heading); font-size: 1.2rem; }
 .experiment-results .score-note { margin: 10px 0 28px; color: var(--text-muted); }
 .score-priority, .score-analysis, .score-gesture-summary { padding: 24px 0; border-top: 1px solid var(--border); }
@@ -73,3 +75,10 @@
   .experiment-container { padding: 16px; }
   .experiment-results > .score-return-button, .experiment-results > .score-retry-button { display: block; width: 100%; margin: 12px 0; }
 }
+
+.score-chart svg:focus-visible, .score-details summary:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.score-complete { margin: 0 0 16px; color: var(--heading); }
+.score-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 24px; }
+.score-details summary { min-height: 44px; padding: 10px 0; cursor: pointer; color: var(--heading); }
+.score-details .score-context { margin-top: 16px; }
+@media (max-width: 600px) { .score-actions { flex-direction: column; } .score-actions button { width: 100%; } }

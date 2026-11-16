@@ -4,7 +4,8 @@ declare global {
   interface Window {
     OculomotorInput: { Calibrate: (x: number, y: number) => void; Reset: () => void; Stop: () => void; FaceDetected: () => boolean; Prediction: () => { x: number | null; y: number | null; sample_performance_ms?: number } | null };
     OculomotorDownload: (fileName: string, text: string) => void;
-    oculomotorExperiment: { Start: (settings: OculomotorSettings) => void; Stop: () => void };
+    oculomotorPaused?: boolean;
+    oculomotorExperiment: { Start: (settings: OculomotorSettings) => void; Stop: () => Promise<void> };
   }
 }
 let loading: Promise<void> | null = null;
@@ -13,7 +14,7 @@ let receivedAt = -Infinity;
 export function InstallEyeInput() {
   window.addEventListener('game:input', (event: Event) => {
     const detail = (event as CustomEvent).detail;
-    if (detail.type === 'frame') { gaze = detail.payload; receivedAt = performance.now(); }
+    if (detail.type === 'frame' && !window.oculomotorPaused) { gaze = detail.payload; receivedAt = performance.now(); }
     else if (detail.type === 'error') { gaze = null; receivedAt = -Infinity; }
   });
   window.OculomotorInput = {

@@ -5,6 +5,8 @@ import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
 import { AcceptGameMessage, IsGameResult, IsGameSettings } from '../packages/ui/src/selfContainedGame.js';
+import { CreateRawDataEnvironment } from '../apps/rehabtrainerhub/functions/_lib/rawDataTestFixtures.mjs';
+import { browserApiHandlers } from './r2-browser-fixtures.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/seagull-flight');
@@ -58,6 +60,22 @@ async function LoadFlight() {
   const logic = await Load('logic/flight.ts');
   return { settings, logic, config: settings.ToPlayConfig(settings.defaultSettings) };
 }
+test('flight clock freezes animation and crash timing while paused', async () => {
+  const { CreateFlightClock } = await Load('logic/flightClock.ts');
+  const clock = CreateFlightClock(0);
+  assert.equal(clock.Tick(100), 0.1);
+  clock.Pause(100);
+  assert.equal(clock.Tick(5100), 0);
+  assert.equal(clock.Now(5100), 100);
+  clock.Resume(5100);
+  assert.equal(clock.Tick(5200), 0.1);
+  assert.equal(clock.Now(5200), 200);
+});
+test('flight Stop remains above the countdown overlay', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const layer = selector => Number(css.match(new RegExp(`\\.${selector}\\s*\\{[^}]*z-index:\\s*(\\d+)`))[1]);
+  assert.ok(layer('seagull-hud') > layer('seagull-countdown'));
+});
 const Input = patch => ({ dt: 0.05, tracking: true, targetX: null, keyboardDirection: 0, flap: false, head: null, ...patch });
 function Run(logic, session, config, seconds, patch = {}) {
   const events = [];
@@ -347,6 +365,56 @@ test('the run ends at the set flight time without a crash', async () => {
   assert.equal(summary.passed + summary.missed, Math.floor((60 - logic.flight.firstRingSec) / 4.5) + 1);
 });
 
+test('a 60-second keyboard flight keeps its original ring cadence and verifies saved private rounds', async t => {
+  const { settings, logic } = await LoadFlight();
+  const { CreateFlightClock } = await Load('logic/flightClock.ts');
+  const { BuildGameScore } = await Load('score.ts');
+  const gameSettings = { ...settings.defaultSettings, inputMode: 'keyboard', durationSec: 60, ringIntervalSec: 3 };
+  const config = settings.ToPlayConfig(gameSettings);
+  const original = logic.CreateFlightSession(config, Seeded(42));
+  const current = logic.CreateFlightSession(config, Seeded(42));
+  const clock = CreateFlightClock(0);
+  let last = 0;
+  for (let frame = 1; frame <= 1400 && !current.ended; frame++) {
+    const now = frame * 50;
+    const previousDelta = Math.min(0.1, Math.max(0, (now - last) / 1000));
+    last = now;
+    original.altitude = current.altitude = 0.9;
+    const input = Input({ dt: previousDelta, flap: frame % 36 === 0 });
+    logic.StepFlight(original, input, config);
+    logic.StepFlight(current, { ...input, dt: clock.Tick(now) }, config);
+  }
+  assert.equal(current.ended, true);
+  assert.equal(current.crashed, false);
+  assert.equal(current.elapsed, 60);
+  assert.deepEqual(current.results.map(ring => ring.at), original.results.map(ring => ring.at), 'The pause-aware clock retains the original timing.');
+  assert.deepEqual(current.results.map(ring => ring.at), Array.from({ length: 20 }, (_, index) => (index + 1) * 3));
+
+  const score = BuildGameScore(logic.SummarizeFlight(current), config);
+  const fixture = CreateRawDataEnvironment('seagull-flight', capabilities);
+  t.after(() => fixture.sqlite.close());
+  const session = await fixture.session();
+  const input = { appId: 'rehabtrainerhub', runtimeId: 'hub', subjectId: session.subjectId,
+    officialGameVersion: session.version, runSessionToken: session.token,
+    record: { id: session.recordId, gameId: 'seagull-flight', moduleId: 'seagull-flight', config: gameSettings, score } };
+  const response = await browserApiHandlers['/api/records']({ env: fixture.env,
+    request: new Request('https://trainerhub.cc/api/records', { method: 'POST',
+      headers: { Origin: 'https://trainerhub.cc', 'CF-Connecting-IP': '192.0.2.212', 'Content-Type': 'application/json' }, body: JSON.stringify(input) }) });
+  assert.equal(response.status, 201, await response.text());
+  const row = fixture.sqlite.prepare('SELECT * FROM training_records').get();
+  const summary = JSON.parse(row.payload_json);
+  assert.deepEqual(summary.score.rounds, [], 'The D1 payload contains summary only.');
+  assert.equal(summary.scoreRoundCount, 20);
+  const { CheckSavedSeagullFlight } = await import('./seagull-flight-browser.mjs');
+  assert.equal(typeof CheckSavedSeagullFlight, 'function', 'The browser fixture verifies the private round CSV.');
+  const saved = await CheckSavedSeagullFlight(row, fixture.env.RAW_DATA, session.version, gameSettings);
+  assert.deepEqual(saved.score.rounds, score.rounds);
+  const file = summary.rawFiles.find(item => item.kind === 'rounds');
+  const object = fixture.env.RAW_DATA.objects.get(file.key);
+  fixture.env.RAW_DATA.objects.set(file.key, { ...object, text: object.text + '\n' });
+  await assert.rejects(() => CheckSavedSeagullFlight(row, fixture.env.RAW_DATA, session.version, gameSettings), /sha-256/i);
+});
+
 test('results keep the ring, reach and flap numbers, and pass the container result check', async () => {
   const { settings, logic } = await LoadFlight();
   const { BuildGameScore } = await Load('score.ts');
@@ -537,7 +605,7 @@ test('head control turns the camera on windowed, then a fresh Start click enters
 test('Seagull Flight owns its 3D runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-seagull-flight');
-  assert.equal(pkg.version, '1.0.1');
+  assert.equal(pkg.version, '1.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'three', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.devDependencies['@types/three']);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);

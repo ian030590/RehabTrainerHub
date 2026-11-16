@@ -78,16 +78,53 @@ test('seagull: repeated Start clicks during fullscreen cannot start two runs',as
   assert.equal(actions.filter(action=>action==='calibration').length,1);
 });
 
+test('seagull: a new flight advances after ending a paused flight', async () => {
+  const logic = await Load('logic/flight.ts');
+  const settings = await Load('settings.ts');
+  const { CreateFlightClock } = await Load('logic/flightClock.ts');
+  const head = await Load('logic/headInput.ts', { './oneEuroFilter': await Load('logic/oneEuroFilter.ts') });
+  let now = 0;
+  const context = {
+    clockRef: { current: CreateFlightClock(now) }, pausedRef: { current: false }, cameraLostRef: { current: false },
+    generationRef: { current: 0 }, sensorReadyRef: { current: false }, phaseRef: { current: 'playing' }, settingsRef: { current: { ...settings.defaultSettings, inputMode: 'keyboard', durationSec: 60 } },
+    sessionRef: { current: null }, frameRef: { current: { head: null, receivedAt: -Infinity } },
+    keysRef: { current: new Set() }, pointersRef: { current: new Map() }, flapRef: { current: false },
+    smootherRef: { current: head.CreateHeadSmoother() }, flapDetectorRef: { current: head.CreateFlapDetector(10) },
+    jsPsychLifecycleRef: { current: null }, hudKeyRef: { current: '' }, crashStarted: null, animation: 0,
+    performance: { now: () => now }, Math, CreateFlightSession: logic.CreateFlightSession, StepFlight: logic.StepFlight,
+    CreateFlapDetector: head.CreateFlapDetector, ToPlayConfig: settings.ToPlayConfig, HeadTargetX: head.HeadTargetX,
+    setPhase: phase => { context.phaseRef.current = phase; }, setPaused() {}, setCameraLost() {}, setSensorReady() {}, setFaceVisible() {},
+    setHud() {}, setSummary() {}, SetInputPreview() {}, StopSensorInput() {}, SendGameEvent() {}, DisposeAudioFeedback() {},
+    ExitContainerFullscreen: async () => {}, PlaySuccessSound() {}, PlayFailureSound() {}, PlayGameEndSound() {},
+    scene: { update() {} }, preview: {}, finishRef: { current: () => assert.fail('The short test flight must not finish.') }, requestAnimationFrame: () => 1,
+  };
+  context.clearPlay = await Callback('clearPlay', context);
+  context.stopSensor = await Callback('stopSensor', context);
+  context.stopRun = await Callback('stopRun', context);
+  const showConfiguration = await Callback('showConfiguration', context);
+  const beginPlay = await Callback('beginPlay', context);
+  const pause = await Callback('pause', context);
+  const tick = await Callback('tick', context);
+  beginPlay();
+  now = 100; tick(now);
+  pause();
+  now = 500; showConfiguration();
+  beginPlay();
+  assert.equal(context.phaseRef.current, 'playing');
+  for (let frame = 0; frame < 40; frame++) { now += 100; tick(now); }
+  assert.ok(context.sessionRef.current.elapsed > 0, 'The second flight must pass its countdown and advance.');
+});
+
 test('seagull: the component subtracts neutral, forgets half nods after a lost or late frame, calibrates and maps proxy errors',async()=>{
   const filters=await Load('logic/oneEuroFilter.ts');
   const head=await Load('logic/headInput.ts',{'./oneEuroFilter':filters});
   const labels=(await Load('labels.ts')).copy.en;
   let now=0;let face=false;let error='';let started=0;
-  const context={sensorReadyRef:{current:true},phaseRef:{current:'playing'},labelsRef:{current:labels},
+  const context={sensorReadyRef:{current:true},phaseRef:{current:'playing'},labelsRef:{current:labels},pausedRef:{current:false},
     frameRef:{current:{head:null,receivedAt:-Infinity}},neutralRef:{current:{yaw:2,pitch:1}},
     smootherRef:{current:head.CreateHeadSmoother()},flapDetectorRef:{current:head.CreateFlapDetector(10)},flapRef:{current:false},
     performance:{now:()=>now},setFaceVisible:value=>{face=value;},setError:value=>{error=value;},
-    InputErrorMessage:(failure,copy)=>copy.errors[failure.message],showConfiguration:()=>{context.phaseRef.current='menu';},
+    InputErrorMessage:(failure,copy)=>copy.errors[failure.message],showConfiguration:()=>{context.phaseRef.current='menu';},pause:()=>{context.pausedRef.current=true;},
     calibrationRef:{current:head.CreateNeutralCalibration(0)},setCalibration(){},beginPlayRef:{current:()=>{started++;context.phaseRef.current='playing';}}};
   const receive=await Callback('receive',context);
   const deliver=(yaw,pitch,found=true)=>receive({detail:{type:'frame',payload:{timestamp:now,face:found,yaw,pitch}}});
@@ -99,9 +136,10 @@ test('seagull: the component subtracts neutral, forgets half nods after a lost o
   for(now=0;now<=2100;now+=33) deliver(3,-2);
   assert.equal(started,1);assert.deepEqual({...context.neutralRef.current},{yaw:3,pitch:-2});
   receive({detail:{type:'error',payload:{reason:'disconnected'}}});
-  assert.equal(error,labels.errors.disconnected);assert.equal(context.phaseRef.current,'menu');
+  assert.equal(context.pausedRef.current,true);assert.equal(context.phaseRef.current,'playing');
   const previous=context.frameRef.current;now+=33;deliver(50,50);assert.equal(context.frameRef.current,previous,'A stopped run ignores late frames.');
   context.phaseRef.current='initializing';
+  context.pausedRef.current=false;
   receive({detail:{type:'error',payload:{reason:'permission'}}});
   assert.equal(error,labels.errors.permission,'A camera error during the fullscreen handshake still returns to settings.');
   assert.equal(context.phaseRef.current,'menu');
@@ -113,7 +151,8 @@ test('seagull: 250 ms without a frame freezes play, a fresh frame resumes it, an
   const config={headControl:true,durationSec:60,turnRangeDeg:20,nodRangeDeg:10,glideSec:10,ringIntervalSec:3};
   const session=logic.CreateFlightSession(config,()=>0.7);session.countdown=0;
   let calibration;
-  const context={last:0,crashStarted:null,animation:0,phaseRef:{current:'playing'},sessionRef:{current:session},
+  const { CreateFlightClock } = await Load('logic/flightClock.ts');
+  const context={clockRef:{current:CreateFlightClock(0)},pausedRef:{current:false},crashStarted:null,animation:0,phaseRef:{current:'playing'},sessionRef:{current:session},
     frameRef:{current:{head:{yaw:10,pitch:0},receivedAt:0}},flapRef:{current:true},keysRef:{current:new Set()},pointersRef:{current:new Map()},
     smootherRef:{current:head.CreateHeadSmoother()},flapDetectorRef:{current:head.CreateFlapDetector(10)},
     calibrationRef:{current:head.CreateNeutralCalibration(0)},setCalibration:value=>{calibration=value;},setFaceVisible(){},
@@ -123,6 +162,9 @@ test('seagull: 250 ms without a frame freezes play, a fresh frame resumes it, an
   const tick=await Callback('tick',context);tick(300);
   assert.equal(session.frozen,true);assert.equal(session.elapsed,0);assert.equal(session.altitude,logic.flight.startAltitude);assert.equal(context.flapRef.current,false);
   context.frameRef.current.receivedAt=350;tick(350);assert.equal(session.frozen,false);assert.ok(session.elapsed>0);
+  const elapsed=session.elapsed;context.clockRef.current.Pause(350);context.pausedRef.current=true;tick(10000);
+  assert.equal(session.elapsed,elapsed,'Paused animation cannot advance the flight.');
+  context.clockRef.current.Resume(10000);context.pausedRef.current=false;
   context.phaseRef.current='calibration';context.frameRef.current.receivedAt=0;tick(15100);assert.equal(calibration.status,'failed');
 });
 

@@ -246,8 +246,11 @@ export async function CheckTongueCatch({ game, evaluate, send, until, standalone
     const stop = process.argv.includes('--stop');
     if (stop) await tap('.tongue-stop');
     else await evaluate(`window.faceFixtureStream.getVideoTracks()[0].dispatchEvent(new Event('ended'))`);
-    await until(() => game(`Boolean(document.querySelector('form'))`), stop ? 'Stop returns to settings' : 'a lost camera returns to settings');
-    if (!stop) assert.equal(await game(`document.querySelector('form [role=alert]').textContent`), labels.errors.disconnected);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent`), english ? 'Continue' : '繼續');
+    if (!stop) assert.match(await game(`document.querySelector('.game-interrupt-panel p').textContent`), english ? /Camera/ : /相機/);
+    await game(`document.querySelector('.game-interrupt-panel .btn-ghost').click()`);
+    await until(() => game(`Boolean(document.querySelector('form'))`), 'End activity returns to settings');
     await until(() => evaluate('document.fullscreenElement === null'), 'returning to settings leaves fullscreen');
     await until(sensorEnded, 'returning to settings turns the camera off');
     assert.equal(await previewHidden(), true);
@@ -264,7 +267,7 @@ export async function CheckTongueCatch({ game, evaluate, send, until, standalone
   await until(() => evaluate('document.fullscreenElement === null'), 'results leave fullscreen');
   await until(sensorEnded, 'finishing turns the camera off');
   assert.equal(await previewHidden(), true, 'The camera image is gone once the results show.');
-  await CheckResultsPresentation(game, { defaultMetric: 'caught', alternateMetric: 'position', english, capture });
+  await CheckResultsPresentation(game, { defaultMetric: 'caught', alternateMetric: 'position', english, capture, checkChartNavigation: true });
   const shown = await game(`[...document.querySelectorAll('.score-key-metric strong')].map(item => item.textContent)`);
   const [caught, missed] = shown.map(Number);
   assert.ok(caught > 0 && missed >= 0, JSON.stringify(shown));

@@ -14,7 +14,7 @@ const games = {
   'complex-search': { version: '1.1.0', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
   'conjunction-search': { version: '1.1.0', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
   'exploratory-saccade': { version: '1.1.0', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
-  'seagull-flight': { version: '1.0.1', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
+  'seagull-flight': { version: '1.1.0', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
   'hart-chart': { version: '2.1.0', file: 'HartChartPage.tsx', settings: 'settings.ts' },
   'driving-rehab': { version: '2.2.0', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.1.0', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
@@ -24,7 +24,7 @@ const games = {
   'motor-cortex-rehab': { version: '2.2.0', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
   'drawing-defense': { version: '2.1.0', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },
   'moving-card': { version: '2.1.0', file: 'MovingCardGame.tsx', settings: 'settings.ts' },
-  'oculomotor-training': { version: '2.1.4', file: 'OculomotorTrainingGame.tsx', settings: 'settings.ts' },
+  'oculomotor-training': { version: '2.2.0', file: 'OculomotorTrainingGame.tsx', settings: 'settings.ts' },
   sart: { version: '1.1.0', file: 'SartGame.tsx', settings: 'settings.ts' },
   'schulte-grid': { version: '1.1.0', file: 'SchulteGridGame.tsx', settings: 'settings.ts' },
   'hex-schulte': { version: '1.1.0', file: 'HexSchulteGame.tsx', settings: 'settings.ts' },
@@ -64,7 +64,7 @@ const games = {
   'plus-minus': { version: '2.1.0', file: 'PlusMinusSwitch.tsx', settings: 'settings.ts' },
   ufov: { version: '2.1.0', file: 'UfovGame.tsx', settings: 'settings.ts' },
   'every-ball-response': { version: '2.1.0', file: 'EveryBallGame.tsx', settings: 'settings.ts' },
-  'tongue-catch': { version: '2.0.2', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
+  'tongue-catch': { version: '2.1.0', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
 };
 const registeredGameIds = Object.keys(JSON.parse(await readFile(resolve(import.meta.dirname, '../packages/ui/src/officialGameReleases.json'), 'utf8'))).sort();
 

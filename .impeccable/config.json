@@ -26,6 +26,15 @@
         ],
         "createdAt": "2026-11-16T14:38:44.699Z",
         "reason": "Agent: pre-existing camera error alert paragraph, not a card; preserve its error cue."
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "apps/rehabtrainerhub/games/seagull-flight/game.css"
+        ],
+        "createdAt": "2026-11-16T15:34:20.970Z",
+        "reason": "Agent: the tutorial depicts the sea as a literal boundary beneath the flight instructions; this is not a decorative card accent."
       }
     ]
   }

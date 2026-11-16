@@ -6,6 +6,24 @@ import ts from 'typescript';
 
 const gameRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games/oculomotor-training');
 
+test('settings summary and section badges inherit the interface typeface', async () => {
+  const css = await readFile(resolve(gameRoot, 'rules.css'), 'utf8');
+  for (const selector of ['.training-config .config-summary strong', '.training-setting-header > span']) {
+    const start = css.indexOf(selector);
+    assert.notEqual(start, -1, selector);
+    const declarations = css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start));
+    assert.match(declarations, /font-family:\s*inherit\s*;/, selector);
+    assert.match(declarations, /font-variant-numeric:\s*tabular-nums\s*;/, selector);
+  }
+});
+
+test('Stop and the interrupt panel stay above the stimulus and validation stages', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const z = selector => Number(css.match(new RegExp(`\\.${selector}\\s*\\{[^}]*z-index:\\s*(\\d+)`))[1]);
+  assert.ok(z('oculomotor-stop') > z('oculomotor-experiment'));
+  assert.ok(z('game-interrupt-overlay') > z('oculomotor-stop'));
+});
+
 test('spotlight follows targets and resize; finishing, skipping, back and disposal clean up', async () => {
   for (const action of ['finish', 'skip', 'back', 'dispose']) {
     const dom = CreateDocument();

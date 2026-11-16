@@ -18,6 +18,15 @@ export function CreateCalibration() {
       progress = 0;
       return label();
     },
+    Resume(pausedMs: number) {
+      if (startedAt !== null) startedAt += pausedMs;
+    },
+    Restart(now: number) {
+      if (startedAt === null) return null;
+      startedAt = now;
+      progress = 0;
+      return label();
+    },
     Update(samples: Record<TongueLabel, number>, now: number) {
       if (startedAt === null) return null;
       const current = label();

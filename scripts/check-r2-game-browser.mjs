@@ -568,7 +568,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckSeagullFlight({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
-      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, touch: viewportMode !== 'desktop' });
+      rawDataBucket: environment.RAW_DATA, gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, touch: viewportMode !== 'desktop' });
   } else if (tongueGame) {
     const screenshots = resolve(root, '.tmp/tongue-catch-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });

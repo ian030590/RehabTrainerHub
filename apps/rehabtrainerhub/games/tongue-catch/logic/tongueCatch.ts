@@ -38,6 +38,10 @@ export function CreateTongueSession(width: number, height: number) {
 }
 export type TongueSession = ReturnType<typeof CreateTongueSession>;
 
+export function ResumeTongueSession(session: TongueSession, pausedMs: number) {
+  if (session.holdStartedAt !== null) session.holdStartedAt += pausedMs;
+}
+
 function CloseActiveHold(session: TongueSession, now: number) {
   if (session.holdStartedAt !== null) {
     const duration = Math.max(0, (now - session.holdStartedAt) / 1000);

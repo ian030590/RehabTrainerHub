@@ -18,10 +18,20 @@ export function OculomotorTrainingGame() {
   const locale = en ? 'en' : 'zh-TW';
   const title = en ? 'Oculomotor practice' : '眼動練習';
   const [phase, setPhase] = useState<'menu' | 'rules' | 'running' | 'results'>('menu');
+  const [paused, setPaused] = useState(false);
+  const [cameraLost, setCameraLost] = useState(false);
+  const pausedRef = useRef(false);
+  const cameraLostRef = useRef(false);
+  const reconnectingRef = useRef(false);
+  const stoppedRunRef = useRef<Promise<void>>(Promise.resolve());
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<OculomotorSettings>({ ...defaultSettings });
   const [result, setResult] = useState<ExperimentResult | null>(null);
@@ -49,9 +59,44 @@ export function OculomotorTrainingGame() {
         ...Object.fromEntries(['screenWidthCm', 'screenHeightCm', 'viewingDistanceCm', 'eyeTrackingSource'].map(key => [key, settings[key]])) });
     } else setSettings(next);
   };
-  const stopRuntime = useCallback(() => { window.oculomotorExperiment?.Stop(); window.OculomotorInput.Stop(); }, []);
-  const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
-  const back = useCallback(() => { stopRuntime(); setCameraState('idle'); setError(''); setPhase('menu'); }, [stopRuntime]);
+  const stopRuntime = useCallback(() => { const stopped = window.oculomotorExperiment?.Stop(); window.OculomotorInput.Stop(); return Promise.resolve(stopped); }, []);
+  const exit = useCallback(() => { window.oculomotorPaused = false; pausedRef.current = false; cameraLostRef.current = false; reconnectingRef.current = false; setPaused(false); void stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const back = useCallback(() => { window.oculomotorPaused = false; pausedRef.current = false; setPaused(false); stopRuntime(); setCameraState('idle'); setError(''); setPhase('menu'); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (phaseRef.current !== 'running' || pausedRef.current) return;
+    pausedRef.current = true;
+    window.oculomotorPaused = true;
+    window.dispatchEvent(new Event('oculomotor:pause'));
+    DisposeAudioFeedback();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(async () => {
+    if (!pausedRef.current || reconnectingRef.current) return;
+    PrepareAudioFeedback();
+    if (cameraLostRef.current) {
+      reconnectingRef.current = true;
+      void rootRef.current?.requestFullscreen?.().catch(() => undefined);
+      await stoppedRunRef.current;
+      if (!reconnectingRef.current || !pausedRef.current || phaseRef.current !== 'running') return;
+      SendGameEvent('input-start');
+      return;
+    }
+    window.oculomotorPaused = false;
+    window.dispatchEvent(new Event('oculomotor:resume'));
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+  }, []);
+  useEffect(() => {
+    const keys = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && phaseRef.current === 'running') {
+        event.preventDefault(); event.stopImmediatePropagation();
+        if (!event.repeat) { if (pausedRef.current) resume(); else pause(); }
+      }
+    };
+    window.addEventListener('keydown', keys, true);
+    return () => window.removeEventListener('keydown', keys, true);
+  }, [pause, resume]);
   useEffect(() => {
     let cancelled = false;
     void PrepareExperiment().then(() => { if (!cancelled) setReady(true); }).catch(() => {
@@ -66,19 +111,29 @@ export function OculomotorTrainingGame() {
   }, [phase]);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
-    const configure = () => { stopRuntime(); setCameraState('idle'); setResult(null); setError(''); setPhase('menu'); };
+    const configure = () => { window.oculomotorPaused = false; pausedRef.current = false; cameraLostRef.current = false; reconnectingRef.current = false; setPaused(false); setCameraLost(false); stopRuntime(); setCameraState('idle'); setResult(null); setError(''); setPhase('menu'); };
     const input = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (detail.type === 'ready') { setCameraState('ready'); setError(''); }
+      if (detail.type === 'ready') {
+        setCameraState('ready'); setError('');
+        if (reconnectingRef.current && phaseRef.current === 'running') {
+          reconnectingRef.current = false; cameraLostRef.current = false; setCameraLost(false);
+          window.oculomotorPaused = false; pausedRef.current = false; restoreStopRef.current = true; setPaused(false);
+          window.oculomotorExperiment.Start({ ...settingsRef.current, language: lang });
+        }
+      }
       if (detail.type === 'error') {
+        if (phaseRef.current === 'running') {
+          reconnectingRef.current = false; cameraLostRef.current = true; setCameraLost(true);
+          pause(); stoppedRunRef.current = stopRuntime(); setCameraState('error'); return;
+        }
         stopRuntime(); setCameraState('error');
         setError(en ? 'Camera access or tracking failed. Retry the camera, or select no gaze tracking in settings.' : '相機授權或追蹤失敗，請重試相機，或返回設定選擇不記錄眼動。');
         if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
-        if (phaseRef.current === 'running') setPhase('menu');
       }
     };
     const experiment = (event: Event) => {
-      if (phaseRef.current !== 'running') return;
+      if (phaseRef.current !== 'running' || cameraLostRef.current) return;
       const message = (event as CustomEvent).detail;
       if (message.type === 'oculomotor:abort') { back(); return; }
       if (message.type === 'oculomotor:error') { stopRuntime(); setError(String(message.message)); setPhase('menu'); return; }
@@ -105,8 +160,8 @@ export function OculomotorTrainingGame() {
       window.removeEventListener('game:input', input); window.removeEventListener('oculomotor:event', experiment);
       stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     };
-  }, [back, en, stopRuntime]);
-  const confirm = () => {
+  }, [back, en, lang, pause, stopRuntime]);
+  const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings) || !ready) {
       if (!ValidateSettings(settings)) setError(en ? 'Check the values and select at least one direction.' : '請檢查數值，並選擇至少一個方位。');
       return;
@@ -134,8 +189,8 @@ export function OculomotorTrainingGame() {
     {(phase === 'menu' || phase === 'rules') && <OculomotorTutorial active={phase === 'rules'} language={lang} settings={settings} summaryItems={summaryItems}
       ready={ready} cameraState={cameraState} error={error} onCamera={() => { setCameraState('starting'); setError(''); SendGameEvent('input-start'); }} onStart={() => void start()} onBack={back} />}
     {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog oculomotor-training-phase-menu" onCancel={event => { event.preventDefault(); exit(); }}>
-      <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirm(); }}
-        onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirm(); } }}>
+      <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
+        onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
         <header className="training-config-header"><h2>{title}</h2></header>
         <div className="training-config-body">
           {error && <p role="alert">{error}<button type="button" onClick={() => {
@@ -144,13 +199,20 @@ export function OculomotorTrainingGame() {
           <OculomotorSettingsFields settings={settings} language={lang} onChange={changeSettings} />
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" disabled={!ready} onClick={confirm}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings} disabled={!ready}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    <div id="experiment-root" className="oculomotor-experiment" hidden={phase !== 'running'} />
-    {phase === 'running' && <button type="button" className="oculomotor-stop" onClick={exit}>{en ? 'Stop practice' : '停止練習'}</button>}
+    <div id="experiment-root" className="oculomotor-experiment" hidden={phase !== 'running'} inert={paused} />
+    {phase === 'running' && <button ref={stopRef} type="button" className="btn btn-ghost oculomotor-stop" onClick={pause} inert={paused}>{en ? 'Stop' : '停止'}</button>}
+    {phase === 'running' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="oculomotor-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="oculomotor-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{cameraLost ? (en ? 'Camera input stopped. Continuing restarts the activity; ending will not save this session.' : '相機輸入已中斷；繼續會重新開始活動，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}
     {phase === 'results' && result && <OculomotorResults result={result} summaryItems={summaryItems} language={lang} saveState={saveState}
       onRetry={() => { setSaveState('saving'); SendGameEvent('retry'); }} onExit={exit} />}
   </div>;
