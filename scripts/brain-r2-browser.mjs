@@ -104,6 +104,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.sart-stimulus', '.sart-response-pad', '.sart-hud'],
     runningSelector: '.sart-running',
     stopSelector: '.sart-stop',
+    interruptPanel: true,
     defaultMetric: 'rtMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Press every digit except 3, but skip the fifth go digit and press on the first 3.
@@ -292,6 +293,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.stroop-word', '.stroop-pads', '.stroop-hud'],
     runningSelector: '.stroop-running',
     stopSelector: '.stroop-stop',
+    interruptPanel: true,
     defaultMetric: 'responseMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Answer the ink color, except counted item 3 gets a wrong color and counted item 5 gets no answer.
@@ -938,6 +940,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.stop-signal-stimulus', '.stop-signal-pads', '.stop-signal-hud'],
     runningSelector: '.stop-signal-running',
     stopSelector: '.stop-signal-stop',
+    interruptPanel: true,
     defaultMetric: 'responseMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Learn the key split from the practice buttons, press at once unless the star is already up, and plan two slips:
@@ -1032,6 +1035,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.go-nogo-stimulus', '.go-nogo-pad', '.go-nogo-hud'],
     runningSelector: '.go-nogo-running',
     stopSelector: '.go-nogo-stop',
+    interruptPanel: true,
     defaultMetric: 'responseMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Press for go squares and hold on the others, with three planned slips: a press on the first practice
@@ -1091,6 +1095,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.simon-stimulus', '.simon-pads', '.simon-hud'],
     runningSelector: '.simon-running',
     stopSelector: '.simon-stop',
+    interruptPanel: true,
     defaultMetric: 'rtMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Answer by shape, except the third shape gets the wrong side and the fifth gets no answer.

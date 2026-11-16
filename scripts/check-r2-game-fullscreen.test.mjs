@@ -36,6 +36,31 @@ function Deferred() {
   return { promise, resolve: resolvePromise };
 }
 
+for (const [game, component] of [
+  ['stroop', 'StroopGame'], ['go-nogo', 'GoNoGoGame'], ['stop-signal', 'StopSignalGame'],
+  ['antisaccade', 'AntisaccadeGame'], ['simon-task', 'SimonTaskGame'], ['sart', 'SartGame'],
+]) test(`${game}: leaving fullscreen during play pauses and explains the interruption`, async () => {
+  const events = [];
+  const source = await readFile(resolve(root, `${games}/${game}/${component}.tsx`), 'utf8');
+  assert.match(source, /document\.addEventListener\('fullscreenchange', fullscreenChanged\)/);
+  assert.match(source, /document\.removeEventListener\('fullscreenchange', fullscreenChanged\)/);
+  assert.ok(source.includes('已退出全螢幕，結束後不會保存這次紀錄。'));
+  const context = { document: { fullscreenElement: {} }, phaseRef: { current: 'running' }, endingRef: { current: false },
+    pause: () => events.push('pause'), setFullscreenInterrupted: value => events.push(value) };
+  const changed = await LoadFunction(`${games}/${game}/${component}.tsx`, 'fullscreenChanged', context);
+  changed();
+  assert.deepEqual(events, []);
+  context.document.fullscreenElement = null;
+  changed();
+  assert.deepEqual(events, ['pause', true]);
+  context.endingRef.current = true;
+  changed();
+  context.endingRef.current = false;
+  context.phaseRef.current = 'results';
+  changed();
+  assert.deepEqual(events, ['pause', true]);
+});
+
 test('motor camera consent and initialization finish in windowed mode before the final Start click', async () => {
   const camera = Deferred();
   const fullscreen = Deferred();

@@ -73,6 +73,24 @@ test('a counted square keeps its full window after a press, and the square hides
   assert.equal(clock.pending(), 0);
 });
 
+test('pause keeps completed squares and restarts the interrupted square with a fresh clock', async () => {
+  const { TrialRun } = await LoadGameModule(gameId, 'logic/trialRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const timing = { lead: [{ state: 'fixation', ms: 500 }], exposureMs: null, windowMs: 1500, endOnResponse: true, feedbackMs: 0, gapMs: 0 };
+  const run = new TrialRun(2, index => ({ trial: index, timing }), {
+    lead() {}, show: step => shown.push(step.trial), hide() {}, signal() {}, end() {}, clear() {},
+  }, clock, outcomes => { finished = outcomes; }, 0);
+  run.start(); clock.advance(500); clock.advance(100); run.respond('press');
+  clock.advance(500); clock.advance(300); run.pause(); clock.advance(5000);
+  assert.equal(run.respond('press'), false);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(500); clock.advance(200); run.respond('press'); clock.advance(0);
+  assert.deepEqual(shown, [0, 1, 1]);
+  assert.deepEqual(finished.map(row => [row.trial, row.rtMs]), [[0, 100], [1, 200]]);
+});
+
 test('the summary counts only counted squares and separates missed presses from wrong presses', async () => {
   const { SummarizeGoNoGo } = await LoadGameModule(gameId, 'logic/goNoGoScore.ts');
   const row = (noGo, responded, rtMs, practice = false) => ({ trial: 0, practice, noGo, color: 0, responded, rtMs });
@@ -99,7 +117,7 @@ test('Go/No-go rows keep the original columns, include practice items and save t
 });
 
 test('Go/No-go owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'GoNoGoGame', category: 'attention', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'GoNoGoGame', category: 'attention', version: '2.1.0' });
 });
 
 test('Go/No-go private bridge accepts only its own parent and replays settings and language', async () => {

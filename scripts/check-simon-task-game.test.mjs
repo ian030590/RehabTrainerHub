@@ -80,6 +80,24 @@ test('stopping the run cancels every timer and ignores later responses', async (
   assert.equal(clock.pending(), 0);
 });
 
+test('pause preserves completed shapes and restarts the interrupted shape with a fresh clock', async () => {
+  const { SimonRun } = await LoadGameModule(gameId, 'logic/simonRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  let hidden = false;
+  const trials = [{ shape: 'circle', side: 'left', answer: 'left', congruent: true }, { shape: 'square', side: 'right', answer: 'right', congruent: true }];
+  const run = new SimonRun(trials, { responseMs: 2000, itiMs: 100, leadInMs: 0 },
+    { show: (_trial, index) => shown.push(index), clear() {}, pause: () => { hidden = true; } }, clock, rows => { finished = rows; });
+  run.start(); clock.advance(0); clock.advance(100); run.respond('left'); clock.advance(100);
+  clock.advance(300); run.pause(); clock.advance(5000); run.respond('right');
+  assert.equal(hidden, true);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(200); run.respond('right'); clock.advance(100);
+  assert.deepEqual(shown, [0, 1, 1]);
+  assert.deepEqual(finished.map(row => row.rtMs), [100, 200]);
+});
+
 test('the summary compares correct response times on matching and opposite sides', async () => {
   const { SummarizeSimon } = await LoadGameModule(gameId, 'logic/simonScore.ts');
   const row = (congruent, correct, rtMs, response = 0) => ({ trial: 0, shape: 0, side: 0, congruent, response, correct, rtMs });
@@ -103,7 +121,7 @@ test('Simon results save bounded numeric rows through the private channel', asyn
 });
 
 test('Simon owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SimonTaskGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'SimonTaskGame', category: 'attention', version: '1.1.0' });
 });
 
 test('Simon private bridge accepts only its own parent and replays settings and language', async () => {

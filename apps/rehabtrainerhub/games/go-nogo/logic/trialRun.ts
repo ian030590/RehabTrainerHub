@@ -37,6 +37,7 @@ export class TrialRun<T> {
   private onset = 0;
   private accepting = false;
   private stopped = false;
+  private paused = false;
 
   constructor(private count: number, private next: (index: number, done: readonly TrialOutcome<T>[]) => TrialStep<T>,
     private view: TrialView<T>, private clock: RunClock, private onFinish: (outcomes: TrialOutcome<T>[]) => void, private leadInMs = 1500) {}
@@ -45,7 +46,7 @@ export class TrialRun<T> {
 
   respond(response: string): boolean {
     const outcome = this.outcome;
-    if (this.stopped || !this.accepting || !outcome || outcome.response !== null) return false;
+    if (this.stopped || this.paused || !this.accepting || !outcome || outcome.response !== null) return false;
     outcome.response = response;
     outcome.rtMs = Math.round(this.clock.now() - this.onset);
     if (this.step!.timing.endOnResponse) this.finishTrial();
@@ -57,6 +58,24 @@ export class TrialRun<T> {
     this.accepting = false;
     for (const timer of this.timers) this.clock.clear(timer);
     this.timers.clear();
+  }
+
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    this.accepting = false;
+    for (const timer of this.timers) this.clock.clear(timer);
+    this.timers.clear();
+    this.trialTimers = [];
+    this.outcome = null;
+    this.view.clear();
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    if (this.outcomes.length < this.count) this.begin(this.outcomes.length);
+    else { this.stopped = true; this.onFinish(this.outcomes.map(item => ({ ...item }))); }
   }
 
   private schedule(callback: () => void, delay: number) {

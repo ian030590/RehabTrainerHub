@@ -1,24 +1,59 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import ts from 'typescript';
 
-const chromeContractGames = ['flanker'];
+const chromeContractGames = ['flanker', 'stroop', 'simon-task', 'go-nogo', 'sart', 'stop-signal', 'antisaccade'];
+const componentOverrides = { 'go-nogo': 'GoNoGoGame' };
 const read = path => readFileSync(path, 'utf8');
 const catalog = read('apps/rehabtrainerhub/games/catalog.ts');
+
+function ThemeForCategory(category) {
+  const theme = catalog.match(new RegExp(`(?:'${category}'|\\b${category}):\\s*\\{[\\s\\S]*?colors: \\{ primary: '([^']+)', dark: '([^']+)'(?:, surfaceMixRatio: (\\d+))?`));
+  return theme && { primary: theme[1], hover: theme[2], surfaceMixRatio: theme[3] ?? '8' };
+}
+
+function EscapeBranches(source) {
+  const file = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const branches = [];
+  function Visit(node) {
+    if (ts.isIfStatement(node) && /\.key\s*===\s*['"]Escape['"]/.test(node.expression.getText(file))) branches.push(node.thenStatement);
+    ts.forEachChild(node, Visit);
+  }
+  Visit(file);
+  return branches.map(branch => branch.getText(file));
+}
+
+test('category lookup defaults an omitted surface mix ratio to eight percent', () => {
+  assert.deepEqual(ThemeForCategory('vision'), { primary: '#006c47', hover: '#005235', surfaceMixRatio: '8' });
+  assert.deepEqual(ThemeForCategory('attention'), { primary: '#7a4a24', hover: '#5a3519', surfaceMixRatio: '10' });
+});
+
+test('Escape branch lookup includes multiline handlers with arbitrary names', () => {
+  const branches = EscapeBranches(`const keyboard = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      exit();
+    }
+  };`);
+  assert.equal(branches.length, 1);
+  assert.match(branches[0], /exit\(\)/);
+});
 
 for (const game of chromeContractGames) {
   const root = `apps/rehabtrainerhub/games/${game}`;
   const manifest = JSON.parse(read(`${root}/public/game.json`));
-  const theme = catalog.match(new RegExp(`(?:'${manifest.category}'|\\b${manifest.category}):\\s*\\{[\\s\\S]*?colors: \\{ primary: '([^']+)', dark: '([^']+)', surfaceMixRatio: (\\d+)`));
+  const theme = ThemeForCategory(manifest.category);
   const css = ['game.css', 'rules.css', 'results.css'].map(file => read(`${root}/${file}`));
-  const component = read(`${root}/${game === 'flanker' ? 'FlankerGame' : game}.tsx`);
+  const componentName = componentOverrides[game] ?? `${game.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')}Game`;
+  const component = read(`${root}/${componentName}.tsx`);
   const analysis = read(`${root}/ScoreAnalysis.tsx`);
 
   test(`${game}: category theme and chrome CSS`, () => {
     assert.ok(theme, 'category theme exists');
-    assert.match(css[0], new RegExp(`--primary:\\s*${theme[1]}`));
-    assert.match(css[0], new RegExp(`--primary-hover:\\s*${theme[2]}`));
-    assert.match(css[0], new RegExp(`--primary-soft:\\s*color-mix\\(in srgb, var\\(--primary\\) ${theme[3]}%, #fff\\)`));
+    assert.match(css[0], new RegExp(`--primary:\\s*${theme.primary}`));
+    assert.match(css[0], new RegExp(`--primary-hover:\\s*${theme.hover}`));
+    assert.match(css[0], new RegExp(`--primary-soft:\\s*color-mix\\(in srgb, var\\(--primary\\) ${theme.surfaceMixRatio}%, #fff\\)`));
     assert.doesNotMatch(css.slice(1).join('\n'), /#[0-9a-f]{3,8}\b|var\(--(?:primary|background|surface|text|heading|text-muted|border|border-strong|text-on-accent|bg-overlay|error|radius),/i);
     assert.doesNotMatch(css[1], /(?:row|column)-reverse/);
   });
@@ -31,11 +66,12 @@ for (const game of chromeContractGames) {
   test(`${game}: settings and interrupt controls`, () => {
     const nav = component.split('training-config-navigation-buttons')[1].split('</footer>')[0];
     assert.ok(nav.indexOf('btn-ghost') < nav.indexOf('btn-primary'));
-    assert.match(component, /flanker-stop[^>]*onClick=\{[^}]+\}[^>]*>\{en \? 'Stop' : '停止'\}/);
+    assert.match(component, /<button\b(?=[^>]*ref=\{stopRef\})(?=[^>]*onClick=\{[^}]+\})[^>]*>\{en \? 'Stop' : '停止'\}/);
     assert.match(component, /game-interrupt-panel[\s\S]*?role="dialog"[\s\S]*?aria-modal="true"/);
     for (const text of ['已暫停', 'Paused', '繼續', 'Continue', '結束活動', 'End activity']) assert.ok(component.includes(text), text);
-    const keys = component.split('const keys =')[1].split('const pagehide')[0];
-    assert.doesNotMatch(keys, /Escape[^\n]*exit\(/);
+    const escapeBranches = EscapeBranches(component);
+    assert.ok(escapeBranches.length, 'Escape handler exists');
+    for (const branch of escapeBranches) assert.doesNotMatch(branch, /\bexit\s*\(/);
     assert.match(component, /stopRef\.current\?\.focus\(\)/, 'Continue restores focus to Stop');
     assert.match(component, /onSubmit=\{event => \{ event\.preventDefault\(\); confirmSettings\(\); \}\}/);
     assert.match(nav, /className="btn btn-primary" type="button" onClick=\{confirmSettings\}/);

@@ -2,7 +2,7 @@ import type { SartTrial } from './sartTrials';
 
 export interface SartRow { trial: number; digit: number; noGo: boolean; responded: boolean; rtMs: number | null }
 export interface SartClock { now(): number; set(callback: () => void, ms: number): number; clear(timer: number): void }
-export interface SartView { show(trial: SartTrial, index: number): void; mask(): void }
+export interface SartView { show(trial: SartTrial, index: number): void; mask(): void; pause(): void }
 export interface SartTiming { digitMs: number; maskMs: number; leadInMs: number }
 
 // Runs the digit stream outside React so onsets and presses use the same clock.
@@ -14,6 +14,7 @@ export class SartRun {
   private onset = 0;
   private startedAt = 0;
   private stopped = false;
+  private paused = false;
 
   constructor(private trials: SartTrial[], private timing: SartTiming, private view: SartView,
     private clock: SartClock, private onFinish: (rows: SartRow[]) => void) {}
@@ -25,7 +26,7 @@ export class SartRun {
 
   respond() {
     const row = this.rows[this.current];
-    if (this.stopped || !row || row.responded) return;
+    if (this.stopped || this.paused || !row || row.responded) return;
     row.responded = true;
     row.rtMs = Math.round(this.clock.now() - this.onset);
   }
@@ -34,6 +35,24 @@ export class SartRun {
     this.stopped = true;
     for (const timer of this.timers) this.clock.clear(timer);
     this.timers.clear();
+  }
+
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    for (const timer of this.timers) this.clock.clear(timer);
+    this.timers.clear();
+    if (this.current >= 0) this.rows.pop();
+    this.current = -1;
+    this.view.pause();
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    const index = this.rows.length;
+    this.startedAt = this.clock.now() - this.timing.leadInMs - index * (this.timing.digitMs + this.timing.maskMs);
+    this.showTrial(index);
   }
 
   private schedule(callback: () => void, delay: number) {

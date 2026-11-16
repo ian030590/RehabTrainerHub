@@ -97,6 +97,24 @@ test('the stop signal shows at its delay for 500 ms, and a press does not end th
   assert.equal(clock.pending(), 0);
 });
 
+test('pausing restarts the interrupted stop signal with a fresh clock and keeps completed items', async () => {
+  const { TrialRun } = await LoadGameModule(gameId, 'logic/trialRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const timing = { lead: [{ state: 'fixation', ms: 500 }], exposureMs: null, windowMs: 1500, endOnResponse: false, feedbackMs: 0, gapMs: 0, signalMs: 300, signalDurationMs: 500 };
+  const run = new TrialRun(2, index => ({ trial: index, timing }), {
+    lead() {}, show: step => shown.push(step.trial), hide() {}, signal() {}, signalOff() {}, end() {}, clear() {},
+  }, clock, outcomes => { finished = outcomes; }, 0);
+  run.start(); clock.advance(500); clock.advance(100); run.respond('left'); clock.advance(1400);
+  clock.advance(500); clock.advance(400); run.pause(); clock.advance(5000);
+  assert.equal(run.respond('right'), false);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(500); clock.advance(200); run.respond('right'); clock.advance(1300);
+  assert.deepEqual(shown, [0, 1, 1]);
+  assert.deepEqual(finished.map(row => [row.trial, row.rtMs, row.signalled]), [[0, 100, true], [1, 200, true]]);
+});
+
 test('block feedback follows the original reminders for slow, missed, wrong and stop-balance problems', async () => {
   const { BlockFeedback } = await LoadGameModule(gameId, 'logic/stopSignalScore.ts');
   const go = (rtMs, correct = true) => ({ trial: 0, practice: false, shape: 0, target: 'left', response: rtMs === null ? null : correct ? 'left' : 'right', rtMs, stop: false, stopDelayMs: null, condition: 'low' });
@@ -142,7 +160,7 @@ test('Stop-signal rows keep the original columns, include practice and save thro
 });
 
 test('Stop-signal owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'StopSignalGame', category: 'attention', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'StopSignalGame', category: 'attention', version: '2.1.0' });
 });
 
 test('Stop-signal private bridge accepts only its own parent and replays settings and language', async () => {

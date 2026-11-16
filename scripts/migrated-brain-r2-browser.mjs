@@ -1150,6 +1150,7 @@ export const migratedBrainGameSpecs = {
     tutorialTargets: ['.as-slot[data-tutorial="cue"]', '.as-slot[data-tutorial="arrow"]', '.as-pads', '.as-hud'],
     runningSelector: '.as-running',
     stopSelector: '.as-stop',
+    interruptPanel: true,
     defaultMetric: 'responseMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Answer the arrow, except practice item 2 and counted item 3 get a wrong direction and counted item 5 gets no answer.

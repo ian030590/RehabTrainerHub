@@ -2,7 +2,7 @@ import type { Side, SimonTrial } from './simonTrials';
 
 export interface SimonRow { trial: number; shape: number; side: number; congruent: boolean; response: number | null; correct: boolean; rtMs: number | null }
 export interface SimonClock { now(): number; set(callback: () => void, ms: number): number; clear(timer: number): void }
-export interface SimonView { show(trial: SimonTrial, index: number): void; clear(row: SimonRow): void }
+export interface SimonView { show(trial: SimonTrial, index: number): void; clear(row: SimonRow): void; pause(): void }
 export interface SimonTiming { responseMs: number; itiMs: number; leadInMs: number }
 
 const sideCode = (side: Side) => side === 'left' ? 0 : 1;
@@ -15,6 +15,7 @@ export class SimonRun {
   private active = false;
   private onset = 0;
   private stopped = false;
+  private paused = false;
 
   constructor(private trials: SimonTrial[], private timing: SimonTiming, private view: SimonView,
     private clock: SimonClock, private onFinish: (rows: SimonRow[]) => void) {}
@@ -23,7 +24,7 @@ export class SimonRun {
 
   respond(side: Side) {
     const row = this.rows.at(-1);
-    if (this.stopped || !this.active || !row) return;
+    if (this.stopped || this.paused || !this.active || !row) return;
     const trial = this.trials[row.trial - 1];
     row.response = sideCode(side);
     row.correct = side === trial.answer;
@@ -36,6 +37,24 @@ export class SimonRun {
     this.active = false;
     for (const timer of this.timers) this.clock.clear(timer);
     this.timers.clear();
+  }
+
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    for (const timer of this.timers) this.clock.clear(timer);
+    this.timers.clear();
+    this.windowTimer = null;
+    if (this.active) this.rows.pop();
+    this.active = false;
+    this.view.pause();
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    if (this.rows.length < this.trials.length) this.showTrial(this.rows.length);
+    else { this.stopped = true; this.onFinish(this.rows.map(item => ({ ...item }))); }
   }
 
   private schedule(callback: () => void, delay: number) {

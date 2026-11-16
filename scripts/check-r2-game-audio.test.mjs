@@ -318,7 +318,7 @@ for (const gameId of gameIds) {
     assert.equal(calls.at(-1), 'play');
     cleanup();
     assert.equal(calls.at(-1), 'stop');
-    if (gameId === 'flanker') {
+    if (['flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart'].includes(gameId)) {
       const before = calls.length;
       run(playingPhase, true)?.();
       assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');

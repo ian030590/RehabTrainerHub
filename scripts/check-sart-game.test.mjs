@@ -107,6 +107,24 @@ test('stopping a run clears its timers and never reports results', async () => {
   assert.equal(clock.pending(), 0);
 });
 
+test('pause keeps completed digits and restarts the interrupted digit on a fresh clock', async () => {
+  const { SartRun } = await Load('logic/sartRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  let hidden = false;
+  const trials = [{ digit: 1, noGo: false, size: 1 }, { digit: 2, noGo: false, size: 1 }];
+  const run = new SartRun(trials, { digitMs: 250, maskMs: 900, leadInMs: 0 },
+    { show: (_trial, index) => shown.push(index), mask() {}, pause: () => { hidden = true; } }, clock, rows => { finished = rows; });
+  run.start(); clock.advance(0); clock.advance(100); run.respond(); clock.advance(1050);
+  clock.advance(300); run.pause(); clock.advance(5000); run.respond();
+  assert.equal(hidden, true);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(200); run.respond(); clock.advance(950);
+  assert.deepEqual(shown, [0, 1, 1]);
+  assert.deepEqual(finished.map(row => row.rtMs), [100, 200]);
+});
+
 test('SART scoring counts skip-digit presses, missed presses, response speed and its variability', async () => {
   const { SummarizeSart } = await Load('logic/sartScore.ts');
   const go = (rtMs) => ({ noGo: false, responded: rtMs !== null, rtMs });
@@ -148,7 +166,7 @@ test('SART results save bounded numeric rows through the private channel', async
 test('SART owns its runtime, catalogue entry and results without Hub dependencies', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-sart');
-  assert.equal(pkg.version, '1.0.2');
+  assert.equal(pkg.version, '1.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   for (const capability of ['settings-storage', 'keyboard', 'touch', 'fullscreen']) assert.ok(pkg.rehabTrainer.capabilities.includes(capability), capability);
   for (const file of await readdir(gameRoot, { recursive: true })) {
