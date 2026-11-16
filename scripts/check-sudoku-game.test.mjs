@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'sudoku';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/numberGrid.ts');
@@ -28,6 +28,26 @@ function PlayEasy(match) {
     match.set(4, 2, 2200), match.set(5, 4, 2300), match.set(6, 3, 2400), match.set(5, 3, 2500), match.set(6, 4, 2600),
   ];
 }
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
+
 
 test('Sudoku keeps the three original rule sets, blank counts, time limits and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -167,7 +187,7 @@ test('number entries stay silent until the board is solved', async () => {
 });
 
 test('Sudoku owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SudokuGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'SudokuGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Sudoku private bridge accepts only its own parent and replays settings and language', async () => {

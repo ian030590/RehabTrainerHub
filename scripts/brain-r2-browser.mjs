@@ -531,6 +531,7 @@ export const brainGameSpecs = {
     rows: 125,
   },
   'number-letter': {
+    interruptPanel: true,
     title: { zh: '數字字母切換（Number-Letter）', en: 'Number-Letter Task' },
     purpose: 'higher-cognition',
     settings: { responseWindowMs: 1500, rounds: 96, practice: true },
@@ -1140,6 +1141,7 @@ export const brainGameSpecs = {
     rows: 40,
   },
   'card-sorting': {
+    interruptPanel: true,
     title: { zh: '卡片規則分類', en: 'Card Rule Sorting' },
     purpose: 'higher-cognition',
     settings: { runLength: 6, categories: 3, maxCards: 48 },

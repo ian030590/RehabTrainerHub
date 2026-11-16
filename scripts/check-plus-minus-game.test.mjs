@@ -1,9 +1,41 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'plus-minus';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/plusMinus.ts');
+
+test('resume clears a partial answer and restarts the same item only during an item', async () => {
+  const source = await readFile('apps/rehabtrainerhub/games/plus-minus/PlusMinusSwitch.tsx', 'utf8');
+  const body = source.match(/resumeRunRef\.current = \(\) => \{(.*?)\};/)[1];
+  for (const current of ['item', 'intro', 'feedback', 'ready']) {
+    const calls = [];
+    new Function('current', 'update', 'show', 'items', 'index', body)(current, value => calls.push(['entry', value]),
+      value => calls.push(['number', value]), [{ number: 37 }], 0);
+    assert.deepEqual(calls, current === 'item' ? [['entry', ''], ['number', 37]] : []);
+  }
+});
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
+
 
 test('Plus-Minus keeps 30 numbers per list and the copy practice, which can be turned off', async () => {
   const { defaultSettings, ValidateSettings, EstimatedSeconds } = await LoadGameModule(gameId, 'settings.ts');
@@ -70,7 +102,7 @@ test('Plus-Minus rows keep the original columns, add the number and answer, and 
 });
 
 test('Plus-Minus owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'PlusMinusSwitch', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'PlusMinusSwitch', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Plus-Minus private bridge accepts only its own parent and replays settings and language', async () => {

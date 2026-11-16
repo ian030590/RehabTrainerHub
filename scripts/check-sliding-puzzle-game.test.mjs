@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'sliding-puzzle';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/slidingPuzzle.ts');
@@ -13,6 +13,26 @@ function SolveEasy(match) {
   assert.deepEqual(match.slide(0, 2000), { accepted: false, solved: false }, 'Tile 1 is not beside the blank.');
   return [[7, 2500], [4, 3000], [1, 3200], [2, 3600], [5, 4000], [8, 4100]].map(([index, now]) => match.slide(index, now));
 }
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
+
 
 test('Sliding Puzzle keeps the original boards, scramble lengths, time limits and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -103,7 +123,7 @@ test('Sliding Puzzle results save one numeric row per slide through the private 
 });
 
 test('Sliding Puzzle owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SlidingPuzzleGame', category: 'higher-cognition', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'SlidingPuzzleGame', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Sliding Puzzle private bridge accepts only its own parent and replays settings and language', async () => {

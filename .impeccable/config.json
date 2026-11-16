@@ -8,6 +8,15 @@
         "value": "material symbols outlined",
         "createdAt": "2026-11-15T16:24:53.032Z",
         "reason": "Claude: icon glyph font (self-hosted subset /fonts/material-symbols-hub.woff2), documented under DESIGN.md Typography 'Icon Font'; not a text face"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "apps/rehabtrainerhub/games/sudoku/game.css"
+        ],
+        "createdAt": "2026-11-16T10:23:40.677Z",
+        "reason": "Sudoku subgrid boundary: existing square cells explicitly set border-radius to 0 in game.css, with CellEdges assigning box boundaries."
       }
     ]
   }

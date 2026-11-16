@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 const outcomeHoldMs = 1600;
@@ -22,10 +23,21 @@ export function SlidingPuzzleGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SlidingPuzzleSettings>({ ...defaultSettings });
   useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
@@ -44,8 +56,8 @@ export function SlidingPuzzleGame() {
   const randomRef = useRef(CreateRandom(Date.now()));
   const startedAtRef = useRef(0);
   const endedAtRef = useRef<number | null>(null);
-  const timerRef = useRef(0);
-  const limitTimerRef = useRef(0);
+  const timerRef = useRef<ReturnType<PauseClock['set']>>(null);
+  const limitTimerRef = useRef<ReturnType<PauseClock['set']>>(null);
   const generationRef = useRef(0);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -55,33 +67,54 @@ export function SlidingPuzzleGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
+    pauseClockRef.current?.stop();
+    pauseClockRef.current = null;
     generationRef.current++;
     matchRef.current = null;
-    window.clearTimeout(timerRef.current);
-    window.clearTimeout(limitTimerRef.current);
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    DisposeAudioFeedback();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    pauseClockRef.current?.resume();
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setScore(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
-      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved);
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -89,7 +122,8 @@ export function SlidingPuzzleGame() {
   }, [phase]);
 
   const finish = useCallback((match: SlidingMatch) => {
-    const result = BuildGameScore(match, (endedAtRef.current ?? performance.now()) - startedAtRef.current);
+    endingRef.current = true;
+    const result = BuildGameScore(match, (endedAtRef.current ?? pauseClockRef.current!.now()) - startedAtRef.current);
     jsPsychLifecycleRef.current?.finish({ outcome: match.outcome, moves: result.summary.moves, errors: result.summary.errors, misplaced: result.summary.misplaced });
     matchRef.current = null;
     setScore(result);
@@ -100,13 +134,13 @@ export function SlidingPuzzleGame() {
   }, [settings]);
   // The final board stays on screen briefly so the player sees it before the results.
   const end = useCallback((match: SlidingMatch, outcome: Outcome) => {
-    endedAtRef.current = performance.now();
-    window.clearTimeout(limitTimerRef.current);
+    endedAtRef.current = pauseClockRef.current!.now();
+    pauseClockRef.current?.clear(limitTimerRef.current);
     // A board still out of order at the time limit ends as a loss, as in the original game.
     PlayGameEndSound(outcome === 'Victory' ? 'Victory' : 'Defeat');
     setVersion(version => version + 1);
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
+    timerRef.current = pauseClockRef.current!.set(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
   }, [finish]);
   useEffect(() => {
     const host = jsPsychHostRef.current;
@@ -114,8 +148,11 @@ export function SlidingPuzzleGame() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:sliding-puzzle', onStart: () => {
-      startedAtRef.current = performance.now();
+      startedAtRef.current = clock.now();
       endedAtRef.current = null;
       randomRef.current = CreateRandom(Date.now());
       const match = new SlidingMatch(settings.difficulty, startedAtRef.current, randomRef.current);
@@ -125,7 +162,7 @@ export function SlidingPuzzleGame() {
       setVersion(version => version + 1);
       if (settings.timeLimitSec) {
         const generation = generationRef.current;
-        limitTimerRef.current = window.setTimeout(() => {
+        limitTimerRef.current = pauseClockRef.current!.set(() => {
           if (generation !== generationRef.current || matchRef.current !== match) return;
           if (match.expire()) end(match, 'TimeUp');
         }, settings.timeLimitSec * 1000);
@@ -133,31 +170,32 @@ export function SlidingPuzzleGame() {
     } });
     return () => {
       matchRef.current = null;
-      window.clearTimeout(limitTimerRef.current);
+      clock.stop();
+      if (pauseClockRef.current === clock) pauseClockRef.current = null;
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, [phase, settings.difficulty, settings.timeLimitSec, end]);
   // The visible clock reads the match start time, so it never drifts from the recorded duration.
   useEffect(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || paused) return;
     const timer = window.setInterval(() => {
       const clock = clockRef.current;
       if (!clock || !matchRef.current || endedAtRef.current !== null) return;
-      const elapsed = performance.now() - startedAtRef.current;
+      const elapsed = pauseClockRef.current!.now() - startedAtRef.current;
       if (!settings.timeLimitSec) { clock.textContent = `${(elapsed / 1000).toFixed(1)} ${en ? 's' : '秒'}`; return; }
       const remaining = settings.timeLimitSec * 1000 - elapsed;
       clock.textContent = FormatRemaining(remaining, en);
       clock.toggleAttribute('data-warning', remaining <= warningMs);
     }, 100);
     return () => window.clearInterval(timer);
-  }, [phase, en, settings.timeLimitSec]);
+  }, [phase, en, settings.timeLimitSec, paused]);
 
   const slideTile = (tile: number) => {
     const match = matchRef.current;
-    if (phaseRef.current !== 'running' || !match || match.outcome) return;
+    if (phaseRef.current !== 'running' || pausedRef.current || !match || match.outcome) return;
     const errorsBefore = match.errors;
-    const slide = match.slide(match.tiles.indexOf(tile), performance.now());
+    const slide = match.slide(match.tiles.indexOf(tile), pauseClockRef.current!.now());
     if (!slide.accepted) {
       if (match.errors > errorsBefore) {
         PlayFailureSound();
@@ -179,6 +217,7 @@ export function SlidingPuzzleGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     SetSoundEnabled(settings.soundEnabled);
     PrepareAudioFeedback();
@@ -240,17 +279,17 @@ export function SlidingPuzzleGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="sp-stage sp-running" aria-label={title}>
+    {phase === 'running' && <><main className="sp-stage sp-running" aria-label={title} inert={paused}>
       <header className="sp-hud">
         <p className="sp-goal">{en ? `Order 1 to ${last}` : `排成 1 到 ${last}`}</p>
         <p className="sp-moves" role="status">{en ? 'Moves' : '步數'} {match?.moves ?? 0}</p>
         <p ref={clockRef} className="sp-clock">{settings.timeLimitSec ? FormatRemaining(settings.timeLimitSec * 1000, en) : `0.0 ${en ? 's' : '秒'}`}</p>
-        <button type="button" className="btn btn-ghost sp-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost sp-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p className={`sp-feedback${match?.outcome ? ' sp-outcome' : ''}`} role="status" data-outcome={match?.outcome ?? undefined}>
         {match?.outcome ? outcomeLabel(match) : stuckTap ? (en ? 'That tile is not beside the gap. Tap a tile directly above, below, left or right of it.' : '這塊不在空格旁邊，請點空格上下左右的方塊。') : ''}</p>
@@ -267,14 +306,27 @@ export function SlidingPuzzleGame() {
           })}
         </SlidingBoard>
       </div>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="sp-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="sp-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && score && summary && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Result' : '結果'}</p><strong>{summary.completed ? (en ? 'Solved' : '排好了') : (en ? 'Time is up' : '時間到')}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Moves' : '步數'}</p><strong>{summary.moves}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean time per move' : '平均每步時間'}</p><strong>{ms(summary.meanThinkMs)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Taps on tiles that could not move' : '點到不能移動方塊的次數'}</dt><dd>{summary.errors}</dd></div>
@@ -282,10 +334,7 @@ export function SlidingPuzzleGame() {
         <div className="score-context-item"><dt>{en ? 'Total time' : '總用時'}</dt><dd>{seconds(summary.duration)}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

@@ -1,9 +1,46 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'card-sorting';
 const LoadLogic = async () => LoadGameModule(gameId, 'logic/cardSorting.ts');
+
+test('resume restarts the unanswered card clock but preserves already recorded feedback', async () => {
+  const source = await readFile('apps/rehabtrainerhub/games/card-sorting/CardSortingGame.tsx', 'utf8');
+  const body = source.match(/const resume = useCallback\(\(\) => \{([\s\S]*?)\n  \}, \[\]\);/)[1];
+  for (const busy of [false, true]) {
+    const pausedRef = { current: true }, restoreStopRef = { current: false }, busyRef = { current: busy }, shownAtRef = { current: 100 };
+    let resumed = 0, state = true;
+    const pauseClockRef = { current: { resume: () => resumed++, now: () => 900 } };
+    new Function('pausedRef', 'restoreStopRef', 'busyRef', 'shownAtRef', 'pauseClockRef', 'setPaused', body)(
+      pausedRef, restoreStopRef, busyRef, shownAtRef, pauseClockRef, value => { state = value; });
+    assert.equal(shownAtRef.current, busy ? 100 : 900);
+    assert.equal(resumed, 1);
+    assert.equal(state, false);
+    assert.equal(restoreStopRef.current, true);
+  }
+});
+
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
+
 
 test('card sorting settings default to six categories of six and reject values outside each range', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -91,7 +128,7 @@ test('card sorting results save bounded numeric rows through the private channel
 });
 
 test('card sorting owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'CardSortingGame', category: 'higher-cognition', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'CardSortingGame', category: 'higher-cognition', version: '1.1.0' });
 });
 
 test('card sorting private bridge accepts only its own parent and replays settings and language', async () => {

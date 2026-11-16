@@ -318,10 +318,18 @@ for (const gameId of gameIds) {
     assert.equal(calls.at(-1), 'play');
     cleanup();
     assert.equal(calls.at(-1), 'stop');
-    if (['connect4', 'dots-and-boxes', 'hex', 'maze', 'minesweeper', 'lights-out', 'flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'hex-schulte', 'memory-match', 'simon-says', 'whack-a-mole', 'ufov', 'every-ball-response', 'n-back', 'digit-span', 'keep-track', 'letter-memory', 'spatial-span', 'pattern-memory'].includes(gameId)) {
+    if (['plus-minus', 'number-letter', 'card-sorting', 'sudoku', 'sliding-puzzle', 'tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex', 'maze', 'minesweeper', 'lights-out', 'flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'hex-schulte', 'memory-match', 'simon-says', 'whack-a-mole', 'ufov', 'every-ball-response', 'n-back', 'digit-span', 'keep-track', 'letter-memory', 'spatial-span', 'pattern-memory'].includes(gameId)) {
       const before = calls.length;
       run(playingPhase, true)?.();
       assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');
+    }
+    if (['plus-minus', 'number-letter', 'card-sorting', 'sudoku', 'sliding-puzzle'].includes(gameId)) {
+      const body = source.match(/const pause = useCallback\(\(\) => \{([\s\S]*?)\n  \}, \[\]\);/)[1];
+      const calls = [];
+      new Function('pausedRef', 'setFullscreenInterrupted', 'pauseClockRef', 'runRef', 'DisposeAudioFeedback', 'setPaused', body)(
+        { current: false }, () => {}, { current: { pause() {} } }, { current: { pause() {} } },
+        () => calls.push('dispose'), () => {});
+      assert.deepEqual(calls, ['dispose'], 'Pause stops scheduled feedback sounds as well as music.');
     }
     assert.ok(effects.some(effect => effect.includes('DisposeAudioFeedback')), 'Unmount must release the game audio context.');
   });

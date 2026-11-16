@@ -232,6 +232,7 @@ function DeduceMines(cells, size, mineCount) {
 
 export const migratedBrainGameSpecs = {
   'tic-tac-toe': {
+    interruptPanel: true,
     title: { zh: '圈圈叉叉', en: 'Tic Tac Toe' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', soundEnabled: true },
@@ -580,6 +581,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'sliding-puzzle': {
+    interruptPanel: true,
     title: { zh: '滑塊拼圖', en: 'Sliding Puzzle' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'easy', timeLimitSec: 0, soundEnabled: true },
@@ -708,6 +710,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   sudoku: {
+    interruptPanel: true,
     title: { zh: '數獨', en: 'Sudoku' },
     purpose: 'higher-cognition',
     settings: { difficulty: 'medium', timeLimitSec: 300, soundEnabled: true },
@@ -1389,6 +1392,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'plus-minus': {
+    interruptPanel: true,
     title: { zh: '心算加減切換（Plus-Minus）', en: 'Plus-Minus Arithmetic' },
     purpose: 'higher-cognition',
     // Phones skip practice so both setups get a real session.

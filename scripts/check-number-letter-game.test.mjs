@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'number-letter';
 const LoadTrials = async () => LoadGameModule(gameId, 'logic/numberLetterTrials.ts');
@@ -20,6 +20,23 @@ function CheckRotation(trials) {
     assert.equal(trial.switched, index ? top !== trials[index - 1].position.startsWith('top') : null);
   });
 }
+
+test('pausing discards the active unanswered item and resumes with the same item and a fresh clock', async () => {
+  const { TrialRun } = await LoadGameModule(gameId, 'logic/trialRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const timing = { lead: [{ state: 'fixation', ms: 500 }], exposureMs: null, windowMs: 1500, endOnResponse: true, feedbackMs: 0, gapMs: 0 };
+  const run = new TrialRun(1, () => ({ trial: 'same', timing }), { lead() {}, show: step => shown.push(step.trial), hide() {}, signal() {}, end() {}, clear() {} }, clock, result => { finished = result; }, 0);
+  run.start(); clock.advance(500); clock.advance(300);
+  run.pause(); clock.advance(5000);
+  assert.equal(run.respond('left'), false);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(500); clock.advance(200); run.respond('left'); clock.advance(0);
+  assert.deepEqual(shown, ['same', 'same']);
+  assert.equal(finished[0].rtMs, 200);
+});
+
 
 test('Number-letter keeps the original deadline and length, and practice can be turned off', async () => {
   const { defaultSettings, ValidateSettings, EstimatedSeconds } = await LoadGameModule(gameId, 'settings.ts');
@@ -105,7 +122,7 @@ test('Number-letter rows keep the original columns, include practice and save th
 });
 
 test('Number-letter owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'NumberLetterSwitch', category: 'higher-cognition', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'NumberLetterSwitch', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Number-letter private bridge accepts only its own parent and replays settings and language', async () => {
