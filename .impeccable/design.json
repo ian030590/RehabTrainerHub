@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-15T17:19:23.436Z",
+  "generatedAt": "2026-11-16T01:02:32.078Z",
   "title": "Design System: 居家訓練網",
   "extensions": {
     "colorMeta": {
@@ -625,7 +625,7 @@
       "**Do** 以 live region／status 呈現必要更新並避免反覆朗讀；支援減少動態及系統高對比（`forced-colors`）。"
     ],
     "donts": [
-      "**Don't** 在元件或 `globals.css` 內寫死色碼（The No-Hardcode Rule）；頁首、頁尾與大廳已全數改用 token，進度頁通知與獎盃的十餘處色碼是待改為 token 的例外，不是範例。",
+      "**Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。",
       "**Don't** 讓導覽、一般連結、篩選文字或分頁使用分類色或品牌藍。",
       "**Don't** 使用 Instagram 漸層、X 品牌藍或黑底、Threads 社群身份元素、圖示獨佔分頁、14 到 15px 正文、三欄時間線、無限捲動、Story／按讚／追蹤／留言／轉發、虛構熱度與個人化推薦。",
       "**Don't** 新增暗色模式；目前沒有需求，`color-scheme` 固定為 light。",

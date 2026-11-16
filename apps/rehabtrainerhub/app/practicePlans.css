@@ -2,7 +2,7 @@
 .practice-plan-manager {
   min-width: 0;
   color: var(--text);
-  font-size: 1rem;
+  font-size: var(--type-body);
   overflow-wrap: anywhere;
 }
 
@@ -30,7 +30,7 @@
 .assigned-practice-plan .assigned-practice-plan-row p {
   grid-column: 1;
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--type-body);
   line-height: 1.5;
 }
 
@@ -60,7 +60,7 @@ summary.assigned-practice-plan-row::after {
   grid-row: 1 / span 2;
   align-self: center;
   content: '+';
-  font-size: 1.5rem;
+  font-size: var(--type-title);
 }
 
 details[open] > summary.assigned-practice-plan-row::after {
@@ -146,7 +146,7 @@ details[open] > summary.assigned-practice-plan-row::after {
 .practice-plan .admin-button,
 .practice-capture-notice .admin-button {
   min-height: 44px;
-  font-size: 1rem;
+  font-size: var(--type-body);
 }
 
 .practice-plan-actions {

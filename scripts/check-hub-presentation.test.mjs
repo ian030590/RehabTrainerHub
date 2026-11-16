@@ -27,6 +27,79 @@ function LobbyRules(css) {
     .map(selector => ({ selector, body })));
 }
 
+function SiteRules(css) {
+  return [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .flatMap(([, selectors, body]) => selectors.split(',').map(selector => ({ selector: selector.trim(), body })));
+}
+
+test('every site text size uses a type role while verified glyph selectors keep their sizes', async () => {
+  const failures = [];
+  for (const file of ['globals.css', 'practicePlans.css']) {
+    const css = await readFile(new URL(file, appRoot), 'utf8');
+    for (const { selector, body } of SiteRules(css)) {
+      if (/material-symbols-outlined|-icon\b|\bsvg\b/.test(selector)) continue;
+      for (const [, value] of body.matchAll(/\bfont-size:\s*([^;]+);/g)) {
+        const token = /^var\(--type-(display|headline|title|body|label)\)$/;
+        const clamp = /^clamp\(var\(--type-(display|headline|title|body|label)\),\s*[\d.]+vw,\s*var\(--type-(display|headline|title|body|label)\)\)$/;
+        if (!token.test(value.trim()) && !clamp.test(value.trim()) && !/^(inherit|100%)$/.test(value.trim())) {
+          failures.push(`${file} ${selector}: ${value}`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(failures, [], 'Site text must use the shared roles with a 14px label floor.');
+});
+
+test('admin KPI units declare the label role instead of inheriting the browser smaller size', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  assert.match(StyleRules(css, '.admin-kpi-grid small').join('\n'), /font-size:\s*var\(--type-label\);/);
+});
+
+test('display type is reserved for page H1s and progress metric numbers at every width', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const failures = SiteRules(css).filter(({ selector, body }) => /font-size:\s*[^;]*var\(--type-display\)/.test(body)
+    && selector !== '.progress-metrics strong'
+    && !/(?:^|[\s>+~])h1(?::lang\([^)]*\))?$/.test(selector));
+  assert.deepEqual(failures.map(({ selector }) => selector), []);
+});
+
+test('developer section headings, running text and the link arrow retain their semantic type roles', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const [selector, role] of [
+    ['.developer-doc-section > header h2', 'headline'],
+    ['.developer-hero > div > p:last-child', 'body'],
+    ['.developer-section-link span', 'title'],
+  ]) {
+    const sizes = StyleRules(css, selector).flatMap(body => [...body.matchAll(/font-size:\s*([^;]+);/g)].map(([, value]) => value));
+    assert.ok(sizes.length > 0, selector);
+    assert.ok(sizes.every(value => value === `var(--type-${role})`), `${selector}: ${sizes.join(', ')}`);
+  }
+});
+
+test('phone developer grids can shrink below long paths and route descriptions wrap those paths', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const phone = css.slice(css.indexOf('@media (max-width: 640px)', css.indexOf('.developer-page {')));
+  const selectors = ['.developer-route-grid', '.developer-research-grid', '.developer-environment-grid',
+    '.developer-prompt-builder form', '.developer-definition-list > div'];
+  const sharedRules = [...phone.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, header]) => selectors.every(selector => header.split(',').map(value => value.trim()).includes(selector)));
+  assert.equal(sharedRules.length, 1);
+  assert.match(sharedRules[0][2], /grid-template-columns:\s*minmax\(0, 1fr\);/);
+  assert.match(StyleRules(css, '.developer-route-grid p').join('\n'), /overflow-wrap:\s*anywhere;/);
+});
+
+test('site colors use shared tokens outside the two root palettes', async () => {
+  const failures = [];
+  for (const file of ['globals.css', 'practicePlans.css']) {
+    const css = await readFile(new URL(file, appRoot), 'utf8');
+    for (const { selector, body } of SiteRules(css)) {
+      if (selector === ':root') continue;
+      if (/#[\da-f]{3,8}\b|\b(?:rgba?|hsla?|oklch)\s*\(/i.test(body)) failures.push(`${file} ${selector}`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
 test('the Hub declares five type roles in its first root block and reuses them for lobby text', async () => {
   const css = await readFile(new URL('globals.css', appRoot), 'utf8');
   const root = css.match(/:root\s*\{([^}]*)\}/)[1];
@@ -264,7 +337,7 @@ for (const [language, loading, unavailable, retryLabel] of [
   ['zh-TW', '正在載入開發者遊戲…', '部分遊戲目前無法載入，已顯示的遊戲仍可開始。', '重新載入'],
   ['en', 'Loading developer games…', 'Some games could not be loaded. Available games can still be played.', 'Try again'],
 ]) {
-  test(`${language} catalog loading is announced above the grid while official activities remain available`, async () => {
+  test(`${language} catalog loading is announced below the grid while official activities remain available`, async () => {
     const { render, requests } = await Lobby(language, [games[0]], { fetchCatalog: true });
     let elements = render();
     const headingFocus = [];
@@ -276,7 +349,7 @@ for (const [language, loading, unavailable, retryLabel] of [
     assert.ok(Text(notice).includes(loading));
     assert.ok(!Elements(notice).some(node => node.type === 'button'));
     assert.ok(elements.indexOf(notice) > elements.findIndex(node => node.props?.className === 'result-header'));
-    assert.ok(elements.indexOf(notice) < elements.findIndex(node => node.props?.className === 'module-grid'));
+    assert.ok(elements.indexOf(notice) > elements.findIndex(node => node.props?.className === 'module-grid'));
     assert.equal(elements.filter(node => node.type === 'article').length, 1);
     const developer = { ...games[1], title: 'Developer activity', launch: { contract: 'package-v1', game: {} },
       release: { launchUrl: 'https://runner.example/games/developer/1.0.0/' } };
@@ -344,14 +417,29 @@ test('catalog failures use a neutral surface and a 44px retry without side strip
   assert.match(StyleRules(css, '.catalog-load-notice button').join('\n'), /grid-column:\s*2;/);
 });
 
-test('catalog loading stays a single quiet text line without extra padding or margins', async () => {
+test('catalog notices sit a grid gap below the cards and keep loading to one quiet line', async () => {
   const css = await readFile(new URL('globals.css', appRoot), 'utf8');
   const loading = StyleRules(css, '.catalog-load-notice[data-state="loading"]').join('\n');
-  assert.match(loading, /margin:\s*0;/);
+  assert.match(StyleRules(css, '.catalog-load-notice').join('\n'), /margin:\s*24px 0 0;/);
+  assert.match(loading, /margin:\s*24px 0 0;/);
   assert.match(loading, /padding:\s*0;/);
   assert.match(loading, /border:\s*0;/);
   assert.match(loading, /color:\s*var\(--text-muted\);/);
   assert.match(StyleRules(css, '.catalog-load-notice p').join('\n'), /margin:\s*0;/);
+});
+
+test('the developer catalog notice follows every grid card and precedes pagination inside the results section', async () => {
+  const { render } = await Lobby();
+  const elements = render();
+  const section = elements.find(node => node.props?.className === 'module-results');
+  const children = section.props.children.filter(Boolean);
+  const grid = children.find(node => node.props?.className === 'module-grid');
+  const notice = children.find(node => node.props?.className === 'catalog-load-notice');
+  const pagination = children.find(node => node.props?.className === 'lobby-pagination');
+  assert.ok(notice, 'The initial loading notice belongs to the results section.');
+  assert.equal(children.indexOf(notice), children.indexOf(grid) + 1);
+  assert.ok(children.indexOf(notice) < children.indexOf(pagination));
+  assert.ok(elements.indexOf(notice) > elements.indexOf(Elements(grid).at(-1)), 'Every card and its actions precede the notice.');
 });
 
 for (const [language, firstVisit, startTour, readGuide, noneYet] of [
@@ -475,8 +563,8 @@ for (const [language, firstVisit, startTour, readGuide, noneYet] of [
   });
 }
 
-test('search facets match descriptions and authors as well as titles', async () => {
-  const { render } = await Lobby('en', [games[0], { ...games[4], summary: 'Balance practice', author: 'Contributor' }]);
+test('search facets match descriptions and visible developer authors as well as titles', async () => {
+  const { render } = await Lobby('en', [games[0], { ...games[4], summary: 'Balance practice', author: 'Contributor', launch: { contract: 'package-v1', game: {} } }]);
   for (const query of ['balance', 'contributor']) {
     let elements = render();
     elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: query } });
@@ -485,6 +573,21 @@ test('search facets match descriptions and authors as well as titles', async () 
     assert.equal(Text(Elements(purposes[1]).find(node => node.type === 'small')), '1');
     assert.equal(Elements(purposes[0]).find(node => node.type === 'input').props.disabled, true);
     assert.equal(elements.filter(node => node.type === 'article').length, 1);
+  }
+});
+
+test('lobby search excludes hidden official authors while developer authors still update results and facets', async () => {
+  const { render } = await Lobby('en', [
+    { ...games[0], author: '居家訓練網' },
+    { ...games[4], author: 'Ada Lab', launch: { contract: 'package-v1', game: {} } },
+  ]);
+  for (const [query, count, memoryCount] of [['居家訓練網', 0, 'None yet'], [' ada ', 1, '1']]) {
+    let elements = render();
+    elements.find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: query } });
+    elements = render();
+    assert.equal(elements.filter(node => node.type === 'article').length, count);
+    const purposes = elements.filter(node => node.props?.className === 'filter-option filter-subcategory-option');
+    assert.equal(Text(Elements(purposes[1]).find(node => node.type === 'small')), memoryCount);
   }
 });
 

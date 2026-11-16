@@ -34,7 +34,7 @@ import {
   type PublishedGame,
 } from './publishedGames';
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
-import { BuildLobbyFilterChips, BuildLobbyPageNumbers, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
+import { BuildLobbyFilterChips, BuildLobbyPageNumbers, FilterLobbyGames, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
 import { AnimateVisibleGameCards, CancelHubGameTransition, TransitionGameSurface } from './hubMotion';
 import { StartHubTour } from './tour/hubTour';
 
@@ -137,12 +137,8 @@ export function TrainingLobby() {
         summaryFallback: '居家練習活動。',
         version: '版本',
       };
-  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const games = useMemo(() => BuildHubGameCatalog(trainingCatalog, publishedGames, locale), [publishedGames, locale]);
-  const searchGames = useMemo(() => games.filter((game) => {
-    const searchable = (game.title + ' ' + game.summary + ' ' + game.author).toLocaleLowerCase(locale);
-    return !normalizedQuery || searchable.includes(normalizedQuery);
-  }), [games, locale, normalizedQuery]);
+  const searchGames = useMemo(() => FilterLobbyGames(games, query, locale), [games, query, locale]);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
@@ -511,23 +507,6 @@ export function TrainingLobby() {
             </div>
           )}
 
-          {publishedGamesStatus !== 'ready' && (
-            <div className="catalog-load-notice" data-state={publishedGamesStatus} ref={catalogNoticeRef} role="status" tabIndex={-1}>
-              {publishedGamesStatus === 'loading' ? <p>{copy.catalogLoading}</p> : <>
-                <span className="material-symbols-outlined" aria-hidden="true">warning</span>
-                <p>{copy.catalogUnavailable}</p>
-                <button onClick={() => {
-                  catalogNoticeRef.current?.focus();
-                  setPublishedGamesStatus('loading');
-                  setCatalogRefresh(value => value + 1);
-                }} type="button">
-                  <span className="material-symbols-outlined" aria-hidden="true">refresh</span>
-                  {copy.catalogRetry}
-                </button>
-              </>}
-            </div>
-          )}
-
           <div className="module-grid" ref={gridRef}>
             {pagination.items.map((game) => {
               const preload = () => {
@@ -603,6 +582,23 @@ export function TrainingLobby() {
               );
             })}
           </div>
+
+          {publishedGamesStatus !== 'ready' && (
+            <div className="catalog-load-notice" data-state={publishedGamesStatus} ref={catalogNoticeRef} role="status" tabIndex={-1}>
+              {publishedGamesStatus === 'loading' ? <p>{copy.catalogLoading}</p> : <>
+                <span className="material-symbols-outlined" aria-hidden="true">warning</span>
+                <p>{copy.catalogUnavailable}</p>
+                <button onClick={() => {
+                  catalogNoticeRef.current?.focus();
+                  setPublishedGamesStatus('loading');
+                  setCatalogRefresh(value => value + 1);
+                }} type="button">
+                  <span className="material-symbols-outlined" aria-hidden="true">refresh</span>
+                  {copy.catalogRetry}
+                </button>
+              </>}
+            </div>
+          )}
 
           {pagination.totalPages > 1 && (
             <nav className="lobby-pagination" aria-label={copy.paginationLabel}>

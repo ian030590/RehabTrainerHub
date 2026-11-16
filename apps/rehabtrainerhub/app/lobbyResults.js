@@ -1,5 +1,13 @@
 export const lobbyPageSize = 12;
 
+export function FilterLobbyGames(games, query, locale) {
+  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
+  return games.filter(game => {
+    const author = game.launch.contract === 'package-v1' ? ' ' + game.author : '';
+    return (game.title + ' ' + game.summary + author).toLocaleLowerCase(locale).includes(normalizedQuery);
+  });
+}
+
 export function BuildLobbyFilterChips(selectedPurposes, query, categorySubcategories) {
   const selected = new Set(selectedPurposes);
   const chips = [];

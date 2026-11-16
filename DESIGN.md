@@ -223,7 +223,7 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 - **Body**（`body`，`--type-body`）：內文、表單、按鈕、品牌中文名。至少 16px；長文每行約 30 到 45 個中文字。強調連結與操作文字用 700 到 800。
 - **Label**（`label`，`--type-label`）：分類標籤、篩選計數、手機底部分頁文字、品牌英文副名、頁尾。計數使用 `tabular-nums`。這是全站最小字級。
 
-五個角色在 `globals.css` 的 `:root` 定義為 `--type-*` token；頁首、頁尾與大廳的 `font-size` 一律取這五個 token（圖示字形的 px 尺寸除外），由 `check-hub-presentation.test.mjs` 檢查。進度、管理、開發者等內頁仍有舊的零散字級，修改那些頁面時再收進 token。
+五個角色在 `globals.css` 的 `:root` 定義為 `--type-*` token；`globals.css` 與 `practicePlans.css` 的每個文字 `font-size` 都取這五個 token，或兩個 token 之間的 `clamp()`（圖示字形的 px 尺寸除外），由 `check-hub-presentation.test.mjs` 檢查。Display 只給每頁的 H1 與進度頁的大數字；開發者頁 H1 以 `clamp(var(--type-headline), 5.6vw, var(--type-display))` 縮放，區段 H2 在各寬度都是 headline。管理後台的表格與欄位說明、開發者頁的程式碼區塊是密集資料，用 label。
 
 `h1` 到 `h3` 一律 700、`letter-spacing: -0.015em`、`text-wrap: wrap`；段落使用 `text-wrap: pretty`。繁中開發者標題依 `:lang(zh)`（涵蓋 `zh-TW`、`zh-Hant-TW`）調整行高與手機字級，保留自然換行。
 
@@ -291,11 +291,11 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 - **Hover / Focus:** 邊框混入 44% 分類色；鍵盤進入卡內時整張卡外加 3px 分類色外框。卡片容器不冒充按鈕，實際操作由可聚焦的按鈕或連結完成。
 - **第三方卡**：保留審核標示、開發者、版本、「平台試玩」與安裝，另加同一行裝置需求。
 - **提示區塊**：淺灰綠面、8px 或 12px 圓角、無邊框，用於指南註記與開始說明。
-- **開發者遊戲載入列**：開發者遊戲清單讀取中，結果標題下方顯示一行輔助文字色的「正在載入開發者遊戲…」（`role="status"`）。讀取失敗時改為淺灰綠面、1px `border`、8px 圓角的通知：`warning` 色圖示、說明文字與 44px「重新載入」外框按鈕，不用側邊色條或金色底。重試期間通知區保持掛載並取得焦點；重試成功後焦點移到結果標題。
+- **開發者遊戲載入列**：放在卡片網格之後、分頁之前，也就是開發者遊戲會出現的位置；官方活動不受這個請求影響，所以讀取中或失敗時仍留在第一屏。讀取中顯示一行輔助文字色的「正在載入開發者遊戲…」（`role="status"`）。讀取失敗時改為淺灰綠面、1px `border`、8px 圓角的通知：`warning` 色圖示、說明文字與 44px「重新載入」外框按鈕，不用側邊色條或金色底。重試期間通知區保持掛載並取得焦點；重試成功後焦點移到結果標題。
 - **練習清單狀態**：已有清單時，重新整理的載入與錯誤（含重試鈕）顯示在收合的 `details` 外，收合時也看得到。
 
 ### Inputs / Fields
-- **搜尋框**（`input-search`）：56px 高、白底、`border-strong` 外框、左側 16px 處放搜尋圖示、右側 44px 清除鈕（淺灰綠底，8px 圓角）。即時過濾；隱藏瀏覽器內建清除鈕，改用自有清除鈕。
+- **搜尋框**（`input-search`）：56px 高、白底、`border-strong` 外框、左側 16px 處放搜尋圖示、右側 44px 清除鈕（淺灰綠底，8px 圓角）。即時過濾，比對名稱與簡介；第三方卡另比對卡上顯示的開發者。官方卡不顯示作者，所以不以作者比對，避免出現看不出原因的結果。隱藏瀏覽器內建清除鈕，改用自有清除鈕。
 - **Focus:** 外框轉墨灰，並有全站 3px 焦點藍外框。
 - **篩選選項**：20 到 22px 原生 checkbox，`accent-color` 依分類；整列至少 44px 可點，計數靠右 `tabular-nums`。勾選列以分類淡底與 700 字重標示，不加左側色條或內陰影；分類群組只有 1px 混色邊框與淡底。
 - **篩選計數**：依目前搜尋字詞計算（不受已勾選目的影響）。計數為 0 的選項停用、計數改顯示「尚無」、輔助文字色、`not-allowed` 游標；已勾選的選項即使變成 0 仍可取消。分類下所有目的皆為 0 時，分類勾選框一併停用。
@@ -336,7 +336,7 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 - **Do** 以 live region／status 呈現必要更新並避免反覆朗讀；支援減少動態及系統高對比（`forced-colors`）。
 
 ### Don't:
-- **Don't** 在元件或 `globals.css` 內寫死色碼（The No-Hardcode Rule）；頁首、頁尾與大廳已全數改用 token，進度頁通知與獎盃的十餘處色碼是待改為 token 的例外，不是範例。
+- **Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。
 - **Don't** 讓導覽、一般連結、篩選文字或分頁使用分類色或品牌藍。
 - **Don't** 使用 Instagram 漸層、X 品牌藍或黑底、Threads 社群身份元素、圖示獨佔分頁、14 到 15px 正文、三欄時間線、無限捲動、Story／按讚／追蹤／留言／轉發、虛構熱度與個人化推薦。
 - **Don't** 新增暗色模式；目前沒有需求，`color-scheme` 固定為 light。

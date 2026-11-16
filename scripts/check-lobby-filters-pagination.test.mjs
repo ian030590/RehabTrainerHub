@@ -8,6 +8,38 @@ function LoadHelper() {
   return import(new URL('lobbyResults.js', appRoot));
 }
 
+const searchableGames = [
+  { title: 'Quiet focus', summary: 'Follow the moving target', author: '居家訓練網', launch: { contract: 'catalog-v1' } },
+  { title: 'Pattern game', summary: 'Remember a sequence', author: 'Ada Lab', launch: { contract: 'package-v1' } },
+];
+
+test('search ignores hidden authors for official and other non-package activities', async () => {
+  const { FilterLobbyGames } = await LoadHelper();
+  for (const contract of ['catalog-v1', 'legacy-v0']) {
+    const official = { ...searchableGames[0], launch: { contract } };
+    assert.deepEqual(FilterLobbyGames([official], '居家訓練網', 'zh-TW'), []);
+  }
+});
+
+test('official activity search still matches visible titles and summaries with locale normalization', async () => {
+  const { FilterLobbyGames } = await LoadHelper();
+  for (const query of ['  FOCUS ', ' moving ']) assert.deepEqual(FilterLobbyGames(searchableGames, query, 'en'), [searchableGames[0]]);
+  const turkish = { ...searchableGames[0], title: 'İleri' };
+  assert.deepEqual(FilterLobbyGames([turkish], 'ileri', 'tr'), [turkish]);
+});
+
+test('developer activity search matches its visible author case-insensitively', async () => {
+  const { FilterLobbyGames } = await LoadHelper();
+  assert.deepEqual(FilterLobbyGames(searchableGames, ' ada ', 'en'), [searchableGames[1]]);
+});
+
+test('empty and whitespace-only activity searches retain all games without mutating them', async () => {
+  const { FilterLobbyGames } = await LoadHelper();
+  const original = structuredClone(searchableGames);
+  for (const query of ['', '   ', '\t\n']) assert.deepEqual(FilterLobbyGames(searchableGames, query, 'en'), original);
+  assert.deepEqual(searchableGames, original);
+});
+
 test('active filters omit empty selections and whitespace-only search', async () => {
   const { BuildLobbyFilterChips } = await LoadHelper();
   assert.deepEqual(BuildLobbyFilterChips([], '  ', categories), []);

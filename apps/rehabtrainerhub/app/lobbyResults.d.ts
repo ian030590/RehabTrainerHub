@@ -2,6 +2,13 @@ import type { TrainerCategoryId, TrainingPurposeId } from '@rehab-trainer/hub-mo
 
 export const lobbyPageSize: 12;
 
+export function FilterLobbyGames<T extends {
+  title: string;
+  summary: string;
+  author: string;
+  launch: { contract: string };
+}>(games: readonly T[], query: string, locale: string): T[];
+
 export type LobbyFilterChip =
   | { key: string; kind: 'category'; id: TrainerCategoryId; purposeIds: TrainingPurposeId[] }
   | { key: string; kind: 'purpose'; id: TrainingPurposeId; purposeIds: TrainingPurposeId[] }
