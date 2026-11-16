@@ -5,6 +5,7 @@ import { defaultSettings, EstimatedSeconds, rangeSettings, ValidateSettings, typ
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { TowerTutorial } from './rules/TowerTutorial';
+import { PauseClock } from './logic/pauseClock';
 import { CreateTowerProblems, Matches, PegClick, startBoard, type Board, type TowerState } from './logic/towerOfLondon';
 import { BallLabel, BallName, countedTotal, TowerBoard } from './TowerBoard';
 import type { TowerRow } from './logic/towerScore';
@@ -28,10 +29,18 @@ export function TowerPlanning() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false), endingRef = useRef(false), restoreStopRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const stopRef = useRef<HTMLButtonElement>(null), continueRef = useRef<HTMLButtonElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<TowerSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<TowerRow[]>([]);
@@ -66,6 +75,7 @@ export function TowerPlanning() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true; pausedRef.current = false; setPaused(false);
     generationRef.current++;
     stopRunRef.current?.();
     stopRunRef.current = null;
@@ -74,6 +84,14 @@ export function TowerPlanning() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false); pausedRef.current = true; pauseClockRef.current?.pause(); DisposeAudioFeedback(); setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false; restoreStopRef.current = true; pauseClockRef.current?.resume(); setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   const startNextProblem = useCallback(() => {
     const current = introRef.current;
@@ -82,9 +100,11 @@ export function TowerPlanning() {
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setIntro(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       if (introRef.current) {
         if ((event.key === 'Enter' || event.key === ' ') && !event.repeat && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); startNextProblem(); }
         return;
@@ -97,20 +117,22 @@ export function TowerPlanning() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime, startNextProblem]);
+  }, [pause, resume, stopRuntime, startNextProblem]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
     return () => dialogRef.current?.close();
   }, [phase]);
-  useEffect(() => { if (intro) continueButtonRef.current?.focus(); }, [intro]);
+  useEffect(() => { if (intro && !pausedRef.current) continueButtonRef.current?.focus(); }, [intro]);
   useEffect(() => {
     const host = jsPsychHostRef.current;
     if (phase !== 'running' || !host) return;
@@ -119,17 +141,14 @@ export function TowerPlanning() {
     jsPsychLifecycleRef.current = lifecycle;
     const plan = CreateTowerProblems(settings);
     const allRows: TowerRow[] = [];
-    const timers = new Set<number>();
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     let ticker = 0;
-    let stopped = false;
-    const later = (callback: () => void, ms: number) => {
-      const timer = window.setTimeout(() => { timers.delete(timer); if (!stopped) callback(); }, ms);
-      timers.add(timer);
-      return timer;
-    };
-    const cancel = (timer: number) => { window.clearTimeout(timer); timers.delete(timer); };
+    const later = (callback: () => void, ms: number) => clock.set(callback, ms);
+    const cancel = (timer: ReturnType<PauseClock['set']>) => clock.clear(timer);
     const stopTicker = () => { window.clearInterval(ticker); ticker = 0; };
-    const stop = () => { stopped = true; stopTicker(); for (const timer of timers) window.clearTimeout(timer); timers.clear(); pegRef.current = null; };
+    const stop = () => { stopTicker(); clock.stop(); if (pauseClockRef.current === clock) pauseClockRef.current = null; pegRef.current = null; };
     stopRunRef.current = stop;
     const setState = (state: string) => { if (stageRef.current) stageRef.current.dataset.state = state; };
     const say = (text: string, result?: string) => {
@@ -145,6 +164,7 @@ export function TowerPlanning() {
     const finish = () => {
       stop();
       runProblemRef.current = null;
+      endingRef.current = true;
       const score = BuildGameScore(allRows, settings);
       jsPsychLifecycleRef.current?.finish({ trials: score.summary.trials, accuracy: score.summary.accuracy });
       PlayGameEndSound('Victory');
@@ -163,7 +183,7 @@ export function TowerPlanning() {
       const prompt = () => enRef.current ? 'Make your board match the target' : '把你的盤面排成目標的樣子';
       let state: TowerState = { board: startBoard, held: null, moves: 0 };
       let firstMoveMs: number | null = null;
-      let notice = 0;
+      let notice: ReturnType<PauseClock['set']> = null;
       setIntro(null);
       setTower(state);
       setProblem({ practice: item.practice, number: counted(index), target: item.target, minimumMoves: item.minimumMoves });
@@ -173,15 +193,15 @@ export function TowerPlanning() {
       showTime(settings.problemLimitMs);
       if (progressFillRef.current) progressFillRef.current.style.width = `${item.practice ? 0 : counted(index) / countedTotal * 100}%`;
       later(() => {
-        const onset = performance.now();
-        let deadline = 0;
+        const onset = clock.now();
+        let deadline: ReturnType<PauseClock['set']> = null;
         const end = (solved: boolean) => {
           pegRef.current = null;
           stopTicker();
           cancel(deadline);
           if (notice) cancel(notice);
           setPlaying(false);
-          const problemMs = solved ? Math.round(performance.now() - onset) : settings.problemLimitMs;
+          const problemMs = solved ? Math.round(clock.now() - onset) : settings.problemLimitMs;
           allRows.push({ trial: allRows.length + 1, practice: item.practice, problem: item.index, solved, moves: state.moves,
             minimumMoves: item.minimumMoves, problemMs, firstMoveMs });
           setState('feedback');
@@ -200,7 +220,7 @@ export function TowerPlanning() {
         setState('play');
         setPlaying(true);
         say(prompt());
-        ticker = window.setInterval(() => showTime(Math.max(0, settings.problemLimitMs - (performance.now() - onset))), 200);
+        ticker = window.setInterval(() => showTime(Math.max(0, settings.problemLimitMs - (clock.now() - onset))), 200);
         deadline = later(() => end(false), settings.problemLimitMs);
         pegRef.current = peg => {
           const next = PegClick(state, peg);
@@ -209,10 +229,10 @@ export function TowerPlanning() {
             const now = enRef.current;
             say(state.held === null ? (now ? 'That peg is empty.' : '這根柱子是空的。') : (now ? 'That peg is full.' : '這根柱子滿了。'), 'wrong');
             if (notice) cancel(notice);
-            notice = later(() => { notice = 0; say(prompt()); }, noticeMs);
+            notice = later(() => { notice = null; say(prompt()); }, noticeMs);
             return;
           }
-          if (firstMoveMs === null && next.held !== null) firstMoveMs = Math.round(performance.now() - onset);
+          if (firstMoveMs === null && next.held !== null) firstMoveMs = Math.round(clock.now() - onset);
           state = next;
           setTower(next);
           if (next.held === null && Matches(next.board, item.target)) end(true);
@@ -239,6 +259,7 @@ export function TowerPlanning() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -303,17 +324,18 @@ export function TowerPlanning() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main ref={stageRef} className="tower-stage tower-running" data-state="ready" aria-label={title}>
+    {phase === 'running' && <><main ref={stageRef} className="tower-stage tower-running" data-state="ready" aria-label={title} inert={paused}>
       <header className="tower-hud">
         <p className="tower-progress-label">{progressText}</p>
         <p ref={timerRef} className="tower-timer" aria-live="off" />
         <div className="tower-progress-track"><div ref={progressFillRef} className="tower-progress-fill" /></div>
-        <button type="button" className="btn btn-ghost tower-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost tower-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p ref={messageRef} className="tower-message" role="status" />
       {problem && <div className="tower-boards">
@@ -351,14 +373,27 @@ export function TowerPlanning() {
           </div></footer>
         </div>
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="tower-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="tower-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Problems finished' : '完成題數'}</p><strong>{summary.correct} / {summary.trials}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Finished in the fewest moves' : '用最少步數完成'}</p><strong>{en ? `${summary.perfect}` : `${summary.perfect} 題`}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean planning time' : '平均規劃時間'}</p><strong>{ms(summary.planningMs)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.slice(0, -1).map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Finished' : '完成率'}</dt><dd>{percent(summary.accuracy)}</dd></div>
@@ -369,10 +404,7 @@ export function TowerPlanning() {
         <p className="score-note">{en ? 'Planning time runs from when a problem appears to lifting the first ball. Finish time counts finished problems only. The practice problem is listed below but not counted here.'
           : '規劃時間從題目出現算到拿起第一顆球；完成時間只算有完成的題目。練習題列在下方明細，但不計入這些統計。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

@@ -30,10 +30,18 @@ export function TimePerceptionGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false), endingRef = useRef(false), restoreStopRef = useRef(false);
+  const pausedStepRef = useRef<Step>('intro'), trialIndexRef = useRef(0);
+  const stopRef = useRef<HTMLButtonElement>(null), continueRef = useRef<HTMLButtonElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<TimingSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<TimingRow[]>([]);
@@ -41,6 +49,7 @@ export function TimePerceptionGame() {
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
   const [step, setStep] = useState<Step>('intro');
   const [trialIndex, setTrialIndex] = useState(0);
+  trialIndexRef.current = trialIndex;
   const [feedback, setFeedback] = useState('');
   // The plan lives in a ref for the timers; this counter re-renders once a new plan is in place.
   const [, setPlanVersion] = useState(0);
@@ -74,11 +83,30 @@ export function TimePerceptionGame() {
     window.clearTimeout(timerRef.current);
   }, []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true; pausedRef.current = false; setPaused(false);
     generationRef.current++;
     stopTimers();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, [stopTimers]);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false); pausedRef.current = true; pausedStepRef.current = stepRef.current;
+    generationRef.current++; stopTimers(); holdStartRef.current = null;
+    if (lampRef.current) lampRef.current.dataset.on = 'false';
+    DisposeAudioFeedback(); setPaused(true);
+  }, [stopTimers]);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false; restoreStopRef.current = true;
+    if (pausedStepRef.current !== 'intro') {
+      if (rowsRef.current.length > trialIndexRef.current) {
+        if (rowsRef.current.length >= planRef.current.length) finishRef.current(rowsRef.current);
+        else beginTrialRef.current(rowsRef.current.length);
+      } else runTrialRef.current(trialIndexRef.current);
+    }
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   const lamp = (on: boolean) => { if (lampRef.current) lampRef.current.dataset.on = String(on); };
   const later = (callback: () => void, ms: number) => {
@@ -91,6 +119,7 @@ export function TimePerceptionGame() {
       () => { if (generation === generationRef.current) onDone(); });
   };
   const finish = useCallback((completed: TimingRow[]) => {
+    endingRef.current = true;
     const thresholdMs = staircaseRef.current.thresholdMs();
     const score = BuildGameScore(completed, thresholdMs);
     jsPsychLifecycleRef.current?.finish({ trials: completed.length, reproduce_error_percent: score.summary.reproduceErrorPercent, compare_threshold_ms: score.summary.compareThresholdMs });
@@ -102,6 +131,8 @@ export function TimePerceptionGame() {
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     setPhase('results');
   }, [settings]);
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
   const beginTrialRef = useRef<(index: number) => void>(() => undefined);
   beginTrialRef.current = (index: number) => {
     const trial = planRef.current[index];
@@ -143,7 +174,7 @@ export function TimePerceptionGame() {
   const chooseRef = useRef<(choice: number) => void>(() => undefined);
   chooseRef.current = (choice: number) => {
     const trial = planRef.current[trialIndex];
-    if (phaseRef.current !== 'running' || stepRef.current !== 'choose' || !trial) return;
+    if (phaseRef.current !== 'running' || pausedRef.current || stepRef.current !== 'choose' || !trial) return;
     const english = enRef.current;
     if (trial.task === 'compare') {
       if (choice > 2) return;
@@ -164,7 +195,7 @@ export function TimePerceptionGame() {
   const holdRef = useRef<(down: boolean) => void>(() => undefined);
   holdRef.current = (down: boolean) => {
     const trial = planRef.current[trialIndex];
-    if (phaseRef.current !== 'running' || !trial || trial.task !== 'reproduce') return;
+    if (phaseRef.current !== 'running' || pausedRef.current || !trial || trial.task !== 'reproduce') return;
     if (down && stepRef.current === 'hold') {
       holdStartRef.current = performance.now();
       lamp(true);
@@ -182,9 +213,11 @@ export function TimePerceptionGame() {
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (event.type === 'keydown' && !event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       if (stepRef.current === 'intro') return;
       if (event.key === ' ' || event.code === 'Space') {
         event.preventDefault();
@@ -201,15 +234,17 @@ export function TimePerceptionGame() {
     window.addEventListener('keydown', keys, true);
     window.addEventListener('keyup', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('keyup', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -242,6 +277,7 @@ export function TimePerceptionGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -301,16 +337,17 @@ export function TimePerceptionGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="time-stage time-running" aria-label={title} data-task={task}>
+    {phase === 'running' && <><main className="time-stage time-running" aria-label={title} data-task={task} inert={paused}>
       <header className="time-hud">
         <p className="time-progress-label">{en ? `Trial ${trialIndex + 1} of ${settings.trials}` : `第 ${trialIndex + 1} 題，共 ${settings.trials} 題`}</p>
         <div className="time-progress-track"><div className="time-progress-fill" style={{ width: `${(trialIndex + 1) / settings.trials * 100}%` }} /></div>
-        <button type="button" className="btn btn-ghost time-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost time-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div className="time-lamp-area"><span ref={lampRef} className="time-lamp" data-on="false" aria-hidden="true" /></div>
       <div className="time-controls">
@@ -332,14 +369,27 @@ export function TimePerceptionGame() {
           <button type="button" className="btn btn-primary time-intro-start" autoFocus onClick={() => runTrialRef.current(trialIndex)}>{en ? 'Start' : '開始'}</button>
         </div>
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="time-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="time-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Reproduce: mean miss' : '重現：平均誤差'}</p><strong>{percent(summary.reproduceErrorPercent)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Compare: smallest gap told apart' : '比較：能分辨的時間差'}</p><strong>{ms(summary.compareThresholdMs)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Estimate: right' : '估計：答對率'}</p><strong>{percent(summary.estimateAccuracyPercent)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Reproduce: held time ÷ shown time' : '重現：按住時間 ÷ 亮的時間'}</dt><dd>{summary.reproduceRatio ?? missing}</dd></div>
@@ -349,10 +399,7 @@ export function TimePerceptionGame() {
         <p className="score-note">{en ? 'A ratio above 1 means you held longer than the dot was on; below 1, shorter. A positive estimate difference means you guessed longer than it was.'
           : '比值大於 1 表示按得比亮的時間久，小於 1 表示較短。估計差距為正數，表示猜得比實際長。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

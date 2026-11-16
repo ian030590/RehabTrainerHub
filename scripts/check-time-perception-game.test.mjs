@@ -1,8 +1,43 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'time-perception';
+
+test('the Stop control remains clickable above the first-item introduction', async () => {
+  const source = await readFile(`${GameRoot(gameId)}/TimePerceptionGame.tsx`, 'utf8');
+  const css = await readFile(`${GameRoot(gameId)}/game.css`, 'utf8');
+  const declarations = selector => css.match(new RegExp(`\\${selector}\\s*\\{([^}]+)\\}`))?.[1] ?? '';
+  const hud = declarations('.time-hud'), intro = declarations('.time-intro'), interrupt = declarations('.game-interrupt-overlay');
+  assert.match(source, /<header className="time-hud">[\s\S]*?<button ref=\{stopRef\}[^>]*onClick=\{pause\}/);
+  assert.match(source, /step === 'intro' && trial && <section className="time-intro"/);
+  assert.match(source, /className="btn btn-primary time-intro-start"[^>]*onClick=\{\(\) => runTrialRef\.current\(trialIndex\)\}/);
+  assert.match(hud, /position:\s*(?:relative|absolute|fixed|sticky)\b/);
+  const hudLayer = Number(hud.match(/z-index:\s*(\d+)/)?.[1] ?? 0);
+  const introLayer = Number(intro.match(/z-index:\s*(\d+)/)?.[1] ?? 0);
+  assert.ok(hudLayer > introLayer, `Stop must be above the introduction, but the HUD is at ${hudLayer} and the introduction at ${introLayer}.`);
+  const interruptLayer = Number(interrupt.match(/z-index:\s*(\d+)/)?.[1] ?? 0);
+  assert.ok(interruptLayer > hudLayer, 'The interrupt panel must cover the HUD when paused.');
+});
+
+test('resume restarts an interrupted item but preserves a recorded answer', async () => {
+  const source = await readFile(`${GameRoot(gameId)}/TimePerceptionGame.tsx`, 'utf8');
+  const body = source.match(/const resume = useCallback\(\(\) => \{([\s\S]*?)\n  \}, \[\]\);/)[1];
+  for (const [step, count, expected] of [['watch', 0, 'trial:0'], ['holding', 0, 'trial:0'], ['feedback', 1, 'next:1'], ['intro', 0, 'none']]) {
+    const events = [];
+    const pausedRef = { current: true }, restoreStopRef = { current: false };
+    const pausedStepRef = { current: step }, trialIndexRef = { current: 0 };
+    const rowsRef = { current: Array(count).fill({}) }, planRef = { current: [{}, {}] };
+    const runTrialRef = { current: index => events.push(`trial:${index}`) };
+    const beginTrialRef = { current: index => events.push(`next:${index}`) };
+    const finishRef = { current: () => events.push('finish') };
+    new Function('pausedRef', 'restoreStopRef', 'pausedStepRef', 'trialIndexRef', 'rowsRef', 'planRef', 'runTrialRef', 'beginTrialRef', 'finishRef', 'setPaused', body)(
+      pausedRef, restoreStopRef, pausedStepRef, trialIndexRef, rowsRef, planRef, runTrialRef, beginTrialRef, finishRef, () => {});
+    assert.equal(events[0] ?? 'none', expected);
+    assert.equal(restoreStopRef.current, true);
+  }
+});
 const LoadLogic = async () => LoadGameModule(gameId, 'logic/timing.ts');
 
 test('time perception settings mix the three tasks by default and reject values outside each range', async () => {
@@ -95,7 +130,7 @@ test('time perception results save bounded numeric rows through the private chan
 });
 
 test('time perception owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TimePerceptionGame', category: 'higher-cognition', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'TimePerceptionGame', category: 'higher-cognition', version: '1.1.0' });
 });
 
 test('time perception private bridge accepts only its own parent and replays settings and language', async () => {

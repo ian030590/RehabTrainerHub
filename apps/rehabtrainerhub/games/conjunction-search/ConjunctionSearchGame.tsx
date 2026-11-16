@@ -26,10 +26,17 @@ export function ConjunctionSearchGame() {
   const en = lang === 'en';
   const title = gameDefinition.title[lang];
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false), endingRef = useRef(false), restoreStopRef = useRef(false);
+  const stopRef = useRef<HTMLButtonElement>(null), restStopRef = useRef<HTMLButtonElement>(null), continueRef = useRef<HTMLButtonElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; if (phaseRef.current === 'rest') restStopRef.current?.focus(); else stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SearchSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<SearchRow[]>([]);
@@ -63,6 +70,7 @@ export function ConjunctionSearchGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true; pausedRef.current = false; setPaused(false);
     generationRef.current++;
     cancelLayoutRef.current?.();
     runRef.current?.stop();
@@ -75,30 +83,41 @@ export function ConjunctionSearchGame() {
     DisposeAudioFeedback();
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false); pausedRef.current = true; runRef.current?.pause(); DisposeAudioFeedback(); setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false; restoreStopRef.current = true; runRef.current?.resume(); setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); rowsRef.current = []; setRows([]); setBlockIndex(0); setPhase('menu'); };
+    const fullscreenChanged = () => { if (['running', 'rest'].includes(phaseRef.current) && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (!['running', 'rest'].includes(phaseRef.current)) return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       const response = answers[event.key.toLowerCase()];
       if (phaseRef.current === 'running' && response !== undefined) { event.preventDefault(); if (!event.repeat) runRef.current?.respond(response); }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved); window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true); window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', configure);
-      window.removeEventListener('keydown', keys, true); window.removeEventListener('pagehide', pagehide); pagehide();
+      window.removeEventListener('keydown', keys, true); window.removeEventListener('pagehide', pagehide); document.removeEventListener('fullscreenchange', fullscreenChanged); pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
     return () => dialogRef.current?.close();
   }, [phase]);
-  useEffect(() => { if (phase === 'rest') restButtonRef.current?.focus(); }, [phase]);
+  useEffect(() => { if (phase === 'rest' && !pausedRef.current) restButtonRef.current?.focus(); }, [phase]);
   useEffect(() => {
     if (phase !== 'running' || !fieldRef.current || !jsPsychHostRef.current) return;
     const field = fieldRef.current;
@@ -120,6 +139,7 @@ export function ConjunctionSearchGame() {
         const completed = [...rowsRef.current, ...outcomes.map(outcome => ToRow(outcome, settings.timeLimitMs, settings.trialsPerBlock))];
         rowsRef.current = completed; setRows(completed);
         if (blockIndex < 2) { setBlockIndex(blockIndex + 1); setLayoutError(false); setPhase('rest'); return; }
+        endingRef.current = true;
         const score = BuildGameScore(completed, settings);
         jsPsychLifecycleRef.current?.finish({ trials: completed.length, accuracy_percent: score.summary.accuracy });
         PlayGameEndSound(score.summary.passed ? 'Victory' : 'Defeat');
@@ -156,8 +176,8 @@ export function ConjunctionSearchGame() {
       if (!jsPsychLifecycleRef.current) {
         const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychHostRef.current }));
         jsPsychLifecycleRef.current = lifecycle;
-        void jsPsychLifecycleRef.current?.start({ moduleId: `vision:${gameDefinition.id}`, onStart: () => { if (runRef.current === nextRun) nextRun.start(); } });
-      } else nextRun.start();
+        void jsPsychLifecycleRef.current?.start({ moduleId: `vision:${gameDefinition.id}`, onStart: () => { if (runRef.current === nextRun) { nextRun.start(); if (pausedRef.current) nextRun.pause(); } } });
+      } else { nextRun.start(); if (pausedRef.current) nextRun.pause(); }
     }, failLayout);
     const settle = () => {
       cancelWait(); settling = true;
@@ -193,6 +213,7 @@ export function ConjunctionSearchGame() {
   };
   const startTraining = async () => {
     if (startingRef.current || phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     startingRef.current = true;
     const generation = generationRef.current;
     PrepareAudioFeedback();
@@ -254,14 +275,15 @@ export function ConjunctionSearchGame() {
           <p className="search-source">{en ? 'Levels and rules refer to Sahraie, Smania & Zihl (2016).' : '等級與規則參考 Sahraie、Smania 與 Zihl（2016）。'}</p>
         </section></div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+
         </div></footer>
       </form>
     </dialog>}
-    {(phase === 'running' || phase === 'rest') && <main className="search-stage search-running" aria-label={title}>
+    {(phase === 'running' || phase === 'rest') && <><main className="search-stage search-running" aria-label={title} inert={paused}>
       <header className="search-hud"><p ref={progressLabelRef} className="search-progress-label">{en ? 'Get ready' : '準備開始'}</p>
-        <button type="button" className="btn btn-ghost search-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button></header>
+        <button ref={stopRef} type="button" className="btn btn-ghost search-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button></header>
       <div ref={fieldRef} className="search-field" data-state="lead" style={{ '--symbol-px': `${symbolPx}px` } as CSSProperties}>
         <div className="search-target-circle"><span className="search-example"><Glyph stimulus={level.target} /></span></div>
         <div className="search-items" aria-hidden="true">{trial?.items.map((item, i) => <span key={i} className="search-item" data-target={item.target}
@@ -277,16 +299,29 @@ export function ConjunctionSearchGame() {
         {layoutError ? <p>{en ? 'The field changed or is too small for the selected letter size. Enlarge the window or rotate the screen, then restart this block. Completed blocks are kept.' : '畫面尺寸已變更，或放不下選定大小的字形。請放大視窗或旋轉螢幕，再重做這一段。已完成的段落會保留。'}</p>
           : <p>{en ? `Block ${blockIndex}: ${percent(rest.accuracy)}. ${rest.passed ? 'Reached 85%.' : 'Below 85%.'} Continue when ready.` : `第 ${blockIndex} 段：${percent(rest.accuracy)}，${rest.passed ? '達到 85%。' : '未達 85%。'}準備好再繼續。`}</p>}
         <button ref={restButtonRef} type="button" className="btn btn-primary search-continue" onClick={() => { setLayoutError(false); setPhase('running'); }}>{en ? 'Continue' : '繼續'}</button>
-        <button type="button" className="btn btn-ghost" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={restStopRef} type="button" className="btn btn-ghost" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </section>}
-    </main>}
-    {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="search-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="search-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
+    {phase === 'results'  && <div className="experiment-container results-container"><section className="experiment-results">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Level result' : '等級結果'}</p><strong>{summary.passed ? (en ? 'Passed' : '通過') : (en ? 'Repeat this level' : '再做這一級')}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Accuracy' : '正確率'}</p><strong>{percent(summary.accuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Correct present: mean time' : '答對有目標題：平均時間'}</p><strong>{ms(summary.presentRtMs)}</strong></div>
       </div><p>{en ? 'A level passes when at least 2 of its 3 blocks reach 85% accuracy.' : '三段中至少兩段的正確率達到 85%，就通過這一級。'}</p></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Block results' : '各段成果'}</h2>
         <div className="results-scroll" tabIndex={0} role="region" aria-label={en ? 'Block results' : '各段成果'}><table className="results-table"><thead><tr>
           {[en ? 'Letters' : '字數', en ? 'Accuracy' : '正確率', en ? 'Reached 85%' : '達到 85%', en ? 'Present RT' : '有目標時間', en ? 'Absent RT' : '無目標時間', en ? 'Timeouts' : '超時'].map(label => <th scope="col" key={label}>{label}</th>)}
@@ -303,10 +338,7 @@ export function ConjunctionSearchGame() {
         <p className="search-next-settings">{en ? `Next time: level ${levels[next.level - 1].globalLevel}, ${timeLabel(next.timeLimitMs)} per trial. You can edit these settings.` : `下次開啟會使用：等級 ${levels[next.level - 1].globalLevel}，每題${timeLabel(next.timeLimitMs)}。設定仍可修改。`}</p>
       </section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

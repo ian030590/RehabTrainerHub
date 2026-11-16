@@ -1,23 +1,23 @@
-import { useRef, type RefObject } from 'react';
+import { useRef, type ReactNode, type RefObject } from 'react';
 import type { ScreenState } from './logic/screenRun';
 
-export function RunningView({ state, en, remainingMs, fieldRef, onStart, onStop, onInteract, tutorial = false }: {
+export function RunningView({ state, en, remainingMs, fieldRef, onStart, onStop, onInteract, stopControl, paused = false, tutorial = false }: {
   state: ScreenState; en: boolean; remainingMs: number; fieldRef: RefObject<HTMLDivElement | null>;
   onStart: () => void; onStop: () => void;
   onInteract: (id: number, kind: 'pointerover' | 'pointermove' | 'pointerdown' | 'click', pointerType: string, activation?: string) => void;
-  tutorial?: boolean;
+  stopControl?: ReactNode; paused?: boolean; tutorial?: boolean;
 }) {
   const activationRef = useRef(0);
   const pointerRef = useRef<{ id: number; activation: string } | null>(null);
   const { screen, phase, found, missed } = state;
   const showing = phase !== 'ready';
   const remaining = Math.ceil(remainingMs / 1000);
-  return <main className={`saccade-stage ${tutorial ? 'exploratory-saccade-tutorial' : 'saccade-running'}`} aria-label={en ? 'Exploratory Saccade Practice' : '探索掃視練習'}>
+  return <main className={`saccade-stage ${tutorial ? 'exploratory-saccade-tutorial' : 'saccade-running'}`} aria-label={en ? 'Exploratory Saccade Practice' : '探索掃視練習'} inert={paused}>
     <header className="saccade-hud">
       <p className="saccade-target">{en ? 'Find' : '找出'} <strong>{screen?.target ?? '?'}</strong></p>
       <p className="saccade-found" aria-live="polite">{en ? 'Found' : '已找到'} {found.length} / {screen?.items.filter(item => item.target).length ?? 0}</p>
       <p className="saccade-remaining">{en ? 'Search time left' : '搜尋剩餘'} {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</p>
-      <button type="button" className="btn btn-ghost saccade-stop" onClick={onStop}>{en ? 'Stop' : '停止'}</button>
+      {stopControl ?? <button type="button" className="btn btn-ghost saccade-stop" onClick={onStop}>{en ? 'Stop' : '停止'}</button>}
     </header>
     <div ref={fieldRef} className="saccade-field" data-state={phase} data-target={screen?.target}>
       {phase === 'ready' && <button type="button" className="btn btn-primary saccade-start" disabled={!screen} autoFocus onClick={onStart}>

@@ -16,6 +16,10 @@ export class ScreenRun {
   private finds: Find[] = [];
   private falseClicks = 0;
   private downActivation: string | undefined;
+  private paused = false;
+  private restartScreen = false;
+  private feedbackDue = 0;
+  private feedbackRemaining = 0;
 
   constructor(private readonly options: { sessionMs: number; screenLimitMs: number },
     private readonly create: (index: number, previous: string | null) => SearchScreen,
@@ -40,7 +44,7 @@ export class ScreenRun {
   }
 
   startScreen(): void {
-    if (this.state.phase !== 'ready' || !this.state.screen) return;
+    if (this.paused || this.state.phase !== 'ready' || !this.state.screen) return;
     this.onset = this.clock.now(); this.finds = []; this.falseClicks = 0; this.downActivation = undefined;
     this.state = { ...this.state, phase: 'search' };
     if (this.options.screenLimitMs > 0) this.timer = this.clock.set(() => this.endScreen(), this.options.screenLimitMs);
@@ -48,7 +52,7 @@ export class ScreenRun {
   }
 
   interact(id: number, kind: 'pointerover' | 'pointermove' | 'pointerdown' | 'click', pointerType = 'mouse', activation?: string): boolean {
-    if (this.state.phase !== 'search') return false;
+    if (this.paused || this.state.phase !== 'search') return false;
     if (this.options.screenLimitMs > 0 && this.clock.now() - this.onset >= this.options.screenLimitMs) { this.endScreen(); return false; }
     const item = this.state.screen?.items.find(candidate => candidate.id === id);
     if (!item) return false;
@@ -76,6 +80,27 @@ export class ScreenRun {
     this.state = { ...this.state, phase: 'stopped' };
   }
 
+  pause(): void {
+    if (this.paused || this.state.phase === 'stopped' || this.state.phase === 'finished') return;
+    this.paused = true;
+    if (this.state.phase === 'search') {
+      this.clearTimer();
+      this.restartScreen = true;
+      this.state = { ...this.state, phase: 'ready', found: [], missed: [] };
+      this.events.change(this.state);
+    } else if (this.state.phase === 'complete' || this.state.phase === 'missed') {
+      this.feedbackRemaining = Math.max(0, this.feedbackDue - this.clock.now());
+      this.clearTimer();
+    }
+  }
+
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    if (this.restartScreen) { this.restartScreen = false; this.startScreen(); }
+    else if (this.state.phase === 'complete' || this.state.phase === 'missed') this.scheduleNext(this.feedbackRemaining);
+  }
+
   private clearTimer(): void {
     if (this.timer !== null) this.clock.clear(this.timer);
     this.timer = null;
@@ -90,12 +115,17 @@ export class ScreenRun {
     this.screens.push({ ...this.state.screen, number: this.screens.length + 1, durationMs, falseClicks: this.falseClicks, finds: [...this.finds] });
     this.state = { ...this.state, phase: missed.length ? 'missed' : 'complete', missed };
     this.events.change(this.state);
+    this.scheduleNext(missed.length ? 1500 : 600);
+  }
+
+  private scheduleNext(delay: number): void {
+    this.feedbackDue = this.clock.now() + delay;
     this.timer = this.clock.set(() => {
       this.timer = null;
       if (this.usedMs >= this.options.sessionMs) {
         this.state = { ...this.state, phase: 'finished' };
         this.events.change(this.state); this.events.end([...this.screens]);
       } else this.prepare();
-    }, missed.length ? 1500 : 600);
+    }, delay);
   }
 }

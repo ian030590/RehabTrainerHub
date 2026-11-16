@@ -1,8 +1,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'tower-of-london';
+test('pausing freezes elapsed time and pending timers until resumed', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('timer'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(749);
+  assert.deepEqual(events, []);
+  clock.advance(1);
+  assert.deepEqual(events, ['timer']);
+  pausedClock.stop();
+});
+
+
+
 const LoadTower = async () => LoadGameModule(gameId, 'logic/towerOfLondon.ts');
 
 test('Tower of London keeps the original time per problem, and practice can be turned off', async () => {
@@ -85,7 +106,7 @@ test('Tower of London rows keep the original columns, add the first-move time an
 });
 
 test('Tower of London owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TowerPlanning', category: 'higher-cognition', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'TowerPlanning', category: 'higher-cognition', version: '2.1.0' });
 });
 
 test('Tower of London private bridge accepts only its own parent and replays settings and language', async () => {

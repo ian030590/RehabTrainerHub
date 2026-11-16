@@ -3,9 +3,6 @@
 
 /* Match this game's Hub GameSettingsForm theme. */
 .training-panel {
-  --primary: #262626;
-  --primary-hover: #0a0a0a;
-  --primary-soft: #eaeaea;
   position: fixed;
   inset: 0;
   z-index: 900;
@@ -17,7 +14,7 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: var(--bg-overlay, rgba(20, 24, 28, 0.54));
+  background: var(--bg-overlay);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   pointer-events: auto;
@@ -34,10 +31,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: var(--radius, 8px);
-  border: 1px solid var(--border, #d4d9de);
-  background: var(--background, #f6f7f9);
-  color: var(--text, #202428);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
   box-shadow: var(--shadow-md, 0 8px 24px rgba(20, 33, 43, 0.12));
   text-align: left;
   margin: 0 auto;
@@ -47,8 +44,8 @@
 
 /* Header matching .game-settings-form header */
 .training-config-header {
-  border-bottom: 1px solid var(--border, #d4d9de);
-  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
   padding: 20px;
   display: flex;
   align-items: flex-start;
@@ -76,7 +73,7 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--primary, #146c5b);
+  color: var(--primary);
   line-height: 1;
 }
 
@@ -87,7 +84,7 @@
   font-weight: 900;
   letter-spacing: -0.025em;
   line-height: 1.25;
-  color: var(--heading, #14212b);
+  color: var(--heading);
   text-wrap: balance;
 }
 
@@ -128,9 +125,9 @@
   padding: 4px 10px;
   border-radius: 6px;
   border: none;
-  background: var(--primary-soft, #e1f1ec);
-  color: var(--primary, #146c5b);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: inherit;
   font-size: calc(0.75rem * 1.15);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -147,7 +144,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
-  background: var(--background, #f6f7f9);
+  background: var(--background);
   scrollbar-gutter: stable;
 }
 
@@ -162,9 +159,9 @@
 .training-setting,
 .training-rule-section {
   position: static;
-  border-radius: var(--radius, 8px);
-  border: 1px solid var(--border, #d4d9de);
-  background: var(--surface, #ffffff);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 20px;
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(20, 33, 43, 0.08));
   margin: 0;
@@ -195,7 +192,7 @@
   font-size: calc(1.125rem * 1.15);
   font-weight: 900;
   letter-spacing: -0.015em;
-  color: var(--heading, #14212b);
+  color: var(--heading);
   line-height: 1.35;
 }
 
@@ -206,7 +203,7 @@
   max-width: none;
   font-size: calc(0.875rem * 1.15);
   line-height: 1.5rem; /* 24px */
-  color: var(--text-muted, #606970);
+  color: var(--text-muted);
 }
 
 .training-setting-header > span {
@@ -217,9 +214,9 @@
   justify-content: center;
   padding: 4px 10px;
   border-radius: 6px;
-  background: var(--primary-soft, #e1f1ec);
-  color: var(--primary, #146c5b);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: inherit;
   font-size: calc(0.75rem * 1.15);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -242,7 +239,7 @@
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: 10px;
-  color: var(--text, #202428);
+  color: var(--text);
   font-size: calc(0.875rem * 1.15);
   line-height: 1.55;
 }
@@ -253,10 +250,10 @@
   height: 24px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary, #146c5b) 30%, var(--border, #d4d9de));
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
   border-radius: 50%;
-  background: var(--primary-soft, #e1f1ec);
-  color: var(--primary, #146c5b);
+  background: var(--primary-soft);
+  color: var(--primary);
   font-size: calc(0.75rem * 1.15);
   font-weight: 800;
   line-height: 1;
@@ -264,7 +261,7 @@
 
 .training-rule-note {
   margin: 10px 0 0;
-  color: var(--text-muted, #606970);
+  color: var(--text-muted);
   font-size: calc(0.8125rem * 1.15);
   line-height: 1.55;
 }
@@ -276,8 +273,8 @@
   display: block;
   margin: 0;
   padding: 16px 20px;
-  border-top: 1px solid var(--border, #d4d9de);
-  background: var(--surface, #ffffff);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: none;
 }
 
@@ -305,8 +302,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  /* Cancel button first (left), Start button second (right) */
-  flex-direction: row-reverse;
 }
 
 /* Outline button (Back/Cancel) matching Button variant="outline" */
@@ -316,10 +311,10 @@
   justify-content: center;
   min-height: 44px;
   padding: 8px 16px;
-  border-radius: var(--radius, 8px);
-  border: 1px solid var(--border-strong, #7d868e);
-  background: var(--surface, #ffffff);
-  color: var(--heading, #14212b);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--heading);
   font-family: inherit;
   font-size: calc(0.875rem * 1.15);
   font-weight: 800;
@@ -331,9 +326,9 @@
 }
 
 .training-config-navigation-buttons .btn.btn-ghost:hover {
-  border-color: var(--primary, #146c5b);
-  color: var(--primary, #146c5b);
-  background: var(--surface, #ffffff);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
 }
 
 .training-config-navigation-buttons .btn.btn-ghost:active {
@@ -348,10 +343,10 @@
   justify-content: center;
   min-height: 48px;
   padding: 8px 24px;
-  border-radius: var(--radius, 8px);
-  border: 1px solid var(--primary, #146c5b);
-  background: var(--primary, #146c5b);
-  color: var(--text-on-accent, #ffffff);
+  border-radius: var(--radius);
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--text-on-accent);
   font-family: inherit;
   font-size: calc(1rem * 1.15);
   font-weight: 800;
@@ -366,8 +361,8 @@
 
 .training-config-navigation-buttons .btn.btn-primary:hover,
 .training-config-navigation-buttons .config-start-btn:hover {
-  background: var(--primary-hover, #0d5547);
-  border-color: var(--primary-hover, #0d5547);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
   box-shadow: none;
 }
 
@@ -384,7 +379,7 @@
 
 @media (max-width: 639px) {
   .training-config-navigation-buttons {
-    flex-direction: column-reverse;
+    flex-direction: column;
     width: 100%;
   }
 

@@ -10,10 +10,10 @@ import ts from 'typescript';
 const root = resolve(import.meta.dirname, '..');
 const gamesRoot = resolve(root, 'apps/rehabtrainerhub/games');
 const games = {
-  'popout-search': { version: '1.0.1', file: 'PopoutSearchGame.tsx', settings: 'settings.ts' },
-  'complex-search': { version: '1.0.1', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
-  'conjunction-search': { version: '1.0.1', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
-  'exploratory-saccade': { version: '1.0.1', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
+  'popout-search': { version: '1.1.0', file: 'PopoutSearchGame.tsx', settings: 'settings.ts' },
+  'complex-search': { version: '1.1.0', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
+  'conjunction-search': { version: '1.1.0', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
+  'exploratory-saccade': { version: '1.1.0', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
   'seagull-flight': { version: '1.0.1', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
   'hart-chart': { version: '2.0.5', file: 'HartChartPage.tsx', settings: 'settings.ts' },
   'driving-rehab': { version: '2.1.2', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
@@ -32,7 +32,7 @@ const games = {
   'simon-task': { version: '1.1.0', file: 'SimonTaskGame.tsx', settings: 'settings.ts' },
   'card-sorting': { version: '1.1.0', file: 'CardSortingGame.tsx', settings: 'settings.ts' },
   'attentional-blink': { version: '1.1.0', file: 'AttentionalBlinkGame.tsx', settings: 'settings.ts' },
-  'time-perception': { version: '1.0.2', file: 'TimePerceptionGame.tsx', settings: 'settings.ts' },
+  'time-perception': { version: '1.1.0', file: 'TimePerceptionGame.tsx', settings: 'settings.ts' },
   'divided-attention': { version: '1.1.0', file: 'DividedAttentionGame.tsx', settings: 'settings.ts' },
   'pattern-memory': { version: '1.1.0', file: 'PatternMemoryGame.tsx', settings: 'settings.ts' },
   stroop: { version: '2.1.0', file: 'StroopGame.tsx', settings: 'settings.ts' },
@@ -44,7 +44,7 @@ const games = {
   'number-letter': { version: '2.1.0', file: 'NumberLetterSwitch.tsx', settings: 'settings.ts' },
   'digit-span': { version: '2.1.0', file: 'DigitSpanRecall.tsx', settings: 'settings.ts' },
   'spatial-span': { version: '2.1.0', file: 'SpatialSpanRecall.tsx', settings: 'settings.ts' },
-  'tower-of-london': { version: '2.0.2', file: 'TowerPlanning.tsx', settings: 'settings.ts' },
+  'tower-of-london': { version: '2.1.0', file: 'TowerPlanning.tsx', settings: 'settings.ts' },
   'reaction-time': { version: '2.1.0', file: 'ReactionSignal.tsx', settings: 'settings.ts' },
   'tic-tac-toe': { version: '2.1.0', file: 'TicTacToeGame.tsx', settings: 'settings.ts' },
   'connect4': { version: '2.1.0', file: 'Connect4Game.tsx', settings: 'settings.ts' },

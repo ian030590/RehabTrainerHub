@@ -12,10 +12,11 @@ import { ufovBrowserSpec } from './ufov-r2-browser.mjs';
 // Per-game drivers for the R2 brain activities. Each one sets a short session, plays it with real
 // browser input and states what the saved record must contain.
 export const brainGameSpecs = {
-  'exploratory-saccade': exploratorySaccadeBrowserSpec,
-  'conjunction-search': conjunctionSearchBrowserSpec,
-  'complex-search': complexSearchBrowserSpec,
+  'exploratory-saccade': { ...exploratorySaccadeBrowserSpec, interruptPanel: true },
+  'conjunction-search': { ...conjunctionSearchBrowserSpec, interruptPanel: true },
+  'complex-search': { ...complexSearchBrowserSpec, interruptPanel: true },
   'popout-search': {
+    interruptPanel: true,
     title: { zh: '突顯目標', en: 'Visual Search: Pop-out' },
     trainer: 'vision', purpose: 'vision', phasePrefix: 'search',
     settings: { level: 1, timeLimitMs: 1500, trialsPerBlock: 20, symbolSizeDeg: 1.4, screenWidthCm: 30 },
@@ -772,6 +773,7 @@ export const brainGameSpecs = {
     rows: 18,
   },
   'tower-of-london': {
+    interruptPanel: true,
     title: { zh: '倫敦塔規劃（Tower of London）', en: 'Tower of London Planning' },
     purpose: 'higher-cognition',
     settings: { problemLimitMs: 10000, practice: true },
@@ -1231,6 +1233,7 @@ export const brainGameSpecs = {
     rows: 24,
   },
   'time-perception': {
+    interruptPanel: true,
     title: { zh: '時間感知', en: 'Time Perception' },
     purpose: 'higher-cognition',
     settings: { mode: 'mixed', trials: 12 },

@@ -4,6 +4,34 @@ import { readFile } from 'node:fs/promises';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule, GameRoot } from './brain-r2-game-checks.mjs';
 
 const gameId = 'conjunction-search';
+test('continuing during a break returns focus to its visible Stop button', async () => {
+  const source = await readFile(`${GameRoot(gameId)}/${gameId === 'popout-search' ? 'PopoutSearch' : gameId === 'complex-search' ? 'ComplexSearch' : 'ConjunctionSearch'}Game.tsx`, 'utf8');
+  const body = source.match(/useEffect\(\(\) => \{ (if \(paused\) continueRef\.current[\s\S]*?) \}, \[paused\]\);/)[1];
+  const focused = [];
+  new Function('paused', 'continueRef', 'restoreStopRef', 'phaseRef', 'restStopRef', 'stopRef', body)(
+    false, { current: null }, { current: true }, { current: 'rest' },
+    { current: { focus: () => focused.push('rest') } }, { current: { focus: () => focused.push('hud') } });
+  assert.deepEqual(focused, ['rest']);
+});
+
+test('pausing discards the active unanswered item and resumes with the same item and a fresh clock', async () => {
+  const { TrialRun } = await LoadGameModule(gameId, 'logic/trialRun.ts');
+  const clock = FakeClock();
+  const shown = [];
+  let finished;
+  const timing = { lead: [{ state: 'fixation', ms: 500 }], exposureMs: null, windowMs: 1500, endOnResponse: true, feedbackMs: 0, gapMs: 0 };
+  const run = new TrialRun(1, () => ({ trial: 'same', timing }), { lead() {}, show: step => shown.push(step.trial), hide() {}, signal() {}, end() {}, clear() {} }, clock, result => { finished = result; }, 0);
+  run.start(); clock.advance(500); clock.advance(300);
+  run.pause(); clock.advance(5000);
+  assert.equal(run.respond('left'), false);
+  assert.equal(finished, undefined);
+  run.resume(); clock.advance(500); clock.advance(200); run.respond('left'); clock.advance(0);
+  assert.deepEqual(shown, ['same', 'same']);
+  assert.equal(finished[0].rtMs, 200);
+});
+
+
+
 test('field settling waits for fullscreen and two stable frames, rejects promptly and caps at 1000 ms', async () => {
   const { WaitForField } = await LoadGameModule(gameId, 'logic/fieldSettle.ts');
   const clock = FakeClock(), frames = new Map();
@@ -254,7 +282,7 @@ test('result progression follows sending the confirmed config; source includes r
 
 test('conjunction-search packaging is self contained and registered as vision', async () => {
   const { gameDefinition } = await LoadLevels();
-  await CheckGamePackaging(gameId, { version: '1.0.1', component: 'ConjunctionSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
+  await CheckGamePackaging(gameId, { version: '1.1.0', component: 'ConjunctionSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
 });
 
 test('private bridge verifies parent, identity and version and restores language and settings', async () => {

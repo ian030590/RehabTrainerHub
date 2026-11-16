@@ -218,6 +218,40 @@ const StartRun = async (options = {}) => {
   return { run, clock, states, ended, marked };
 };
 
+test('pause discards the interrupted screen and restarts it with a fresh clock', async () => {
+  const { run, clock } = await StartRun();
+  run.startScreen(); clock.advance(100); run.interact(0, 'click', 'mouse');
+  const screen = run.state.screen;
+  run.pause(); clock.advance(5000);
+  assert.equal(run.interact(1, 'click', 'mouse'), false);
+  assert.equal(run.remainingMs(), 1000);
+  assert.equal(run.screens.length, 0);
+  run.resume();
+  assert.equal(run.state.screen, screen);
+  assert.deepEqual(run.state.found, []);
+  clock.advance(200); run.interact(0, 'click', 'mouse'); run.interact(1, 'click', 'mouse');
+  assert.equal(run.screens[0].durationMs, 200);
+  assert.deepEqual(run.screens[0].finds.map(find => find.foundMs), [200, 200]);
+});
+
+test('pause preserves completed-screen feedback without advancing', async () => {
+  const { run, clock } = await StartRun();
+  run.startScreen(); run.interact(0, 'click', 'mouse'); run.interact(1, 'click', 'mouse');
+  clock.advance(200); run.pause(); clock.advance(5000);
+  assert.equal(run.state.phase, 'complete');
+  run.resume(); clock.advance(399); assert.equal(run.state.phase, 'complete');
+  clock.advance(1); assert.equal(run.state.phase, 'ready');
+});
+
+test('a resize while paused waits until continuing before changing the layout', async () => {
+  const source = await readFile(`${GameRoot(gameId)}/ExploratorySaccadeGame.tsx`, 'utf8');
+  const body = source.match(/const observer = new ResizeObserver\(entries => \{([\s\S]*?)\n    \}\);/)[1];
+  const resizePendingRef = { current: false };
+  new Function('entries', 'phaseRef', 'pausedRef', 'resizePendingRef', body)(
+    [], { current: 'running' }, { current: true }, resizePendingRef);
+  assert.equal(resizePendingRef.current, true);
+});
+
 test('mouse hover and any pointer activation mark once; hover of distractors and touch hover do nothing', async () => {
   const { run, clock, marked } = await StartRun();
   clock.advance(5000);
@@ -354,7 +388,7 @@ test('browser clock fixture advances real game timers without a product-only set
   assert.equal(performance.now, clock.now); assert.equal(window.setTimeout, clock.set); assert.equal(window.clearTimeout, clock.clear);
   assert.equal(clock.pending(), 0);
 });
-test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { version: '1.0.1', component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
+test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { version: '1.1.0', component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
 test('catalog entry', async () => assert.ok(/id: 'exploratory-saccade'/.test(await readFile(resolve(root, 'apps/rehabtrainerhub/games/catalog.ts'), 'utf8')), 'catalog must register exploratory-saccade'));
 test('lockfile workspace', async () => {
   const lockfile = JSON.parse(await readFile(resolve(root, 'package-lock.json'), 'utf8'));
