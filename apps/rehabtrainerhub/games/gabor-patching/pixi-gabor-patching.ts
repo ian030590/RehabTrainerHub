@@ -13,6 +13,7 @@ import { cssColors, pixiColors, typography } from './runtime/theme';
 import { GetGaborTexture, gaborTextureSpecs } from './gaborTexture';
 import type { GaborPatchRecord } from './score';
 import { soundManager } from './runtime/soundManager';
+import { IsGaborPaused } from './runtime/pauseState';
 
 const info = {
   name: 'pixi-gabor-patching',
@@ -95,6 +96,11 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   private patchRecords: GaborPatchRecord[] = [];
   private spawned = 0;
   private abortListener: (() => void) | null = null;
+  private pauseListener: (() => void) | null = null;
+  private resumeListener: (() => void) | null = null;
+  private pausedAt: number | null = null;
+  private pausedDuration = 0;
+  private loop: (() => void) | null = null;
   private score = 0;
   private hits = 0;
   private gameStartTime = 0;
@@ -146,11 +152,29 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
     this.abortListener = () => this.stopGame(displayElement);
     window.addEventListener('game:abort', this.abortListener);
+    this.pauseListener = () => {
+      if (this.pausedAt !== null || this.isGameOver) return;
+      this.pausedAt = performance.now();
+      cancelAnimationFrame(this.gameLoopRaf);
+      this.gameLoopRaf = 0;
+      this.app?.ticker.stop();
+    };
+    this.resumeListener = () => {
+      if (this.pausedAt === null || this.isGameOver) return;
+      this.pausedDuration += performance.now() - this.pausedAt;
+      this.pausedAt = null;
+      this.app?.ticker.start();
+      if (this.loop) this.gameLoopRaf = requestAnimationFrame(this.loop);
+    };
+    window.addEventListener('game:pause', this.pauseListener);
+    window.addEventListener('game:resume', this.resumeListener);
+    if (IsGaborPaused()) this.pauseListener();
 
     RunPixiTrial(gaborPatchingPixiScope, displayElement, (app) => {
       if (this.isGameOver) return;
       if (!displayElement.isConnected) { this.stopGame(displayElement); return; }
       this.app = app;
+      if (this.pausedAt !== null) app.ticker.stop();
       AttachPixiTrialCanvas(gaborPatchingPixiScope, container);
       app.renderer.background.color = trial.background_color ?? cssColors.gaborBackground;
       this.resizeListener = () => this.clampActiveSpots();
@@ -160,10 +184,10 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         GetGaborTexture(spec.size, spec.freq, spec.angle)
       ));
 
-      this.gameStartTime = performance.now();
+      this.gameStartTime = this.now();
 
       const updateHUD = () => {
-        const elapsed = performance.now() - this.gameStartTime;
+        const elapsed = this.now() - this.gameStartTime;
         const duration = trial.duration_ms ?? 60000;
         const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
         timerEl.textContent = `${trial.language === 'en' ? 'Time' : '時間'}: ${remaining}s`;
@@ -195,7 +219,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         sprite.eventMode = 'static';
         sprite.cursor = 'pointer';
 
-        const spawnTime = performance.now();
+        const spawnTime = this.now();
         const maxScore = 1000;
 
         let lifetime = 4000;
@@ -216,12 +240,13 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         this.spots.push(spotData);
       };
 
-      const loop = (time: number) => {
+      const loop = () => {
         if (!displayElement.isConnected) {
           this.stopGame(displayElement);
           return;
         }
-        if (this.isGameOver || !this.app) return;
+        if (this.isGameOver || !this.app || this.pausedAt !== null) return;
+        const time = this.now();
 
         const elapsed = time - this.gameStartTime;
         if (elapsed >= (trial.duration_ms ?? 60000)) {
@@ -283,14 +308,15 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
       for (let i = 0; i < Math.min(3, trial.max_spots ?? 10); i++) spawnSpot();
       updateHUD();
 
-      this.gameLoopRaf = requestAnimationFrame(loop);
+      this.loop = loop;
+      if (this.pausedAt === null) this.gameLoopRaf = requestAnimationFrame(loop);
     });
   }
 
   private handleSpotClick(spot: GaborSpot) {
-    if (this.isGameOver || !this.app || !this.spots.includes(spot)) return;
+    if (this.isGameOver || this.pausedAt !== null || !this.app || !this.spots.includes(spot)) return;
 
-    const now = performance.now();
+    const now = this.now();
     const spotAge = now - spot.spawnTime;
     const progress = Math.min(1, spotAge / spot.lifetime);
     const finalPoints = Math.max(0, Math.ceil(spot.maxScore * (1 - progress)));
@@ -357,7 +383,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   }
 
   private recordSpot(spot: GaborSpot, outcome: number, points: number) {
-    const now = performance.now();
+    const now = this.now();
     this.patchRecords.push({ patch: spot.patch, type: spot.type, outcome,
       spawnedMs: Math.max(0, Math.round(spot.spawnTime - this.gameStartTime)), endedMs: Math.max(0, Math.round(now - this.gameStartTime)),
       reactionMs: outcome === 1 ? Math.max(0, Math.round(now - spot.spawnTime)) : null, points, lifetimeMs: spot.lifetime });
@@ -369,6 +395,10 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     cancelAnimationFrame(this.gameLoopRaf);
     this.gameLoopRaf = 0;
     if (this.abortListener) window.removeEventListener('game:abort', this.abortListener);
+    if (this.pauseListener) window.removeEventListener('game:pause', this.pauseListener);
+    if (this.resumeListener) window.removeEventListener('game:resume', this.resumeListener);
+    if (this.pausedAt !== null) this.app?.ticker.start();
+    this.loop = null;
     this.abortListener = null;
     if (this.app) {
       if (this.resizeListener) this.app.renderer.off('resize', this.resizeListener);
@@ -379,6 +409,10 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     this.textures = [];
     this.spots = [];
     this.floatingScores = [];
+  }
+
+  private now() {
+    return (this.pausedAt ?? performance.now()) - this.pausedDuration;
   }
 
   private endGame(trial: TrialType<Info>, displayElement: HTMLElement) {

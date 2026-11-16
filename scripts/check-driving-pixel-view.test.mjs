@@ -38,7 +38,7 @@ function PolygonArea(points) {
 let drivingRuntimeLoad = null;
 async function LoadDrivingRuntime() {
   const modules = await Promise.all([
-    'traffic/drivingTraffic.ts', 'route/driving-route.ts', 'hazards/driving-hazards.ts', 'rendering/driving-rendering.ts', 'text/driving-text.ts', 'pixel/spriteNames.ts',
+    'traffic/drivingTraffic.ts', 'route/driving-route.ts', 'hazards/driving-hazards.ts', 'rendering/driving-rendering.ts', 'text/driving-text.ts', 'pixel/spriteNames.ts', 'timing/pauseClock.ts',
   ].map(ImportGameModule));
   const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
   const ast = ts.createSourceFile('driving.ts', source, ts.ScriptTarget.Latest, true);

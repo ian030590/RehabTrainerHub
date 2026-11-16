@@ -219,7 +219,7 @@ test('steering captures input timestamps, ignores held inputs, and accepts a new
   Object.defineProperty(globalThis, 'document', { configurable: true, value: { visibilityState: 'visible' } });
   try {
     const { runtime, hazard, event } = CreateResponseHarness();
-    Object.assign(runtime, { keyState: { left: true, right: false }, lastResponseSteering: 0, visibilityPausedAt: null, normalizeInputTimestamp: value => value, excludeInactiveFrameGap() {} });
+    Object.assign(runtime, { keyState: { left: true, right: false }, lastResponseSteering: 0, visibilityPausedAt: null, manualPausedAt: null, normalizeInputTimestamp: value => value, excludeInactiveFrameGap() {} });
     runtime.captureSteeringInputTimestamp(900);
     hazard.crossingStarted = true;
     runtime.markHazardsPresented(1000);

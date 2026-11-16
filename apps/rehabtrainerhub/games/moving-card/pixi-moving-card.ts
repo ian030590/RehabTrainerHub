@@ -22,6 +22,7 @@ import { ShuffleArray, GenerateRandomLetters } from './gameUtils';
 import { ChooseMovingCardRotation, CreateMovingCardOptionLayout, GetMovingCardSearchBounds, type SafeAreaInsets } from './cardLayout';
 import { PixelFromMillimeter } from './settings';
 import { soundManager } from './runtime/soundManager';
+import { IsMovingCardPaused } from './runtime/pauseState';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
@@ -126,14 +127,6 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
   trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
     const self = this;
 
-    // ── Setup Container ──
-    const wrapper = CreatePixiTrialContainer(
-      displayElement,
-      movingCardContainerStyle,
-      'moving-card-trial',
-    );
-    const safeAreaProbe = CreateSafeAreaProbe(wrapper);
-
     // ── State (captured by closure) ──
     const target = (trial.target_letters as string) || GenerateRandomLetters(2);
     const diff = trial.difficulty as string;
@@ -147,8 +140,44 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     let trialEnded = false;
     let attempts = 0;
     let wrongAttempts = 0;
+    let paused = IsMovingCardPaused();
+    let activeApp: Application | null = null;
+    let cleanupScene: (() => void) | null = null;
+
+    const pauseTrial = () => {
+      if (paused || trialEnded) return;
+      paused = true;
+      cleanupScene?.();
+      activeApp?.ticker.stop();
+    };
+    const resumeTrial = () => {
+      if (!paused || trialEnded) return;
+      paused = false;
+      attempts = 0;
+      wrongAttempts = 0;
+      feedbackActive = false;
+      activeApp?.ticker.start();
+      if (activeApp) runWithApp(activeApp);
+    };
+    const abortTrial = () => {
+      if (trialEnded) return;
+      trialEnded = true;
+      cleanupScene?.();
+      if (paused) activeApp?.ticker.start();
+      window.removeEventListener('game:abort', abortTrial);
+      window.removeEventListener('game:pause', pauseTrial);
+      window.removeEventListener('game:resume', resumeTrial);
+    };
+    window.addEventListener('game:abort', abortTrial);
+    window.addEventListener('game:pause', pauseTrial);
+    window.addEventListener('game:resume', resumeTrial);
 
     const runWithApp = (app: Application) => {
+      if (trialEnded || !displayElement.isConnected) { abortTrial(); return; }
+      activeApp = app;
+      if (paused) { app.ticker.stop(); return; }
+      const wrapper = CreatePixiTrialContainer(displayElement, movingCardContainerStyle, 'moving-card-trial');
+      const safeAreaProbe = CreateSafeAreaProbe(wrapper);
       AttachPixiTrialCanvas(movingCardPixiScope, wrapper);
 
       const startTime = performance.now();
@@ -381,7 +410,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           if (!feedbackActive) drawState('normal');
         });
         optContainer.on('pointertap', () => {
-          if (feedbackActive || trialEnded) return;
+          if (feedbackActive || trialEnded || paused) return;
           feedbackActive = true;
           attempts += 1;
           const rt = Math.round(performance.now() - startTime);
@@ -522,37 +551,22 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       };
       app.renderer.on('resize', handleResize);
 
-      // ── Keydown Handler ──
-      const handleKeydown = (e: KeyboardEvent) => {
-        if (e.code === 'Escape') {
-          EndTrial(Math.round(performance.now() - startTime), false, 'Escape');
-        }
-      };
-      window.addEventListener('keydown', handleKeydown);
-      const abortTrial = () => CleanupTrial();
-      window.addEventListener('game:abort', abortTrial);
-
       // ── End Trial ──
-      function CleanupTrial() {
-        if (trialEnded) return;
-        trialEnded = true;
-
+      cleanupScene = () => {
         if (moveTimerId) clearInterval(moveTimerId);
         if (feedbackTimerId) clearTimeout(feedbackTimerId);
+        moveTimerId = null;
+        feedbackTimerId = null;
         animationFrames.forEach(id => cancelAnimationFrame(id));
         animationFrames.clear();
         app.renderer.off('resize', handleResize);
-        window.removeEventListener('keydown', handleKeydown);
-        window.removeEventListener('game:abort', abortTrial);
-
-        // Clear & detach (reuse app for next round)
         CleanupPixiTrial(movingCardPixiScope, displayElement);
-
-      }
+        cleanupScene = null;
+      };
 
       function EndTrial(rt: number, correct: boolean, response: string) {
         if (trialEnded) return;
-        CleanupTrial();
+        abortTrial();
         // Tell jsPsych this trial is done
         self.jsPsych.finishTrial({
           rt,

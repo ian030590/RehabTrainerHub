@@ -78,7 +78,7 @@ test('moving card owns dependencies, UI and captured gameplay preview and is exc
   }
   for (const file of ['settings.json', 'score.json', 'exportCsv.ts', 'results/DefaultTrainingResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.5');
+  assert.equal(pkg.version, '2.1.0');
   assert.deepEqual(pkg.rehabTrainer?.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -90,7 +90,7 @@ test('moving card owns dependencies, UI and captured gameplay preview and is exc
   assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
-async function LoadPlugin(width = 390, height = 844) {
+async function LoadPlugin(width = 390, height = 844, initiallyPaused = false, deferred = false) {
   const source = await readFile(resolve(gameRoot, 'pixi-moving-card.ts'), 'utf8');
   const timers = new Map(); const frames = new Map(); const listeners = new Map(); const finished = [];
   let nextId = 1; let now = 0;
@@ -109,10 +109,11 @@ async function LoadPlugin(width = 390, height = 844) {
   class Text extends Container {
     constructor(options = {}) { super(); Object.assign(this, { style: {}, ...options }); }
   }
-  const app = { stage: new Container(), screen: { width, height }, renderer: { on(name, handler) { listeners.set(name, handler); }, off(name) { listeners.delete(name); } } };
+  const app = { ticker: { stop() {}, start() {} }, stage: new Container(), screen: { width, height }, renderer: { on(name, handler) { listeners.set(name, handler); }, off(name) { listeners.delete(name); } } };
   const wrapper = { appendChild() {} };
+  let initialize;
   const pool = { pixiRuntimeScopes: { movingCard: 'moving-card' }, CreatePixiTrialContainer: () => wrapper,
-    RunPixiTrial: (_scope, _display, run) => run(app), AttachPixiTrialCanvas() {}, CleanupPixiTrial() {} };
+    RunPixiTrial: (_scope, _display, run) => { initialize = () => run(app); if (!deferred) initialize(); }, AttachPixiTrialCanvas() {}, CleanupPixiTrial() { app.stage.children = []; } };
   const mathSource = await readFile(resolve(root, 'packages/ui/src/mathUtils.ts'), 'utf8');
   const mathModule = { exports: {} };
   new Function('module', 'exports', ts.transpileModule(mathSource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(mathModule, mathModule.exports);
@@ -128,6 +129,7 @@ async function LoadPlugin(width = 390, height = 844) {
     '@rehab-trainer/ui/spatialUtils': { PixelFromMillimeter: value => value * 700 / 149 },
     './settings': { PixelFromMillimeter: value => value * 700 / 149 },
     './runtime/soundManager': { soundManager: { playSuccess() {}, playFailure() {} } },
+    './runtime/pauseState': { IsMovingCardPaused: () => initiallyPaused },
     './runtime/pixiPool': pool };
   const window = { addEventListener: (name, handler) => listeners.set(name, handler), removeEventListener: name => listeners.delete(name),
     getComputedStyle: () => ({}) };
@@ -142,7 +144,7 @@ async function LoadPlugin(width = 390, height = 844) {
   const plugin = new module.exports.default({ finishTrial: data => finished.push(data) });
   const start = (count = 18, difficulty = 'beginner') => plugin.trial({ isConnected: true }, { target_letters: 'AB', option_count: count,
     difficulty, move_interval_ms: 800, target_size_mm: 15, option_size_mm: 10, round_number: 1, total_rounds: 5, language: 'en', calibration_length_mm: 149 });
-  return { app, timers, frames, listeners, finished, start, setNow: value => { now = value; },
+  return { app, timers, frames, listeners, finished, start, initialize: () => initialize(), setNow: value => { now = value; },
     options: () => app.stage.children.at(-1).children,
     flushFeedback: () => { for (const [id, callback] of [...timers]) if (id > 1) { timers.delete(id); callback(); } } };
 }
@@ -156,6 +158,35 @@ test('original moving-card gameplay keeps wrong selections retryable and times t
   game.setNow(2000); find('AB').events.pointertap(); game.flushFeedback();
   assert.deepEqual(game.finished, [{ rt: 2000, correct: true, attempts: 2, wrong_attempts: 1, target: 'AB', response: 'AB' }]);
   assert.equal(game.timers.size, 0); assert.equal(game.listeners.size, 0);
+});
+
+test('pause discards the interrupted search and restarts the same target with a fresh clock', async () => {
+  const game = await LoadPlugin(); game.start();
+  const initial = game.options();
+  game.setNow(100); initial.find(option => option.children[1].text !== 'AB').events.pointertap();
+  game.listeners.get('game:pause')();
+  assert.equal(game.timers.size, 0);
+  assert.equal(game.frames.size, 0);
+  game.setNow(10100);
+  game.listeners.get('game:resume')();
+  const options = game.options();
+  game.setNow(10300); options.find(option => option.children[1].text === 'AB').events.pointertap();
+  game.flushFeedback();
+  assert.deepEqual(game.finished, [{ rt: 200, correct: true, attempts: 1, wrong_attempts: 0, target: 'AB', response: 'AB' }]);
+});
+
+test('a trial started or initialized while paused waits for continuation', async () => {
+  for (const initiallyPaused of [false, true]) {
+    const game = await LoadPlugin(390, 844, initiallyPaused, true); game.start();
+    if (!initiallyPaused) game.listeners.get('game:pause')();
+    game.initialize();
+    assert.equal(game.timers.size, 0);
+    assert.equal(game.app.stage.children.length, 0);
+    game.setNow(10000); game.listeners.get('game:resume')();
+    game.setNow(10200); game.options().find(option => option.children[1].text === 'AB').events.pointertap();
+    game.flushFeedback();
+    assert.equal(game.finished[0].rt, 200);
+  }
 });
 
 test('every allowed card count renders all choices and a reachable target at all difficulty levels', async () => {

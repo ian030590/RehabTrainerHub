@@ -29,6 +29,7 @@ ParseHartSeed
 import { CreateHartChineseChart, CreateHartChineseDecoder, LastHanCharacter } from './logic/hartChineseChart';
 import { DecoderLayoutStyle, SplitDecoderWords } from './logic/decoderLayout';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
+import { HartClock } from './logic/pauseClock';
 import './styles/hart-chart.css';
 
 type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
@@ -130,11 +131,21 @@ function HartChartRuntime() {
   const phaseRef = useRef<HartTrainingPhase>('menu');
   const generationRef = useRef(0);
   const [phase, setPhase] = useState<HartTrainingPhase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const clockRef = useRef(new HartClock(() => Date.now()));
   phaseRef.current = phase;
   useEffect(() => {
-    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<HartSettings>({ ...defaultSettings });
   const [tourFinished, setTourFinished] = useState(false);
@@ -152,7 +163,6 @@ function HartChartRuntime() {
   const [activeTokenIndex, setActiveTokenIndex] = useState<number | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
-  const [startedAt, setStartedAt] = useState(Date.now);
   const [result, setResult] = useState<HartResult | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -205,7 +215,7 @@ function HartChartRuntime() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
-    void lifecycle.start({ moduleId: 'vision:hart-chart', onStart: () => setStartedAt(Date.now()) });
+    void lifecycle.start({ moduleId: 'vision:hart-chart', onStart: () => { clockRef.current.start(); if (pausedRef.current) clockRef.current.pause(); } });
 
     return () => {
       lifecycle.dispose();
@@ -278,25 +288,54 @@ function HartChartRuntime() {
 
   const exitTraining = useCallback(() => {
     generationRef.current++;
+    phaseRef.current = 'menu';
+    pausedRef.current = false;
+    setPaused(false);
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     setQrOpen(false);
     void ExitGame();
+  }, []);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    clockRef.current.pause();
+    composingRef.current = false;
+    setDraft(null);
+    setQrOpen(false);
+    decoderDragActiveRef.current = false;
+    setDecoderDragging(false);
+    setDecoderDragPreview(null);
+    DisposeAudioFeedback();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    clockRef.current.resume();
+    restoreStopRef.current = true;
+    setPaused(false);
   }, []);
   useEffect(() => {
     const configure = () => { setResult(null); setQrOpen(false); backToSettings(); };
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && phaseRef.current === 'playing' && !qrOpen) { event.preventDefault(); exitTraining(); }
+      if (event.key === 'Escape' && phaseRef.current === 'playing' && !qrOpen) { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
+    };
+    const fullscreenChanged = () => {
+      if (phaseRef.current === 'playing' && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); }
     };
     window.addEventListener('game:configure', configure);
     window.addEventListener('game:saved', saved);
     window.addEventListener('keydown', escape);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('keydown', escape);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
     };
-  }, [backToSettings, exitTraining, qrOpen]);
+  }, [backToSettings, pause, resume, qrOpen]);
   useEffect(() => {
     const cleanup = () => {
       generationRef.current++;
@@ -311,7 +350,7 @@ function HartChartRuntime() {
     setSeed(CreateHartSeed());
     setQrDataUrl('');
     setAttempts(0);
-    setStartedAt(Date.now());
+    clockRef.current.start();
     setResult(null);
   };
 
@@ -426,7 +465,7 @@ function HartChartRuntime() {
   };
 
   const handleAnswer = (index: number, event: ChangeEvent<HTMLInputElement>) => {
-    if (phaseRef.current !== 'playing') return;
+    if (phaseRef.current !== 'playing' || pausedRef.current) return;
     if (characterSet === 'english') {
       commitAnswer(index, event.target.value.replace(/[^a-z]/gi, '').slice(-1).toUpperCase(), event.target);
       return;
@@ -441,19 +480,19 @@ function HartChartRuntime() {
 
   const handleCompositionEnd = (index: number, event: ReactCompositionEvent<HTMLInputElement>) => {
     composingRef.current = false;
-    if (phaseRef.current !== 'playing') return;
+    if (phaseRef.current !== 'playing' || pausedRef.current) return;
     commitAnswer(index, LastHanCharacter(event.currentTarget.value), event.currentTarget);
   };
 
   const finishTraining = () => {
-    if (!complete || phaseRef.current !== 'playing') return;
+    if (!complete || phaseRef.current !== 'playing' || pausedRef.current) return;
     phaseRef.current = 'results';
 
     const completedAt = new Date();
     const targetCount = decodableIndexes.length;
     const nextResult: HartResult = {
       completedAt: completedAt.toISOString(),
-      durationMs: Math.max(0, completedAt.getTime() - startedAt),
+      durationMs: clockRef.current.elapsed(),
       attempts,
       targetCount,
       accuracy: attempts > 0 ? Math.round((targetCount / attempts) * 100) : 100,
@@ -509,29 +548,6 @@ function HartChartRuntime() {
   return (
     <div ref={fullscreenRootRef} className="hart-chart-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-        {phase === 'rules' && tourFinished && <section className="training-panel hart-tutorial-ready" role="dialog" aria-modal="true" aria-label={t('hart.title')}
-          onKeyDown={event => {
-            if (event.key === 'Escape') { event.preventDefault(); backToSettings(); }
-            if (event.key === 'Tab') {
-              event.preventDefault();
-              const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
-              const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-              buttons[(index + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length]?.focus();
-            }
-          }}>
-          <div ref={confirmationRef} className="training-config training-confirmation">
-            <header className="training-config-header"><h2>{t('hart.title')}</h2></header>
-            <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3>
-              <div className="training-config-summary"><p className="training-config-summary-item">{characterSetTitle}：{characterSetLabel(characterSet)}</p>
-                <p className="training-config-summary-item">{roundsLabel}：{rounds}</p>
-                <p className="training-config-summary-item">{en ? 'Chart size' : '視標大小'}：{sizeLabel(settings.chartSize)}</p></div>
-            </section></div>
-            <footer className="config-actions"><div className="training-config-navigation-buttons">
-              <button type="button" className="btn btn-primary" onClick={startTraining}>{en ? 'Start Training' : '開始訓練'}</button>
-              <button type="button" className="btn btn-ghost" onClick={backToSettings}>{en ? 'Back to settings' : '返回設定'}</button>
-            </div></footer>
-          </div>
-        </section>}
       {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog hart-chart-phase-menu" aria-labelledby="hart-settings-title"
         onCancel={event => { event.preventDefault(); exitTraining(); }}>
         <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
@@ -551,21 +567,51 @@ function HartChartRuntime() {
             </select></label>
           </section></div>
           <footer className="config-actions"><div className="training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
             <button type="button" className="btn btn-ghost" onClick={exitTraining}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+            <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           </div></footer>
         </form>
       </dialog>}
+        {phase === 'rules' && tourFinished && <section className="training-panel hart-tutorial-ready" role="dialog" aria-modal="true" aria-label={t('hart.title')}
+          onKeyDown={event => {
+            if (event.key === 'Escape') { event.preventDefault(); backToSettings(); }
+            if (event.key === 'Tab') {
+              event.preventDefault();
+              const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
+              const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+              buttons[(index + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length]?.focus();
+            }
+          }}>
+          <div ref={confirmationRef} className="training-config training-confirmation">
+            <header className="training-config-header"><h2>{t('hart.title')}</h2></header>
+            <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3>
+              <div className="training-config-summary"><p className="training-config-summary-item">{characterSetTitle}：{characterSetLabel(characterSet)}</p>
+                <p className="training-config-summary-item">{roundsLabel}：{rounds}</p>
+                <p className="training-config-summary-item">{en ? 'Chart size' : '視標大小'}：{sizeLabel(settings.chartSize)}</p></div>
+            </section></div>
+            <footer className="config-actions"><div className="training-config-navigation-buttons">
+              <button type="button" className="btn btn-ghost" onClick={backToSettings}>{en ? 'Back to settings' : '返回設定'}</button>
+              <button type="button" className="btn btn-primary" onClick={startTraining}>{en ? 'Start Training' : '開始訓練'}</button>
+            </div></footer>
+          </div>
+        </section>}
 
       {phase === 'results' && result && (
         <main className="experiment-container experiment-container-scrollable hart-results-container">
           <div className="experiment-results">
-            <h1>{t('hart.results.title')}</h1>
-            <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+            <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{t('hart.title')}</p></header>
+            <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
               <div className="score-key-metric"><p>{en ? 'Target count / entry count' : '目標數／輸入次數'}</p><strong>{result.accuracy}%</strong></div>
               <div className="score-key-metric"><p>{t('hart.results.duration')}</p><strong>{result.durationMs} ms</strong></div>
               <div className="score-key-metric"><p>{t('hart.results.attempts')}</p><strong>{result.attempts}</strong></div>
             </div></section>
+            <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+              : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+            <div className="score-actions">
+            {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+            <button className="btn btn-primary score-return-button" type="button" onClick={exitTraining}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+            </div>
+            <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
             <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
               <div className="score-context-item"><dt>{characterSetTitle}</dt><dd>{characterSetLabel(characterSet)}</dd></div>
               <div className="score-context-item"><dt>{chinese ? (en ? 'Requested characters' : '要求字數') : (en ? 'Requested letters' : '要求字母數')}</dt><dd>{settings.rounds}</dd></div>
@@ -578,24 +624,16 @@ function HartChartRuntime() {
               <span>{result.phrase}</span>
             </p>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang} />
-            <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-              : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-            {saveState === 'error' && <button className="score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-            <button className="btn btn-primary score-return-button" type="button" onClick={exitTraining}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+            </details>
           </div>
         </main>
       )}
 
       {phase !== 'results' && (
-        <main inert={phase !== 'playing'} className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`} style={decoderLayout}>
+        <main inert={phase !== 'playing' || paused} className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`} style={decoderLayout}>
           <header className="hart-topbar">
         <div className="hart-topbar-leading">
-          <button className="btn btn-ghost hart-back-button" type="button" aria-label={en ? 'Stop training' : '停止訓練'} onClick={exitTraining}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-            {t('common.back')}
-          </button>
+          <button ref={stopRef} className="btn btn-ghost hart-back-button" type="button" onClick={pause}>{en ? 'Stop' : '停止'}</button>
           <div className="hart-title-block">
             <h1>{t('hart.title')}</h1>
             <p>{t('hart.subtitle')}</p>
@@ -784,6 +822,13 @@ function HartChartRuntime() {
       )}
         </main>
       )}
+      {phase === 'playing' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="hart-pause-title"
+        onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+        <h2 id="hart-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+        <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+        <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+        <button className="btn btn-ghost" type="button" onClick={exitTraining}>{en ? 'End activity' : '結束活動'}</button>
+      </div></div>}
     </div>
   );
 }

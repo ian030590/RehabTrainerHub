@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
@@ -8,7 +9,7 @@ const fastSettings = { passage: 1, wordsPerMinute: 600, crowding: 500, contrast:
 const controlValue = (name, value) => name === 'crowding' ? value / 100 : value;
 
 export async function CheckReadingTraining({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
   await until(() => game(`document.querySelector('form h2').textContent === ${JSON.stringify(english ? 'Reading Training (RSVP)' : '閱讀訓練（RSVP）')}`), 'private init language');
   if (rendererFailure) {
     await until(() => game(`Boolean(document.querySelector('.renderer-error[role=alert]'))`), 'visible renderer failure');
@@ -83,7 +84,11 @@ export async function CheckReadingTraining({ game, evaluate, send, until, standa
   await tap('.training-confirmation .btn-primary');
   await until(() => game(`window.readingPixiApp?.stage?.children.some(child => child.text === '3')`), 'real jsPsych Pixi countdown');
   await until(() => game(`document.fullscreenElement === document.querySelector('.reading-training-game-root')`), 'native fullscreen root');
-  if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
+  if (process.argv.includes('--windowed')) {
+    await game(`document.exitFullscreen()`);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen loss pauses');
+    await tap('.game-interrupt-panel .btn-primary');
+  }
   await until(() => game(`(() => {
     const canvas=document.querySelector('canvas')?.getBoundingClientRect(), root=document.documentElement;
     return canvas && canvas.left === 0 && canvas.top === 0 && canvas.right === innerWidth && canvas.bottom === innerHeight
@@ -95,6 +100,9 @@ export async function CheckReadingTraining({ game, evaluate, send, until, standa
   await capture('gameplay');
   if (process.argv.includes('--stop')) {
     await tap('.reading-training-stop');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'stop opens interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent.trim()`), english ? 'Continue' : '繼續');
+    await tap('.game-interrupt-panel .btn-ghost');
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'cancel without saving');
     assert.equal(getSaveAttempts(), 0); assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     assert.equal(await evaluate('document.fullscreenElement'), null);
@@ -144,13 +152,14 @@ export async function CheckReadingTraining({ game, evaluate, send, until, standa
     assert.equal(records.length, 1); assert.ok(getSaveAttempts() >= 2);
     assert.equal(records[0].user_id ?? null, accountId);
     if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
-    const saved = JSON.parse(records[0].payload_json);
+    const saved = await ReadSavedGameRecord(records[0], rawDataBucket, version);
     assert.equal(saved.gameId, 'reading-training');
     assert.deepEqual(saved.config, fastSettings);
     const words = english ? 565 : 74;
     assert.deepEqual({ ...saved.score.summary, presentationMs: undefined, correct: undefined }, { questions: 10, correct: undefined,
       presentationMs: undefined, wordCount: words, configuredWpm: 600, presented: words, finished: 1, passage: 1, language: english ? 1 : 0 });
     assert.equal(saved.score.summary.correct, saved.score.rounds.filter(row => row.correct === 1).length);
+    assert.equal(saved.score.rounds.length, 10, 'All answered questions are saved in the private CSV.');
     const expectedMs = 3000 + Math.ceil(words / 5) * 500;
     assert.ok(Math.abs(saved.score.summary.presentationMs - expectedMs) < 1500, `Presentation time ${saved.score.summary.presentationMs} follows the configured pace (${expectedMs}).`);
     assert.ok(saved.score.rounds.every(row => row.options === 4 && row.responseMs > 0 && row.correct === Number(row.choice === row.expectedChoice)));

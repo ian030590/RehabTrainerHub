@@ -90,7 +90,8 @@ test('reading timeline converts settings exactly as before and scores up to ten 
   const { BuildReadingTimeline } = await LoadModule('timeline/readingTimeline.ts', {
     '../settings': { ValidateSettings }, '../pixi-reading-training': { default: Reading },
     '@jspsych/plugin-html-button-response': { default: Button },
-  });
+    '../runtime/pauseState': { IsReadingPaused: () => false },
+  }, { window: { addEventListener() {}, removeEventListener() {} } });
   const timeline = BuildReadingTimeline({ ...defaultSettings, passage: 2, wordsPerMinute: 600, crowding: 300, contrast: 50 }, story, () => 0);
   assert.equal(timeline[0].type, Reading);
   assert.deepEqual(timeline[0].content_array, story.content_array);
@@ -114,6 +115,26 @@ test('reading timeline converts settings exactly as before and scores up to ten 
   assert.equal(BuildReadingTimeline(defaultSettings, { ...story, language: 'zh', questions: story.questions.slice(0, 3) }).length, 4);
   assert.throws(() => BuildReadingTimeline({ ...defaultSettings, crowding: 150 }, story));
   assert.throws(() => BuildReadingTimeline(defaultSettings, null));
+});
+
+test('an interrupted reading question restarts its response clock and removes pause listeners', async () => {
+  const { ValidateSettings, defaultSettings } = await LoadModule('settings.ts');
+  const listeners = new Map(); let now = 0;
+  const { BuildReadingTimeline } = await LoadModule('timeline/readingTimeline.ts', {
+    '../settings': { ValidateSettings }, '../pixi-reading-training': { default: class {} },
+    '@jspsych/plugin-html-button-response': { default: class {} },
+    '../runtime/pauseState': { IsReadingPaused: () => false },
+  }, { window: { addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) }, performance: { now: () => now } });
+  const question = BuildReadingTimeline(defaultSettings, story, () => 0)[1];
+  question.on_load();
+  now = 100; listeners.get('game:pause')();
+  now = 10100; listeners.get('game:resume')();
+  now = 10300;
+  const data = { response: question.data.correct_index, rt: 10300 };
+  question.on_finish(data);
+  assert.equal(data.rt, 200);
+  assert.equal(data.correct, true);
+  assert.equal(listeners.size, 0);
 });
 
 test('reading saves the original numeric score fields without inventing values', async () => {
@@ -155,7 +176,7 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   }
   for (const file of ['settings.json', 'score.json', 'results/ReadingResults.tsx', 'exportCsv.ts']) await assert.rejects(access(resolve(gameRoot, file)), file);
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.3');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', '@jspsych/plugin-html-button-response', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -174,12 +195,12 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
-async function LoadPlugin({ deferred = false } = {}) {
+async function LoadPlugin({ deferred = false, initiallyPaused = false } = {}) {
   const timers = new Map(), listeners = new Map(), finished = [];
   let now = 0, nextId = 1, initialize;
   class Text { text = ''; anchor = { set() {} }; style = {}; get width() { return this.text.length * 10; } }
   class Graphics { clear() { return this; } rect() { return this; } fill() { return this; } }
-  const app = { screen: { width: 390, height: 844 }, stage: { children: [], addChild(...items) { this.children.push(...items); } },
+  const app = { ticker: { stop() {}, start() {} }, screen: { width: 390, height: 844 }, stage: { children: [], addChild(...items) { this.children.push(...items); } },
     renderer: { on: (name, fn) => listeners.set(`renderer:${name}`, fn), off: name => listeners.delete(`renderer:${name}`) } };
   const display = { isConnected: true };
   const pool = { pixiRuntimeScopes: { reading: 'reading-training' }, CreatePixiTrialContainer: () => ({}),
@@ -188,6 +209,7 @@ async function LoadPlugin({ deferred = false } = {}) {
   const module = await LoadModule('pixi-reading-training.ts', {
     jspsych: { ParameterType: {} }, 'pixi.js': { Text, Graphics }, './runtime/pixiPool': pool,
     './runtime/theme': { typography: { fontFamily: 'sans-serif' }, pixiColors: { white: 0xffffff } },
+    './runtime/pauseState': { IsReadingPaused: () => initiallyPaused },
   }, { window: { addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name), visualViewport: null },
     performance: { now: () => now },
     setTimeout: (fn, delay) => { const id = nextId++; timers.set(id, { fn, at: now + delay }); return id; },
@@ -223,6 +245,44 @@ test('real RSVP timing keeps the 3-2-1 countdown, batch size, display time and c
   const faint = await LoadPlugin();
   faint.start({ contrast: -Math.log10(.2) });
   assert.equal(faint.text().style.fill, '#a0a0a0', 'Contrast 20% keeps the original gray level.');
+});
+
+test('pausing RSVP re-presents the interrupted text batch with a fresh display interval', async () => {
+  const game = await LoadPlugin(); game.start();
+  game.advance(3500);
+  assert.equal(game.text().text, 'one two');
+  game.listeners.get('game:pause')();
+  assert.equal(game.timers.size, 0);
+  game.advance(13500);
+  assert.equal(game.finished.length, 0);
+  game.listeners.get('game:resume')();
+  assert.equal(game.text().text, 'one two');
+  game.advance(14499); assert.equal(game.text().text, 'one two');
+  game.advance(14500); assert.equal(game.text().text, 'three four');
+  game.advance(16000);
+  assert.equal(game.finished[0].reading_time, 6000);
+});
+
+test('RSVP initialized while paused waits before starting its countdown', async () => {
+  for (const initiallyPaused of [false, true]) {
+    const game = await LoadPlugin({ deferred: true, initiallyPaused });
+    game.start();
+    if (!initiallyPaused) game.listeners.get('game:pause')();
+    game.advance(5000); game.initialize();
+    assert.equal(game.timers.size, 0);
+    game.advance(10000); game.listeners.get('game:resume')();
+    assert.equal(game.text().text, '3');
+    game.advance(11000); assert.equal(game.text().text, '2');
+  }
+});
+
+test('the Stop control is layered above the RSVP and question surfaces', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const stop = css.match(/\.reading-training-stop\s*\{([^}]*)\}/)?.[1];
+  const qa = css.match(/\.reading-training-experiment \.jspsych-content\.reading-qa-trial\s*\{([^}]*)\}/)?.[1];
+  assert.match(stop, /z-index:\s*50\b/);
+  assert.ok(qa);
+  assert.doesNotMatch(qa, /z-index\s*:/);
 });
 
 test('stopping reading cancels timers and input without producing a result, even before the renderer arrives', async () => {

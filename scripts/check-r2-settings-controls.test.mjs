@@ -36,7 +36,7 @@ async function Version(gameId) {
   return JSON.parse(await readFile(resolve(gamesRoot, gameId, 'package.json'), 'utf8')).version;
 }
 
-for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.0.4'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.0.13']]) {
+for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.1.0'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.0.13']]) {
   test(`${gameId}: difficulty options lead with a plain name and keep the parameters as detail`, async () => {
     const { source } = await Load(gameId, file);
     assert.equal(await Version(gameId), version);
@@ -91,7 +91,7 @@ test('drawing-defense: only the inputs for the current choice are shown and HP a
 
 test('driving-rehab: settings use the same section cards and dropdowns as the other R2 games', async () => {
   const { input, label, elements, attribute, tree, source } = await Load('driving-rehab', 'DrivingRehabGame.tsx');
-  assert.equal(await Version('driving-rehab'), '2.1.2');
+  assert.equal(await Version('driving-rehab'), '2.2.0');
   const section = node => { let current = node; while (current && !(ts.isJsxElement(current) && current.openingElement.tagName.getText(tree) === 'section')) current = current.parent; return current; };
   for (const name of ['difficulty', 'renderQuality', 'controlMode']) {
     const control = input(name);

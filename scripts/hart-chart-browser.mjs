@@ -1,11 +1,25 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
+export async function CloseHartQrAfterDisplay({ game, until, tap, capture }) {
+  await until(() => game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary, .game-interrupt-panel'))`), 'QR dialog or fullscreen interruption');
+  if (await game(`Boolean(document.querySelector('.game-interrupt-panel'))`)) {
+    await tap('.game-interrupt-panel .btn-primary');
+    await until(() => game(`!document.querySelector('.game-interrupt-panel')`), 'continue after opening shared display');
+    await tap('.hart-topbar-controls button:nth-of-type(2)');
+    await until(() => game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary'))`), 'reopened QR dialog');
+  }
+  if (capture) await capture('qr');
+  await tap('.hart-qr-dialog .btn-primary');
+  await until(() => game(`!document.querySelector('.hart-qr-dialog')`), 'QR dialog closed');
+}
+
 export async function CheckHartChart({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, accountId, guestSubjectId }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId }) {
   const chinese = process.argv.includes('--chinese');
   const setInput = async (selector, value, index = 0) => game(`(() => {
     const input=document.querySelectorAll(${JSON.stringify(selector)})[${index}];
@@ -79,7 +93,11 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   await until(() => game(`Boolean(document.querySelector('.hart-page:not([inert])'))`), 'real Hart gameplay');
   assert.deepEqual(await scene(), tutorialScene, 'Training keeps the tutorial layout, typography, complete decoder and tools.');
   await until(() => game(`document.fullscreenElement === document.querySelector('.hart-chart-game-root')`), 'native fullscreen');
-  if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
+  if (process.argv.includes('--windowed')) {
+    await game(`document.exitFullscreen()`);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen loss pauses');
+    await tap('.game-interrupt-panel .btn-primary');
+  }
   const layout = await game(`(() => { const root=document.documentElement,r=document.querySelector('.hart-page').getBoundingClientRect();return {left:r.left,right:innerWidth-r.right,scrollWidth:root.scrollWidth,width:root.clientWidth,scrollHeight:root.scrollHeight,height:root.clientHeight};})()`);
   assert.ok(Math.abs(layout.left-layout.right)<=1 && layout.scrollWidth<=layout.width && layout.scrollHeight<=layout.height, JSON.stringify(layout));
   console.log('Hart viewport: '+JSON.stringify(layout));
@@ -122,6 +140,9 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   await capture('gameplay');
   if (process.argv.includes('--stop')) {
     await tap('.hart-back-button');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'stop opens interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent.trim()`), english ? 'Continue' : '繼續');
+    await tap('.game-interrupt-panel .btn-ghost');
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving');
     assert.equal(getSaveAttempts(), 0); assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     return;
@@ -137,6 +158,7 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   await capture('decoder-left');
   await tap('.hart-topbar-controls button:nth-of-type(2)');
   await until(() => game(`Boolean(document.querySelector('.hart-qr-dialog img'))`), 'real QR image');
+  assert.equal(await game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary'))`), true, 'QR dialog retains its primary close action.');
   const share = await game(`document.querySelector('.hart-share-url').textContent`);
   assert.match(share, /package\/index\.html#\/hart-chart\/display\?seed=\d+&scale=0.9/);
   assert.equal(share.includes('characters=chinese'), chinese, 'The shared screen shows the same kind of chart.');
@@ -194,8 +216,7 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
       }
     }
   } finally { await send('Target.closeTarget', { targetId: displayTarget.targetId }); }
-  await capture('qr');
-  await game(`document.querySelector('.hart-qr-dialog .btn-primary').click()`);
+  await CloseHartQrAfterDisplay({ game, until, tap, capture });
   // Placeholders read [column,row]: the first number counts across, the second down.
   const entries = await game(`Array.from(document.querySelectorAll('.hart-code-input')).map(input=>{const [col,row]=input.placeholder.match(/[0-9]+/g).map(Number);return document.querySelectorAll('.hart-chart-cell')[(row-1)*10+col-1].textContent;})`);
   assert.deepEqual(await game(`Array.from(document.querySelectorAll('.hart-code-input')).map(input=>{const [col,row]=input.placeholder.match(/[0-9]+/g);return input.getAttribute('aria-label')===(${english}?'Column '+col+', row '+row:'第 '+col+' 欄，第 '+row+' 列');})`),
@@ -239,7 +260,7 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
     const records = sqlite.prepare('SELECT * FROM training_records').all();
     assert.equal(records.length, 1); assert.equal(records[0].user_id ?? null, accountId);
     if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
-    const saved = JSON.parse(records[0].payload_json);
+    const saved = await ReadSavedGameRecord(records[0], rawDataBucket, version);
     assert.deepEqual(saved.config, settings);
     assert.deepEqual({ ...saved.score.summary, durationMs: 0 }, { durationMs: 0, targets: settings.rounds, attempts: settings.rounds+1, accuracy: Math.round(settings.rounds/(settings.rounds+1)*100), hints: 1 });
     assert.deepEqual(saved.score.rounds, [saved.score.summary]);

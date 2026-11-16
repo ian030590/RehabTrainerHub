@@ -10,6 +10,7 @@ import {
   pixiRuntimeScopes,
 } from './runtime/pixiPool';
 import { pixiColors, typography } from './runtime/theme';
+import { IsReadingPaused } from './runtime/pauseState';
 
 const info = {
   name: 'pixi-reading-training',
@@ -53,6 +54,25 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
     let chunkIndex = 0;
     let detachRenderer: (() => void) | null = null;
     const startTime = performance.now();
+    let pausedAt: number | null = IsReadingPaused() ? startTime : null;
+    let pausedDuration = 0;
+    let appRef: Application | null = null;
+    let replay: (() => void) | null = null;
+
+    const pause = () => {
+      if (trialEnded || pausedAt !== null) return;
+      pausedAt = performance.now();
+      if (timerId) clearTimeout(timerId);
+      timerId = null;
+      appRef?.ticker.stop();
+    };
+    const resume = () => {
+      if (trialEnded || pausedAt === null) return;
+      pausedDuration += performance.now() - pausedAt;
+      pausedAt = null;
+      appRef?.ticker.start();
+      replay?.();
+    };
 
     const stop = () => {
       if (trialEnded) return;
@@ -60,12 +80,19 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       if (timerId) clearTimeout(timerId);
       timerId = null;
       window.removeEventListener('game:abort', stop);
+      window.removeEventListener('game:pause', pause);
+      window.removeEventListener('game:resume', resume);
+      if (pausedAt !== null) appRef?.ticker.start();
       detachRenderer?.();
     };
     window.addEventListener('game:abort', stop);
+    window.addEventListener('game:pause', pause);
+    window.addEventListener('game:resume', resume);
 
     const runWithApp = (app: Application) => {
       if (trialEnded || !displayElement.isConnected) { stop(); return; }
+      appRef = app;
+      if (pausedAt !== null) app.ticker.stop();
       AttachPixiTrialCanvas(readingPixiScope, wrapper);
       const background = new Graphics();
       const text = new Text();
@@ -98,7 +125,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         if (trialEnded) return;
         stop();
         this.jsPsych.finishTrial({
-          reading_time: Math.round(performance.now() - startTime),
+          reading_time: Math.round(performance.now() - startTime - pausedDuration),
           total_words: contentArray.length,
           presented_segments: chunkIndex,
           presentation_completed: true,
@@ -109,10 +136,10 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         if (trialEnded) return;
         if (chunkIndex >= contentArray.length) { finish(); return; }
         const count = Math.min(crowding, contentArray.length - chunkIndex);
-        text.text = contentArray.slice(chunkIndex, chunkIndex + count).join(' ');
-        fitText();
+        const content = contentArray.slice(chunkIndex, chunkIndex + count).join(' ');
         chunkIndex += count;
-        timerId = setTimeout(showReading, (count / wps) * 1000);
+        replay = () => { text.text = content; fitText(); timerId = setTimeout(showReading, (count / wps) * 1000); };
+        replay();
       };
 
       const countdown = ['3', '2', '1'];
@@ -120,11 +147,12 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       const showCountdown = () => {
         if (trialEnded) return;
         if (countdownIndex >= countdown.length) { showReading(); return; }
-        text.text = countdown[countdownIndex++];
-        fitText();
-        timerId = setTimeout(showCountdown, 1000);
+        const value = countdown[countdownIndex++];
+        replay = () => { text.text = value; fitText(); timerId = setTimeout(showCountdown, 1000); };
+        replay();
       };
-      showCountdown();
+      if (pausedAt === null) showCountdown();
+      else replay = showCountdown;
     };
 
     RunPixiTrial(readingPixiScope, displayElement, runWithApp);

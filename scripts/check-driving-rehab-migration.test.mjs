@@ -21,6 +21,83 @@ async function LoadModule(file, stubs = {}) {
   return module.exports;
 }
 
+test('driving interruption freezes pending lane-reset timers and excludes paused time', async () => {
+  const { DrivingPauseClock } = await LoadModule('timing/pauseClock.ts');
+  let now = 0, nextId = 1;
+  const timers = new Map(), events = [];
+  const clock = new DrivingPauseClock({ now: () => now, set: (fn, delay) => { const id = nextId++; timers.set(id, { fn, due: now + delay }); return id; }, clear: id => timers.delete(id) });
+  const advance = value => { now = value; for (const [id, timer] of [...timers]) if (timer.due <= now) { timers.delete(id); timer.fn(); } };
+  clock.set(() => events.push('reset'), 90);
+  advance(30); clock.pause(); advance(10030);
+  assert.deepEqual(events, []);
+  assert.equal(clock.now(), 30);
+  clock.resume(); advance(10089); assert.deepEqual(events, []);
+  advance(10090); assert.deepEqual(events, ['reset']);
+});
+
+test('wheel interruption pauses once and resumes only after the calibrated wheel returns', async () => {
+  const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
+  const ast = ts.createSourceFile('driving.ts', source, ts.ScriptTarget.Latest, true);
+  const runtime = ast.statements.find(ts.isClassDeclaration);
+  const names = ['syncInputPause', 'attachInterruptListeners'];
+  const members = runtime.members.filter(node => names.includes(node.name?.getText(ast))).map(node => node.getText(ast)).join('\n');
+  const compiled = ts.transpileModule(`class RuntimeHarness { ${members} }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let now = 100, connected = false;
+  const listeners = new Map(), shifts = [], states = [];
+  const window = { addEventListener: (name, fn) => listeners.set(name, fn), dispatchEvent: event => {
+    states.push(event.detail);
+    if (!event.detail) listeners.get('game:pause')();
+  } };
+  const harnessType = new Function('window', 'document', 'navigator', 'performance', 'CustomEvent', 'FindDrivingWheelGamepad', 'ReadDrivingWheelInput', 'IsDrivingPaused', `${compiled}; return RuntimeHarness;`)(
+    window, { visibilityState: 'visible' }, { getGamepads: () => [] }, { now: () => now },
+    class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
+    () => connected ? {} : null, () => ({}), () => false);
+  const game = new harnessType();
+  Object.assign(game, { inputAvailable: true, manualPausedAt: null, finished: false, controlMode: 'wheel', wheelCalibration: {},
+    pauseClock: { pause() {}, resume() {} }, shiftResponseClockAfterPause: value => shifts.push(value) });
+  game.attachInterruptListeners();
+  assert.equal(game.syncInputPause(now), true);
+  assert.equal(game.manualPausedAt, 100);
+  now = 5100; listeners.get('game:resume')();
+  assert.equal(game.manualPausedAt, 100);
+  connected = true; assert.equal(game.syncInputPause(now), false);
+  assert.deepEqual(states, [false, true]);
+  listeners.get('game:resume')();
+  assert.deepEqual(shifts, [5000]);
+  assert.equal(game.manualPausedAt, null);
+});
+
+test('overlapping hidden and manual pauses exclude each interval only once', async () => {
+  const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
+  const ast = ts.createSourceFile('driving.ts', source, ts.ScriptTarget.Latest, true);
+  const runtime = ast.statements.find(ts.isClassDeclaration);
+  const names = ['attachInterruptListeners', 'endVisibilityPause'];
+  const members = runtime.members.filter(node => names.includes(node.name?.getText(ast))).map(node => node.getText(ast)).join('\n');
+  const compiled = ts.transpileModule(`class RuntimeHarness { ${members} }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let now = 2100;
+  const listeners = new Map(), shifts = [];
+  const harnessType = new Function('window', 'document', 'performance', 'IsDrivingPaused', `${compiled}; return RuntimeHarness;`)(
+    { addEventListener: (name, fn) => listeners.set(name, fn) }, { visibilityState: 'visible' }, { now: () => now }, () => false);
+  const game = new harnessType();
+  Object.assign(game, { manualPausedAt: 100, visibilityPausedAt: 500, inputAvailable: true, finished: false, controlMode: 'arrow',
+    pauseClock: { pause() {}, resume() {} }, shiftResponseClockAfterPause: duration => shifts.push(duration) });
+  game.attachInterruptListeners();
+  game.endVisibilityPause(1500);
+  assert.equal(game.manualPausedAt, 1100);
+  listeners.get('game:resume')();
+  assert.deepEqual(shifts, [1000, 1000]);
+  assert.equal(game.manualPausedAt, null);
+});
+
+test('driving Stop remains above the loading overlay', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const source = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
+  const stopLayer = Number(css.match(/\.driving-training-stop\s*\{[^}]*z-index:\s*(\d+)/)?.[1]);
+  const loading = source.split('private createLoadingOverlay(')[1].split('private ', 1)[0];
+  const loadingLayer = Number(loading.match(/zIndex:\s*'(\d+)'/)?.[1]);
+  assert.ok(stopLayer > loadingLayer);
+});
+
 test('driving retains original settings, validates enums and preserves the four control choices', async () => {
   const { defaultSettings, ValidateSettings } = await LoadModule('settings.ts');
   const fields = legacy.settings.sections.flatMap(section => section.fields);
@@ -100,7 +177,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.2');
+  assert.equal(pkg.version, '2.2.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('gamepad'));
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
@@ -152,7 +229,7 @@ test('cancelling during refresh measurement aborts startup and never restarts a 
     }); }, () => { started++; });
   const runtime = new runtimeClass();
   Object.assign(runtime, { resetTrialState() { this.startupAbort = new AbortController(); },
-    createLoadingOverlay: () => ({ remove() {} }), initScene() { this.renderer = {}; }, initHud() {}, initTouchControls() {}, initInputPauseOverlay() {},
+    createLoadingOverlay: () => ({ remove() {} }), initScene() { this.renderer = {}; }, initHud() {}, initTouchControls() {}, attachInterruptListeners() {},
     renderQuality: { useReferenceVehicleModel: false }, updateVehicleVisual() {}, updateTrafficLights() {}, renderFirstFrameBeforeReveal() {},
     detachGlobalListeners() {}, cleanupRenderResources() {}, finishTrial() {}, readInput: () => ({ brake: 0 }), updateVehicleFree() {},
     attachVisibilityPauseListener() {}, attachKeyboardListeners() {}, attachGamepadListeners() {},

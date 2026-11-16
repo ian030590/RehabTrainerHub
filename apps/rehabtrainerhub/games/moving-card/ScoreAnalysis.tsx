@@ -25,6 +25,7 @@ export function ScoreAnalysis({ rounds, language, trials = [] }: {
 }) {
   const [metricKey, setMetricKey] = useState('searchMs');
   const [page, setPage] = useState(0);
+  const [point, setPoint] = useState(0);
   const rows = rounds;
   const metric = metrics.find(item => item.key === metricKey)!;
   const statistics = CalculateScoreStatistics(rows.map(row => row[metric.key]));
@@ -35,6 +36,8 @@ export function ScoreAnalysis({ rounds, language, trials = [] }: {
   const measure = (value: number | null) => value === null ? missing : `${format(value)} ${metric.unit ?? ''}`;
   const pageCount = Math.max(1, Math.ceil(rows.length / 50));
   const pageRows = rows.slice(page * 50, (page + 1) * 50);
+  const points = pageRows.flatMap((row, index) => row[metric.key] == null ? [] : [index]);
+  const selectedPoint = points[Math.min(point, points.length - 1)];
   const minimum = Math.min(0, statistics.minimum ?? 0);
   const maximum = Math.max(minimum + 1, statistics.maximum ?? 1);
   const y = (value: number) => 184 - (value - minimum) / (maximum - minimum) * 154;
@@ -72,7 +75,8 @@ export function ScoreAnalysis({ rounds, language, trials = [] }: {
     </dl>
     <div className="score-chart">
       <p>{en ? 'Round-by-round trend' : '逐回合趨勢'} · {en ? 'Page' : '頁次'} {page + 1} / {pageCount}</p>
-      {statistics.observations ? <svg viewBox="0 0 580 220" role="img" aria-label={`${en ? 'Trend' : '趨勢'} · ${metric[language]}`}>
+      {points.length ? <svg viewBox="0 0 580 220" role="img" tabIndex={0} aria-label={`${en ? 'Trend' : '趨勢'} · ${metric[language]}`}
+        onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setPoint(current => Math.max(0, Math.min(points.length - 1, current + (event.key === 'ArrowRight' ? 1 : -1)))); } }}>
         <path className="chart-axis" d="M56 30V184H536" />
         <text x="48" y="35" textAnchor="end">{format(maximum)}</text>
         <text x="48" y="184" textAnchor="end">{format(minimum)}</text>
@@ -82,11 +86,12 @@ export function ScoreAnalysis({ rounds, language, trials = [] }: {
           <title>{`${en ? 'Mean reference' : '平均值參考線'}: ${format(statistics.mean)}`}</title>
         </line>}
         <path className="chart-trend" d={line} />
-        {pageRows.map((row, index) => row[metric.key] === null ? null : <circle key={index} tabIndex={0} cx={x(index)} cy={y(row[metric.key]!)} r="3.5">
+        {pageRows.map((row, index) => row[metric.key] === null ? null : <circle key={index} cx={x(index)} cy={y(row[metric.key]!)} r={index === selectedPoint ? 6 : 3.5}>
           <title>{`${en ? 'Round' : '回合'} ${page * 50 + index + 1} · ${metric[language]}: ${format(row[metric.key])} ${metric.unit ?? ''}`}</title>
         </circle>)}
       </svg> : <p>{en ? 'No numeric values are available for this metric.' : '此指標沒有可用數值。'}</p>}
-      <p className="score-chart-legend">{en ? 'Dashed line: session mean. Focus a point to read its value.' : '虛線：當次平均值。可聚焦資料點讀取數值。'}</p>
+      <p aria-live="polite">{selectedPoint !== undefined ? `${en ? 'Round' : '回合'} ${page * 50 + selectedPoint + 1} · ${metric[language]}: ${measure(pageRows[selectedPoint][metric.key])}` : ''}</p>
+      <p className="score-chart-legend">{en ? 'Dashed line: session mean. Use left and right arrows to read points.' : '虛線：當次平均值。使用左右方向鍵讀取資料點。'}</p>
     </div>
     <header className="score-section-header">
       <div className="score-section-title"><h3 id="score-details-title">{detailsTitle}</h3><p>{en ? 'Search time includes incorrect selections and retries; each trial is one round.' : '每個試次為一回合；搜尋完成時間包含錯誤選擇與重試。'}</p></div>

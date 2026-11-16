@@ -243,6 +243,7 @@ function TopLevelRules(css) {
 async function RenderHart(phase, settings, language, { tourFinished = false, seed } = {}) {
   const changes = [];
   let finishTour = tourFinished;
+  let falseStates = 0;
   const { ChartScale } = await LoadModule('settings.ts');
   const chartModule = await LoadModule('logic/hartChart.ts');
   const dictionary = (await LoadModule(`i18n/${language}.ts`))[language];
@@ -251,6 +252,7 @@ async function RenderHart(phase, settings, language, { tourFinished = false, see
     './logic/hartChart': seed === undefined ? chartModule : { ...chartModule, CreateHartSeed: () => seed },
     './logic/hartChineseChart': await LoadModule('logic/hartChineseChart.ts'),
     './logic/decoderLayout': await LoadModule('logic/decoderLayout.ts'),
+    './logic/pauseClock': await LoadModule('logic/pauseClock.ts'),
     './i18n/useT': { useT: () => ({ t: key => dictionary[key] ?? key, lang: language }) },
     react: {
       useState: initial => {
@@ -258,8 +260,7 @@ async function RenderHart(phase, settings, language, { tourFinished = false, see
         if (value === 'menu') value = phase;
         if (value?.rounds) value = settings;
         if (initial === 1) value = ChartScale(settings.chartSize);
-        // tourFinished is the component's first false state.
-        if (initial === false && finishTour) { finishTour = false; value = true; }
+        if (initial === false && ++falseStates === 3 && finishTour) { finishTour = false; value = true; }
         return [value, next => changes.push(next)];
       },
       useRef: current => ({ current }), useMemo: create => create(), useEffect() {}, useCallback: callback => callback,

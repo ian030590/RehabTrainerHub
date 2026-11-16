@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 export async function CheckMovingCard({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
   await until(() => game(`document.querySelector('form h2').textContent === ${JSON.stringify(english ? 'Moving Card Training' : '移動卡片訓練')}`), 'private init language');
   if (rendererFailure) {
     await until(() => game(`Boolean(document.querySelector('.renderer-error[role=alert]'))`), 'visible renderer failure');
@@ -94,7 +95,8 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   await until(() => game(`document.fullscreenElement === document.querySelector('.moving-card-game-root')`), 'native fullscreen root');
   if (process.argv.includes('--windowed')) {
     await game(`document.exitFullscreen()`);
-    await until(() => game(`!document.fullscreenElement`), 'exit fullscreen without losing gameplay');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen loss pauses');
+    await click('.game-interrupt-panel .btn-primary');
   }
   await until(() => game(`(() => {
     const canvas = document.querySelector('canvas').getBoundingClientRect(), root = document.documentElement;
@@ -127,6 +129,9 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   await capture('gameplay-' + difficulty);
   if (process.argv.includes('--stop')) {
     await click('.moving-card-stop');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'stop opens interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent.trim()`), english ? 'Continue' : '繼續');
+    await click('.game-interrupt-panel .btn-ghost');
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving incomplete training');
     assert.equal(getSaveAttempts(), 0);
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
@@ -202,7 +207,7 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
     const record = records[0];
     assert.equal(record.user_id ?? null, accountId);
     if (accountId) assert.notEqual(record.subject_id, guestSubjectId); else assert.equal(record.subject_id, guestSubjectId);
-    const saved = JSON.parse(record.payload_json);
+    const saved = await ReadSavedGameRecord(record, rawDataBucket, version);
     assert.equal(saved.gameId, 'moving-card');
     assert.equal(saved.config.optionCount, 40); assert.equal(saved.config.optionMoveIntervalMs, 200);
     assert.equal(saved.config.calibrationLengthMm, 70 * 700 / calibrationBar.actual);

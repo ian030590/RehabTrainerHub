@@ -2,6 +2,7 @@ import HtmlButtonResponsePlugin from '@jspsych/plugin-html-button-response';
 import PixiReadingTrainingPlugin from '../pixi-reading-training';
 import { ValidateSettings, type ReadingSettings } from '../settings';
 import type { SelectedReadingStory } from '../types/types';
+import { IsReadingPaused } from '../runtime/pauseState';
 
 export interface ReadingQuestionData {
   question_index: number;
@@ -35,12 +36,27 @@ export function BuildReadingTimeline(settings: ReadingSettings, story: SelectedR
     [questions[index], questions[swap]] = [questions[swap], questions[index]];
   }
   for (const question of questions.slice(0, count)) {
+    let restartedAt: number | null = null;
+    let interrupted = false;
+    const pause = () => { interrupted = true; restartedAt = null; };
+    const resume = () => { if (interrupted) restartedAt = performance.now(); };
+    const cleanup = () => {
+      window.removeEventListener('game:pause', pause);
+      window.removeEventListener('game:resume', resume);
+      window.removeEventListener('game:abort', cleanup);
+    };
     timeline.push({
       type: HtmlButtonResponsePlugin,
       css_classes: ['reading-qa-trial'],
       stimulus: `<p class="reading-qa-question">${question.question}</p>`,
       choices: question.options,
       button_html: (choice: string) => `<button type="button" class="reading-qa-btn">${choice}</button>`,
+      on_load: () => {
+        if (IsReadingPaused()) pause();
+        window.addEventListener('game:pause', pause);
+        window.addEventListener('game:resume', resume);
+        window.addEventListener('game:abort', cleanup);
+      },
       data: {
         question_index: story.questions.indexOf(question) + 1,
         option_count: question.options.length,
@@ -50,6 +66,8 @@ export function BuildReadingTimeline(settings: ReadingSettings, story: SelectedR
         correct_text: question.options[question.correct_index],
       },
       on_finish: (data: ReadingQuestionData) => {
+        if (restartedAt !== null && data.rt !== null && data.rt !== undefined) data.rt = Math.round(performance.now() - restartedAt);
+        cleanup();
         data.correct = data.response === question.correct_index;
         data.response_text = typeof data.response === 'number' ? question.options[data.response] : undefined;
       },

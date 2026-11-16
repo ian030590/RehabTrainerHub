@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
+export async function CheckDrivingResultDetails(game, english) {
+  assert.equal(await game(`document.querySelectorAll('.score-key-metric').length`), 3);
+  assert.equal(await game(`document.querySelector('.score-details').open`), false, 'Detailed results start collapsed.');
+  await game(`document.querySelector('.score-details').open = true`);
+  assert.equal(await game(`Array.from(document.querySelectorAll('.score-context-item')).some(item => item.querySelector('dt')?.textContent === ${JSON.stringify(english ? 'Collisions' : '碰撞事件數')} && item.querySelector('dd')?.textContent.trim().length > 0)`), true, 'Collision count remains available in details.');
+  assert.equal(await game(`document.querySelectorAll('.results-table th').length`), 12);
+}
+
 export async function CheckDrivingRehab({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
   sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure, rawCsvObjects }) {
   const pointerSession = gameContext.session || session;
@@ -103,7 +111,11 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   }
   await until(() => game(`document.querySelector('.driving-rehab-root')?.getAttribute('aria-busy') === 'false'`), 'pixel scene and jsPsych started', 90000);
   assert.equal(await game(`document.fullscreenElement === document.querySelector('.driving-rehab-game-root')`),true);
-  if (process.argv.includes('--windowed')) await game('document.exitFullscreen()');
+  if (process.argv.includes('--windowed')) {
+    await game('document.exitFullscreen()');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen loss pauses');
+    await tap('.game-interrupt-panel .btn-primary');
+  }
   const layout = await game(`(() => { const canvas=document.querySelector('.driving-rehab-root canvas').getBoundingClientRect();const root=document.documentElement;return {left:canvas.left,right:canvas.right,top:canvas.top,bottom:canvas.bottom,width:innerWidth,height:innerHeight,overflowX:root.scrollWidth-root.clientWidth,overflowY:root.scrollHeight-root.clientHeight}; })()`);
   assert.equal(layout.left,0); assert.equal(layout.top,0); assert.equal(layout.right,layout.width); assert.equal(layout.bottom,layout.height); assert.equal(layout.overflowX,0); assert.equal(layout.overflowY,0);
   console.log('Driving viewport:',JSON.stringify(layout));
@@ -135,12 +147,17 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   }
   if (wheel) {
     await game(`window.drivingFixtureWheel.connected=false`);
-    await until(() => game(`document.querySelector('.driving-rehab-root').textContent.includes(${JSON.stringify(english?'disconnected':'已中斷')})`), 'wheel disconnect pauses gameplay');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel .btn-primary:disabled'))`), 'wheel disconnect pauses gameplay');
     await capture('wheel-disconnected');
     await game(`window.drivingFixtureWheel.connected=true`);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel .btn-primary:not(:disabled)'))`), 'wheel reconnect allows continuation');
+    await tap('.game-interrupt-panel .btn-primary');
   }
   if (process.argv.includes('--stop')) {
     await tap('.driving-training-stop');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'stop opens interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent.trim()`), english ? 'Continue' : '繼續');
+    await tap('.game-interrupt-panel .btn-ghost');
     await until(() => standalone ? game(`Boolean(document.querySelector('dialog[open]'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving');
     assert.equal(getSaveAttempts(),0);assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count,0);
     assert.equal(await evaluate('document.fullscreenElement'),null);assert.deepEqual(errors,[]);return;
@@ -155,8 +172,7 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   if (mobile) await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]},pointerSession);
   else await press(english ? 'KeyW' : 'ArrowUp',english ? 'w' : 'ArrowUp','keyUp');
   assert.equal(await game('document.fullscreenElement'),null);
-  assert.equal(await game(`document.querySelectorAll('.score-key-metric').length`),4);
-  assert.equal(await game(`document.querySelectorAll('.results-table th').length`),12);
+  await CheckDrivingResultDetails(game, english);
   assert.equal(await game(`document.documentElement.scrollWidth <= innerWidth`),true);
   await game(`document.querySelector('.score-analysis').scrollIntoView()`);await capture('results-analysis');
   await game(`document.querySelector('.score-analysis select').value='avoided';document.querySelector('.score-analysis select').dispatchEvent(new Event('change',{bubbles:true}))`);

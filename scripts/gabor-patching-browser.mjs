@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 export async function CheckGaborPatching({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
   await until(() => game(`document.querySelector('form h2').textContent === ${JSON.stringify(english ? 'Gabor Patching' : '蓋伯斑塊練習')}`), 'private init language');
   if (rendererFailure) {
     await until(() => game(`Boolean(document.querySelector('.renderer-error[role=alert]'))`), 'visible renderer failure');
@@ -75,7 +76,11 @@ export async function CheckGaborPatching({ game, evaluate, send, until, standalo
   await click('.training-confirmation .btn-primary');
   await until(() => game(`Boolean(document.querySelector('.gabor-timer')) && window.gaborPixiApp.stage.children.length >= 3`), 'real jsPsych Pixi trial');
   await until(() => game(`document.fullscreenElement === document.querySelector('.gabor-patching-game-root')`), 'native fullscreen root');
-  if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
+  if (process.argv.includes('--windowed')) {
+    await game(`document.exitFullscreen()`);
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen loss pauses');
+    await click('.game-interrupt-panel .btn-primary');
+  }
   await until(() => game(`(() => {
     const canvas=document.querySelector('canvas').getBoundingClientRect(), root=document.documentElement;
     return canvas.left === 0 && canvas.top === 0 && canvas.right === innerWidth && canvas.bottom === innerHeight
@@ -86,6 +91,9 @@ export async function CheckGaborPatching({ game, evaluate, send, until, standalo
   await capture('gameplay');
   if (process.argv.includes('--stop')) {
     await click('.gabor-patching-stop');
+    await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'stop opens interrupt panel');
+    assert.equal(await game(`document.activeElement.textContent.trim()`), english ? 'Continue' : '繼續');
+    await click('.game-interrupt-panel .btn-ghost');
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'cancel without saving');
     assert.equal(getSaveAttempts(), 0); assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     assert.equal(await evaluate('document.fullscreenElement'), null);
@@ -133,10 +141,11 @@ export async function CheckGaborPatching({ game, evaluate, send, until, standalo
     assert.equal(records.length, 1); assert.ok(getSaveAttempts() >= 2);
     assert.equal(records[0].user_id ?? null, accountId);
     if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
-    const saved = JSON.parse(records[0].payload_json);
+    const saved = await ReadSavedGameRecord(records[0], rawDataBucket, version);
     assert.equal(saved.gameId, 'gabor-patching');
     assert.deepEqual(saved.config, { difficulty, durationSec: 30, maxSpots: 3, soundEnabled: soundOn });
     assert.equal(saved.score.summary.durationMs, 30000);
+    assert.ok(saved.score.summary.hits > 0, 'Real pointer input produces saved hits.');
     assert.equal(saved.score.summary.hits, saved.score.rounds.filter(row=>row.outcome===1).length);
     assert.equal(saved.score.summary.score, saved.score.rounds.reduce((sum,row)=>sum+row.points,0));
     assert.ok(saved.score.rounds.every(row=>row.outcome===1 ? row.reactionMs >= 0 : row.reactionMs === null));

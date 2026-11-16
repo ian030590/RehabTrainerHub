@@ -72,7 +72,7 @@ test('Gabor owns UI, dependencies, metadata and the exact original preview; the 
   }
   for (const file of ['settings.json', 'score.json', 'results/GaborResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.4');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -83,7 +83,7 @@ test('Gabor owns UI, dependencies, metadata and the exact original preview; the 
   assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), capture.previewSha256);
 });
 
-async function LoadPlugin(deferred = false) {
+async function LoadPlugin(deferred = false, initiallyPaused = false) {
   const frames = new Map(), listeners = new Map(), finished = [];
   let now = 0, nextId = 1;
   let initialize;
@@ -97,7 +97,7 @@ async function LoadPlugin(deferred = false) {
     destroy() { this.destroyed = true; }
   }
   class Text extends Sprite { constructor(options) { super(); Object.assign(this, options); } }
-  const app = { screen: { width: 390, height: 844 }, stage: { children: [],
+  const app = { ticker: { stop() {}, start() {} }, screen: { width: 390, height: 844 }, stage: { children: [],
     addChild(sprite) { this.children.push(sprite); }, removeChild(sprite) { this.children = this.children.filter(item => item !== sprite); } },
   renderer: { background: {}, on: (name, fn) => listeners.set(name, fn), off: name => listeners.delete(name) } };
   const display = { isConnected: true };
@@ -110,6 +110,7 @@ async function LoadPlugin(deferred = false) {
     jspsych: { ParameterType: {} }, 'pixi.js': { Sprite, Text, Texture: { from: () => ({ width: 256, height: 256 }) } },
     './runtime/pixiPool': pool, './runtime/theme': { typography: { fontFamily: 'sans-serif' }, cssColors: { gaborBackground: '#808080' }, pixiColors: {} },
     './runtime/soundManager': { soundManager: { playSuccess() {} } },
+    './runtime/pauseState': { IsGaborPaused: () => initiallyPaused },
     './gaborTexture': { GetGaborTexture: () => ({ width: 256, height: 256 }), DisposeGaborTextures() {},
       gaborTextureSpecs: [{ size: 256, freq: .05, angle: 0 }, { size: 256, freq: .08, angle: Math.PI / 4 }, { size: 256, freq: .03, angle: Math.PI / 2 }] },
   }, { window: { addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) },
@@ -145,6 +146,51 @@ test('real Gabor gameplay retains scoring and lifetime, records hits/expiry/end 
     assert.equal(result.patchRecords[1].outcome, 0); assert.equal(result.patchRecords[1].reactionMs, null);
     assert.equal(game.frames.size, 0); assert.equal(game.listeners.size, 0);
   }
+});
+
+test('pausing freezes Gabor targets, elapsed time and input until continuation', async () => {
+  const game = await LoadPlugin(); game.start('beginner');
+  game.tick(1000);
+  const target = game.app.stage.children[0];
+  game.listeners.get('game:pause')();
+  assert.equal(game.frames.size, 0);
+  game.tick(11000);
+  target.events.pointerdown({ stopPropagation() {} });
+  assert.equal(game.plugin.hits, 0);
+  assert.equal(game.finished.length, 0);
+  game.listeners.get('game:resume')();
+  game.tick(11200);
+  target.events.pointerdown({ stopPropagation() {} });
+  assert.equal(game.plugin.hits, 1);
+  game.tick(40000);
+  assert.equal(game.finished[0].patchRecords[0].reactionMs, 1200);
+  assert.equal(game.finished[0].score, 700);
+  assert.equal(game.listeners.size, 0);
+});
+
+test('Gabor renderer initialization during a pause stays frozen until continuation', async () => {
+  const game = await LoadPlugin(true); game.start('beginner');
+  game.setNow(100);
+  game.listeners.get('game:pause')();
+  game.setNow(5100);
+  game.initialize();
+  assert.equal(game.frames.size, 0);
+  game.setNow(10100);
+  game.listeners.get('game:resume')();
+  game.tick(11100);
+  game.app.stage.children[0].events.pointerdown({ stopPropagation() {} });
+  game.tick(40100);
+  assert.equal(game.finished[0].patchRecords[0].reactionMs, 1000);
+});
+
+test('Gabor started while already paused does not animate or count paused time', async () => {
+  const game = await LoadPlugin(false, true); game.setNow(100); game.start('beginner');
+  assert.equal(game.frames.size, 0);
+  game.setNow(10100); game.listeners.get('game:resume')();
+  game.tick(11100);
+  game.app.stage.children[0].events.pointerdown({ stopPropagation() {} });
+  game.tick(40100);
+  assert.equal(game.finished[0].patchRecords[0].reactionMs, 1000);
 });
 
 test('aborting Gabor stops input and animation without producing a completed result, even after a pending renderer init', async () => {

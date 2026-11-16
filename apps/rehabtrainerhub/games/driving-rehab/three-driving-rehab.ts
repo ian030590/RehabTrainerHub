@@ -4,6 +4,8 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { MeasureDisplayRefreshRate } from './runtime/displayTiming';
+import { IsDrivingPaused } from './runtime/pauseState';
+import { DrivingPauseClock } from './timing/pauseClock';
 const typography = { fontFamily: 'system-ui, sans-serif' };
 import { soundManager } from './runtime/soundManager';
 import { difficultyPresets, hazardTemplates } from './hazards/driving-hazards';
@@ -247,6 +249,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetActive = false;
   private laneResetBlackoutTimer: number | null = null;
   private laneResetClearTimer: number | null = null;
+  private redFlashTimer: number | null = null;
   private cameraMode: DrivingCameraMode = 'first-person';
 
   // Intersection / turning state
@@ -274,8 +277,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private keyupListener: ((event: KeyboardEvent) => void) | null = null;
   private touchControlsRoot: HTMLDivElement | null = null;
   private hudPanelObserver: ResizeObserver | null = null;
-  private inputPauseOverlay: HTMLDivElement | null = null;
-  private inputPausedAt = 0;
+  private inputAvailable = true;
+  private manualPausedAt: number | null = null;
+  private pauseListener: (() => void) | null = null;
+  private resumeListener: (() => void) | null = null;
+  private pauseClock = new DrivingPauseClock({ now: () => performance.now(), set: (fn, ms) => window.setTimeout(fn, ms), clear: id => window.clearTimeout(id) });
   private visibilityPausedAt: number | null = null;
   private visibilityChangeListener: (() => void) | null = null;
   private gamepadConnectedListener: ((event: GamepadEvent) => void) | null = null;
@@ -348,6 +354,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   trial(displayElement: HTMLElement, trial: TrialType<Info>) {
     displayElement.replaceChildren();
     this.resetTrialState(trial);
+    this.attachInterruptListeners();
     this.unregisterRuntimeDisposer = RegisterDrivingRuntimeDisposer(() => {
       if (this.finished) return;
       this.finished = true;
@@ -381,7 +388,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.initTouchControls(root);
-        this.initInputPauseOverlay(root);
         if (this.finished) return;
         if (!displayElement.isConnected) {
           this.finishTrial(displayElement, 'aborted');
@@ -434,7 +440,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.renderFirstFrameBeforeReveal(this.trialStartTime);
         root.setAttribute('aria-busy', 'false');
         loadingOverlay.remove();
-        root.focus();
+        if (!IsDrivingPaused()) root.focus();
         this.attachVisibilityPauseListener();
         this.attachKeyboardListeners(displayElement);
         this.attachGamepadListeners();
@@ -595,6 +601,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private attachKeyboardListeners(displayElement: HTMLElement) {
     this.keydownListener = (event: KeyboardEvent) => {
+      if (this.manualPausedAt !== null) return;
       if (this.shouldPreventKeyDefault(event.code)) {
         event.preventDefault();
       }
@@ -603,9 +610,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         event.preventDefault();
         this.cycleCameraMode();
       }
-      if (event.code === 'Escape') this.finishTrial(displayElement, 'aborted');
     };
     this.keyupListener = (event: KeyboardEvent) => {
+      if (this.manualPausedAt !== null) return;
       this.setKeyboardInput(event.code, false, event.timeStamp);
     };
     window.addEventListener('keydown', this.keydownListener);
@@ -615,8 +622,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private initTouchControls(root: HTMLDivElement) {
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
-    this.inputPauseOverlay = null;
-    this.inputPausedAt = 0;
     this.visibilityPausedAt = null;
     if (!this.isTouchControlEnabled()) return;
 
@@ -796,43 +801,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', (event) => event.preventDefault());
     return button;
-  }
-
-  private initInputPauseOverlay(root: HTMLDivElement) {
-    this.inputPauseOverlay?.remove();
-    const overlay = document.createElement('div');
-    overlay.setAttribute('role', 'alert');
-    overlay.setAttribute('aria-live', 'assertive');
-    Object.assign(overlay.style, {
-      position: 'absolute',
-      inset: '0',
-      zIndex: '60',
-      display: 'none',
-      placeItems: 'center',
-      padding: '24px',
-      background: 'var(--bg-overlay)',
-      color: 'var(--text-primary)',
-      textAlign: 'center',
-      pointerEvents: 'auto',
-    });
-    const message = document.createElement('div');
-    Object.assign(message.style, {
-      width: 'min(520px, 100%)',
-      padding: '22px',
-      border: '1px solid var(--border-hover)',
-      borderRadius: 'var(--radius-l)',
-      background: 'var(--bg-card)',
-    });
-    const title = document.createElement('strong');
-    title.textContent = this.text.inputPausedTitle;
-    Object.assign(title.style, { display: 'block', fontSize: '22px', lineHeight: '1.3' });
-    const detail = document.createElement('p');
-    detail.textContent = this.text.inputPausedDetail;
-    Object.assign(detail.style, { margin: '10px 0 0', fontSize: '15px', lineHeight: '1.55' });
-    message.append(title, detail);
-    overlay.append(message);
-    root.appendChild(overlay);
-    this.inputPauseOverlay = overlay;
   }
 
   private shouldPreventKeyDefault(code: string): boolean {
@@ -1910,7 +1878,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.finishTrial(displayElement, 'aborted');
       return;
     }
-    if (this.syncVisibilityPause(time) || this.syncInputPause(time)) {
+    const visibilityPaused = this.syncVisibilityPause(time);
+    const inputPaused = this.syncInputPause();
+    if (visibilityPaused || inputPaused || this.manualPausedAt !== null) {
       this.lastFrameTime = time;
       this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, displayElement));
       return;
@@ -2227,10 +2197,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     if (this.hud?.blackout) this.hud.blackout.style.opacity = '1';
 
-    this.laneResetBlackoutTimer = window.setTimeout(() => {
+    this.laneResetBlackoutTimer = this.pauseClock.set(() => {
       this.laneResetBlackoutTimer = null;
       this.applyLaneResetPose(resetPose);
-      this.laneResetClearTimer = window.setTimeout(() => {
+      this.laneResetClearTimer = this.pauseClock.set(() => {
         this.laneResetClearTimer = null;
         if (this.hud?.blackout) this.hud.blackout.style.opacity = '0';
         this.laneResetActive = false;
@@ -2784,7 +2754,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   }
 
-  private syncInputPause(time: number) {
+  private syncInputPause() {
     const inputAvailable = this.controlMode !== 'wheel' || (() => {
       const wheel = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []);
       return Boolean(
@@ -2793,24 +2763,34 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         && ReadDrivingWheelInput(wheel, this.wheelCalibration),
       );
     })();
-    if (!inputAvailable) {
-      if (this.inputPausedAt === 0) {
-        this.inputPausedAt = time;
-        this.keyState = { left: false, right: false, up: false, down: false };
-        this.lastBrakePressed = false;
-        if (this.inputPauseOverlay) this.inputPauseOverlay.style.display = 'grid';
-      }
-      return true;
+    if (inputAvailable !== this.inputAvailable) {
+      this.inputAvailable = inputAvailable;
+      window.dispatchEvent(new CustomEvent('game:input-availability', { detail: inputAvailable }));
     }
-    if (this.inputPausedAt === 0) return false;
+    return !inputAvailable;
+  }
 
-    const pausedDuration = Math.max(0, time - this.inputPausedAt);
-    this.inputPausedAt = 0;
-    if (this.inputPauseOverlay) this.inputPauseOverlay.style.display = 'none';
-    this.shiftResponseClockAfterPause(pausedDuration);
-    this.lastFrameTime = time;
-    this.lastBrakePressed = this.readInput().brake > 0.35;
-    return false;
+  private attachInterruptListeners() {
+    this.pauseListener = () => {
+      if (this.manualPausedAt !== null || this.finished) return;
+      this.manualPausedAt = performance.now();
+      this.pauseClock.pause();
+      this.keyState = { left: false, right: false, up: false, down: false };
+      this.pendingBrakeTimestamp = null;
+      this.lastBrakePressed = false;
+      this.lastResponseSteering = 0;
+    };
+    this.resumeListener = () => {
+      if (this.manualPausedAt === null || this.finished || !this.inputAvailable || document.visibilityState !== 'visible') return;
+      const time = performance.now();
+      this.shiftResponseClockAfterPause(Math.max(0, time - this.manualPausedAt));
+      this.manualPausedAt = null;
+      this.lastFrameTime = time;
+      this.pauseClock.resume();
+    };
+    window.addEventListener('game:pause', this.pauseListener);
+    window.addEventListener('game:resume', this.resumeListener);
+    if (IsDrivingPaused()) this.pauseListener();
   }
 
   private attachVisibilityPauseListener() {
@@ -2830,7 +2810,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private beginVisibilityPause(time: number) {
-    if (this.visibilityPausedAt === null) this.visibilityPausedAt = time;
+    if (this.visibilityPausedAt === null) { this.visibilityPausedAt = time; this.pauseClock.pause(); }
     this.keyState = { left: false, right: false, up: false, down: false };
     this.pendingBrakeTimestamp = null;
     this.lastBrakePressed = false;
@@ -2839,11 +2819,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private endVisibilityPause(time: number) {
     if (this.visibilityPausedAt === null) return;
     const pausedDuration = Math.max(0, time - this.visibilityPausedAt);
+    const overlap = this.manualPausedAt === null ? 0 : Math.max(0, time - Math.max(this.manualPausedAt, this.visibilityPausedAt));
     this.visibilityPausedAt = null;
     this.shiftResponseClockAfterPause(pausedDuration);
-    // If a wheel-disconnect pause overlaps the hidden interval, move its start
-    // forward too so the same wall-clock duration is not excluded twice.
-    if (this.inputPausedAt > 0) this.inputPausedAt += pausedDuration;
+    if (this.manualPausedAt !== null) this.manualPausedAt += overlap;
+    else this.pauseClock.resume();
     this.lastFrameTime = time;
     this.pendingBrakeTimestamp = null;
     this.lastBrakePressed = this.controlMode === 'wheel'
@@ -2866,7 +2846,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (!Number.isFinite(gap) || gap <= this.maxSimulationCatchUpMs) return;
     const excludedDuration = gap - this.maxSimulationCatchUpMs;
     this.shiftResponseClockAfterPause(excludedDuration);
-    if (this.inputPausedAt > 0) this.inputPausedAt += excludedDuration;
     this.lastFrameTime += excludedDuration;
   }
 
@@ -3295,7 +3274,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private flashRed() {
     if (!this.hud?.redFlash || this.hud.redFlash.style.boxShadow === 'none') return;
     this.hud.redFlash.style.opacity = '1';
-    window.setTimeout(() => {
+    if (this.redFlashTimer !== null) this.pauseClock.clear(this.redFlashTimer);
+    this.redFlashTimer = this.pauseClock.set(() => {
+      this.redFlashTimer = null;
       if (this.hud?.redFlash) this.hud.redFlash.style.opacity = '0';
     }, 120);
   }
@@ -3705,6 +3686,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private detachGlobalListeners() {
     this.startupAbort.abort();
     cancelAnimationFrame(this.raf);
+    if (this.pauseListener) window.removeEventListener('game:pause', this.pauseListener);
+    if (this.resumeListener) window.removeEventListener('game:resume', this.resumeListener);
+    this.pauseListener = null;
+    this.resumeListener = null;
+    this.manualPausedAt = null;
+    this.pauseClock.resume();
     if (this.keydownListener) {
       window.removeEventListener('keydown', this.keydownListener);
       this.keydownListener = null;
@@ -3735,7 +3722,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private captureBrakeInputTimestamp(value: number) {
     const timestamp = this.normalizeInputTimestamp(value);
-    if (document.visibilityState !== 'visible' || this.visibilityPausedAt !== null) return;
+    if (document.visibilityState !== 'visible' || this.visibilityPausedAt !== null || this.manualPausedAt !== null) return;
     this.excludeInactiveFrameGap(timestamp);
     this.pendingBrakeTimestamp = timestamp;
     this.lastBrakePressed = true;
@@ -3747,7 +3734,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const previous = this.lastResponseSteering;
     this.lastResponseSteering = steering;
     if (!steering || steering === previous || this.laneResetActive
-      || document.visibilityState !== 'visible' || this.visibilityPausedAt !== null) return;
+      || document.visibilityState !== 'visible' || this.visibilityPausedAt !== null || this.manualPausedAt !== null) return;
     const timestamp = this.normalizeInputTimestamp(value);
     this.excludeInactiveFrameGap(timestamp);
     this.handleHazardResponse(timestamp, steering < 0 ? 'steer-left' : 'steer-right');
@@ -3761,12 +3748,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private clearLaneResetTimers() {
+    if (this.redFlashTimer !== null) {
+      this.pauseClock.clear(this.redFlashTimer);
+      this.redFlashTimer = null;
+    }
     if (this.laneResetBlackoutTimer !== null) {
-      window.clearTimeout(this.laneResetBlackoutTimer);
+      this.pauseClock.clear(this.laneResetBlackoutTimer);
       this.laneResetBlackoutTimer = null;
     }
     if (this.laneResetClearTimer !== null) {
-      window.clearTimeout(this.laneResetClearTimer);
+      this.pauseClock.clear(this.laneResetClearTimer);
       this.laneResetClearTimer = null;
     }
   }
@@ -3789,9 +3780,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.root = null;
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
-    this.inputPauseOverlay?.remove();
-    this.inputPauseOverlay = null;
-    this.inputPausedAt = 0;
     this.visibilityPausedAt = null;
     this.ambientTrafficActors = [];
     this.hud = null;

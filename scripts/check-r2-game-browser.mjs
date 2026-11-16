@@ -595,18 +595,21 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckHartChart({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'reading-training') {
     const screenshots = resolve(root, '.tmp/reading-training-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckReadingTraining({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'gabor-patching') {
     const screenshots = resolve(root, '.tmp/gabor-patching-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy'}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckGaborPatching({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'oculomotor-training') {
     const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}${process.argv.includes('--incorrect-screen-height')?'-incorrect-screen-height':''}${process.argv.includes('--screen-3-2')?'-screen-3-2':''}${process.argv.includes('--measurements-16-9')?'-measurements-16-9':''}`);
@@ -618,6 +621,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckMovingCard({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'motor-cortex-rehab') {
     const screenshots = resolve(root, '.tmp/motor-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);

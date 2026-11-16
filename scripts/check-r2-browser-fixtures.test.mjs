@@ -8,6 +8,8 @@ import { EnsureAccountSubjectId } from '../apps/rehabtrainerhub/functions/_lib/s
 import { rawCoordinateColumns } from '../packages/ui/src/rawCoordinateRecorder.js';
 import { browserApiHandlers, CreateBrowserDatabase, ReadSavedGameRecord, VerifyRemotePreview } from './r2-browser-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { CloseHartQrAfterDisplay } from './hart-chart-browser.mjs';
+import { CheckDrivingResultDetails } from './driving-rehab-r2-browser.mjs';
 
 for (const modern of [false, true]) test(`results browser helper checks ${modern ? 'collapsed details' : 'legacy actions'}`, async () => {
   const events = [];
@@ -62,6 +64,10 @@ for (const [gameId, kind, capabilities] of [
   ['tongue-catch', 'tongue', ['tongue-tracking']],
   ['gesture-battler', 'hand', ['hand-tracking']],
   ['whack-a-mole', null, ['pointer']],
+  ['gabor-patching', null, ['pointer']],
+  ['moving-card', null, ['pointer']],
+  ['reading-training', null, ['pointer']],
+  ['hart-chart', null, ['pointer']],
 ]) test(`${gameId}: browser fixture uploads coordinates and verifies persisted rounds from private CSV`, async t => {
   const fixture = CreateRawDataEnvironment(gameId, capabilities);
   t.after(() => fixture.sqlite.close());
@@ -114,6 +120,44 @@ for (const [gameId, kind, capabilities] of [
   await assert.rejects(() => ReadSavedGameRecord(row, fixture.env.RAW_DATA, session.version), /sha-256/i);
   fixture.env.RAW_DATA.objects.delete(roundFile.key);
   await assert.rejects(() => ReadSavedGameRecord(row, fixture.env.RAW_DATA, session.version), /missing.*csv/i);
+});
+
+for (const interrupted of [false, true]) test(`Hart QR fixture closes the primary action ${interrupted ? 'after fullscreen interruption' : 'when still open'}`, async () => {
+  let paused = interrupted;
+  let qrOpen = !interrupted;
+  const clicks = [];
+  const game = async expression => {
+    if (expression.includes('.hart-qr-dialog .btn-primary, .game-interrupt-panel')) return qrOpen || paused;
+    if (expression.includes('!document.querySelector')) return expression.includes('game-interrupt-panel') ? !paused : !qrOpen;
+    if (expression.includes('.game-interrupt-panel')) return paused;
+    if (expression.includes('.hart-qr-dialog .btn-primary')) return qrOpen;
+    throw new Error(`Unexpected expression: ${expression}`);
+  };
+  const tap = async selector => {
+    clicks.push(selector);
+    if (selector === '.game-interrupt-panel .btn-primary') { assert.ok(paused); paused = false; }
+    else if (selector === '.hart-topbar-controls button:nth-of-type(2)') { assert.ok(!paused); qrOpen = true; }
+    else if (selector === '.hart-qr-dialog .btn-primary') { assert.ok(qrOpen); qrOpen = false; }
+    else throw new Error(`Unexpected selector: ${selector}`);
+  };
+  await CloseHartQrAfterDisplay({ game, until: async predicate => assert.ok(await predicate()), tap });
+  assert.deepEqual(clicks, interrupted ? ['.game-interrupt-panel .btn-primary', '.hart-topbar-controls button:nth-of-type(2)', '.hart-qr-dialog .btn-primary'] : ['.hart-qr-dialog .btn-primary']);
+});
+
+test('driving fixture checks three key metrics, collision details and the complete table', async () => {
+  for (const defect of ['', 'metrics', 'open', 'collision', 'columns']) {
+    let opened = false;
+    const game = async expression => {
+      if (expression.includes('.score-key-metric')) return defect === 'metrics' ? 4 : 3;
+      if (expression.endsWith('.open = true')) { opened = true; return true; }
+      if (expression.endsWith('.open')) return defect === 'open';
+      if (expression.includes('.score-context-item')) return opened && defect !== 'collision' && expression.includes('Collisions');
+      if (expression.includes('.results-table th')) return opened && defect !== 'columns' ? 12 : 11;
+      throw new Error(`Unexpected expression: ${expression}`);
+    };
+    if (defect) await assert.rejects(() => CheckDrivingResultDetails(game, true));
+    else await CheckDrivingResultDetails(game, true);
+  }
 });
 
 test('signed-in browser fixture assigns an account subject through an atomic D1 batch', async t => {

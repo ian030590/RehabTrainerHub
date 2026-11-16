@@ -8,6 +8,25 @@ import { AcceptGameMessage } from '../packages/ui/src/selfContainedGame.js';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/hart-chart');
+
+test('Hart clock excludes time spent paused while preserving elapsed time across resumes', async () => {
+  const { HartClock } = await Load('logic/pauseClock.ts');
+  let now = 1000;
+  const clock = new HartClock(() => now);
+  clock.start();
+  now = 1250; clock.pause();
+  now = 11250; assert.equal(clock.elapsed(), 250);
+  clock.resume();
+  now = 11500; assert.equal(clock.elapsed(), 500);
+  clock.pause(); now = 13500; clock.resume();
+  now = 13600; assert.equal(clock.elapsed(), 600);
+});
+
+test('Hart Stop remains above the decoder while it is being dragged', async () => {
+  const css = await readFile(resolve(gameRoot, 'styles/hart-chart.css'), 'utf8');
+  const layer = selector => Number(css.match(new RegExp(`\\.${selector}\\s*\\{[^}]*z-index:\\s*(\\d+)`))?.[1]);
+  assert.ok(layer('hart-topbar') > layer('hart-decoder-panel-dragging'));
+});
 async function Load(path) {
   const module = { exports: {} };
   new Function('module', 'exports', ts.transpileModule(await readFile(resolve(gameRoot, path), 'utf8'), {
@@ -103,7 +122,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.5');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {
