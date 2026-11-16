@@ -14,6 +14,28 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
   for (const placeholder of [String.fromCharCode(0x2014), 'undefined', 'NaN']) {
     assert.ok(!resultsText.includes(placeholder), `Results show 無 or N/A for missing values, never "${placeholder}".`);
   }
+  const hasDetails = await game('Boolean(document.querySelector(".score-details"))');
+  if (hasDetails) {
+    assert.equal(await game('document.querySelector(".score-details").tagName'), 'DETAILS');
+    assert.equal(await game('document.querySelector(".score-details").open'), false, 'Details start closed.');
+    assert.equal(await game(`(() => {
+      const status = document.querySelector('.score-save-status');
+      const actions = document.querySelector('.score-actions');
+      const details = document.querySelector('.score-details');
+      return Boolean(status && actions && details
+        && (status.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (actions.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING));
+    })()`), true, 'Save status and actions precede details.');
+    assert.equal(await game('Boolean(document.querySelector(".score-actions > .score-return-button"))'), true);
+    assert.equal(await game('document.activeElement === document.querySelector(".experiment-results h1")'), true, 'Results heading receives focus.');
+    if (capture) {
+      await game('document.querySelector(".experiment-results h1").scrollIntoView({ block: "start" })');
+      await capture('results');
+    }
+    await game('document.querySelector(".score-details").open = true');
+    assert.equal(await game('document.querySelector(".score-chart svg").getAttribute("tabindex")'), '0');
+    assert.equal(await game('document.querySelectorAll(".score-chart circle[tabindex]").length'), 0);
+  }
   assert.equal(await game('Boolean(document.querySelector(".score-context dl"))'), true);
   assert.equal(await game('document.querySelector(".score-analysis select").value'), defaultMetric);
   assert.equal(await game('Boolean(document.querySelector(".score-chart svg[role=img]"))'), true);
@@ -35,9 +57,9 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
   assert.ok(await game('document.documentElement.scrollWidth <= innerWidth'), 'Results must fit the viewport; wide tables scroll within their own region.');
   assert.ok(await game('(panel => panel.scrollWidth <= panel.clientWidth)(document.querySelector(".experiment-container"))'), 'The results panel must not scroll sideways.');
   assert.ok(await game('Array.from(document.querySelectorAll(".results-table th")).every(cell => cell.getBoundingClientRect().width >= 48)'), 'Round columns remain readable.');
-  assert.equal(await game('document.querySelectorAll(".experiment-results > button").length >= 1'), true);
+  if (!hasDetails) assert.equal(await game('document.querySelectorAll(".experiment-results > button").length >= 1'), true);
   if (capture) {
-    for (const [name, selector] of [['results', '.experiment-results h1'], ['results-analysis', '.score-analysis'], ['results-details', '#score-details-title']]) {
+    for (const [name, selector] of [...(hasDetails ? [] : [['results', '.experiment-results h1']]), ['results-analysis', '.score-analysis'], ['results-details', '#score-details-title']]) {
       await game(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: 'start' })`);
       await capture(name);
     }

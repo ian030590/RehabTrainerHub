@@ -310,14 +310,19 @@ for (const gameId of gameIds) {
     const musicEffect = effects.find(effect => effect.includes('PlayMidiMusic('));
     assert.ok(musicEffect, 'A composer must be able to configure a song without editing the training loop.');
     const calls = [];
-    const run = phase => new Function('phase', 'backgroundMusic', 'backgroundMusicOptions', 'PlayMidiMusic', 'StopMidiMusic',
-      `return (${musicEffect})();`)(phase, song, {}, () => { calls.push('play'); return Promise.resolve(true); }, () => calls.push('stop'));
+    const run = (phase, paused = false) => new Function('phase', 'backgroundMusic', 'backgroundMusicOptions', 'PlayMidiMusic', 'StopMidiMusic', 'paused',
+      `return (${musicEffect})();`)(phase, song, {}, () => { calls.push('play'); return Promise.resolve(true); }, () => calls.push('stop'), paused);
     for (const phase of ['menu', 'rules', 'results']) { run(phase)?.(); }
     assert.ok(!calls.includes('play'));
     const cleanup = run(playingPhase);
     assert.equal(calls.at(-1), 'play');
     cleanup();
     assert.equal(calls.at(-1), 'stop');
+    if (gameId === 'flanker') {
+      const before = calls.length;
+      run(playingPhase, true)?.();
+      assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');
+    }
     assert.ok(effects.some(effect => effect.includes('DisposeAudioFeedback')), 'Unmount must release the game audio context.');
   });
 }

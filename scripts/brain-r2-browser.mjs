@@ -342,6 +342,7 @@ export const brainGameSpecs = {
     tutorialTargets: ['.flanker-row', '.flanker-pads', '.flanker-hud'],
     runningSelector: '.flanker-running',
     stopSelector: '.flanker-stop',
+    interruptPanel: true,
     defaultMetric: 'responseMs', alternateMetric: 'correct',
     async play({ game, until, press, tap, mobile, capture }) {
       // Answer the middle arrow, except counted item 3 gets the wrong side and counted item 5 gets no answer.
@@ -1491,10 +1492,26 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   if (tutorialStop) assert.equal(await buttonLook(spec.stopSelector), tutorialStop, 'The tutorial Stop matches the real Stop button.');
   if (process.argv.includes('--stop')) {
     await tap(spec.stopSelector);
+    if (spec.interruptPanel) {
+      await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel', 3000);
+      assert.equal(await game(`document.querySelector('.game-interrupt-panel').getAttribute('role')`), 'dialog');
+      assert.equal(await game(`document.querySelector('.game-interrupt-panel').getAttribute('aria-modal')`), 'true');
+      await until(() => game(`document.activeElement === document.querySelector('.game-interrupt-panel .btn-primary')`), 'interrupt Continue focus', 3000);
+      assert.equal(await game(`document.querySelector(${JSON.stringify(spec.runningSelector)}).inert`), true, 'The running stage is inert while paused.');
+      await press('Escape', 'Escape', 27);
+      await until(() => game(`!document.querySelector('.game-interrupt-panel')`), 'interrupt panel closed', 3000);
+      await until(() => game(`(() => { const stage = document.querySelector(${JSON.stringify(spec.runningSelector)});
+        return Boolean(stage && !stage.inert && stage.getBoundingClientRect().width && stage.getBoundingClientRect().height && getComputedStyle(stage).visibility === 'visible' && getComputedStyle(stage).display !== 'none'); })()`), 'running stage visible after Continue', 3000);
+      await until(() => game(`document.activeElement === document.querySelector(${JSON.stringify(spec.stopSelector)})`), 'Stop focus after Continue', 3000);
+      await tap(spec.stopSelector);
+      await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel reopened', 3000);
+      await tap('.game-interrupt-panel .btn-ghost');
+    }
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving');
     assert.equal(getSaveAttempts(), 0);
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     assert.deepEqual(errors, []);
+    if (spec.interruptPanel) console.log(`${gameId}: Stop opens the interrupt panel; Escape continues; End activity ends without saving.`);
     console.log(`${gameId}: stop ends the session without saving.`);
     return;
   }

@@ -136,7 +136,7 @@ components:
 
 # Design System: 居家訓練網
 
-本檔描述 Hub（`apps/rehabtrainerhub`，`trainerhub.cc`）的視覺系統，token 以 `apps/rehabtrainerhub/app/globals.css` 為唯一來源。各遊戲的 canvas、runtime 與遊戲內畫面屬於各遊戲自己；`packages/ui/src/trainerTheme.ts` 是遊戲 runtime 與 PixiJS 用的舊 trainer token，不作為 Hub 頁面的色彩來源。上方 frontmatter 是規範值，下文只說明用途，不重寫數值。
+本檔描述 Hub（`apps/rehabtrainerhub`，`trainerhub.cc`）的視覺系統，token 以 `apps/rehabtrainerhub/app/globals.css` 為唯一來源。各遊戲的 canvas、runtime 與遊戲內畫面屬於各遊戲自己；每款遊戲都有的設定對話框、成果畫面與停止中斷面板另見 `apps/rehabtrainerhub/games/DESIGN.md`（各遊戲自行實作的共同規格）；`packages/ui/src/trainerTheme.ts` 是遊戲 runtime 與 PixiJS 用的舊 trainer token，不作為 Hub 頁面的色彩來源。上方 frontmatter 是規範值，下文只說明用途，不重寫數值。
 
 這是以手機與平板為優先的原創 Hub 規格。互動模式參照 [design-ai 專案的 Instagram 規格](https://github.com/Khalidabdi1/design-ai/blob/c46449573bafa883484dcfcfd5499eec39725554/design-md/instagram/DESIGN.md)、[X 規格](https://github.com/Khalidabdi1/design-ai/blob/c46449573bafa883484dcfcfd5499eec39725554/design-md/x/DESIGN.md)、[Threads 規格](https://github.com/Khalidabdi1/design-ai/blob/c46449573bafa883484dcfcfd5499eec39725554/design-md/threads/DESIGN.md)（commit `c46449573bafa883484dcfcfd5499eec39725554`）。這三份是參照倉庫的描述，不是社群產品官方發布的設計系統；本站不複製其視覺資產。另可查核 [Meta 對 Threads 網頁單欄／多欄瀏覽的說明](https://about.fb.com/news/2025/04/new-features-threads-web-experience/)。
 

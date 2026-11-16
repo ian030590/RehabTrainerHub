@@ -7,6 +7,56 @@ import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/aut
 import { EnsureAccountSubjectId } from '../apps/rehabtrainerhub/functions/_lib/subjects.js';
 import { rawCoordinateColumns } from '../packages/ui/src/rawCoordinateRecorder.js';
 import { browserApiHandlers, CreateBrowserDatabase, ReadSavedGameRecord, VerifyRemotePreview } from './r2-browser-fixtures.mjs';
+import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+
+for (const modern of [false, true]) test(`results browser helper checks ${modern ? 'collapsed details' : 'legacy actions'}`, async () => {
+  const events = [];
+  let open = false;
+  let metric = 'responseMs';
+  let failure = '';
+  const game = async expression => {
+    events.push(expression);
+    if (expression === 'Boolean(document.querySelector(".score-details"))') return modern;
+    if (expression === 'document.querySelector(".score-details").tagName') return failure === 'element' ? 'DIV' : 'DETAILS';
+    if (expression === 'document.querySelector(".score-details").open') return failure === 'open' || open;
+    if (expression === 'document.querySelector(".score-details").open = true') { open = true; return true; }
+    if (expression.includes('compareDocumentPosition')) return failure !== 'order';
+    if (expression.includes('document.activeElement')) return failure !== 'focus';
+    if (expression.includes('.score-actions > .score-return-button')) return failure !== 'return';
+    if (expression.includes('.score-chart svg') && expression.includes('getAttribute("tabindex")')) return failure === 'chart' ? null : '0';
+    if (expression.includes('.score-chart circle[tabindex]')) return failure === 'point' ? 1 : 0;
+    if (expression.includes('.experiment-results > button')) return !modern;
+    if (expression.includes('div:not([class])')) return 0;
+    if (expression.includes('querySelectorAll(".score-return-button")')) return 1;
+    if (expression.includes('.fontSize')) return '16px';
+    if (expression.includes('.maxWidth')) return '1248px';
+    if (expression === 'innerWidth <= 600') return false;
+    if (expression.includes('.padding')) return '24px';
+    if (expression.includes('.score-key-grid > div')) return 3;
+    if (expression === 'document.querySelector(".experiment-results").textContent') return 'results';
+    if (expression.includes('.score-analysis select").value')) return metric;
+    if (expression.includes('.score-analysis").textContent.includes')) return true;
+    if (expression.includes('.score-analysis tbody tr')) return 2;
+    if (expression.includes("select.value = ")) { metric = expression.includes('correct') ? 'correct' : 'responseMs'; return; }
+    if (expression.includes('scrollIntoView') || expression.includes('scrollTop =')) return;
+    return true;
+  };
+  await CheckResultsPresentation(game, { defaultMetric: 'responseMs', alternateMetric: 'correct', capture: async name => {
+    events.push(`capture:${name}:${open}`);
+  } });
+  if (modern) {
+    assert.ok(events.indexOf('capture:results:false') < events.indexOf('document.querySelector(".score-details").open = true'));
+    assert.ok(events.indexOf('document.querySelector(".score-details").open = true') < events.indexOf('capture:results-analysis:true'));
+    assert.ok(events.some(event => event.includes('document.activeElement')));
+    for (const defect of ['element', 'open', 'order', 'return', 'focus', 'chart', 'point']) {
+      open = false; metric = 'responseMs'; failure = defect;
+      await assert.rejects(() => CheckResultsPresentation(game, { defaultMetric: 'responseMs', alternateMetric: 'correct' }), undefined, defect);
+    }
+  } else {
+    assert.ok(events.some(event => event.includes('.experiment-results > button')));
+    assert.ok(events.includes('capture:results:false'));
+  }
+});
 
 for (const [gameId, kind, capabilities] of [
   ['tongue-catch', 'tongue', ['tongue-tracking']],

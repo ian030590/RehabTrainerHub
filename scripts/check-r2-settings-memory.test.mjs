@@ -36,7 +36,7 @@ const games = {
   'divided-attention': { version: '1.0.2', file: 'DividedAttentionGame.tsx', settings: 'settings.ts' },
   'pattern-memory': { version: '1.0.2', file: 'PatternMemoryGame.tsx', settings: 'settings.ts' },
   stroop: { version: '2.0.2', file: 'StroopGame.tsx', settings: 'settings.ts' },
-  flanker: { version: '2.0.2', file: 'FlankerGame.tsx', settings: 'settings.ts' },
+  flanker: { version: '2.1.0', file: 'FlankerGame.tsx', settings: 'settings.ts' },
   'go-nogo': { version: '2.0.2', file: 'GoNoGoGame.tsx', settings: 'settings.ts' },
   'stop-signal': { version: '2.0.2', file: 'StopSignalGame.tsx', settings: 'settings.ts' },
   'attention-network-task': { version: '2.0.2', file: 'AttentionNetworkGame.tsx', settings: 'settings.ts' },
