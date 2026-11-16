@@ -627,7 +627,7 @@ try {
     const screenshots = resolve(root, '.tmp/motor-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
-    await CheckMotorCortex({ game, evaluate, until, standalone, english, capture, checkSpotlight, sqlite,
+    await CheckMotorCortex({ game, evaluate, send, gameContext, session, until, standalone, english, capture, checkSpotlight, sqlite,
       getSaveAttempts: () => saveAttempts, getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId,
       revokeRelease: () => { revoked = true; } });
   } else if (gameId === 'gesture-battler') {
@@ -718,6 +718,15 @@ try {
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-playing canvas"))'), 'Pixi gameplay');
   console.log('Playing.');
   assert.equal(await game('document.fullscreenElement === document.querySelector(".drawing-defense")'), true, 'Native fullscreen must belong to the game root.');
+  assert.equal(await game(`(() => { const stop = document.querySelector('.drawing-stop'), rect = stop.getBoundingClientRect(); return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === stop; })()`), true, 'Stop stays above the drawing input.');
+  await game('document.querySelector(".drawing-stop").click()');
+  await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'drawing interrupt panel');
+  assert.equal(await game('document.activeElement === document.querySelector(".game-interrupt-panel .btn-primary")'), true);
+  await wait(1200);
+  assert.equal(await game('Boolean(document.querySelector(".drawing-defense-phase-playing"))'), true);
+  await game("window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))");
+  await until(() => game('!document.querySelector(".game-interrupt-panel")'), 'Escape resumes drawing');
+  assert.equal(await game('document.activeElement === document.querySelector(".drawing-stop")'), true);
   const viewport = await game('(() => { const canvas=document.querySelector("canvas").getBoundingClientRect(); return [Math.round(canvas.width),Math.round(canvas.height),innerWidth,innerHeight]; })()');
   assert.equal(viewport[0], viewport[2]);
   assert.equal(viewport[1], viewport[3]);
@@ -741,8 +750,8 @@ try {
   };
   await CheckResultsPresentation(game, { defaultMetric: 'reactionSeconds', alternateMetric: 'defeated', capture: captureResults });
   if (standalone) {
-    assert.ok(await game('document.body.textContent.includes("從 Hub 開啟才能保存紀錄")'));
-    await game('document.querySelector(".experiment-results > button:last-child").click()');
+    assert.ok(await game('document.body.textContent.includes("獨立練習，成果未保存至 Hub")'));
+    await game('document.querySelector(".score-return-button").click()');
     await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-menu"))'), 'standalone return to settings');
     assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to settings exits fullscreen.');
     assert.equal(saveAttempts, 0);
@@ -766,7 +775,7 @@ try {
   assert.equal(sessionAttempts, sessionFailure ? 2 : 1, 'Saving and retry must keep the session selected before current changed.');
   assert.equal(requests.some(url => /drawing-defense.*(?:settings|score)\.json/.test(url)), false);
   assert.equal(errors.length, 0, errors.join('\n'));
-  await game('document.querySelector(".experiment-results > button:last-child").click()');
+  await game('document.querySelector(".score-return-button").click()');
   await until(() => evaluate('!document.querySelector("dialog.training-overlay")'), 'return to lobby');
   assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub exits fullscreen.');
   console.log(`Brave R2 game passed: settings → tutorial → Pixi (${viewport[0]}×${viewport[1]}) → results → failed save → retry → one SQL row → lobby.`);

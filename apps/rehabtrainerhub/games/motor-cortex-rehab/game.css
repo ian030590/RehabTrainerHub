@@ -1,9 +1,9 @@
 :root {
   --surface: #ffffff; --background: #f6f7f9; --text: #202428; --heading: #14212b;
-  --text-muted: #606970; --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e3eef8;
-  --border: #d4d9de; --border-strong: #7d868e; --bg-overlay: #14212b99;
+  --text-muted: #606970; --primary: #005eb8; --primary-hover: #00478d; --primary-soft: color-mix(in srgb, var(--primary) 8%, #fff);
+  --border: #d4d9de; --border-strong: #7d868e; --bg-overlay: rgba(20,24,28,.54);
   --arena: #e5eee8; --target: #277956; --target-soft: #27795625; --success: #35ae70;
-  --hand-line: #67e8f9; --hand-point: #fef08a; --text-on-accent: #ffffff; --radius: 8px;
+  --hand-line: #67e8f9; --hand-point: #fef08a; --text-on-accent: #ffffff; --error: #ba1a1a; --radius: 8px;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --scene-night: #111a2e; --scene-panel: #1e2d46; --scene-border: #869ab4;
   --scene-sky: #28435f; --scene-text: #eef5ff; --scene-score: #ffd17c;
@@ -17,6 +17,7 @@ html, body, #root { margin: 0; width: 100%; height: 100%; color: var(--text); }
 html { font-size: 16px; }
 body { font: 700 18px/1.5 var(--font-body); }
 button, input, select { font: inherit; }
+.training-config input[type=range], .training-config input[type=checkbox], .training-config input[type=radio] { accent-color: var(--primary); }
 button { min-height: 44px; padding: 8px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 button:disabled { opacity: .6; cursor: default; }
@@ -103,7 +104,18 @@ button:disabled { opacity: .6; cursor: default; }
 .motor-cortex-camera canvas { position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 4/3; }
 .motor-cortex-camera p { margin: 0; padding: 4px; font-size: .8rem; text-align: center; }
 .motor-hand-placeholder { position: absolute; width: 65%; height: 65%; top: 6%; left: 17%; fill: var(--hand-line); }
-.motor-exit-button { position: absolute; bottom: 16px; right: 16px; }
+.motor-exit-button { position: absolute; z-index: 50; bottom: 16px; right: 16px; color: var(--heading); }
+.motor-exit-button:hover { color: var(--primary); border-color: var(--primary); }
+.motor-cortex-play[data-paused=true] * { animation-play-state: paused !important; }
+.game-interrupt-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.game-interrupt-panel { width: min(28rem, 100%); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 8px 24px rgba(20, 33, 43, .12); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-interrupt-panel h2 { margin: 0; color: var(--heading); }
+.game-interrupt-panel button { margin: 8px 8px 0 0; }
+.game-interrupt-panel .btn-ghost, .motor-exit-button { font-weight: 800; }
+.game-interrupt-panel .btn-primary { min-height: 48px; padding: 8px 24px; border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); font-weight: 800; }
+.game-interrupt-panel .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.game-interrupt-panel .btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+@media (max-width: 639px) { .game-interrupt-panel button { display: block; width: 100%; margin: 12px 0 0; } }
 .motor-loading { padding: 24px; }
 .motor-input-error { color: var(--text); border-left: 4px solid var(--primary); padding: 12px; }
 .training-config-body label { display: grid; gap: 8px; margin-top: 16px; }

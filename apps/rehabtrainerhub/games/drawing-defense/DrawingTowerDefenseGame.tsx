@@ -1,8 +1,8 @@
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { useT, type TranslationKey } from './i18n/useT';
-import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
-import { SendGameResult, UploadSample, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
+import { useFullscreenTrainingRoot } from './runtime/trainingLifecycle';
+import { SendGameEvent, SendGameResult, UploadSample, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
 import { defaultSettings, ValidateSettings, type DrawingSettings } from './settings';
 import starSkyUrl from './textures/StarSky.png';
@@ -130,6 +130,7 @@ const shapeLabelKeys: Record<ShapeId, TranslationKey> = {
 };
 export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
     const { t, lang } = useT();
+    const en = lang === 'en';
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -146,6 +147,14 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const isDrawingRef = useRef(false);
     const metricsRef = useRef({ defeated: 0, hp: defaultHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 });
     const phaseRef = useRef<GamePhase>('menu');
+    const formRef = useRef<HTMLFormElement>(null);
+    const pausedRef = useRef(false);
+    const [paused, setPaused] = useState(false);
+    const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+    const stopRef = useRef<HTMLButtonElement>(null);
+    const continueRef = useRef<HTMLButtonElement>(null);
+    const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+    const restoreStopRef = useRef(false);
     const configRef = useRef({
         difficulty: 'Beginner' as Difficulty,
         gameDurationSec: defaultGameDurationSeconds,
@@ -159,9 +168,11 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
     const [phase, setPhaseState] = useState<GamePhase>('menu');
     useEffect(() => {
-      if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
       return StopMidiMusic;
-    }, [phase]);
+    }, [phase, paused]);
+    useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+    useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
     useEffect(() => DisposeAudioFeedback, []);
 
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
@@ -214,8 +225,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         setMaxHp(restored.maxHp); setSpeed(restored.speed); setStrictness(restored.strictness); setStrokeWaitMs(restored.strokeWaitMs);
         setBackgroundMode(restored.backgroundMode); setBackgroundColor(restored.backgroundColor); setSoundEnabled(restored.soundEnabled);
     }), []);
-    const confirmSettings = (form: HTMLFormElement | null | undefined) => {
-        if (!form?.reportValidity()) return;
+    const confirmSettings = () => {
+        if (!formRef.current?.reportValidity()) return;
         const settings: DrawingSettings = { difficulty, gameDurationSec: gameDurationSec ?? 0, customDuration: customDurationSelected,
             customGameDurationSec, maxHp, speed, strictness, strokeWaitMs,
             backgroundMode: backgroundMode === 'image' ? 'stars' : backgroundMode, backgroundColor, soundEnabled };
@@ -442,7 +453,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         });
     }, [t]);
     const handlePointerEnd = useCallback(() => {
-        if (!isDrawingRef.current)
+        if (pausedRef.current || !isDrawingRef.current)
             return;
         isDrawingRef.current = false;
         if (pathRef.current.length > 1) {
@@ -483,6 +494,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         if (!app)
             return;
         await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:drawing-defense', onStart: () => {
+                pausedRef.current = false;
+                setPaused(false);
+                app.ticker.start();
                 ResizePixiAppToElement(app, pixiHostRef.current);
                 clearPixiState();
                 app.stage.removeChildren();
@@ -494,16 +508,32 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                 setPhase('playing');
             } });
     }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
-    const returnToMenu = useCallback(() => {
-        jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
-        const app = appRef.current;
+    const exitGame = useCallback(() => {
+        phaseRef.current = 'menu';
+        pausedRef.current = false;
+        setPaused(false);
         clearPixiState();
-        if (app) {
-            app.stage.removeChildren();
-            drawLayout(app);
-        }
-        setPhase('menu');
-    }, [clearPixiState, drawLayout, setPhase]);
+        appRef.current?.ticker.start();
+        jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+        onExit();
+    }, [clearPixiState, onExit]);
+    const pause = useCallback(() => {
+        if (pausedRef.current || phaseRef.current !== 'playing') return;
+        pausedRef.current = true;
+        setFullscreenInterrupted(false);
+        clearDrawingInput();
+        appRef.current?.ticker.stop();
+        DisposeAudioFeedback();
+        setPaused(true);
+    }, [clearDrawingInput]);
+    const resume = useCallback(() => {
+        if (!pausedRef.current) return;
+        pausedRef.current = false;
+        restoreStopRef.current = true;
+        setFullscreenInterrupted(false);
+        setPaused(false);
+        appRef.current?.ticker.start();
+    }, []);
     const handleBackgroundImageUpload = useCallback((file: File | undefined) => {
         if (!file || !file.type.startsWith('image/'))
             return;
@@ -610,10 +640,15 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             appRef.current = null;
         };
     }, [drawLayout, finishGame, recordEnemyOutcome, redrawPath, spawnEnemy]);
-    useTrainingAbort({
-        active: phase === 'playing',
-        onAbort: returnToMenu,
-    });
+    useEffect(() => {
+        if (phase !== 'playing') return;
+        SendGameEvent('active');
+        const keys = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } } };
+        const fullscreen = () => { if (!document.fullscreenElement && phaseRef.current === 'playing') { pause(); setFullscreenInterrupted(true); } };
+        window.addEventListener('keydown', keys);
+        document.addEventListener('fullscreenchange', fullscreen);
+        return () => { window.removeEventListener('keydown', keys); document.removeEventListener('fullscreenchange', fullscreen); };
+    }, [phase, pause, resume]);
     useEffect(() => {
         const overlay = overlayRef.current;
         if (!overlay)
@@ -623,7 +658,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             return { x: event.clientX - rect.left, y: event.clientY - rect.top };
         };
         const onPointerDown = (event: PointerEvent) => {
-            if (phaseRef.current !== 'playing')
+            if (pausedRef.current || phaseRef.current !== 'playing')
                 return;
             event.preventDefault();
             if (recognitionTimerRef.current !== null) {
@@ -642,7 +677,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             redrawPath();
         };
         const onPointerMove = (event: PointerEvent) => {
-            if (!isDrawingRef.current || phaseRef.current !== 'playing')
+            if (pausedRef.current || !isDrawingRef.current || phaseRef.current !== 'playing')
                 return;
             event.preventDefault();
             pathRef.current.push(toPoint(event));
@@ -661,16 +696,19 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     }, [handlePointerEnd, redrawPath]);
     return (<div ref={fullscreenRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
       <div ref={jsPsychHostRef} className="drawing-defense-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
-      <div ref={pixiHostRef} className="drawing-defense-stage"/>
-      <div ref={overlayRef} className="drawing-defense-input"/>
+      <div ref={pixiHostRef} className="drawing-defense-stage" inert={paused}/>
+      <div ref={overlayRef} className="drawing-defense-input" inert={paused}/>
+      {phase === 'playing' && <button ref={stopRef} className="btn btn-ghost drawing-stop" type="button" onClick={pause} inert={paused}>{en ? 'Stop' : '停止'}</button>}
+      {phase === 'playing' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="drawing-pause-title"
+        onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+        <h2 id="drawing-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+        <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended. Ending the activity will not save this session. Drawing samples already sent are not affected.' : '全螢幕已結束；結束後不會保存這次紀錄；已送出的畫作樣本不受影響。') : (en ? 'Ending the activity will not save this session. Drawing samples already sent are not affected.' : '結束後不會保存這次紀錄；已送出的畫作樣本不受影響。')}</p>
+        <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+        <button className="btn btn-ghost" type="button" onClick={exitGame}>{en ? 'End activity' : '結束活動'}</button>
+      </div></div>}
 
       {phase === 'menu' && <section className="training-panel">
-        <form className="training-config" onSubmit={(event) => { event.preventDefault(); confirmSettings(event.currentTarget); }} onKeyDown={event => {
-          if (event.key === 'Enter' && event.target instanceof HTMLInputElement && ['number', 'text'].includes(event.target.type)) {
-            event.preventDefault();
-            confirmSettings(event.currentTarget);
-          }
-        }}>
+        <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }} onKeyDown={event => { if (event.key === 'Enter' && event.target instanceof HTMLInputElement && ['number', 'text'].includes(event.target.type)) { event.preventDefault(); confirmSettings(); } }}>
           <header className="training-config-header"><h2>{t('training.drawing.title')}</h2></header>
           <div className="training-config-body">
             <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
@@ -693,7 +731,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               <label><input type="checkbox" checked={soundEnabled} onChange={event => setSoundEnabled(event.target.checked)} />{lang === 'en' ? 'Sound feedback' : '音效回饋'}</label>
             </section>
           </div>
-          <footer className="config-actions"><div className="training-config-navigation-buttons"><button className="btn btn-primary" type="button" onClick={event => confirmSettings(event.currentTarget.form)}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button><button className="btn btn-ghost" type="button" onClick={onExit}>{lang === 'en' ? 'Back' : '返回'}</button></div></footer>
+          <footer className="config-actions"><div className="training-config-navigation-buttons"><button className="btn btn-ghost" type="button" onClick={onExit}>{en ? 'Back' : '返回'}</button><button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button></div></footer>
         </form>
       </section>}
 
@@ -716,16 +754,21 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
 
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
-            <h1>{t('drawing.results.complete')}</h1>
-            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{t('training.drawing.title')}</p></header>
             <section className="score-priority" aria-labelledby="score-priority-title">
-              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <p className="score-complete" id="score-priority-title">{en ? 'Activity complete' : '已完成本次活動'}</p>
               <dl className="score-key-grid">
                 <div className="score-key-metric"><dt>{t('drawing.results.defeatedEnemies')}</dt><dd>{result.Enemies_Defeated}<small> / {result.Enemies_Spawned}</small></dd></div>
                 <div className="score-key-metric"><dt>{lang === 'en' ? 'HP remaining' : '剩餘耐久'}</dt><dd>{result.HP_Remaining}<small> / {result.Starting_HP}</small></dd></div>
                 <div className="score-key-metric"><dt>{t('drawing.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
               </dl>
             </section>
+            <p className="score-save-status" role="status">{!IsHubGame() ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。') : saveState === 'saved' ? (en ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (en ? 'Save failed' : '保存失敗') : (en ? 'Saving record…' : '正在保存紀錄…')}</p>
+            <div className="score-actions">
+              {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry saving' : '重試保存'}</button>}
+              <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{!IsHubGame() ? (en ? 'Back to settings' : '返回設定') : t('training.returnLobby')}</button>
+            </div>
+            <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
               <dl className="score-context-list">
@@ -735,9 +778,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
 
-            <p className="score-save-status" role="status">{!IsHubGame() ? (lang === 'en' ? 'Local session; open from the Hub to save a record.' : '本機練習；從 Hub 開啟才能保存紀錄。') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving record…' : '正在保存紀錄…')}</p>
-            {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry saving' : '重試保存'}</button>}
-            <button type="button" className="btn btn-primary score-return-button" onClick={onExit}>{!IsHubGame() ? (lang === 'en' ? 'Back to settings' : '返回設定') : t('training.returnLobby')}</button>
+            </details>
           </div>
         </div>)}
     </div>);

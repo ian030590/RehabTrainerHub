@@ -1,6 +1,6 @@
-import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
+import { useFullscreenTrainingRoot } from './runtime/trainingLifecycle';
 import { useT } from './i18n/useT';
-import { SendGameResult, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
+import { SendGameEvent, SendGameResult, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
 import { defaultSettings, BuildRuntimeConfig, BuildGameScore, ValidateSettings, type AsteroidSettings } from './settings';
 import { PlayFailureSound, PlayAsteroidFallSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
@@ -287,6 +287,7 @@ const copy = {
 } as const;
 export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const { lang, t } = useT();
+    const en = lang === 'en';
     const labels = copy[lang];
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +301,13 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const shieldPositionRef = useRef(0.5);
     const activeControlModeRef = useRef<ControlMode>('mouse');
     const phaseRef = useRef<GamePhase>('menu');
+    const pausedRef = useRef(false);
+    const [paused, setPaused] = useState(false);
+    const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+    const stopRef = useRef<HTMLButtonElement>(null);
+    const continueRef = useRef<HTMLButtonElement>(null);
+    const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+    const restoreStopRef = useRef(false);
     const mountedRef = useRef(true);
     const resultRecordsRef = useRef<ThreatRecord[]>([]);
     const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics(defaultHp));
@@ -315,9 +323,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const [phase, setPhaseState] = useState<GamePhase>('menu');
     const [hud, setHud] = useState({ hp: maxHp, remainingSec: durationSec });
     useEffect(() => {
-      if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
       return StopMidiMusic;
-    }, [phase]);
+    }, [phase, paused]);
+    useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+    useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
     useEffect(() => DisposeAudioFeedback, []);
     useEffect(() => { if (phase === 'menu') DisposeAudioFeedback(); }, [phase]);
     const [result, setResult] = useState<SessionRecord | null>(null);
@@ -357,8 +367,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
         if (restored && phaseRef.current === 'menu') setSettings(restored);
     }), []);
-    const confirmSettings = (form: HTMLFormElement | null) => {
-        if (!form?.reportValidity() || !ValidateSettings(settingsRef.current)) return;
+    const confirmSettings = () => {
+        if (!settingsDialogRef.current?.querySelector('form')?.reportValidity() || !ValidateSettings(settingsRef.current)) return;
         SaveGameSettings(settingsRef.current);
         setPhase('rules');
     };
@@ -417,10 +427,14 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         SendGameResult({ ...settingsRef.current }, score.summary, score.rounds);
     }, [setPhase]);
     const beginPlaying = useCallback(() => {
+        pausedRef.current = false;
+        setPaused(false);
+        setFullscreenInterrupted(false);
         const app = appRef.current;
         const textures = texturesRef.current;
         if (!app || !textures)
             return;
+        app.ticker.start();
         ResizePixiAppToElement(app, pixiHostRef.current);
         ResetAsteroidScene(app, sceneRef, textures);
         const config = configRef.current;
@@ -444,23 +458,42 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         await fullscreenPromise;
         await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:asteroid-shield', onStart: beginPlaying });
     }, [beginPlaying, enterTrainingFullscreen, rendererReady]);
-    const returnToMenu = useCallback(() => {
-        jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
-        ClearAsteroidScene(sceneRef.current);
-        metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
-        resultRecordsRef.current = [];
-        setResult(null);
-        showConfiguration();
-    }, [showConfiguration]);
     const exitGame = useCallback(() => {
+        phaseRef.current = 'menu';
+        pausedRef.current = false;
+        setPaused(false);
         effectsRef.current?.clear();
+        appRef.current?.ticker.start();
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
-        onExit();
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined).finally(onExit);
+        else onExit();
     }, [onExit]);
-    useTrainingAbort({
-        active: phase === 'initializing' || phase === 'playing',
-        onAbort: returnToMenu,
-    });
+    const pause = useCallback(() => {
+        if (pausedRef.current || phaseRef.current !== 'playing') return;
+        pausedRef.current = true;
+        appRef.current?.ticker.stop();
+        DisposeAudioFeedback();
+        setPaused(true);
+    }, []);
+    const resume = useCallback(() => {
+        if (!pausedRef.current) return;
+        pausedRef.current = false;
+        restoreStopRef.current = true;
+        setFullscreenInterrupted(false);
+        setPaused(false);
+        appRef.current?.ticker.start();
+    }, []);
+    useEffect(() => {
+        if (phase !== 'playing') return;
+        SendGameEvent('active');
+        const keys = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
+        };
+        const fullscreen = () => { if (!document.fullscreenElement && phaseRef.current === 'playing') { setFullscreenInterrupted(true); pause(); } };
+        window.addEventListener('keydown', keys);
+        document.addEventListener('fullscreenchange', fullscreen);
+        return () => { window.removeEventListener('keydown', keys); document.removeEventListener('fullscreenchange', fullscreen); };
+    }, [phase, pause, resume]);
     useEffect(() => {
         let cancelled = false;
         const app = new Application();
@@ -497,6 +530,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     metricsRef,
                     configRef,
                     shieldPositionRef,
+                    pausedRef,
                     resultRecordsRef,
                     onSuccess: () => PlaySuccessSound(jsPsychRef),
                     onFailure: () => PlayFailureSound(jsPsychRef),
@@ -506,7 +540,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     onProgress: (hp, remainingSec) => setHud(previous => previous.hp === hp && previous.remainingSec === remainingSec
                         ? previous : { hp, remainingSec }),
                 });
-                if (effectsRef.current?.activeCount) {
+                if (!pausedRef.current && effectsRef.current?.activeCount) {
                     const scene = sceneRef.current;
                     const protectedRects = phaseRef.current === 'playing' && scene
                         ? [scene.ship, scene.shield, ...scene.threats.map(threat => threat.sprite)]
@@ -557,7 +591,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         if (!host)
             return;
         const updateFromPointer = (event: PointerEvent) => {
-            if (phaseRef.current !== 'playing' || activeControlModeRef.current !== 'mouse')
+            if (pausedRef.current || phaseRef.current !== 'playing' || activeControlModeRef.current !== 'mouse')
                 return;
             const rect = host.getBoundingClientRect();
             shieldPositionRef.current = Clamp((event.clientX - rect.left) / rect.width, 0, 1);
@@ -573,30 +607,37 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const rendererErrorNotice = rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>;
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} className="asteroid-shield-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
-      <div ref={pixiHostRef} className="asteroid-shield-stage"/>
+      <div ref={pixiHostRef} className="asteroid-shield-stage" inert={paused}/>
       <canvas ref={effectsCanvasRef} className="asteroid-fx" aria-hidden="true"/>
-      {phase === 'playing' && <section className="asteroid-hud" aria-label={lang === 'en' ? 'Training status' : '訓練狀態'}>
+      {phase === 'playing' && <section className="asteroid-hud" inert={paused} aria-label={lang === 'en' ? 'Training status' : '訓練狀態'}>
         <p>{labels.hp} <output>{hud.hp} / {maxHp}</output></p>
         <div className="asteroid-health-bar" role="progressbar" aria-label={labels.hp} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hud.hp}>
           <div style={{ width: `${hud.hp / maxHp * 100}%` }}/>
         </div>
         <p>{labels.timeLeft} <time dateTime={`PT${hud.remainingSec}S`} data-remaining={hud.remainingSec}>{Math.floor(hud.remainingSec / 60)}:{String(hud.remainingSec % 60).padStart(2, '0')}</time></p>
       </section>}
+      {phase === 'playing' && <button ref={stopRef} type="button" className="btn btn-ghost asteroid-stop" onClick={pause} inert={paused}>{en ? 'Stop' : '停止'}</button>}
+      {phase === 'playing' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="asteroid-pause-title"
+        onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+        <h2 id="asteroid-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+        <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended. Ending the activity will not save this session.' : '全螢幕已結束；結束活動後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+        <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+        <button className="btn btn-ghost" type="button" onClick={exitGame}>{en ? 'End activity' : '結束活動'}</button>
+      </div></div>}
 
       {(phase === 'menu' || phase === 'rules') && <div className="asteroid-tutorial-panel" inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
         <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} shieldSizePercent={shieldSizePercent} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
       </div>}
 
       {phase === 'menu' && <dialog ref={settingsDialogRef} className="game-settings-dialog" aria-labelledby="asteroid-settings-title" onCancel={event => { event.preventDefault(); onExit(); }}>
-        <form className="training-config game-settings-form" onKeyDown={event => {
+        <form className="training-config game-settings-form" onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); confirmSettings(); }
           if (event.key === 'Tab') {
             const controls = event.currentTarget.querySelectorAll<HTMLElement>('button, input, select');
             if (document.activeElement === controls[event.shiftKey ? 0 : controls.length - 1]) {
               event.preventDefault(); controls[event.shiftKey ? controls.length - 1 : 0]?.focus();
             }
           }
-          if (event.key === 'Enter') { event.preventDefault(); confirmSettings(event.currentTarget); }
-        }} onSubmit={event => event.preventDefault()}>
+        }} onSubmit={event => { event.preventDefault(); confirmSettings(); }}>
           <header className="training-config-header"><h2 id="asteroid-settings-title">{labels.title}</h2></header>
           <div className="training-config-body">
             {rendererErrorNotice}
@@ -619,8 +660,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             </section>
           </div>
           <footer className="config-actions"><div className="training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={event => confirmSettings(event.currentTarget.form)}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
             <button type="button" className="btn btn-ghost" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+            <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           </div></footer>
         </form>
       </dialog>}
@@ -628,16 +669,21 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       {phase !== 'menu' && rendererErrorNotice}
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
-            <header className="asteroid-result-heading"><h1>{labels.resultTitle}</h1><span ref={finishAnchorRef} className="asteroid-finish-anchor" aria-hidden="true"/></header>
-            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <header className="score-header asteroid-result-heading"><div className="score-header-title"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{labels.title}</p></div><span ref={finishAnchorRef} className="asteroid-finish-anchor" aria-hidden="true"/></header>
             <section className="score-priority" aria-labelledby="score-priority-title">
-              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <p className="score-complete" id="score-priority-title">{en ? 'Activity complete' : '已完成本次活動'}</p>
               <dl className="score-key-grid">
                 <div className="score-key-metric"><dt>{labels.statusScore}</dt><dd>{result.Score}</dd></div>
                 <div className="score-key-metric"><dt>{labels.finalHp}</dt><dd>{result.Final_HP}<small> / {result.Starting_HP}</small></dd></div>
                 <div className="score-key-metric"><dt>{labels.objectsBlocked}</dt><dd>{result.Objects_Blocked}<small> / {result.Objects_Spawned}</small></dd></div>
               </dl>
             </section>
+            <p className="score-save-status" role="status">{!IsHubGame() ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。') : saveState === 'saved' ? (en ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (en ? 'Save failed' : '保存失敗') : (en ? 'Saving…' : '保存中…')}</p>
+            <div className="score-actions">
+              {IsHubGame() && saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
+              <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+            </div>
+            <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
               <dl className="score-context-list">
@@ -651,10 +697,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               </dl>
             </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
-
-            <p className="score-save-status" role="status">{!IsHubGame() ? (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving…' : '保存中…')}</p>
-            {IsHubGame() && saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
-            <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+            </details>
           </div>
         </div>)}
 
@@ -728,9 +771,10 @@ function ClearAsteroidScene(scene: AsteroidScene | null): void {
     });
     scene.threats = [];
 }
-function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onFall, onComplete, onProgress, onEffect, }: {
+function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onFall, onComplete, onProgress, onEffect, pausedRef }: {
     app: Application;
     ticker: Ticker;
+    pausedRef: { current: boolean };
     sceneRef: {
         current: AsteroidScene | null;
     };
@@ -759,6 +803,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     onProgress: (hp: number, remainingSec: number) => void;
     onEffect?: (event: AsteroidEffectEvent) => void;
 }): void {
+    if (pausedRef.current) return;
     const scene = sceneRef.current;
     if (!scene)
         return;

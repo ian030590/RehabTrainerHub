@@ -38,7 +38,9 @@ async function LoadAsteroidGameplay() {
   const progress = [];
   const falls = [];
   const effects = [];
+  const pausedRef = { current: false };
   const options = { app, sceneRef: { current: scene }, metricsRef, configRef, shieldPositionRef,
+    pausedRef,
     resultRecordsRef: { current: records }, onSuccess: () => {}, onFailure: () => {}, onComplete: () => {},
     onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }), onFall: () => falls.push(metricsRef.current.elapsedMs),
     onEffect: event => effects.push(event) };
@@ -48,10 +50,10 @@ async function LoadAsteroidGameplay() {
     ts.forEachChild(node, findPointer);
   };
   findPointer(syntax);
-  const pointer = new Function('host', 'phaseRef', 'activeControlModeRef', 'configRef', 'shieldPositionRef', 'metricsRef',
+  const pointer = new Function('host', 'phaseRef', 'activeControlModeRef', 'configRef', 'shieldPositionRef', 'metricsRef', 'pausedRef',
     'Clamp', transpile('const ' + pointerDeclaration) + '\nreturn updateFromPointer;')(
     { getBoundingClientRect: () => ({ left: 20, top: 40, width: app.screen.width, height: app.screen.height }) },
-    { current: 'playing' }, { current: 'mouse' }, configRef, shieldPositionRef, metricsRef,
+    { current: 'playing' }, { current: 'mouse' }, configRef, shieldPositionRef, metricsRef, pausedRef,
     (value, min, max) => Math.min(max, Math.max(min, value)));
   const layout = () => runtime.UpdateSceneLayout(app, scene, configRef.current.shieldSizePercent, shieldPositionRef.current);
   const spawn = (kind = 'normal', random = 0.5) => {
@@ -63,9 +65,43 @@ async function LoadAsteroidGameplay() {
     } finally { Math.random = originalRandom; }
     return scene.threats.at(-1);
   };
-  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, falls, effects, pointer, layout, spawn,
+  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, falls, effects, pointer, layout, spawn, pausedRef,
     tick: (deltaMS = 16, visuals = true) => runtime.UpdateAsteroidGame({ ...options, onEffect: visuals ? options.onEffect : undefined, ticker: { deltaMS } }) };
 }
+
+test('pausing freezes objects, elapsed time and pointer input until resumed', async () => {
+  const game = await LoadAsteroidGameplay();
+  game.layout();
+  const threat = game.spawn();
+  game.tick(50);
+  const before = { y: threat.y, elapsed: game.metricsRef.current.elapsedMs, shield: game.shieldPositionRef.current, records: game.records.length };
+  game.pausedRef.current = true;
+  for (let index = 0; index < 100; index++) game.tick(50);
+  game.pointer({ clientX: 900 });
+  assert.deepEqual({ y: threat.y, elapsed: game.metricsRef.current.elapsedMs, shield: game.shieldPositionRef.current, records: game.records.length }, before);
+  game.pausedRef.current = false;
+  game.tick(50);
+  game.pointer({ clientX: 900 });
+  assert.ok(threat.y > before.y);
+  assert.equal(game.metricsRef.current.elapsedMs, before.elapsed + 50);
+  assert.notEqual(game.shieldPositionRef.current, before.shield);
+});
+
+test('pause stops the renderer ticker and feedback immediately', async () => {
+  const source = await readFile(resolve(gameRoot, 'AsteroidShieldGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let declaration;
+  const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === 'pause') declaration = node; ts.forEachChild(node, visit); };
+  visit(syntax);
+  const code = ts.transpileModule(`const ${declaration.getText(syntax)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const calls = [], pausedRef = { current: false };
+  const pause = new Function('useCallback', 'pausedRef', 'phaseRef', 'appRef', 'DisposeAudioFeedback', 'setPaused', `${code}; return pause;`)(
+    fn => fn, pausedRef, { current: 'playing' }, { current: { ticker: { stop: () => calls.push('ticker') } } },
+    () => calls.push('audio'), value => calls.push(value));
+  pause();
+  assert.equal(pausedRef.current, true);
+  assert.deepEqual(calls, ['ticker', 'audio', true]);
+});
 
 test('interceptions and ship damage emit positioned feedback without changing records or gameplay randomness', async () => {
   for (const kind of ['normal', 'heavy', 'lethal', 'energy']) {
@@ -103,7 +139,7 @@ async function LoadEffectHarness(reduced = false) {
   const media = new EventTarget(); media.matches = reduced;
   const view = new EventTarget();
   view.matchMedia = () => media;
-  view.getComputedStyle = () => ({ getPropertyValue: name => ({ '--primary': '#005eb8', '--primary-hover': '#00478d', '--primary-soft': '#e8f2fc', '--text-on-accent': '#ffffff', '--hud-health': '#49e78c' })[name] });
+  view.getComputedStyle = () => ({ getPropertyValue: name => ({ '--primary': '#005eb8', '--primary-hover': '#00478d', '--fx-soft': '#e8f2fc', '--text-on-accent': '#ffffff', '--hud-health': '#49e78c' })[name] });
   const document = new EventTarget(); document.defaultView = view; document.hidden = false;
   const draws = []; const clears = []; const images = [];
   const context = { clearRect: (...args) => clears.push(args), drawImage: (...args) => draws.push(args),
@@ -346,7 +382,7 @@ test('asteroid release owns UI, dependencies, metadata and the captured gameplay
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.13');
+  assert.equal(pkg.version, '2.1.0');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);

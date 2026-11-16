@@ -62,6 +62,7 @@ for (const [game, component] of [
 });
 
 test('motor camera consent and initialization finish in windowed mode before the final Start click', async () => {
+  const { PauseClock } = await import('../apps/rehabtrainerhub/games/motor-cortex-rehab/logic/pauseClock.ts');
   const camera = Deferred();
   const fullscreen = Deferred();
   const actions = [];
@@ -77,7 +78,8 @@ test('motor camera consent and initialization finish in windowed mode before the
     PrepareAudioFeedback() {}, jsPsychRef: {}, metricsRef: {}, targetRef: {},
     laserAudioRef: { current: null }, CreateLaserAudio: () => { audioInitializations++; return { dispose() {} }; },
     enemyRef: {}, CreateLaserEncounter: () => ({}),
-    CreateEmptyMetrics: () => ({}), performance: { now: () => 10 },
+    CreateEmptyMetrics: () => ({}), performance: { now: () => 10 }, PauseClock,
+    clockRef: {}, pausedRef: {}, cameraLostRef: {}, setPaused() {}, tickRef: {},
     jsPsychLifecycleRef: { current: { start: async ({ onStart }) => { actions.push('timer'); onStart(); } } },
     SendGameEvent: type => actions.push(type), requestAnimationFrame: () => 1, animationRef: {},
   };

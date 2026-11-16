@@ -52,7 +52,7 @@ export class AsteroidEffects {
     this.scratchContext = this.scratch.getContext('2d');
     this.pixels = this.scratchContext?.createImageData(200, 112);
     const style = this.view.getComputedStyle(canvas);
-    this.palette = ['--primary-hover', '--primary', '--primary-soft', '--text-on-accent']
+    this.palette = ['--primary-hover', '--primary', '--fx-soft', '--text-on-accent']
       .map(name => style.getPropertyValue(name).trim());
     this.resume();
     for (const event of ['blur', 'pagehide', 'game:pause']) this.view.addEventListener(event, this.suspend);

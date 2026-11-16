@@ -137,6 +137,7 @@ function CreateEmptyGestureStats(): Record<GestureId, GestureStat> {
 }
 export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const { lang, t } = useT();
+    const en = lang === 'en';
     const fullscreenRootRef = useRef<HTMLDivElement | null>(null);
     const enterTrainingFullscreen = useCallback(async () => {
         try { await fullscreenRootRef.current?.requestFullscreen?.(); } catch { /* Windowed input remains available. */ }
@@ -148,6 +149,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const appRef = useRef<Application | null>(null);
     const sceneRef = useRef<BattleScene | null>(null);
     const phaseRef = useRef<GamePhase>('menu');
+    const pausedRef = useRef(false);
+    const pausedAtRef = useRef(0);
+    const cameraLostRef = useRef(false);
+    const reconnectingRef = useRef(false);
+    const [paused, setPaused] = useState(false);
+    const [pauseReason, setPauseReason] = useState<'manual' | 'fullscreen' | 'camera'>('manual');
+    const stopRef = useRef<HTMLButtonElement>(null);
+    const continueRef = useRef<HTMLButtonElement>(null);
+    const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+    const restoreStopRef = useRef(false);
     const inputGenerationRef = useRef(0);
     const calibrationIndexRef = useRef(0);
     const calibrationCapturingRef = useRef(false);
@@ -166,6 +177,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const enemyHpRef = useRef(defaultEnemyHp);
     const targetGestureRef = useRef<GestureId>(1);
     const attackActiveRef = useRef(false);
+    const attackGenerationRef = useRef(0);
     const mountedRef = useRef(true);
     const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
@@ -185,9 +197,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     });
     const [phase, setPhaseState] = useState<GamePhase>('menu');
     useEffect(() => {
-      if (phase === 'combat' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      if (phase === 'combat' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
       return StopMidiMusic;
-    }, [phase]);
+    }, [phase, paused]);
+    useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+    useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
     useEffect(() => DisposeAudioFeedback, []);
     const [enemyMaxHp, setEnemyMaxHp] = useState(defaultGestureConfig.enemyMaxHp);
     const [holdDuration, setHoldDuration] = useState(defaultGestureConfig.holdDurationSec);
@@ -289,6 +303,38 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setCombatGesture(null);
         setCombatHoldProgress(0);
     }, []);
+    const pause = useCallback((reason: 'manual' | 'fullscreen' | 'camera' = 'manual') => {
+        if (phaseRef.current !== 'combat') return;
+        if (reason === 'camera') cameraLostRef.current = true;
+        if (reason !== 'manual' || !pausedRef.current) setPauseReason(reason);
+        if (pausedRef.current) return;
+        pausedRef.current = true;
+        pausedAtRef.current = performance.now();
+        appRef.current?.ticker.stop();
+        battleFeedbackRef.current?.clear();
+        DisposeAudioFeedback();
+        setPaused(true);
+    }, []);
+    const resume = useCallback(async () => {
+        if (!pausedRef.current || reconnectingRef.current) return;
+        if (cameraLostRef.current) {
+            reconnectingRef.current = true;
+            try { await StartHandInput(); cameraLostRef.current = false; }
+            catch { setPauseReason('camera'); return; }
+            finally { reconnectingRef.current = false; }
+            if (!mountedRef.current || phaseRef.current !== 'combat' || !pausedRef.current) return;
+        }
+        const gap = performance.now() - pausedAtRef.current;
+        metricsRef.current.startedAt += gap;
+        if (holdRef.current.lastTickAt) holdRef.current.lastTickAt += gap;
+        if (holdRef.current.lastValidAt) holdRef.current.lastValidAt += gap;
+        lastHandSeenAtRef.current = performance.now();
+        pausedRef.current = false;
+        restoreStopRef.current = true;
+        setPaused(false);
+        appRef.current?.ticker.start();
+    }, []);
+    const pauseManually = useCallback(() => pause(), [pause]);
     const completeSession = useCallback((completedAt: number) => {
         if (!mountedRef.current || phaseRef.current === 'results' || phaseRef.current === 'menu')
             return;
@@ -334,11 +380,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         if (attackActiveRef.current || phaseRef.current !== 'combat')
             return;
         attackActiveRef.current = true;
+        const generation = attackGenerationRef.current;
         const targetAtCast = configRef.current.targetMode === 'directed' ? targetGestureRef.current : null;
         PlaySuccessSound(jsPsychRef);
-        await AnimateAttack(appRef.current, sceneRef.current, gesture, () => battleFeedbackRef.current?.play(gesture, sceneRef.current));
-        if (!mountedRef.current || phaseRef.current !== 'combat') {
-            attackActiveRef.current = false;
+        await AnimateAttack(appRef.current, sceneRef.current, gesture, () => battleFeedbackRef.current?.play(gesture, sceneRef.current),
+            () => generation === attackGenerationRef.current && phaseRef.current === 'combat');
+        if (!mountedRef.current || phaseRef.current !== 'combat' || generation !== attackGenerationRef.current) {
             return;
         }
         const nextHp = Math.max(0, enemyHpRef.current - 1);
@@ -358,7 +405,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         resetHold(false);
         if (nextHp <= 0) {
             battleFeedbackRef.current?.play('defeated', sceneRef.current);
-            window.setTimeout(() => completeSession(performance.now()), 650);
+            if (appRef.current) AfterActiveTime(appRef.current, 650, () => { if (generation === attackGenerationRef.current && phaseRef.current === 'combat') completeSession(performance.now()); });
+            else completeSession(performance.now());
             return;
         }
         if (configRef.current.targetMode === 'directed') {
@@ -418,6 +466,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             void triggerAttack(match.gesture, match.similarity);
     }, [resetHold, triggerAttack]);
     const beginCombat = useCallback(() => {
+        attackGenerationRef.current++;
+        pausedRef.current = false;
+        cameraLostRef.current = false;
+        setPaused(false);
+        appRef.current?.ticker.start();
         const config = configRef.current;
         const firstTarget = RandomGesture();
         targetGestureRef.current = firstTarget;
@@ -530,6 +583,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setCalibrationNotice('');
     }, [enterTrainingFullscreen]);
     const processFrame = useCallback((input: HandInputFrame) => {
+        if (pausedRef.current) return;
         const now = performance.now();
         const currentPhase = phaseRef.current;
         if (currentPhase !== 'calibration' && currentPhase !== 'combat')
@@ -571,6 +625,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             const message = (event as CustomEvent).detail;
             if (message.type === 'frame') processFrame(message.payload);
             if (message.type === 'error' && ['calibration', 'combat'].includes(phaseRef.current)) {
+                if (phaseRef.current === 'combat') { stopVision(); pause('camera'); return; }
                 stopVision();
                 jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-input-failed' });
                 setVisionError(t(message.payload.reason === 'disconnected' ? 'gesture.error.disconnected' : 'gesture.error.initialization'));
@@ -580,7 +635,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         };
         window.addEventListener('game:input', receive);
         return () => window.removeEventListener('game:input', receive);
-    }, [processFrame, showConfiguration, stopVision, t]);
+    }, [pause, processFrame, showConfiguration, stopVision, t]);
     const startCalibration = useCallback(async () => {
         PrepareAudioFeedback(jsPsychRef);
         await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:gesture-battler', onStart: async () => {
@@ -622,6 +677,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             } });
     }, [setPhase, showConfiguration, stopVision, t]);
     const returnToMenu = useCallback(() => {
+        attackGenerationRef.current++;
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
         stopVision();
         resetHold(false);
@@ -633,6 +689,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     }, [resetHold, showConfiguration, stopVision]);
     const exitGame = useCallback(() => {
+        attackGenerationRef.current++;
+        phaseRef.current = 'menu';
+        pausedRef.current = false;
+        setPaused(false);
+        appRef.current?.ticker.start();
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
         stopVision();
         if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined).finally(onExit);
@@ -640,12 +701,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }, [onExit, stopVision]);
     useEffect(() => {
         if (!['initializing', 'calibration', 'combat'].includes(phase)) return;
-        const abort = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); returnToMenu(); } };
-        const fullscreen = () => { if (!document.fullscreenElement) returnToMenu(); };
+        const abort = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (phaseRef.current === 'combat') { if (pausedRef.current) void resume(); else pause(); } else returnToMenu(); } } };
+        const fullscreen = () => { if (!document.fullscreenElement) { if (phaseRef.current === 'combat') pause('fullscreen'); else returnToMenu(); } };
         window.addEventListener('keydown', abort);
         document.addEventListener('fullscreenchange', fullscreen);
         return () => { window.removeEventListener('keydown', abort); document.removeEventListener('fullscreenchange', fullscreen); };
-    }, [phase, returnToMenu]);
+    }, [phase, pause, resume, returnToMenu]);
     useEffect(() => {
         let cancelled = false;
         let initialized = false;
@@ -667,11 +728,13 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             initialized = true;
             host.appendChild(app.canvas);
             app.canvas.className = 'gesture-battler-canvas';
+            let animationTime = 0;
             app.ticker.add((ticker: Ticker) => {
                 const scene = sceneRef.current;
                 if (!scene || phaseRef.current !== 'combat')
                     return;
-                const time = ticker.lastTime / 520;
+                animationTime += ticker.deltaMS;
+                const time = animationTime / 520;
                 scene.enemy.y = scene.enemyBaseY + Math.sin(time) * 3;
                 scene.player.y = scene.playerBaseY + Math.sin(time * 0.8) * 2;
             });
@@ -718,14 +781,15 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
     return (<div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={jsPsychHostRef} className="gesture-battler-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
+      <div className="gesture-running-stage" inert={paused}>
       <div ref={pixiHostRef} className="gesture-battler-stage"/>
       <canvas ref={feedbackCanvasRef} className="gesture-battle-feedback" aria-hidden="true"/>
 
-      <button className="gesture-mobile-back" type="button" onClick={exitGame} aria-label={t('gesture.mobile.backLobby')} title={t('gesture.mobile.backLobby')}>
+      {phase !== 'combat' && <button className="gesture-mobile-back" type="button" onClick={exitGame} aria-label={t('gesture.mobile.backLobby')} title={t('gesture.mobile.backLobby')}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M14.5 5 7.5 12l7 7"/>
         </svg>
-      </button>
+      </button>}
 
       <div className={`gesture-camera ${previewingBattle ? 'gesture-camera-tutorial' : ''} ${phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <p className="gesture-camera-label">{t('gesture.camera.preview')}</p>
@@ -775,8 +839,17 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           </section>
         </div>)}
 
+      </div>
+      {phase === 'combat' && <button ref={stopRef} className="btn btn-ghost gesture-stop" type="button" onClick={pauseManually} inert={paused}>{en ? 'Stop' : '停止'}</button>}
+      {phase === 'combat' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="gesture-pause-title"
+        onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+        <h2 id="gesture-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+        <p>{pauseReason === 'camera' ? (en ? 'Camera input stopped. Ending the activity will not save this session.' : '攝影機輸入已中斷；結束活動後不會保存這次紀錄。') : pauseReason === 'fullscreen' ? (en ? 'Fullscreen ended. Ending the activity will not save this session.' : '全螢幕已結束；結束活動後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+        <button ref={continueRef} className="btn btn-primary" type="button" onClick={() => void resume()}>{en ? 'Continue' : '繼續'}</button>
+        <button className="btn btn-ghost" type="button" onClick={exitGame}>{en ? 'End activity' : '結束活動'}</button>
+      </div></div>}
       {phase === 'menu' && <section className="training-panel gesture-menu-panel">
-        <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}
+        <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
           onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); confirmSettings(); } }}>
           <header className="training-config-header"><h2>{t('training.gesture.title')}</h2></header>
           <div className="training-config-body">
@@ -789,8 +862,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             </section>
           </div>
           <footer className="config-actions"><div className="training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={confirmSettings}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
             <button type="button" className="btn btn-ghost" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
+            <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           </div></footer>
         </form>
       </section>}
@@ -849,16 +922,21 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable gesture-results-container">
           <div className="experiment-results">
-            <h1>{t('gesture.results.title')}</h1>
-            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{t('training.gesture.title')}</p></header>
             <section className="score-priority" aria-labelledby="score-priority-title">
-              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <p className="score-complete" id="score-priority-title">{en ? 'Activity complete' : '已完成本次活動'}</p>
               <dl className="score-key-grid">
                 <div className="score-key-metric"><dt>{t('gesture.results.casts')}</dt><dd>{result.Successful_Casts}</dd></div>
                 <div className="score-key-metric"><dt>{t('gesture.results.interruptions')}</dt><dd>{result.Interrupted_Holds}</dd></div>
                 <div className="score-key-metric"><dt>{t('gesture.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
               </dl>
             </section>
+            <p className="score-save-status" role="status">{saveState === 'saved' ? (en ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (en ? 'Saving…' : '保存中…') : saveState === 'error' ? (en ? 'Save failed. Try again.' : '保存失敗，請重試。') : (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')}</p>
+            <div className="score-actions">
+              {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
+              <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
+            </div>
+            <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
               <dl className="score-context-list">
@@ -893,9 +971,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               </tbody>
             </table></div>
             </section>
-            <p className="score-save-status" role="status">{saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (lang === 'en' ? 'Saving…' : '保存中…') : saveState === 'error' ? (lang === 'en' ? 'Save failed. Try again.' : '保存失敗，請重試。') : (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')}</p>
-            {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
-            <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
+            </details>
           </div>
         </div>)}
 
@@ -1127,7 +1203,17 @@ function CreatePixelHero(): Container {
     hero.addChild(body);
     return hero;
 }
-function AnimateAttack(app: Application | null, scene: BattleScene | null, gesture: GestureId, onImpact: () => void): Promise<void> {
+function AfterActiveTime(app: Application, duration: number, complete: () => void): void {
+    let elapsed = 0;
+    const tick = (ticker: Ticker) => {
+        elapsed += ticker.deltaMS;
+        if (elapsed < duration) return;
+        app.ticker.remove(tick);
+        complete();
+    };
+    app.ticker.add(tick);
+}
+function AnimateAttack(app: Application | null, scene: BattleScene | null, gesture: GestureId, onImpact: () => void, isActive: () => boolean = () => true): Promise<void> {
     if (!app || !scene)
         return Promise.resolve();
     const color = moveColors[gesture - 1];
@@ -1145,6 +1231,7 @@ function AnimateAttack(app: Application | null, scene: BattleScene | null, gestu
         let elapsed = 0;
         const duration = 620;
         const tick = (ticker: Ticker) => {
+            if (!isActive()) { app.ticker.remove(tick); projectile.destroy(); resolve(); return; }
             elapsed += ticker.deltaMS;
             const progress = Clamp(elapsed / duration, 0, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
@@ -1166,7 +1253,7 @@ function AnimateAttack(app: Application | null, scene: BattleScene | null, gestu
             scene.effects.addChild(burst);
             scene.enemy.alpha = 0.28;
             scene.enemy.x += 12;
-            window.setTimeout(() => {
+            AfterActiveTime(app, 260, () => {
                 if (!burst.destroyed)
                     burst.destroy();
                 if (!scene.enemy.destroyed) {
@@ -1174,7 +1261,7 @@ function AnimateAttack(app: Application | null, scene: BattleScene | null, gestu
                     scene.enemy.x -= 12;
                 }
                 resolve();
-            }, 260);
+            });
         };
         app.ticker.add(tick);
     });

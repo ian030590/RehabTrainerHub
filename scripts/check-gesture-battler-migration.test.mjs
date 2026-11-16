@@ -8,6 +8,56 @@ import '../apps/rehabtrainerhub/games/gesture-battler/fx/battleFeedback.test.mjs
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/gesture-battler');
 
+test('combat delays advance only while the Pixi ticker is running', async () => {
+  const source = await readFile(resolve(gameRoot, 'GestureBattlerGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declaration = syntax.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'AfterActiveTime');
+  assert.ok(declaration, 'combat delays use the pausable game ticker');
+  const js = ts.transpileModule(declaration.getText(syntax), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const after = new Function(`${js}; return AfterActiveTime;`)();
+  const callbacks = new Set();
+  let running = true;
+  const ticker = { add: fn => callbacks.add(fn), remove: fn => callbacks.delete(fn) };
+  const advance = deltaMS => { if (running) for (const fn of [...callbacks]) fn({ deltaMS }); };
+  let completed = 0;
+  after({ ticker }, 650, () => completed++);
+  advance(200); running = false; advance(5000);
+  assert.equal(completed, 0);
+  running = true; advance(449); assert.equal(completed, 0);
+  advance(1); assert.equal(completed, 1);
+  advance(500); assert.equal(completed, 1);
+});
+
+test('paused combat ignores hand frames and removes the pause interval from clocks', async () => {
+  const source = await readFile(resolve(gameRoot, 'GestureBattlerGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declarations = new Map();
+  const visit = node => { if (ts.isVariableDeclaration(node) && ['pause', 'resume', 'processFrame'].includes(node.name.getText(syntax))) declarations.set(node.name.getText(syntax), node.getText(syntax)); ts.forEachChild(node, visit); };
+  visit(syntax);
+  const code = ts.transpileModule([...declarations.values()].map(value => `const ${value};`).join('\n'), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let now = 2000;
+  const pausedRef = { current: false }, pausedAtRef = { current: 0 }, metricsRef = { current: { startedAt: 1000 } };
+  const holdRef = { current: { lastTickAt: 1900, lastValidAt: 1800 } }, lastHandSeenAtRef = { current: 1900 };
+  const calls = [];
+  const create = new Function('useCallback', 'phaseRef', 'pausedRef', 'pausedAtRef', 'cameraLostRef', 'reconnectingRef', 'setPauseReason',
+    'performance', 'appRef', 'battleFeedbackRef', 'DisposeAudioFeedback', 'setPaused', 'metricsRef', 'holdRef', 'lastHandSeenAtRef', 'restoreStopRef',
+    'handleCalibrationHand', 'handleCombatHand', 'handleNoHand', 'resetHold', 'showConfiguration', 'stopVision', 't',
+    `${code}; return { pause, resume, processFrame };`);
+  const api = create(fn => fn, { current: 'combat' }, pausedRef, pausedAtRef, { current: false }, { current: false }, () => {},
+    { now: () => now }, { current: { ticker: { stop: () => calls.push('stop'), start: () => calls.push('start') } } },
+    { current: { clear() {} } }, () => {}, () => {}, metricsRef, holdRef, lastHandSeenAtRef, { current: false },
+    () => {}, () => {}, () => {}, () => {}, () => {}, () => {}, () => {});
+  api.pause();
+  api.processFrame({ landmarks: [] });
+  now += 5000;
+  await api.resume();
+  assert.deepEqual(calls, ['stop', 'start']);
+  assert.equal(metricsRef.current.startedAt, 6000);
+  assert.equal(holdRef.current.lastTickAt, 6900);
+  assert.equal(holdRef.current.lastValidAt, 6800);
+  assert.equal(pausedRef.current, false);
+});
+
 test('gesture game owns configuration, tutorial, calibration, combat and complete results', async () => {
   for (const file of (await readdir(gameRoot, { recursive: true })).filter(file =>
     /\.(tsx?|css)$/.test(file) && !file.startsWith('dist'))) {

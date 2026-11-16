@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { initJsPsych } from 'jspsych';
 import { defaultConfig, difficulties, IsMotorConfig, type MotorConfig } from './config';
 import { copy } from './labels';
@@ -15,6 +15,7 @@ import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { Clamp } from './gameUtils';
+import { PauseClock } from './logic/pauseClock';
 
 export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const { lang } = useT();
@@ -28,6 +29,17 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const animationRef = useRef<number | null>(null);
+  const tickRef = useRef<((now: number) => void) | null>(null);
+  const clockRef = useRef(new PauseClock(() => performance.now()));
+  const pausedRef = useRef(false);
+  const cameraLostRef = useRef(false);
+  const reconnectingRef = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const [pauseReason, setPauseReason] = useState<'manual' | 'fullscreen' | 'camera'>('manual');
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const restoreStopRef = useRef(false);
   const generationRef = useRef(0);
   const phaseRef = useRef<GamePhase>('menu');
   const targetRef = useRef<TargetState | null>(null);
@@ -37,9 +49,11 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const metricsRef = useRef(CreateEmptyMetrics());
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useEffect(() => {
-    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useLayoutEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useLayoutEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => {
     const dispose = () => { laserAudioRef.current?.dispose(); DisposeAudioFeedback(); };
     window.addEventListener('pagehide', dispose);
@@ -57,8 +71,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     const update = () => {
       const hand = handRef.current;
       const height = stageRef.current?.clientHeight ?? 0;
-      if (document.hidden) { laserAudioRef.current?.stop(); return; }
-      if (phase === 'playing' && (!hand.visible || performance.now() - hand.lastSeenAt > 240
+      if (document.hidden || paused) { laserAudioRef.current?.stop(); return; }
+      if (phase === 'playing' && (!hand.visible || clockRef.current.now() - hand.lastSeenAt > 240
         || hand.y > height * config.raiseLinePercent / 100)) { laserAudioRef.current?.setFiring(false); return; }
       laserAudioRef.current?.setFiring(phase === 'playing' && live.laserActive, live.insideTarget, live.currentHoldPercent);
     };
@@ -66,7 +80,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     const timer = phase === 'playing' ? window.setInterval(update, 60) : null;
     document.addEventListener('visibilitychange', update);
     return () => { if (timer !== null) window.clearInterval(timer); document.removeEventListener('visibilitychange', update); };
-  }, [phase, live.laserActive, live.insideTarget, live.currentHoldPercent, config.raiseLinePercent]);
+  }, [phase, paused, live.laserActive, live.insideTarget, live.currentHoldPercent, config.raiseLinePercent]);
   useEffect(() => {
     if (phase !== 'playing') DrawHand(handCanvasRef.current, [], config.raiseLinePercent);
   }, [phase, config.raiseLinePercent]);
@@ -87,11 +101,48 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     StopHandInput();
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
     animationRef.current = null;
+    tickRef.current = null;
     handRef.current.visible = false;
     laserAudioRef.current?.stop();
     handCanvasRef.current?.getContext('2d')?.clearRect(0, 0, 320, 240);
   }, []);
+  const pause = useCallback((reason: 'manual' | 'fullscreen' | 'camera' = 'manual') => {
+    if (phaseRef.current !== 'playing') return;
+    if (reason === 'camera') cameraLostRef.current = true;
+    if (reason !== 'manual' || !pausedRef.current) setPauseReason(reason);
+    if (pausedRef.current) return;
+    pausedRef.current = true;
+    clockRef.current.pause();
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+    metricsRef.current.currentHoldMs = 0;
+    setLive(current => ({ ...current, currentHoldPercent: 0, laserActive: false, insideTarget: false }));
+    laserAudioRef.current?.stop();
+    DisposeAudioFeedback();
+    setPaused(true);
+  }, []);
+  const pauseManually = useCallback(() => pause(), [pause]);
+  const resume = useCallback(async () => {
+    if (!pausedRef.current || reconnectingRef.current) return;
+    if (cameraLostRef.current) {
+      reconnectingRef.current = true;
+      const generation = generationRef.current;
+      try { await StartHandInput(config.handChoice); }
+      catch { setPauseReason('camera'); return; }
+      finally { reconnectingRef.current = false; }
+      if (generationRef.current !== generation || phaseRef.current !== 'playing' || !pausedRef.current) return;
+      cameraLostRef.current = false;
+      setHandInputReady(true);
+    }
+    handRef.current.visible = false;
+    clockRef.current.resume();
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    if (tickRef.current) animationRef.current = requestAnimationFrame(tickRef.current);
+  }, [config.handChoice]);
   const showConfiguration = useCallback(() => {
+    pausedRef.current = false; setPaused(false); cameraLostRef.current = false;
     stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'configure' });
     setLive(current => ({ ...current, accuracy: 0, visibility: 0, successes: 0, misses: 0,
       currentHoldPercent: 0, level: 1, handVisible: false, handRaised: false, insideTarget: false, laserActive: false, enemyPhase: 'active', enemyNumber: 1,
@@ -99,7 +150,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     setResult(null); setPhase('menu');
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   }, [stopInput, setPhase]);
-  const exitGame = useCallback(() => { stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit' }); onExit(); }, [stopInput, onExit]);
+  const exitGame = useCallback(() => { phaseRef.current = 'menu'; pausedRef.current = false; setPaused(false); stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit' }); onExit(); }, [stopInput, onExit]);
   useEffect(() => {
     const jsPsych = initJsPsych({ display_element: jsPsychHostRef.current! });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
@@ -109,8 +160,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     window.addEventListener('game:configure', showConfiguration);
     return () => { stopInput(); lifecycle.dispose(); window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', showConfiguration); };
   }, [showConfiguration, stopInput]);
-  useEffect(() => {
-    if (phase === 'menu') formRef.current?.querySelector<HTMLSelectElement>('select')?.focus();
+  useLayoutEffect(() => {
+    if (phase === 'menu') formRef.current?.querySelector<HTMLSelectElement>('select[name="drill"]')?.focus();
     if (phase === 'ready') rootRef.current?.querySelector<HTMLButtonElement>('.motor-tutorial-ready .btn-primary')?.focus();
   }, [phase]);
   useEffect(() => {
@@ -118,28 +169,31 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
       const message = (event as CustomEvent).detail;
       if (!['ready', 'initializing', 'playing'].includes(phaseRef.current)) return;
       if (message.type === 'error') {
+        if (phaseRef.current === 'playing') { pause('camera'); StopHandInput(); setHandInputReady(false); return; }
         showConfiguration();
         setError(message.payload.reason === 'permission' ? labels.permission : message.payload.reason === 'disconnected' ? labels.disconnected : labels.initialization);
       }
-      if (message.type !== 'frame' || phaseRef.current !== 'playing') return;
+      if (message.type !== 'frame' || phaseRef.current !== 'playing' || pausedRef.current) return;
       const stage = stageRef.current;
       const rect = stage ? { width: stage.clientWidth, height: stage.clientHeight } : null;
       const points = message.payload.landmarks as { x: number; y: number; z: number }[];
       DrawHand(handCanvasRef.current, points, config.raiseLinePercent);
       if (points.length && rect) {
-        handRef.current = { ...GetHandCursorPoint(points, rect.width, rect.height), visible: true, handedness: null, lastSeenAt: performance.now() };
-      } else if (performance.now() - handRef.current.lastSeenAt > 240) handRef.current.visible = false;
+        handRef.current = { ...GetHandCursorPoint(points, rect.width, rect.height), visible: true, handedness: null, lastSeenAt: clockRef.current.now() };
+      } else if (clockRef.current.now() - handRef.current.lastSeenAt > 240) handRef.current.visible = false;
     };
     window.addEventListener('game:input', receive);
     return () => window.removeEventListener('game:input', receive);
-  }, [labels, config.raiseLinePercent, showConfiguration]);
+  }, [labels, config.raiseLinePercent, pause, showConfiguration]);
   useEffect(() => {
     const abort = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape' && ['playing', 'initializing'].includes(phaseRef.current)) { event.preventDefault(); showConfiguration(); }
+      if (event.key === 'Escape' && ['playing', 'initializing'].includes(phaseRef.current)) { event.preventDefault(); if (!event.repeat) { if (phaseRef.current === 'playing') { if (pausedRef.current) void resume(); else pause(); } else showConfiguration(); } }
     };
+    const fullscreen = () => { if (!document.fullscreenElement && phaseRef.current === 'playing') pause('fullscreen'); };
     window.addEventListener('keydown', abort);
-    return () => window.removeEventListener('keydown', abort);
-  }, [showConfiguration]);
+    document.addEventListener('fullscreenchange', fullscreen);
+    return () => { window.removeEventListener('keydown', abort); document.removeEventListener('fullscreenchange', fullscreen); };
+  }, [pause, resume, showConfiguration]);
   const firingLineOptions = [{ value: 80, label: labels.raiseLow }, { value: 65, label: labels.raiseMiddle }, { value: 50, label: labels.raiseHigh }];
   const summaryItems = [
     { label: labels.drill, value: labels.drillNames[config.drill] }, { label: labels.difficulty, value: labels.difficultyNames[config.difficulty] },
@@ -147,14 +201,14 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     { label: labels.targetSize, value: `${config.targetSizePercent}%` }, { label: labels.speed, value: `${config.speedPercent}%` },
     { label: labels.raiseLine, value: firingLineOptions.find(item => item.value === config.raiseLinePercent)!.label },
   ];
-  const confirm = () => {
+  const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !IsMotorConfig(config)) return;
     SaveGameSettings(config);
     setError(''); setLive(current => ({ ...current, timeRemaining: config.durationSec, targetRadius: difficulty.radius * config.targetSizePercent / 100 })); setPhase('rules');
   };
+  const cancelSettings = () => exitGame();
   const handleModalKey = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === 'Escape') { event.preventDefault(); exitGame(); }
-    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) { event.preventDefault(); confirm(); }
+    if (event.key === 'Escape') { event.preventDefault(); cancelSettings(); }
     if (event.key !== 'Tab') return;
     const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('input,select,button:not(:disabled)'));
     if (event.shiftKey && document.activeElement === elements[0]) { event.preventDefault(); elements.at(-1)?.focus(); }
@@ -199,12 +253,15 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
         return;
       }
-      metricsRef.current = { ...CreateEmptyMetrics(), startedAt: performance.now(), lastTickAt: performance.now() }; targetRef.current = null;
+      clockRef.current = new PauseClock(() => performance.now());
+      pausedRef.current = false; cameraLostRef.current = false; setPaused(false);
+      metricsRef.current = { ...CreateEmptyMetrics(), startedAt: clockRef.current.now(), lastTickAt: clockRef.current.now() }; targetRef.current = null;
       enemyRef.current = CreateLaserEncounter();
       await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:motor-cortex-rehab', onStart: () => {
         setPhase('playing'); SendGameEvent('active'); let lastLive = 0;
-        const tick = (now: number) => {
-          if (phaseRef.current !== 'playing') return;
+        const tick = (_frameTime: number) => {
+          if (phaseRef.current !== 'playing' || pausedRef.current) return;
+          const now = clockRef.current.now();
           const rect = { width: stageRef.current!.clientWidth, height: stageRef.current!.clientHeight };
           if (rect.width > 0 && rect.height > 0) {
             targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height * config.raiseLinePercent / 100);
@@ -216,6 +273,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
           }
           if (phaseRef.current === 'playing') animationRef.current = requestAnimationFrame(tick);
         };
+        tickRef.current = tick;
         animationRef.current = requestAnimationFrame(tick);
       } });
     } catch (reason) {
@@ -264,7 +322,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     '--motor-prompt-x': `${promptX}px`, '--motor-prompt-y': `${promptY}px`, '--motor-prompt-width': `${promptWidth}px` } as CSSProperties;
   return <div ref={rootRef} className={`motor-cortex-rehab-game motor-cortex-rehab-phase-${phase} motor-cortex-drill-${config.drill}`} style={style}>
     <div ref={jsPsychHostRef} className="motor-jspsych-host" aria-hidden="true" />
-    {phase !== 'results' && <div className="motor-cortex-play" aria-hidden={phase === 'menu' || phase === 'ready'}>
+    {phase !== 'results' && <div className="motor-cortex-play" data-paused={paused} inert={paused} aria-hidden={phase === 'menu' || phase === 'ready'}>
       <div className="motor-cortex-hud">{[[labels.timeLeft, `${preview ? config.durationSec : Math.ceil(live.timeRemaining)}s`], [labels.accuracy, `${ToPercent(live.accuracy)}%`], [labels.visible, `${ToPercent(live.visibility)}%`], [labels.reps, live.successes], [labels.level, live.level]].map(([label, value]) => <p key={label} className={label === labels.reps && defeated ? 'is-scored' : ''}><span>{label}</span><strong>{value}</strong></p>)}</div>
       <div ref={stageRef} className="motor-cortex-stage" aria-label={labels.followTarget}>
         <div className="motor-city" aria-hidden="true"><div className="motor-skyline">{Array.from({ length: buildingCount }, (_, index) => <img key={index} src={`./assets/laser-hero/building-${[0, 1, 2, 3, 1, 0, 3, 2][index % 8]}.png`} alt="" draggable={false} />)}</div><div className="motor-road-plane"><div className="motor-street" /><div className="motor-road-centre" /></div></div>
@@ -288,10 +346,17 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
         {preview && <svg className="motor-hand-placeholder" viewBox="0 0 100 100" aria-hidden="true"><path d="M35 80L15 50Q10 40 20 42L30 52V22Q30 12 38 22V44V12Q44 2 48 12V44V18Q56 8 58 18V48V30Q66 20 68 30V66Q64 88 35 80Z" /></svg>}
         <p>{preview ? (en ? 'Hand landmark preview' : '手部座標預覽') : live.handVisible ? labels.tracking : labels.finding}</p>
       </div>
-      {phase === 'playing' && <button className="motor-exit-button btn btn-ghost" onClick={showConfiguration}>{en ? 'Stop' : '停止活動'}</button>}
     </div>}
+    {phase === 'playing' && <button ref={stopRef} className="motor-exit-button btn btn-ghost" type="button" onClick={pauseManually} inert={paused}>{en ? 'Stop' : '停止'}</button>}
+    {phase === 'playing' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="motor-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="motor-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{pauseReason === 'camera' ? (en ? 'Camera input stopped. Ending the activity will not save this session.' : '攝影機輸入已中斷；結束活動後不會保存這次紀錄。') : pauseReason === 'fullscreen' ? (en ? 'Fullscreen ended. Ending the activity will not save this session.' : '全螢幕已結束；結束活動後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束活動後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={() => void resume()}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exitGame}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}
     {phase === 'menu' && <section className="training-panel" role="dialog" aria-modal="true" aria-labelledby="motor-config-title" onKeyDown={handleModalKey}>
-      <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}>
+      <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); confirmSettings(); } }}>
         <header className="training-config-header"><div className="training-config-title"><p className="training-config-label">{labels.configLabel}</p><h2 id="motor-config-title">{labels.title}</h2></div></header>
         <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Session settings' : '活動設定'}</h3>
           <label>{labels.drill}<select name="drill" value={config.drill} onChange={event => setConfig({ ...config, drill: event.target.value as MotorConfig['drill'] })}>{(['bounce', 'vertical', 'horizontal', 'random'] as const).map(value => <option key={value} value={value}>{labels.drillNames[value]}</option>)}</select></label><p>{labels.drillDescriptions[config.drill]}</p>
@@ -302,24 +367,28 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
           <label>{labels.targetSize}：<output>{config.targetSizePercent}%</output><input name="targetSizePercent" type="range" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
           <label>{labels.speed}：<output>{config.speedPercent}%</output><input name="speedPercent" type="range" required min={70} max={140} step={5} value={config.speedPercent} onChange={event => setConfig({ ...config, speedPercent: event.target.valueAsNumber })} /></label>
         </section><section className="training-setting"><h3>{labels.privacyTitle}</h3><p>{labels.privacyDesc}</p></section>{error && <p role="alert" className="motor-input-error">{error}</p>}</div>
-        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={confirm}>{en ? 'Confirm settings' : '確認設定'}</button><button type="button" className="btn btn-ghost" onClick={exitGame}>{en ? 'Back' : '返回'}</button></div></footer>
+        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-ghost" onClick={exitGame}>{en ? 'Back' : '返回'}</button><button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button></div></footer>
       </form>
     </section>}
     <MotorTutorial active={phase === 'rules'} onBack={showConfiguration} onFinish={() => setPhase('ready')} />
     {phase === 'ready' && <section className="training-panel motor-tutorial-ready" role="dialog" aria-modal="true" aria-labelledby="motor-ready-title" onKeyDown={handleModalKey}>
       <div className="training-config training-confirmation"><header className="training-config-header"><h2 id="motor-ready-title">{labels.title}</h2></header>
         <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3><div className="training-config-summary">{summaryItems.map(item => <p className="training-config-summary-item" key={item.label}><strong>{item.label}：</strong>{item.value}</p>)}</div></section><p>{handInputReady ? (en ? 'Camera ready. Start training to enter fullscreen and begin the timer.' : '相機已準備完成。按下開始訓練後進入全螢幕並開始計時。') : (en ? 'Enable the camera first. Start training after hand tracking is ready.' : '請先啟用相機，手部追蹤準備完成後再開始訓練。')}</p></div>
-        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={() => void startTraining()}>{handInputReady ? (en ? 'Start training' : '開始訓練') : (en ? 'Enable camera' : '啟用相機')}</button><button type="button" className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Back to settings' : '返回設定'}</button></div></footer>
+        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Back to settings' : '返回設定'}</button><button type="button" className="btn btn-primary" onClick={() => void startTraining()}>{handInputReady ? (en ? 'Start training' : '開始訓練') : (en ? 'Enable camera' : '啟用相機')}</button></div></footer>
       </div></section>}
     {phase === 'initializing' && <section className="training-panel" role="status"><div className="training-config motor-loading"><h2>{labels.loadingTitle}</h2><p>{en ? 'Confirm camera access in the camera dialog.' : '請在相機視窗確認啟用。'}</p><button className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Cancel' : '取消'}</button></div></section>}
     {phase === 'results' && result && <div className="experiment-container motor-results-container"><section className="experiment-results">
-      <h1>{labels.resultsTitle}</h1><p>{en ? 'Records from this session' : '本次活動紀錄'}</p>
-      <section className="score-priority"><h2 className="score-priority-title">{en ? 'Key results' : '主要統計'}</h2><dl className="score-key-grid">{[[labels.accuracy, `${result.Accuracy_Percent}%`], [labels.visible, `${result.Hand_Visible_Percent}%`], [labels.reps, result.Successful_Reps]].map(([label, value]) => <div className="score-key-metric" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{labels.title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><dl className="score-key-grid">{[[labels.accuracy, `${result.Accuracy_Percent}%`], [labels.visible, `${result.Hand_Visible_Percent}%`], [labels.reps, result.Successful_Reps]].map(([label, value]) => <div className="score-key-metric" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。') : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? (en ? 'Return to lobby' : '返回大廳') : (en ? 'Return to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session overview' : '當次概況'}</h2><dl className="score-context-list">{[...summaryItems, { label: labels.raisedTime, value: `${result.Raised_Percent}%` }, { label: labels.bestHold, value: `${result.Best_Hold_Seconds}s` }, { label: labels.interrupted, value: result.Interrupted_Holds }, { label: labels.level, value: result.Adaptive_Level }, { label: en ? 'Actual activity duration' : '實際活動時間', value: `${result.Duration_Seconds}s` }].map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>
       <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Results stay on this device.' : '獨立遊玩，成果保留於本機畫面。') : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? (en ? 'Return to lobby' : '返回大廳') : (en ? 'Return to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

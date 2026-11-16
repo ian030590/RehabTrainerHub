@@ -138,6 +138,20 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   }
   await evaluate('window.setHandFixture("pointing_up")');
   assert.equal(await game('document.fullscreenElement===document.querySelector(".gesture-battler")'), true);
+  if (mobile) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
+  assert.equal(await game(`(() => { const stop = document.querySelector('.gesture-stop'), rect = stop.getBoundingClientRect(); return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === stop; })()`), true, 'Stop stays above the portrait orientation overlay.');
+  await game('document.querySelector(".gesture-stop").click()');
+  await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'interrupt panel');
+  assert.equal(await game('document.activeElement === document.querySelector(".game-interrupt-panel .btn-primary")'), true);
+  const pausedHp = await game('document.querySelector(".gesture-hp-row strong").textContent');
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  assert.equal(await game('document.querySelector(".gesture-hp-row strong").textContent'), pausedHp);
+  assert.equal(await evaluate('window.handFixtureStream.getTracks().some(track => track.readyState === "live")'), true);
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, gameContext.session || session);
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, gameContext.session || session);
+  await until(() => game('!document.querySelector(".game-interrupt-panel")'), 'Escape resumes');
+  assert.equal(await game('document.activeElement === document.querySelector(".gesture-stop")'), true);
+  if (mobile) await send('Emulation.setDeviceMetricsOverride', { width: 844, height: 390, deviceScaleFactor: 1, mobile: true }, session);
   await CheckBattleLayout(game, false);
   await capture('combat');
   if (directed) {
@@ -165,7 +179,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
     const cached = await evaluate('(async () => {const keys=await caches.keys();const cache=await caches.open(keys.find(key=>key.startsWith("trainerhub-game:gesture-battler:")));return (await cache.keys()).map(request=>new URL(request.url).pathname);})()');
     assert.ok(cached.some(path => path.endsWith('/vision_wasm_internal.wasm')));
     assert.ok(cached.every(path => path.startsWith(`/games/gesture-battler/${version}/`) || path.startsWith('/runtime/') || path.startsWith('/input/hand-tracking-1.0.0/')));
-    assert.match(await body(), english ? /Open from Hub/ : /從 Hub 開啟/);
+    assert.match(await body(), english ? /Local play/ : /獨立練習/);
     assert.equal(getSaveAttempts(), 0);
   } else {
     await until(() => body().then(text => text.includes(english ? 'Retry save' : '重試保存')), 'save error retained');
@@ -189,7 +203,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   }
   assert.equal(requests.some(url => /gesture-battler.*(?:settings|score)\.json/.test(url)), false);
   assert.deepEqual(errors, []);
-  await game('document.querySelector(".experiment-results > button:last-child").click()');
+  await game('document.querySelector(".score-return-button").click()');
   await until(() => standalone ? game(`Boolean(document.querySelector('${settings}'))`) : evaluate('!document.querySelector("dialog.training-overlay")'), 'gesture returns to its entry');
   assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub or entry exits fullscreen.');
   if (standalone) assert.equal(await game('document.fullscreenElement===null'), true, 'Return restores the standalone entry viewport.');

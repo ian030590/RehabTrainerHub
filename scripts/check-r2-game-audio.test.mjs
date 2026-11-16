@@ -318,7 +318,7 @@ for (const gameId of gameIds) {
     assert.equal(calls.at(-1), 'play');
     cleanup();
     assert.equal(calls.at(-1), 'stop');
-    if (['driving-rehab', 'hart-chart', 'reading-training', 'moving-card', 'gabor-patching', 'time-perception', 'exploratory-saccade', 'tower-of-london', 'complex-search', 'conjunction-search', 'popout-search', 'plus-minus', 'number-letter', 'card-sorting', 'sudoku', 'sliding-puzzle', 'tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex', 'maze', 'minesweeper', 'lights-out', 'flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'hex-schulte', 'memory-match', 'simon-says', 'whack-a-mole', 'ufov', 'every-ball-response', 'n-back', 'digit-span', 'keep-track', 'letter-memory', 'spatial-span', 'pattern-memory'].includes(gameId)) {
+    if (['asteroid-shield', 'gesture-battler', 'driving-rehab', 'hart-chart', 'reading-training', 'moving-card', 'gabor-patching', 'time-perception', 'exploratory-saccade', 'tower-of-london', 'complex-search', 'conjunction-search', 'popout-search', 'plus-minus', 'number-letter', 'card-sorting', 'sudoku', 'sliding-puzzle', 'tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex', 'maze', 'minesweeper', 'lights-out', 'flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'hex-schulte', 'memory-match', 'simon-says', 'whack-a-mole', 'ufov', 'every-ball-response', 'n-back', 'digit-span', 'keep-track', 'letter-memory', 'spatial-span', 'pattern-memory'].includes(gameId)) {
       const before = calls.length;
       run(playingPhase, true)?.();
       assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');
@@ -330,6 +330,11 @@ for (const gameId of gameIds) {
         { current: false }, () => {}, { current: { pause() {} } }, { current: { pause() {} } },
         () => calls.push('dispose'), () => {});
       assert.deepEqual(calls, ['dispose'], 'Pause stops scheduled feedback sounds as well as music.');
+    }
+    if (['motor-cortex-rehab', 'drawing-defense'].includes(gameId)) {
+      const before = calls.length;
+      run(playingPhase, true)?.();
+      assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');
     }
     assert.ok(effects.some(effect => effect.includes('DisposeAudioFeedback')), 'Unmount must release the game audio context.');
   });

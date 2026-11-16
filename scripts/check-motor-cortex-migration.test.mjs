@@ -17,6 +17,87 @@ async function LoadModule(path) {
   return module.exports;
 }
 
+test('settings focus the drill select during layout before the menu is observable', async () => {
+  const source = await readFile(resolve(gameRoot, 'MotorCortexRehabGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let effect;
+  const visit = node => {
+    if (ts.isCallExpression(node) && node.expression.getText(syntax) === 'useLayoutEffect'
+      && node.arguments[0]?.getText(syntax).includes('formRef.current')) effect = node.arguments[0];
+    ts.forEachChild(node, visit);
+  };
+  visit(syntax);
+  assert.ok(effect, 'settings focus is assigned synchronously in a layout effect');
+  const code = ts.transpileModule(`(${effect.getText(syntax)})`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const focused = [];
+  const formRef = { current: { querySelector: selector => { assert.equal(selector, 'select[name="drill"]'); return { focus: () => focused.push('drill') }; } } };
+  const rootRef = { current: { querySelector: selector => { assert.equal(selector, '.motor-tutorial-ready .btn-primary'); return { focus: () => focused.push('start') }; } } };
+  const create = new Function('phase', 'formRef', 'rootRef', `return ${code.trim().replace(/;$/, '')};`);
+  create('menu', formRef, rootRef)();
+  create('ready', formRef, rootRef)();
+  create('playing', formRef, rootRef)();
+  assert.deepEqual(focused, ['drill', 'start']);
+});
+
+test('pause and results focus are set during layout before their screens are observable', async () => {
+  const source = await readFile(resolve(gameRoot, 'MotorCortexRehabGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const effects = [];
+  const visit = node => {
+    if (ts.isCallExpression(node) && node.expression.getText(syntax) === 'useLayoutEffect') effects.push(node.arguments[0].getText(syntax));
+    ts.forEachChild(node, visit);
+  };
+  visit(syntax);
+  assert.ok(effects.some(effect => effect.includes('continueRef.current?.focus()') && effect.includes('stopRef.current?.focus()')));
+  assert.ok(effects.some(effect => effect.includes("phase === 'results'") && effect.includes('resultHeadingRef.current?.focus()')));
+});
+
+test('pause freezes the encounter clock and resumes the same target without a time jump', async () => {
+  const { PauseClock } = await LoadModule('logic/pauseClock.ts');
+  const engine = await LoadModule('engine.ts');
+  let realNow = 1000;
+  const clock = new PauseClock(() => realNow);
+  const difficulty = { radius: 66, speed: 165, holdMs: 2000 };
+  const metrics = { ...engine.CreateEmptyMetrics(), startedAt: 1000, lastTickAt: 1000 };
+  const target = engine.CreateInitialTarget('horizontal', difficulty, 1, 1, 900, 390);
+  const enemy = engine.CreateLaserEncounter();
+  let completed = 0;
+  const tick = () => engine.UpdateLaserEncounter({ now: clock.now(), rect: { width: 900, height: 600 }, drill: 'horizontal', activeDifficulty: difficulty,
+    durationSec: 45, targetSizeScale: 1, speedScale: 1, target, hand: { x: 450, y: 200, visible: true, lastSeenAt: clock.now() }, metrics, enemy,
+    labels: { drillNames: { horizontal: 'Horizontal' } }, onSuccess() {}, onComplete() { completed++; } });
+  realNow += 90; tick();
+  const position = { x: target.x, y: target.y, radius: target.radius };
+  const activeTime = clock.now();
+  clock.pause(); realNow += 60000;
+  assert.equal(clock.now(), activeTime);
+  assert.equal(completed, 0);
+  assert.deepEqual({ x: target.x, y: target.y, radius: target.radius }, position);
+  clock.resume(); realNow += 90; tick();
+  assert.equal(clock.now(), activeTime + 90);
+  assert.equal(completed, 0);
+  assert.equal(metrics.lastTickAt, activeTime + 90);
+});
+
+test('pausing motor play cancels its frame, discards the hold and silences laser audio', async () => {
+  const source = await readFile(resolve(gameRoot, 'MotorCortexRehabGame.tsx'), 'utf8');
+  const syntax = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let declaration;
+  const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === 'pause') declaration = node; ts.forEachChild(node, visit); };
+  visit(syntax);
+  const code = ts.transpileModule(`const ${declaration.getText(syntax)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const calls = [], pausedRef = { current: false }, animationRef = { current: 42 }, metricsRef = { current: { currentHoldMs: 400 } };
+  const pause = new Function('useCallback', 'phaseRef', 'cameraLostRef', 'pausedRef', 'setPauseReason', 'clockRef', 'animationRef',
+    'cancelAnimationFrame', 'metricsRef', 'setLive', 'laserAudioRef', 'DisposeAudioFeedback', 'setPaused', `${code}; return pause;`)(
+    fn => fn, { current: 'playing' }, { current: false }, pausedRef, () => {}, { current: { pause: () => calls.push('clock') } }, animationRef,
+    id => calls.push(id), metricsRef, update => { const live = update({ currentHoldPercent: .5, laserActive: true, insideTarget: true }); assert.equal(live.laserActive, false); },
+    { current: { stop: () => calls.push('laser') } }, () => calls.push('audio'), value => calls.push(value));
+  pause();
+  assert.equal(pausedRef.current, true);
+  assert.equal(metricsRef.current.currentHoldMs, 0);
+  assert.equal(animationRef.current, null);
+  assert.deepEqual(calls, ['clock', 42, 'laser', 'audio', true]);
+});
+
 test('tracking preserves four paths, successful and interrupted holds, hand loss, adaptation and timed completion', async () => {
   let engine;
   if (existsSync(resolve(gameRoot, 'engine.ts'))) engine = await LoadModule('engine.ts');
@@ -376,6 +457,7 @@ test('firing height appears in settings, confirmation and results; real scene us
   const config = await LoadModule('config.ts');
   const labels = await LoadModule('labels.ts');
   const engine = await LoadModule('engine.ts');
+  const pauseClock = await LoadModule('logic/pauseClock.ts');
   const source = await readFile(resolve(gameRoot,'MotorCortexRehabGame.tsx'),'utf8');
   const gameUtils=await LoadModule('gameUtils.ts');
   for (const language of ['zh','en']) for (const phase of ['menu','ready','playing','results']) {
@@ -386,10 +468,10 @@ test('firing height appears in settings, confirmation and results; real scene us
     const updates=[];
     let refsCreated=0;
     const hooks = { useState: value => [value==='menu'?phase:value===null?result:typeof value==='object'&&'drill' in value?{...config.defaultConfig,raiseLinePercent:50}:typeof value==='object'&&'timeRemaining' in value?live:value,value=>updates.push(value)],
-      useRef: value => ({ current:refsCreated++===1?{clientWidth:358,clientHeight:130}:value }),useCallback: value=>value,useEffect(){} };
+      useRef: value => ({ current:refsCreated++===1?{clientWidth:358,clientHeight:130}:value }),useCallback: value=>value,useEffect(){},useLayoutEffect(){} };
     const module = {exports:{}};
     new Function('module','exports','require',ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(module,module.exports,name=>({
-      react:hooks,'react/jsx-runtime':{jsx,jsxs:jsx},'./config':config,'./engine':engine,'./labels':labels,'./gameUtils':gameUtils,
+      react:hooks,'react/jsx-runtime':{jsx,jsxs:jsx},'./config':config,'./engine':engine,'./labels':labels,'./gameUtils':gameUtils,'./logic/pauseClock':pauseClock,
       './i18n/useT':{useT:()=>({lang:language})},'./runtime/hubBridge':{IsHubGame:()=>false},'./score':{BuildGameScore:()=>({rounds:[]})},
     }[name]??{}));
     const tree = module.exports.MotorCortexRehabGame({onExit(){}});
@@ -450,12 +532,18 @@ test('playing loops stop on lowered or stale input; hidden pages still stop all 
   const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
   let effect;
   const visit=node=>{if(ts.isCallExpression(node)&&node.expression.getText(tree)==='useEffect'&&/setFiring/.test(node.arguments[0]?.getText(tree))) effect=node.arguments[0];ts.forEachChild(node,visit);};visit(tree);
-  const create=new Function('phase','live','handRef','stageRef','config','laserAudioRef','document','window','performance',`return (${ts.transpileModule(effect.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText.trim().replace(/;$/, '')});`);
+  const create=new Function('phase','live','handRef','stageRef','config','laserAudioRef','document','window','paused','clockRef',`return (${ts.transpileModule(effect.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText.trim().replace(/;$/, '')});`);
+  const pausedCalls=[];
+  const pauseDispose=create('playing',{laserActive:true,insideTarget:true,currentHoldPercent:.5},{current:{visible:true,y:200,lastSeenAt:1000}},
+    {current:{clientHeight:600}},{raiseLinePercent:50},{current:{stop:()=>pausedCalls.push('stop'),setFiring:()=>pausedCalls.push('fire')}},
+    {hidden:false,addEventListener(){},removeEventListener(){}},{setInterval:()=>1,clearInterval(){}},true,{current:{now:()=>1000}})();
+  assert.deepEqual(pausedCalls,['stop'], 'Pausing silences the laser even when the last live frame was firing.');
+  pauseDispose();
   for(const phase of ['playing','results']) {
     const calls=[];const listeners=new Map();let interval=null;
     const hand={x:400,y:200,visible:true,lastSeenAt:1000};const document={hidden:false,addEventListener:(key,fn)=>listeners.set(key,fn),removeEventListener:key=>listeners.delete(key)};
     const run=create(phase,{laserActive:true,insideTarget:true,currentHoldPercent:.5},{current:hand},{current:{clientHeight:600}},{raiseLinePercent:50},
-      {current:{stop:()=>calls.push('stop'),setFiring:(...values)=>calls.push(values)}},document,{setInterval:fn=>{interval=fn;return 1;},clearInterval:()=>{interval=null;}},{now:()=>1000});
+      {current:{stop:()=>calls.push('stop'),setFiring:(...values)=>calls.push(values)}},document,{setInterval:fn=>{interval=fn;return 1;},clearInterval:()=>{interval=null;}},false,{current:{now:()=>1000}});
     const dispose=run();
     if(phase==='playing') {
       assert.deepEqual(calls.at(-1),[true,true,.5]);
@@ -472,7 +560,7 @@ test('lowered or stale hands preserve a playing defeat one-shot while both loops
   const source=await readFile(resolve(gameRoot,'MotorCortexRehabGame.tsx'),'utf8');
   const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
   let effect;const visit=node=>{if(ts.isCallExpression(node)&&node.expression.getText(tree)==='useEffect'&&/setFiring/.test(node.arguments[0]?.getText(tree)))effect=node.arguments[0];ts.forEachChild(node,visit);};visit(tree);
-  const create=new Function('phase','live','handRef','stageRef','config','laserAudioRef','document','window','performance',`return (${ts.transpileModule(effect.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText.trim().replace(/;$/, '')});`);
+  const create=new Function('phase','live','handRef','stageRef','config','laserAudioRef','document','window','paused','clockRef',`return (${ts.transpileModule(effect.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText.trim().replace(/;$/, '')});`);
   for(const reason of ['lowered','stale','missing']) {
     const samples=[];const audio=CreateLaserAudio(src=>{
       const sample={src,paused:true,currentTime:0,play(){this.paused=false;return Promise.resolve();},pause(){this.paused=true;},removeAttribute(){},load(){}};
@@ -484,7 +572,7 @@ test('lowered or stale hands preserve a playing defeat one-shot while both loops
     const listeners=new Map();let interval;
     const hand={visible:true,y:200,lastSeenAt:1000};const document={hidden:false,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:name=>listeners.delete(name)};
     const dispose=create('playing',{laserActive:false,insideTarget:false,currentHoldPercent:0},{current:hand},{current:{clientHeight:600}},{raiseLinePercent:65},{current:audio},document,
-      {setInterval:fn=>{interval=fn;return 1;},clearInterval(){}},{now:()=>1000})();
+      {setInterval:fn=>{interval=fn;return 1;},clearInterval(){}},false,{current:{now:()=>1000}})();
     if(reason==='lowered')hand.y=500;if(reason==='stale')hand.lastSeenAt=759;if(reason==='missing')hand.visible=false;
     interval();await new Promise(done=>setImmediate(done));
     assert.equal(hit.paused,false,`${reason} input must not cut off hit.ogg.`);
@@ -548,15 +636,16 @@ test('tutorial enemy and its health bar clear the title on the road when they fi
 
 async function RenderMotorScene({width=900,height=600,language='zh',phase='menu',settings={},live={},obstacles={},titleBottom=40}={}) {
   const config=await LoadModule('config.ts'),labels=await LoadModule('labels.ts'),engine=await LoadModule('engine.ts'),gameUtils=await LoadModule('gameUtils.ts');
+  const pauseClock=await LoadModule('logic/pauseClock.ts');
   const source=await readFile(resolve(gameRoot,'MotorCortexRehabGame.tsx'),'utf8');
   const jsx=(type,props)=>({type,props});let refsCreated=0;
   const stage={clientWidth:width,clientHeight:height,clientTop:0,clientLeft:0,getBoundingClientRect:()=>({left:0,top:0,width,height,right:width,bottom:height})};
   const root={querySelector:selector=>selector==='.motor-mission-title'?{getBoundingClientRect:()=>({bottom:titleBottom})}:obstacles[selector]?{getBoundingClientRect:()=>obstacles[selector]}:null};
   const hooks={useState:value=>[value==='menu'?phase:value&&typeof value==='object'&&'drill' in value?{...config.defaultConfig,...settings}:value&&typeof value==='object'&&'timeRemaining' in value?{...value,...live}:value,()=>{}],
-    useRef:value=>({current:refsCreated++===0?root:refsCreated===2?stage:value}),useCallback:value=>value,useEffect(){}};
+    useRef:value=>({current:refsCreated++===0?root:refsCreated===2?stage:value}),useCallback:value=>value,useEffect(){},useLayoutEffect(){}};
   const module={exports:{}};
   new Function('module','exports','require',ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(module,module.exports,name=>({
-    react:hooks,'react/jsx-runtime':{jsx,jsxs:jsx},'./config':config,'./engine':engine,'./labels':labels,'./gameUtils':gameUtils,'./i18n/useT':{useT:()=>({lang:language})},'./runtime/hubBridge':{IsHubGame:()=>false},
+    react:hooks,'react/jsx-runtime':{jsx,jsxs:jsx},'./config':config,'./engine':engine,'./labels':labels,'./gameUtils':gameUtils,'./logic/pauseClock':pauseClock,'./i18n/useT':{useT:()=>({lang:language})},'./runtime/hubBridge':{IsHubGame:()=>false},
   }[name]??{}));
   const tree=module.exports.MotorCortexRehabGame({onExit(){}}),nodes=[];
   const walk=node=>{if(!node||typeof node!=='object')return;if(Array.isArray(node)){node.forEach(walk);return;}nodes.push(node);walk(node.props?.children);};walk(tree);
@@ -591,7 +680,7 @@ test('pixel hero art and sound are packaged CC0 files with verified source hashe
 
 test('tracking is self-contained with private input, own modal and real-scene spotlight, full results and original preview', async () => {
   const packageJson = JSON.parse(await readFile(resolve(gameRoot,'package.json'),'utf8'));
-  assert.equal(packageJson.version,'2.1.1');
+  assert.equal(packageJson.version,'2.2.0');
   assert.deepEqual(Object.keys(packageJson.dependencies).sort(),['jspsych','react','react-dom','tone']);
   assert.ok(packageJson.rehabTrainer.capabilities.includes('hand-tracking'));
   for (const file of (await readdir(gameRoot,{recursive:true})).filter(file=>/\.(tsx?|css)$/.test(file)&&!file.startsWith('dist'))) {

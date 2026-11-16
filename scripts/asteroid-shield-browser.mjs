@@ -203,6 +203,17 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');
   assert.equal(await game('document.querySelector(".asteroid-shield-tutorial, dialog.game-settings-dialog")'), null);
   await until(() => game('Boolean(document.querySelector(".asteroid-hud"))'), 'health bar and timer appear during training');
+  assert.equal(await game(`(() => { const stop = document.querySelector('.asteroid-stop'), rect = stop.getBoundingClientRect(); return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === stop; })()`), true, 'Stop remains above the game scene.');
+  await game('document.querySelector(".asteroid-stop").click()');
+  await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'interrupt panel');
+  assert.equal(await game('document.activeElement === document.querySelector(".game-interrupt-panel .btn-primary")'), true);
+  const pausedTime = await game('document.querySelector(".asteroid-hud time").dataset.remaining');
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  assert.equal(await game('document.querySelector(".asteroid-hud time").dataset.remaining'), pausedTime);
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, gameContext.session || session);
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, gameContext.session || session);
+  await until(() => game('!document.querySelector(".game-interrupt-panel")'), 'Escape resumes');
+  assert.equal(await game('document.activeElement === document.querySelector(".asteroid-stop")'), true);
   const readHud = () => game(`(() => {
     const hud = document.querySelector('.asteroid-hud'), bar = hud.querySelector('[role=progressbar]');
     const rect = hud.getBoundingClientRect();
@@ -389,7 +400,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await game('document.querySelector(".results-scroll").scrollLeft = document.querySelector(".results-table").scrollWidth');
   await capture('results-details-end');
   assert.deepEqual(errors, []);
-  await game('document.querySelector(".experiment-results > button:last-child").click()');
+  await game('document.querySelector(".score-return-button").click()');
   await until(() => standalone ? game('Boolean(document.querySelector("form"))') : evaluate('!document.querySelector("dialog.training-overlay")'), 'return to original entry');
   assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub or entry exits fullscreen.');
   if (standalone) await checkSettingsPreview();

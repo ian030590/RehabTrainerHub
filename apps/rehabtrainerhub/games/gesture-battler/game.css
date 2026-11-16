@@ -6,15 +6,17 @@
   --text-muted: #606970;
   --primary: #005eb8;
   --primary-hover: #00478d;
+  --primary-soft: color-mix(in srgb, var(--primary) 8%, #fff);
   --border: #d4d9de;
   --border-strong: #7d868e;
   --cue-folded: #aeb6bd;
-  --bg-overlay: #14212b99;
+  --bg-overlay: rgba(20,24,28,.54);
   --arena: #dce9c8;
   --hp: #538446;
   --hand-line: #67e8f9;
   --hand-point: #fef08a;
   --text-on-accent: #ffffff;
+  --error: #ba1a1a;
   --radius: 8px;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -23,6 +25,7 @@ html, body, #root { margin: 0; width: 100%; height: 100%; color: var(--text); }
 html { font-size: 16px; }
 body { font: 700 18px/1.5 var(--font-body); }
 button, input, select { font: inherit; }
+.training-config input[type=range], .training-config input[type=checkbox], .training-config input[type=radio] { accent-color: var(--primary); }
 button { min-height: 44px; padding: 8px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
 button:disabled { cursor: wait; opacity: .6; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
@@ -33,6 +36,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-camera, .gesture-combat-hud { z-index: 2; }
 .gesture-mobile-back { position: absolute; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 20; padding: 8px; }
 .gesture-mobile-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+.gesture-stop { position: absolute; z-index: 150; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); color: var(--heading); }
+.gesture-stop:hover { color: var(--primary); border-color: var(--primary); }
+.game-interrupt-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.game-interrupt-panel { width: min(28rem, 100%); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 8px 24px rgba(20, 33, 43, .12); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-interrupt-panel h2 { margin: 0; color: var(--heading); }
+.game-interrupt-panel button { margin: 8px 8px 0 0; }
+.game-interrupt-panel .btn-ghost, .gesture-stop { font-weight: 800; }
+.game-interrupt-panel .btn-primary { min-height: 48px; padding: 8px 24px; border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); font-weight: 800; }
+.game-interrupt-panel .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.game-interrupt-panel .btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+@media (max-width: 639px) { .game-interrupt-panel button { display: block; width: 100%; margin: 12px 0 0; } }
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
 .game-tour-spotlight { position: fixed; border-radius: var(--radius); pointer-events: none; outline: 3px solid var(--surface); box-shadow: 0 0 0 100vmax var(--bg-overlay); z-index: 9998; }
 .game-tour { position: fixed; width: min(calc(100vw - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; z-index: 9999; }

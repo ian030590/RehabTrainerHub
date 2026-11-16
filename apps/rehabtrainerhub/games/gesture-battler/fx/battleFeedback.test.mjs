@@ -124,30 +124,50 @@ test('impact feedback fires once at the existing 620ms hit without changing the 
   const source = await readFile(resolve(gameRoot, 'GestureBattlerGame.tsx'), 'utf8');
   const ast = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const attack = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'AnimateAttack');
-  const code = ts.transpileModule(attack.getText(ast), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const delay = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'AfterActiveTime');
+  const code = ts.transpileModule(`${delay.getText(ast)}\n${attack.getText(ast)}`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   class Graphics {
     rect() { return this; }
     fill() { return this; }
     destroy() { this.destroyed = true; }
   }
   let tick;
-  let recovery;
   let impacts = 0;
   const app = { ticker: { add(callback) { tick = callback; }, remove() { tick = null; } } };
   const battle = { ...scene, enemy: { ...scene.enemy }, playerBaseY: 380, enemyBaseY: 220, effects: { addChild() {} } };
-  const animate = new Function('Graphics', 'Clamp', 'moveColors', 'window', `${code}; return AnimateAttack;`)(Graphics,
-    (value, min, max) => Math.min(max, Math.max(min, value)), [1, 2, 3, 4, 5],
-    { setTimeout(callback, duration) { assert.equal(duration, 260); recovery = callback; } });
+  const animate = new Function('Graphics', 'Clamp', 'moveColors', `${code}; return AnimateAttack;`)(Graphics,
+    (value, min, max) => Math.min(max, Math.max(min, value)), [1, 2, 3, 4, 5]);
   const pending = animate(app, battle, 2, () => impacts++);
   tick({ deltaMS: 619 });
   assert.equal(impacts, 0);
   tick({ deltaMS: 1 });
   assert.equal(impacts, 1);
+  assert.notEqual(tick, null);
+  tick({ deltaMS: 259 });
+  assert.equal(battle.enemy.alpha, 0.28);
+  tick({ deltaMS: 1 });
   assert.equal(tick, null);
-  recovery();
   await pending;
   assert.equal(battle.enemy.x, scene.enemy.x);
   assert.equal(battle.enemy.alpha, 1);
+});
+
+test('an attack from an ended session cannot impact the next session', async () => {
+  const source = await readFile(resolve(gameRoot, 'GestureBattlerGame.tsx'), 'utf8');
+  const ast = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declarations = ast.statements.filter(node => ts.isFunctionDeclaration(node) && ['AfterActiveTime', 'AnimateAttack'].includes(node.name?.text));
+  const code = ts.transpileModule(declarations.map(node => node.getText(ast)).join('\n'), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  class Graphics { rect() { return this; } fill() { return this; } destroy() { this.destroyed = true; } }
+  let tick; let active = true; let impacts = 0;
+  const app = { ticker: { add(callback) { tick = callback; }, remove() { tick = null; } } };
+  const battle = { ...scene, enemy: { ...scene.enemy }, playerBaseY: 380, enemyBaseY: 220, effects: { addChild() {} } };
+  const animate = new Function('Graphics', 'Clamp', 'moveColors', `${code}; return AnimateAttack;`)(Graphics,
+    (value, min, max) => Math.min(max, Math.max(min, value)), [1, 2, 3, 4, 5]);
+  const pending = animate(app, battle, 2, () => impacts++, () => active);
+  tick({ deltaMS: 300 }); active = false; tick({ deltaMS: 320 });
+  assert.equal(impacts, 0);
+  assert.equal(tick, null);
+  await pending;
 });
 
 async function CreateFeedbackHarness(reduced = false) {

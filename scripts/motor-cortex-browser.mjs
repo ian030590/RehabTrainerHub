@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
-export async function CheckMotorCortex({ game, evaluate, until, standalone, english, capture, checkSpotlight,
+export async function CheckMotorCortex({ game, evaluate, send, gameContext, session, until, standalone, english, capture, checkSpotlight,
   sqlite, getSaveAttempts, getSessionAttempts, sessionFailure, requests, errors, version, accountId, guestSubjectId, revokeRelease }) {
   const body = () => game('document.body.innerText');
   const choose = (name, value) => game(`(() => {const field=document.querySelector('[name=${name}]');const proto=field.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(field,${JSON.stringify(String(value))});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);
@@ -64,9 +64,18 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok((await game('document.querySelector(".training-config-summary").textContent')).includes(english?'Firing line height':'發射高度線'));
   assert.equal(await game('document.fullscreenElement'), null, 'Tutorial and final confirmation stay windowed.');
   assert.equal(await game('document.activeElement.classList.contains("btn-primary")'), true, 'Final confirmation focuses Start training.');
-  await game('document.activeElement.dispatchEvent(new KeyboardEvent("keydown",{key:"Tab",shiftKey:true,bubbles:true}))');
+  const tab = async shift => {
+    const modifiers = shift ? 8 : 0;
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers }, gameContext.session || session);
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers }, gameContext.session || session);
+  };
+  await tab(true);
   assert.equal(await game('document.activeElement.classList.contains("btn-ghost")'), true, 'Shift-Tab stays within final confirmation.');
-  await game('document.activeElement.dispatchEvent(new KeyboardEvent("keydown",{key:"Tab",bubbles:true}))');
+  await tab(true);
+  assert.equal(await game('document.activeElement.classList.contains("btn-primary")'), true, 'Shift-Tab wraps from Back to Start.');
+  await tab(false);
+  assert.equal(await game('document.activeElement.classList.contains("btn-ghost")'), true, 'Tab wraps from Start to Back.');
+  await tab(false);
   assert.equal(await game('document.activeElement.classList.contains("btn-primary")'), true, 'Tab wraps to Start training.');
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false);
   await game('document.querySelector(".motor-tutorial-ready .btn-ghost").click()');
@@ -98,9 +107,32 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok(requests.some(url => url.includes('/input/hand-tracking-1.0.0/wasm/') && url.endsWith('.wasm')));
   assert.equal(requests.some(url => /cdn\.jsdelivr|storage\.googleapis/.test(url)), false);
   assert.ok(await game('document.fullscreenElement===document.querySelector(".motor-cortex-rehab-game")'));
+  assert.equal(await game(`(() => { const stop = document.querySelector('.motor-exit-button'), rect = stop.getBoundingClientRect(); return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === stop; })()`), true, 'Stop is above the running scene.');
+  await game('document.querySelector(".motor-exit-button").click()');
+  await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'motor interrupt panel');
+  assert.equal(await game('document.activeElement === document.querySelector(".game-interrupt-panel .btn-primary")'), true);
+  if (process.argv.includes('--stop')) {
+    await game('document.querySelector(".game-interrupt-panel .btn-ghost").click()');
+    await until(() => standalone ? game('Boolean(document.querySelector("form"))') : evaluate('!document.querySelector("dialog.training-overlay")'), 'ending returns to the entry');
+    await until(() => evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), 'ending stops the camera');
+    assert.equal(getSaveAttempts(), 0);
+    assert.equal(await evaluate('document.fullscreenElement'), null);
+    return;
+  }
+  const pausedHud = await game('document.querySelector(".motor-cortex-hud").textContent');
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  assert.equal(await game('document.querySelector(".motor-cortex-hud").textContent'), pausedHud);
+  assert.ok(await game('window.motorLaserSamples.every(sample => sample.paused)'));
+  assert.equal(await evaluate('window.handFixtureStream.getTracks().some(track => track.readyState === "live")'), true);
+  await game("window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))");
+  await until(() => game('!document.querySelector(".game-interrupt-panel")'), 'Escape resumes motor');
+  assert.equal(await game('document.activeElement === document.querySelector(".motor-exit-button")'), true);
   if (process.argv.includes('--windowed')) {
     await game('document.exitFullscreen()');
     await until(() => game('document.fullscreenElement===null'), 'windowed gameplay');
+    await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'fullscreen loss pauses motor');
+    await game('document.querySelector(".game-interrupt-panel .btn-primary").click()');
+    await until(() => game('!document.querySelector(".game-interrupt-panel")'), 'resume windowed gameplay');
     assert.equal(await evaluate('innerWidth-document.documentElement.clientWidth'), 0, 'Windowed gameplay does not expose the lobby scrollbar.');
   }
   const layout = await game(`(() => {
@@ -155,8 +187,9 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   }
   if (process.argv.includes('--camera-disconnect')) {
     await evaluate('window.handFixtureStream.getVideoTracks()[0].dispatchEvent(new Event("ended"))');
-    await until(() => game('Boolean(document.querySelector("form [role=alert]"))'), 'disconnect returns to settings');
-    assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true);
+    await until(() => game('Boolean(document.querySelector(".game-interrupt-panel"))'), 'disconnect opens the interrupt panel');
+    assert.ok(await game(`document.querySelector('.game-interrupt-panel p').textContent.includes(${JSON.stringify(english ? 'Camera input stopped.' : '攝影機輸入已中斷')})`));
+    await until(() => evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), 'disconnect stops the camera');
     assert.equal(getSaveAttempts(),0); return;
   }
   let laserHitCaptured = false;
@@ -195,7 +228,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok(await game('Boolean(document.querySelector(".score-chart circle"))'), 'At least one actual hold event reaches the chart.');
   if (standalone) {
     assert.equal(getSaveAttempts(),0);
-    assert.equal(await game('document.querySelector(".score-save-status").textContent.includes(' + JSON.stringify(english ? 'device' : '獨立遊玩') + ')'),true);
+    assert.equal(await game('document.querySelector(".score-save-status").textContent.includes(' + JSON.stringify(english ? 'Local play' : '獨立練習') + ')'),true);
     await until(() => evaluate('(async()=>Boolean(await caches.match("/input/hand-tracking-1.0.0/hand_landmarker.task")))()'), 'motor PWA cached hand model',30000);
     assert.ok((await evaluate('(async()=>(await navigator.serviceWorker.ready).scope)()')).endsWith(`/games/motor-cortex-rehab/${version}/`));
   } else {

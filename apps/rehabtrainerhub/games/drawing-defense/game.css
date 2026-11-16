@@ -1,14 +1,15 @@
 :root {
   font-family: system-ui, sans-serif; color: #202428; background: #005eb8;
-  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: color-mix(in srgb, var(--primary) 8%, #fff);
   --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
   --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
-  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #146c5b; --error: #a12b2b;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #146c5b; --error: #ba1a1a;
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input, select { font: inherit; }
-button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+.training-config input[type=range], .training-config input[type=checkbox], .training-config input[type=radio] { accent-color: var(--primary); }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--heading); font-weight: 700; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 label { display: block; margin-top: 16px; font-weight: 700; line-height: 1.6; }
 label > input:not([type=checkbox]), label > select { display: block; width: 100%; margin-top: 6px; min-height: 40px; }
@@ -21,3 +22,14 @@ label > input:not([type=checkbox]), label > select { display: block; width: 100%
 .results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
 .result-success { color: var(--success); }
 .result-fail { color: var(--error); }
+.drawing-stop { position: absolute; z-index: 50; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
+.drawing-stop:hover { color: var(--primary); border-color: var(--primary); }
+.game-interrupt-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg-overlay); }
+.game-interrupt-panel { width: min(28rem, 100%); padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 8px 24px rgba(20, 33, 43, .12); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-interrupt-panel h2 { margin: 0; color: var(--heading); }
+.game-interrupt-panel button { margin: 8px 8px 0 0; }
+.game-interrupt-panel .btn-ghost, .drawing-stop { font-weight: 800; }
+.game-interrupt-panel .btn-primary { min-height: 48px; padding: 8px 24px; border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); font-weight: 800; }
+.game-interrupt-panel .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.game-interrupt-panel .btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+@media (max-width: 639px) { .game-interrupt-panel button { display: block; width: 100%; margin: 12px 0 0; } }

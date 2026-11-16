@@ -17,6 +17,15 @@
         ],
         "createdAt": "2026-11-16T10:23:40.677Z",
         "reason": "Sudoku subgrid boundary: existing square cells explicitly set border-radius to 0 in game.css, with CellEdges assigning box boundaries."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "apps/rehabtrainerhub/games/motor-cortex-rehab/game.css"
+        ],
+        "createdAt": "2026-11-16T14:38:44.699Z",
+        "reason": "Agent: pre-existing camera error alert paragraph, not a card; preserve its error cue."
       }
     ]
   }
