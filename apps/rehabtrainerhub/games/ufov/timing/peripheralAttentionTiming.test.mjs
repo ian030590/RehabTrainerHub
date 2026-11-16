@@ -148,11 +148,11 @@ test('UFOV experiment integrates per-trial measurement before formal result and 
   assert.ok(staircaseUpdate > acceptedTrial, 'formal timing rejection must precede adaptive staircase updates');
 });
 
-test('UFOV aborts startup, per-trial rAF, waits, and a stopped run never finishes', () => {
+test('UFOV aborts startup, per-trial rAF, waits, and a stopped run never finishes', async () => {
   for (const marker of [
     'private readonly controller = new AbortController()',
     'stop() { this.controller.abort(); }',
-    'MeasureDisplayRefreshRate({ signal: abortSignal })',
+    'this.interrupt.run(abortSignal, signal => MeasureDisplayRefreshRate({ signal }))',
     'if (!abortSignal.aborted) this.finish(session)',
     "abortSignal.addEventListener('abort', abortPresentation, { once: true })",
     'window.cancelAnimationFrame(frameId)',
@@ -165,4 +165,28 @@ test('UFOV aborts startup, per-trial rAF, waits, and a stopped run never finishe
   for (const marker of ['const generationRef = useRef(0)', 'runRef.current?.stop()', "jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' })", 'lifecycle.dispose()']) {
     assert.ok(gameSource.includes(marker), `UFOV cancellation contract missing: ${marker}`);
   }
+
+  const { TrialInterrupt } = await ImportTypeScriptModule('../logic/trialInterrupt.ts');
+  const parent = new AbortController();
+  const interrupt = new TrialInterrupt();
+  let attemptSignal;
+  const running = interrupt.run(parent.signal, signal => new Promise(resolve => {
+    attemptSignal = signal;
+    signal.addEventListener('abort', () => resolve('measurement stopped'), { once: true });
+  }));
+  assert.ok(attemptSignal, 'Startup measurement receives an attempt signal.');
+  assert.notEqual(attemptSignal, parent.signal, 'The attempt signal is distinct from its parent.');
+  parent.abort();
+  assert.equal(attemptSignal.aborted, true, 'Parent abort stops the active attempt.');
+  await assert.rejects(running, { name: 'AbortError' }, 'An aborted measurement cannot complete the run.');
+
+  const paused = new TrialInterrupt();
+  const pausedParent = new AbortController();
+  let started = false;
+  paused.pause();
+  const waiting = paused.run(pausedParent.signal, async () => { started = true; });
+  pausedParent.abort();
+  await assert.rejects(waiting, { name: 'AbortError' }, 'Parent abort releases a paused run.');
+  paused.resume();
+  assert.equal(started, false, 'A stopped run cannot start an attempt after resuming.');
 });
