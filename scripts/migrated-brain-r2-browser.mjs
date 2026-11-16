@@ -777,6 +777,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'memory-match': {
+    interruptPanel: true,
     title: { zh: '記憶配對', en: 'Memory Match' },
     purpose: 'memory',
     settings: { difficulty: 'easy', timeLimitSec: 60, soundEnabled: true },
@@ -867,6 +868,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'simon-says': {
+    interruptPanel: true,
     title: { zh: '順序記憶', en: 'Simon Says' },
     purpose: 'memory',
     settings: { difficulty: 'easy', lives: 3, soundEnabled: true },
@@ -941,6 +943,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'whack-a-mole': {
+    interruptPanel: true,
     title: { zh: '目標點擊', en: 'Target Click' },
     purpose: 'attention',
     settings: { difficulty: 'easy', durationSec: 30, soundEnabled: true },

@@ -25,6 +25,7 @@ function ParseCsv(text) {
 }
 
 export const ufovBrowserSpec = {
+  interruptPanel: true,
   title: { zh: '周邊視野訓練', en: 'Peripheral Visual Field Training' },
   purpose: 'attention',
   settings,
@@ -80,8 +81,8 @@ export const ufovBrowserSpec = {
       if (await game(`Boolean(document.querySelector('.experiment-results'))`)) return true;
       const state = await game(`({ trial: Number((document.querySelector('.ufov-progress')?.textContent.match(/\\d+/) ?? [0])[0]),
         vehicle: Boolean(document.querySelector('.ufov-answer-choices')), direction: Boolean(document.querySelector('.ufov-answer-directions')),
-        pause: Boolean(document.querySelector('.ufov-sync-pause')) })`);
-      if (state.pause) { plan.pauses++; await tap('.ufov-sync-pause .btn-primary'); return false; }
+        pause: Boolean(document.querySelector('.game-interrupt-panel')) })`);
+      if (state.pause) { plan.pauses++; await tap('.game-interrupt-panel .btn-primary'); return false; }
       if (state.vehicle && !plan.answered.has(`v${state.trial}`)) {
         plan.answered.add(`v${state.trial}`);
         if (state.trial === 2) await capture('gameplay-answer');

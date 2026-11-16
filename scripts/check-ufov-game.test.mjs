@@ -11,6 +11,38 @@ const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/ufov');
 const legacy = JSON.parse(await readFile(resolve(import.meta.dirname, 'fixtures/ufov-legacy.json'), 'utf8'));
 
+test('interrupting a UFOV trial discards it and restarts after continuation', async () => {
+  const { TrialInterrupt } = await Load('logic/trialInterrupt.ts');
+  const gate = new TrialInterrupt();
+  const parent = new AbortController();
+  let starts = 0;
+  const run = gate.run(parent.signal, signal => new Promise((resolve, reject) => {
+    starts++;
+    signal.addEventListener('abort', () => reject(new DOMException('Interrupted', 'AbortError')), { once: true });
+    if (starts === 2) resolve('completed');
+  }));
+  await Promise.resolve();
+  gate.pause();
+  await Promise.resolve();
+  assert.equal(starts, 1);
+  gate.resume();
+  assert.equal(await run, 'completed');
+  assert.equal(starts, 2);
+});
+
+test('stopping while UFOV is paused releases the pending trial without restarting it', async () => {
+  const { TrialInterrupt } = await Load('logic/trialInterrupt.ts');
+  const gate = new TrialInterrupt();
+  const parent = new AbortController();
+  gate.pause();
+  let starts = 0;
+  const run = gate.run(parent.signal, async () => { starts++; });
+  parent.abort();
+  await assert.rejects(run, { name: 'AbortError' });
+  gate.resume();
+  assert.equal(starts, 0);
+});
+
 async function Load(path, dependencies = {}) {
   const module = { exports: {} };
   const output = ts.transpileModule(await readFile(resolve(gameRoot, path), 'utf8'), {
@@ -22,6 +54,39 @@ async function Load(path, dependencies = {}) {
   }, module, module.exports);
   return module.exports;
 }
+
+test('UFOV reruns an interrupted exposure without recording the partial attempt', async () => {
+  const gate = await Load('logic/trialInterrupt.ts');
+  const staircase = await Load('logic/staircase.ts');
+  const timing = await Load('timing/peripheralAttentionTiming.ts');
+  const { UfovRun } = await Load('logic/ufovRun.ts', {
+    '../runtime/displayTiming': { MeasureDisplayRefreshRate: async () => ({ refreshMs: 16, refreshHz: 62.5 }) },
+    '../runtime/peripheralAttentionCanvas': { CreatePeripheralAttentionCanvasSlots: () => [{ ring: 2, isTargetCandidate: true, axis: 0 }] },
+    '../runtime/peripheralAttentionResults': { EstimatePeripheralAttentionThresholdMs: () => 500 },
+    '../timing/peripheralAttentionTiming': timing,
+    './staircase': staircase,
+    './trialInterrupt': gate,
+  });
+  let completed;
+  const config = { subtestId: 1, mode: 'formal', stopCondition: 'fixed_trials', trialCount: 1, targetAxes: [0] };
+  const run = new UfovRun(config, { host: {}, label: 'test', prompt() {}, progress() {} }, session => { completed = session; });
+  let starts = 0;
+  run.runTrial = (stimulus, refresh, attempt, signal) => new Promise((resolve, reject) => {
+    starts++;
+    if (starts === 1) signal.addEventListener('abort', () => reject(new DOMException('Interrupted', 'AbortError')), { once: true });
+    else resolve({ timingAttempt: { syncValid: true, refreshMs: 16 }, record: { correct: true, durationMs: 500, practice: false } });
+  });
+  const running = run.start();
+  await new Promise(resolve => setImmediate(resolve));
+  run.pause();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(starts, 1);
+  run.resume();
+  await running;
+  assert.equal(starts, 2);
+  assert.equal(completed.trials.length, 1);
+  assert.equal(completed.timing_attempts.length, 1);
+});
 
 async function LoadScoring() {
   const results = await Load('runtime/peripheralAttentionResults.ts');
@@ -186,7 +251,7 @@ test('UFOV hands its result files to the container before the result and asks fo
 test('UFOV owns its runtime, catalogue entry and results without Hub dependencies', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-ufov');
-  assert.equal(pkg.version, '2.0.1');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   for (const capability of ['result-files', 'settings-storage', 'pointer', 'fullscreen']) assert.ok(pkg.rehabTrainer.capabilities.includes(capability), capability);

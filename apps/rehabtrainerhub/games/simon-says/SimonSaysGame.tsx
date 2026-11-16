@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 const outcomeHoldMs = 1600;
@@ -23,10 +24,22 @@ export function SimonSaysGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false);
+  const endingRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const replayRef = useRef<(() => void) | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SimonSaysSettings>({ ...defaultSettings });
   useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
@@ -45,10 +58,10 @@ export function SimonSaysGame() {
   const matchRef = useRef<SimonMatch | null>(null);
   const startedAtRef = useRef(0);
   const endedAtRef = useRef<number | null>(null);
-  const timerRef = useRef(0);
-  const playbackRef = useRef<number[]>([]);
-  const pressTimerRef = useRef(0);
-  const shakeTimerRef = useRef(0);
+  const timerRef = useRef<ReturnType<PauseClock['set']>>(null);
+  const playbackRef = useRef<ReturnType<PauseClock['set']>[]>([]);
+  const pressTimerRef = useRef<ReturnType<PauseClock['set']>>(null);
+  const shakeTimerRef = useRef<ReturnType<PauseClock['set']>>(null);
   const generationRef = useRef(0);
   const tapRef = useRef<(pad: number) => void>(() => undefined);
   const phaseRef = useRef(phase);
@@ -59,26 +72,46 @@ export function SimonSaysGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const clearPlayback = useCallback(() => {
-    playbackRef.current.forEach(timer => window.clearTimeout(timer));
+    playbackRef.current.forEach(timer => pauseClockRef.current?.clear(timer));
     playbackRef.current = [];
   }, []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     matchRef.current = null;
     clearPlayback();
-    window.clearTimeout(timerRef.current);
-    window.clearTimeout(pressTimerRef.current);
-    window.clearTimeout(shakeTimerRef.current);
+    pauseClockRef.current?.stop();
+    pauseClockRef.current = null;
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, [clearPlayback]);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    pauseClockRef.current?.resume();
+    if (matchRef.current?.status === 'showing') replayRef.current?.();
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setScore(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       const pad = ['1', '2', '3', '4'].indexOf(event.key);
       if (pad >= 0 && !event.repeat) { event.preventDefault(); tapRef.current(pad); }
     };
@@ -87,14 +120,16 @@ export function SimonSaysGame() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -102,7 +137,8 @@ export function SimonSaysGame() {
   }, [phase]);
 
   const finish = useCallback((match: SimonMatch) => {
-    const result = BuildGameScore(match, (endedAtRef.current ?? performance.now()) - startedAtRef.current);
+    endingRef.current = true;
+    const result = BuildGameScore(match, (endedAtRef.current ?? pauseClockRef.current!.now()) - startedAtRef.current);
     jsPsychLifecycleRef.current?.finish({ outcome: match.outcome, trials: result.summary.trials, longestCorrect: result.summary.longestCorrect });
     matchRef.current = null;
     setScore(result);
@@ -113,18 +149,19 @@ export function SimonSaysGame() {
   }, [settings]);
   // The final pads stay on screen briefly so the player sees the outcome before the results.
   const end = useCallback((match: SimonMatch, outcome: Outcome) => {
-    endedAtRef.current = performance.now();
+    endedAtRef.current = pauseClockRef.current!.now();
     clearPlayback();
     PlayGameEndSound(outcome);
     setVersion(version => version + 1);
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
+    timerRef.current = pauseClockRef.current!.set(() => { if (generation === generationRef.current) finish(match); }, outcomeHoldMs);
   }, [clearPlayback, finish]);
   // Lights each pad of the sequence in turn, then hands the pads to the player.
   const playSequence = useCallback((match: SimonMatch) => {
     clearPlayback();
+    setLit(null);
     const generation = generationRef.current;
-    const at = (delay: number, step: () => void) => playbackRef.current.push(window.setTimeout(() => {
+    const at = (delay: number, step: () => void) => playbackRef.current.push(pauseClockRef.current!.set(() => {
       if (generation === generationRef.current && matchRef.current === match) step();
     }, delay));
     let delay = timing.leadInMs;
@@ -134,16 +171,20 @@ export function SimonSaysGame() {
       at(delay, () => setLit(null));
       delay += timing.gapMs;
     }
-    at(delay, () => { match.beginInput(performance.now()); setVersion(version => version + 1); });
+    at(delay, () => { match.beginInput(pauseClockRef.current!.now()); setVersion(version => version + 1); });
   }, [clearPlayback]);
+  replayRef.current = () => { if (matchRef.current) playSequence(matchRef.current); };
   useEffect(() => {
     const host = jsPsychHostRef.current;
     if (phase !== 'running' || !host) return;
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:simon-says', onStart: () => {
-      startedAtRef.current = performance.now();
+      startedAtRef.current = clock.now();
       endedAtRef.current = null;
       const match = new SimonMatch(settings.difficulty, settings.lives, CreateRandom(Date.now()));
       matchRef.current = match;
@@ -155,6 +196,8 @@ export function SimonSaysGame() {
     return () => {
       matchRef.current = null;
       clearPlayback();
+      clock.stop();
+      if (pauseClockRef.current === clock) pauseClockRef.current = null;
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
@@ -162,18 +205,18 @@ export function SimonSaysGame() {
 
   const tapPad = (pad: number) => {
     const match = matchRef.current;
-    if (phaseRef.current !== 'running' || !match) return;
-    const tap = match.tap(pad, performance.now());
+    if (phaseRef.current !== 'running' || pausedRef.current || !match) return;
+    const tap = match.tap(pad, pauseClockRef.current!.now());
     if (!tap.accepted) return;
     setPressed(pad);
-    window.clearTimeout(pressTimerRef.current);
-    pressTimerRef.current = window.setTimeout(() => setPressed(null), pressMs);
+    pauseClockRef.current?.clear(pressTimerRef.current);
+    pressTimerRef.current = pauseClockRef.current!.set(() => setPressed(null), pressMs);
     if (tap.result === 'step' || (tap.result === 'sequence' && !tap.outcome)) PlaySuccessSound();
     if (tap.result === 'wrong') PlayFailureSound();
     if (tap.result === 'wrong') {
       setShake(true);
-      window.clearTimeout(shakeTimerRef.current);
-      shakeTimerRef.current = window.setTimeout(() => setShake(false), shakeMs);
+      pauseClockRef.current?.clear(shakeTimerRef.current);
+      shakeTimerRef.current = pauseClockRef.current!.set(() => setShake(false), shakeMs);
       setFeedback(en ? 'Wrong pad. Watch the same order again.' : '點錯了，再看一次同樣的順序。');
     } else setFeedback(tap.result === 'sequence' && !tap.outcome ? (en ? 'Correct. One more pad.' : '答對了，多加一個。') : '');
     setVersion(version => version + 1);
@@ -189,6 +232,7 @@ export function SimonSaysGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     SetSoundEnabled(settings.soundEnabled);
     PrepareAudioFeedback();
@@ -245,41 +289,51 @@ export function SimonSaysGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="ss-stage ss-running" aria-label={title}>
+    {phase === 'running' && <><main className="ss-stage ss-running" aria-label={title} inert={paused}>
       <header className="ss-hud">
         <p className="ss-status" role="status" data-turn={match?.status === 'input' ? 'true' : undefined}>{match ? statusLabel(match) : ''}</p>
         <p className="ss-length">{en ? 'Length' : '長度'} {match?.sequence.length ?? 1} / {match?.targetLength ?? targetLengths[settings.difficulty]}</p>
         <Hearts count={match?.lives ?? settings.lives} total={settings.lives} en={en} />
-        <button type="button" className="btn btn-ghost ss-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost ss-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p className={`ss-feedback${match?.outcome ? ' ss-outcome' : ''}`} role="status" data-outcome={match?.outcome ?? undefined}>
         {match?.outcome ? outcomeLabel(match) : feedback}</p>
-      {match && <div className="ss-board-slot">
+      {match && <div className="ss-board-slot" style={{ visibility: paused ? 'hidden' : 'visible' }}>
         <SimonPads lit={lit} pressed={pressed} state={match.status} shake={shake} en={en} label={en ? 'Pads' : '按鈕'} onPad={tapPad} />
       </div>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="ss-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="ss-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && score && summary && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Result' : '結果'}</p><strong>{summary.completed ? (en ? 'Completed' : '完成') : (en ? 'No lives left' : '生命用完')}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Longest correct order' : '最長正確順序'}</p><strong>{summary.longestCorrect}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Correct repeats' : '答對次數'}</p><strong>{summary.correctTrials} / {summary.trials}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Lives left' : '剩下的生命'}</dt><dd>{summary.remainingLives} / {summary.maxLives}</dd></div>
         <div className="score-context-item"><dt>{en ? 'Total time' : '總用時'}</dt><dd>{seconds(summary.duration)}</dd></div>
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

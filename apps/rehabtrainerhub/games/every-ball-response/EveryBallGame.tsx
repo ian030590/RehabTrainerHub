@@ -20,6 +20,7 @@ import {
   SetInputPreview, StartSensorInput, StopSensorInput, ToPreviewRect,
 } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { TrialInterrupt } from './logic/trialInterrupt';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type Hole = { x: number; y: number; width: number; height: number; viewportWidth: number; viewportHeight: number };
@@ -47,10 +48,23 @@ export function EveryBallGame() {
   const labels = copy[lang];
   const title = t('game.title');
   const [phase, setPhaseState] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const pausedRef = useRef(false);
+  const endingRef = useRef(false);
+  const containerFullscreenRef = useRef(false);
+  const interruptRef = useRef(new TrialInterrupt());
+  const runAbortRef = useRef<AbortController | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'playing' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<EveryBallSettings>({ ...defaultSettings });
   const [error, setError] = useState('');
@@ -117,11 +131,40 @@ export function EveryBallGame() {
     if (meterRef.current) meterRef.current.style.transform = 'scaleX(0)';
   }, [sendPreview, setTrackingState]);
   const stopRun = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
+    runAbortRef.current?.abort();
+    runAbortRef.current = null;
     responses.Cancel();
+    interruptRef.current.resume();
+    appRef.current?.ticker.start();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'stop' });
   }, [responses]);
-  // Stop, Escape, a lost sensor and the container's configure request all return to the settings form.
+  const pause = useCallback(() => {
+    if (pausedRef.current || phaseRef.current !== 'playing') return;
+    pausedRef.current = true;
+    setFullscreenInterrupted(false);
+    interruptRef.current.pause();
+    responses.Cancel();
+    pointerHandledRef.current = false;
+    appRef.current?.ticker.stop();
+    StopMidiMusic();
+    drawVisual({ phase: 'idle' });
+    setPaused(true);
+  }, [drawVisual, responses]);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    cameraDetectorRef.current = CreateCameraGestureDetector();
+    microphoneDetectorRef.current = CreateMicrophoneTapDetector(settingsRef.current.soundSensitivity);
+    appRef.current?.ticker.start();
+    interruptRef.current.resume();
+    setPaused(false);
+  }, []);
+  // A lost sensor and the container's configure request return to the settings form.
   const showConfiguration = useCallback(() => {
     stopRun();
     stopSensor();
@@ -171,6 +214,7 @@ export function EveryBallGame() {
       app.canvas.className = 'every-ball-canvas';
       host.appendChild(app.canvas);
       appRef.current = app;
+      if (pausedRef.current) app.ticker.stop();
       app.renderer.on('resize', redraw);
       redraw();
     }).catch(failure => console.warn('The Every Ball stage could not start.', failure));
@@ -193,6 +237,7 @@ export function EveryBallGame() {
         return;
       }
       if (message.type !== 'frame') return;
+      if (pausedRef.current) return;
       const playing = phaseRef.current === 'playing';
       if ('rms' in message.payload) {
         const frame = message.payload as MicrophoneFrame;
@@ -214,19 +259,29 @@ export function EveryBallGame() {
   }, [palette, responses, setTrackingState, showConfiguration]);
 
   const respond = useCallback((action: ResponseAction, source: ResponseSource) => {
-    if (phaseRef.current === 'playing') responses.Emit(action, source);
+    if (phaseRef.current === 'playing' && !pausedRef.current) responses.Emit(action, source);
   }, [responses]);
   useEffect(() => {
     if (phase !== 'playing' && phase !== 'initializing') return;
     const keys = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); showConfiguration(); return; }
-      if (phase !== 'playing' || event.repeat) return;
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (phase === 'playing') { if (pausedRef.current) resume(); else pause(); } else showConfiguration(); } return; }
+      if (phase !== 'playing' || pausedRef.current || event.repeat) return;
       if (event.code === 'Space') { event.preventDefault(); respond('clap', 'keyboard'); }
       if (event.key === 'ArrowDown') { event.preventDefault(); respond('thigh', 'keyboard'); }
     };
     window.addEventListener('keydown', keys, true);
     return () => window.removeEventListener('keydown', keys, true);
-  }, [phase, respond, showConfiguration]);
+  }, [phase, respond, showConfiguration, pause, resume]);
+  useEffect(() => {
+    const changed = (event: Event) => {
+      const active = (event as CustomEvent<boolean>).detail;
+      const lost = containerFullscreenRef.current && !active;
+      containerFullscreenRef.current = active;
+      if (lost && phaseRef.current === 'playing' && !endingRef.current) { pause(); setFullscreenInterrupted(true); }
+    };
+    window.addEventListener('game:fullscreen', changed);
+    return () => window.removeEventListener('game:fullscreen', changed);
+  }, [pause]);
 
   // The container shows the camera image behind the transparent game, inside the camera frame.
   const previewing = settings.inputMode === 'camera' && sensorReady && (phase === 'rules' || phase === 'playing');
@@ -246,6 +301,7 @@ export function EveryBallGame() {
   }, [previewing, sendPreview]);
 
   const finish = useCallback((trials: TrialRecord[], levelId: 1 | 2 | 3) => {
+    endingRef.current = true;
     const completed = SummarizeEveryBallTrials(trials, levelId);
     const score = BuildGameScore(completed);
     // Preview and sensor stop first: once the result is sent the container accepts no more sensor requests.
@@ -262,6 +318,8 @@ export function EveryBallGame() {
     const host = jsPsychHostRef.current;
     if (phase !== 'playing' || !host) return;
     const generation = generationRef.current;
+    const controller = new AbortController();
+    runAbortRef.current = controller;
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
@@ -272,14 +330,28 @@ export function EveryBallGame() {
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:every-ball-response', onStart: () => {
       void RunEveryBall(CreateEveryBallPlans(levelId, settings.rounds), {
         fixationStyle: settings.fixationStyle,
-        wait: milliseconds => new Promise<void>(resolve => { jsPsych.pluginAPI.setTimeout(resolve, milliseconds); }),
-        waitForResponse: milliseconds => responses.WaitForResponse(milliseconds),
-        notify: drawVisual,
+        interrupt: interruptRef.current, signal: controller.signal,
+        wait: (milliseconds, signal) => new Promise<void>((resolve, reject) => {
+          const timer = window.setTimeout(() => { signal?.removeEventListener('abort', stop); resolve(); }, milliseconds);
+          const stop = () => { window.clearTimeout(timer); reject(new DOMException('Interrupted', 'AbortError')); };
+          signal?.addEventListener('abort', stop, { once: true });
+          if (signal?.aborted) stop();
+        }),
+        waitForResponse: (milliseconds, signal) => {
+          const pending = responses.WaitForResponse(milliseconds);
+          const stop = () => responses.Cancel();
+          signal?.addEventListener('abort', stop, { once: true });
+          if (signal?.aborted) stop();
+          return pending.finally(() => signal?.removeEventListener('abort', stop));
+        },
+        notify: visual => { if (!cancelled()) drawVisual(visual); },
         cancelled,
       }).then(result => { if (!result.aborted && !cancelled()) finish(result.trials, levelId); })
         .catch(failure => console.error('Every Ball stopped unexpectedly.', failure));
     } });
     return () => {
+      controller.abort();
+      if (runAbortRef.current === controller) runAbortRef.current = null;
       responses.Cancel();
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
@@ -293,6 +365,7 @@ export function EveryBallGame() {
     setPhase('rules');
   };
   const beginRun = useCallback(() => {
+    endingRef.current = false;
     SendGameEvent('active');
     drawVisual({ phase: 'idle' });
     setPhase('playing');
@@ -361,14 +434,14 @@ export function EveryBallGame() {
   return <div className={`every-ball-root every-ball-response-phase-${phase}`} style={{ '--every-ball-hole': HoleClipPath(hole) } as CSSProperties}>
     <div className="every-ball-field" aria-hidden="true" />
     <div ref={jsPsychHostRef} className="every-ball-jspsych-host" aria-hidden="true" />
-    <main className={`every-ball-stage${microphone ? '' : ' is-camera'}`} aria-label={title} data-trial-phase={visual.phase}>
-      <div ref={canvasHostRef} className="every-ball-canvas-host" aria-hidden="true" />
+    <main className={`every-ball-stage${microphone ? '' : ' is-camera'}`} aria-label={title} data-trial-phase={visual.phase} inert={paused}>
+      <div ref={canvasHostRef} className="every-ball-canvas-host" aria-hidden="true" style={{ visibility: paused ? 'hidden' : 'visible' }} />
       <header className={`every-ball-hud${microphone ? ' has-meter' : ''}`}>
         <p className="every-ball-hud-item"><span>{labels.levelShort[level]}</span><strong>{title}</strong></p>
         <p className="every-ball-hud-item"><span>{labels.progress}</span><strong>{labels.trial(Math.max(1, visual.trialNumber ?? 1), settings.rounds)}</strong></p>
         <p className="every-ball-hud-item every-ball-hud-status" aria-live="polite"><span>{labels.inputMode}</span><strong>{hudStatus}</strong></p>
         {microphone && <div className="every-ball-meter" role="img" aria-label={labels.meter}><span ref={meterRef} className="every-ball-meter-level" /></div>}
-        <button type="button" className="btn btn-ghost every-ball-stop" onClick={showConfiguration}>{labels.stop}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost every-ball-stop" onClick={phase === 'playing' ? pause : showConfiguration}>{en ? 'Stop' : '停止'}</button>
       </header>
       {!microphone && <div className={`every-ball-camera${previewing ? ' is-live' : ''}`}>
         <div ref={cameraViewRef} className="every-ball-camera-view">
@@ -385,6 +458,14 @@ export function EveryBallGame() {
       {(phase === 'menu' || phase === 'rules' || phase === 'initializing') && <EveryBallTutorial active={phase !== 'menu'} ready={phase === 'rules'} title={title}
         settings={settings} summaryItems={summaryItems} onStart={() => void startTraining()} onBack={showConfiguration} inputReady={sensorReady} status={status} />}
     </main>
+    {phase === 'playing' && paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="every-ball-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="every-ball-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{en ? 'Ending the activity will return to settings without saving this session.' : '結束後會返回設定，不會保存這次紀錄。'}</p>
+      {fullscreenInterrupted && <p>{en ? 'Fullscreen ended.' : '已退出全螢幕。'}</p>}
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={showConfiguration}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}
     {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog" aria-labelledby="every-ball-settings-title"
       onCancel={event => { event.preventDefault(); exit(); }}>
       <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
@@ -405,14 +486,14 @@ export function EveryBallGame() {
           <section className="training-setting"><h3>{labels.privacyTitle}</h3><p className="training-setting-description">{labels.privacy}</p></section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{labels.confirm}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{backLabel}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{labels.confirm}</button>
         </div></footer>
       </form>
     </dialog>}
     {phase === 'results' && summary && score && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{labels.resultsTitle}</h1><p>{title} · {labels.difficultyNames[settings.difficulty]}</p></header>
-      <section className="score-priority"><h2>{labels.keyResults}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title} · {labels.difficultyNames[settings.difficulty]}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{labels.correct}</p><strong>{summary.correct} / {summary.total}</strong></div>
         <div className="score-key-metric"><p>{labels.accuracy}</p><strong>{summary.accuracy}%</strong></div>
         <div className="score-key-metric"><p>{labels.averageRt}</p><strong>{summary.averageRtMs === null ? labels.none : `${summary.averageRtMs} ms`}</strong></div>
@@ -420,6 +501,12 @@ export function EveryBallGame() {
         <p className="score-note">{summary.passed ? labels.passed : labels.notPassed}{en ? '. ' : '。'}{labels.passRule(levelPassAccuracy[LevelFromDifficulty(settings.difficulty)])}</p>
         <p className="score-note">{labels.rtNote}</p>
       </section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context score-errors"><h2>{labels.errorCounts}</h2><dl className="score-context-list">
         <div className="score-context-item"><dt>{labels.misses}</dt><dd>{summary.misses}</dd></div>
         <div className="score-context-item"><dt>{labels.falseAlarms}</dt><dd>{summary.falseAlarms}</dd></div>
@@ -429,9 +516,7 @@ export function EveryBallGame() {
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
       </dl></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? labels.localSave : saveState === 'saved' ? labels.saved : saveState === 'error' ? labels.saveError : labels.saving}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{labels.retry}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{backLabel}</button>
+      </details>
     </section></div>}
   </div>;
 }

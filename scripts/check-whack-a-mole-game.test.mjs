@@ -4,9 +4,26 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import ts from 'typescript';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'whack-a-mole';
+test('pause freezes the target window and activity countdown', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('target'), 500);
+  pausedClock.set(() => events.push('end'), 1000);
+  clock.advance(250);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 250);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(750);
+  assert.deepEqual(events, ['target', 'end']);
+  pausedClock.stop();
+});
 const LoadLogic = () => LoadGameModule(gameId, 'logic/whackAMole.ts');
 const Sequence = (...values) => { let index = 0; return () => values[index++ % values.length]; };
 
@@ -94,7 +111,7 @@ test('hits and misses each play their own sound, and taps use the pointer-down t
 });
 
 test('Target Click owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'WhackAMoleGame', category: 'attention', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'WhackAMoleGame', category: 'attention', version: '2.1.0' });
 });
 
 test('Target Click private bridge accepts only its own parent and replays settings and language', async () => {
@@ -245,7 +262,7 @@ test('the decorative canvas sits under target shapes, keeps star and X, and is w
   assert.match(css, /\.wm-fx\s*\{[^}]*image-rendering:\s*pixelated/);
   assert.match(css, /\.wm-hole\s*\{[^}]*z-index:\s*1/);
   assert.match(source, /if \(!tap.accepted \|\| !tap.outcome\) return;[\s\S]*?holeEffectsRef.current\?\.play\(index, tap.outcome\)/);
-  assert.match(source, /match\.expire\(performance.now\(\)\)[\s\S]*?holeEffectsRef.current\?\.resetStreak\(\)/);
+  assert.match(source, /match\.expire\(pauseClockRef.current!\.now\(\)\)[\s\S]*?holeEffectsRef.current\?\.resetStreak\(\)/);
   assert.ok((source.match(/holeEffectsRef.current\?\.clear\(\)/g) ?? []).length >= 2, 'Stop and time-up clear effects.');
   const end = source.slice(source.indexOf('const end ='), source.indexOf('const showFlash ='));
   assert.ok(end.indexOf('endedAtRef.current = performance.now()') < end.indexOf('holeEffectsRef.current?.clear()'), 'Record the end time before decorative cleanup.');

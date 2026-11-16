@@ -34,13 +34,17 @@ export class OrderedSearch {
   errors = 0;
   next = 1;
   private finishedAt: number | null = null;
+  private pausedAt: number | null = null;
 
-  constructor(private count: number, readonly startedAt: number) {}
+  constructor(private count: number, public startedAt: number) {}
 
   get done() { return this.finishedAt !== null; }
 
+  pause(now: number) { if (!this.done && this.pausedAt === null) this.pausedAt = now; }
+  resume(now: number) { if (this.pausedAt !== null) { this.startedAt += now - this.pausedAt; this.pausedAt = null; } }
+
   tap(value: number, now: number): SearchTap {
-    if (this.done || this.found.has(value)) return { correct: false, done: this.done, ignored: true };
+    if (this.pausedAt !== null || this.done || this.found.has(value)) return { correct: false, done: this.done, ignored: true };
     if (value !== this.next) { this.errors++; return { correct: false, done: false }; }
     this.found.add(value);
     this.next++;

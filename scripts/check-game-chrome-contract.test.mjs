@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import ts from 'typescript';
 
-const chromeContractGames = ['flanker', 'stroop', 'simon-task', 'go-nogo', 'sart', 'stop-signal', 'antisaccade', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'digit-span', 'keep-track', 'letter-memory', 'n-back', 'spatial-span', 'pattern-memory'];
-const componentOverrides = { 'go-nogo': 'GoNoGoGame', 'attention-network-task': 'AttentionNetworkGame', 'reaction-time': 'ReactionSignal', 'digit-span': 'DigitSpanRecall', 'keep-track': 'KeepTrackRecall', 'letter-memory': 'LetterMemoryRecall', 'n-back': 'NBackLetters', 'spatial-span': 'SpatialSpanRecall' };
+const chromeContractGames = ['flanker', 'stroop', 'simon-task', 'go-nogo', 'sart', 'stop-signal', 'antisaccade', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'digit-span', 'keep-track', 'letter-memory', 'n-back', 'spatial-span', 'pattern-memory', 'memory-match', 'simon-says', 'hex-schulte', 'whack-a-mole', 'ufov', 'every-ball-response'];
+const componentOverrides = { 'go-nogo': 'GoNoGoGame', 'attention-network-task': 'AttentionNetworkGame', 'reaction-time': 'ReactionSignal', 'digit-span': 'DigitSpanRecall', 'keep-track': 'KeepTrackRecall', 'letter-memory': 'LetterMemoryRecall', 'n-back': 'NBackLetters', 'spatial-span': 'SpatialSpanRecall', 'whack-a-mole': 'WhackAMoleGame', 'every-ball-response': 'EveryBallGame' };
 const read = path => readFileSync(path, 'utf8');
 const catalog = read('apps/rehabtrainerhub/games/catalog.ts');
 

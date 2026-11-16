@@ -186,6 +186,7 @@ export const brainGameSpecs = {
     rows: 2,
   },
   'hex-schulte': {
+    interruptPanel: true,
     title: { zh: '六角舒爾特方格', en: 'Hexagon Schulte Grid' },
     purpose: 'attention',
     settings: { rings: 2, rounds: 2, centerChecks: true },
@@ -1502,7 +1503,14 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   await tap('.training-confirmation .btn-primary');
   await until(() => game(`Boolean(document.querySelector(${JSON.stringify(spec.runningSelector)}))`), 'running stage');
   await until(() => game(`document.fullscreenElement === document.querySelector('.${gameId}-game-root')`), 'native fullscreen root');
-  if (process.argv.includes('--windowed')) await game(`document.exitFullscreen()`);
+  if (process.argv.includes('--windowed')) {
+    await game(`document.exitFullscreen()`);
+    if (spec.interruptPanel) {
+      await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'fullscreen interruption panel');
+      await tap('.game-interrupt-panel .btn-primary');
+      await until(() => game(`!document.querySelector('.game-interrupt-panel')`), 'continue windowed');
+    }
+  }
   assert.ok(await game(`document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight`), 'Stage fits the viewport.');
   if (tutorialStop) assert.equal(await buttonLook(spec.stopSelector), tutorialStop, 'The tutorial Stop matches the real Stop button.');
   if (process.argv.includes('--stop')) {

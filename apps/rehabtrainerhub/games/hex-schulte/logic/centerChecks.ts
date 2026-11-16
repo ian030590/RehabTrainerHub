@@ -10,13 +10,17 @@ export class CenterChecks {
   private hits = 0;
   private missed = 0;
   private stopped = false;
+  private paused = false;
+  private due = 0;
+  private remaining = 0;
+  private callback: (() => void) | null = null;
 
   constructor(private timing: CenterTiming, private clock: CenterClock, private random: () => number, private view: CenterView) {}
 
   start() { this.scheduleNext(); }
 
   respond(): boolean {
-    if (this.stopped || !this.showing) return false;
+    if (this.stopped || this.paused || !this.showing) return false;
     this.hits++;
     this.end(true);
     return true;
@@ -32,9 +36,29 @@ export class CenterChecks {
 
   counts() { return { shown: this.shown, hits: this.hits, missed: this.missed }; }
 
+  pause() {
+    if (this.stopped || this.paused) return;
+    this.paused = true;
+    this.remaining = Math.max(0, this.due - this.clock.now());
+    if (this.timer !== null) this.clock.clear(this.timer);
+    this.timer = null;
+  }
+
+  resume() {
+    if (this.stopped || !this.paused) return;
+    this.paused = false;
+    if (this.callback) this.schedule(this.callback, this.remaining);
+  }
+
+  private schedule(callback: () => void, ms: number) {
+    this.callback = callback;
+    this.due = this.clock.now() + ms;
+    this.timer = this.clock.set(callback, ms);
+  }
+
   private scheduleNext() {
     const gap = this.timing.minGapMs + this.random() * (this.timing.maxGapMs - this.timing.minGapMs);
-    this.timer = this.clock.set(() => this.show(), Math.round(gap));
+    this.schedule(() => this.show(), Math.round(gap));
   }
 
   private show() {
@@ -42,7 +66,7 @@ export class CenterChecks {
     this.showing = true;
     this.shown++;
     this.view.show();
-    this.timer = this.clock.set(() => { this.missed++; this.end(false); }, this.timing.windowMs);
+    this.schedule(() => { this.missed++; this.end(false); }, this.timing.windowMs);
   }
 
   private end(hit: boolean) {

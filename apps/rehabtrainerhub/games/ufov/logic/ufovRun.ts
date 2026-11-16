@@ -11,6 +11,7 @@ import {
 } from '../timing/peripheralAttentionTiming';
 import { FramesToMs, InitialAdaptiveState, MaxTestTrials, MsToFrameCount, NextDurationMs, UpdateAdaptiveState, ufovTiming, type AdaptiveState } from './staircase';
 import type { UfovSession, UfovTimingAttempt, UfovTrial, Vehicle } from './ufovSummary';
+import { TrialInterrupt } from './trialInterrupt';
 
 export interface UfovRunConfig {
   subtestId: 1 | 2 | 3;
@@ -68,6 +69,7 @@ function WaitMs(durationMs: number, signal: AbortSignal) {
 
 export class UfovRun {
   private readonly controller = new AbortController();
+  private readonly interrupt = new TrialInterrupt();
   private readonly hasPeripheral: boolean;
   private readonly hasDistractors: boolean;
 
@@ -77,11 +79,13 @@ export class UfovRun {
   }
 
   stop() { this.controller.abort(); }
+  pause() { this.interrupt.pause(); }
+  resume() { this.interrupt.resume(); }
 
   async start() {
     const abortSignal = this.controller.signal;
     try {
-      const measured = await MeasureDisplayRefreshRate({ signal: abortSignal });
+      const measured = await this.interrupt.run(abortSignal, signal => MeasureDisplayRefreshRate({ signal }));
       ThrowIfUfovRunAborted(abortSignal);
       const session = await this.run(measured, abortSignal);
       if (!abortSignal.aborted) this.finish(session);
@@ -105,14 +109,15 @@ export class UfovRun {
     try {
       for (let index = 0; practiceMode && index < ufovTiming.practiceTrials; index++) {
         this.view.progress(index + 1, true);
-        const attempt = await this.runTrial(this.createStimulus(true, index + 1, ufovTiming.practiceDurationMs, currentRefreshMs), currentRefreshMs, 1, abortSignal);
+        const stimulus = this.createStimulus(true, index + 1, ufovTiming.practiceDurationMs, currentRefreshMs);
+        const attempt = await this.interrupt.run(abortSignal, signal => this.runTrial(stimulus, currentRefreshMs, 1, signal));
         timingAttempts.push(attempt.timingAttempt);
         currentRefreshMs = attempt.timingAttempt.refreshMs;
         if (!attempt.timingAttempt.syncValid) invalidTimingAttemptCount += 1;
         if (!attempt.record) continue;
         trials.push(attempt.record);
         this.view.prompt({ kind: 'feedback', correct: attempt.record.correct });
-        await WaitMs(300, abortSignal);
+        await this.interrupt.run(abortSignal, signal => WaitMs(300, signal));
       }
       let testTrialNumber = 0;
       let attemptNumber = 0;
@@ -120,7 +125,8 @@ export class UfovRun {
       while (!practiceMode && testTrialNumber < maxTestTrials) {
         attemptNumber += 1;
         this.view.progress(testTrialNumber + 1, false);
-        const attempt = await this.runTrial(this.createStimulus(false, testTrialNumber + 1, durationMs, currentRefreshMs), currentRefreshMs, attemptNumber, abortSignal);
+        const stimulus = this.createStimulus(false, testTrialNumber + 1, durationMs, currentRefreshMs);
+        const attempt = await this.interrupt.run(abortSignal, signal => this.runTrial(stimulus, currentRefreshMs, attemptNumber, signal));
         timingAttempts.push(attempt.timingAttempt);
         currentRefreshMs = attempt.timingAttempt.refreshMs;
         const shouldCountTrial = ShouldCountPeripheralAttentionTrial(config.mode, attempt.timingAttempt.syncValid);
@@ -129,7 +135,7 @@ export class UfovRun {
           consecutiveInvalidAttempts += 1;
           if (GetPeripheralAttentionSyncRecoveryAction(consecutiveInvalidAttempts) === 'retry') {
             this.view.prompt({ kind: 'retry' });
-            await WaitMs(450, abortSignal);
+            await this.interrupt.run(abortSignal, signal => WaitMs(450, signal));
           } else {
             synchronizationPauseCount += 1;
             consecutiveInvalidAttempts = 0;

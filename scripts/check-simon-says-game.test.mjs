@@ -2,9 +2,28 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
+import { FakeClock } from './brain-r2-game-checks.mjs';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'simon-says';
+
+test('pausing freezes sequence presentation and the response clock', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pausedClock = new PauseClock(clock);
+  const events = [];
+  pausedClock.set(() => events.push('light'), 300);
+  pausedClock.set(() => events.push('input'), 600);
+  clock.advance(100);
+  pausedClock.pause();
+  clock.advance(5000);
+  assert.equal(pausedClock.now(), 100);
+  assert.deepEqual(events, []);
+  pausedClock.resume();
+  clock.advance(500);
+  assert.deepEqual(events, ['light', 'input']);
+  pausedClock.stop();
+});
 const LoadLogic = () => LoadGameModule(gameId, 'logic/simonSays.ts');
 const Sequence = (...values) => { let index = 0; return () => values[index++ % values.length]; };
 
@@ -96,7 +115,7 @@ test('correct and wrong pads each play their own sound, and number keys press th
 });
 
 test('Simon Says owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SimonSaysGame', category: 'memory', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'SimonSaysGame', category: 'memory', version: '2.1.0' });
 });
 
 test('Simon Says private bridge accepts only its own parent and replays settings and language', async () => {

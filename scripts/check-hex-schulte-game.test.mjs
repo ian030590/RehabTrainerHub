@@ -39,6 +39,34 @@ test('a round takes numbers in ascending order and counts wrong taps', async () 
   assert.deepEqual(search.result(), { timeMs: 900, errors: 1 });
 });
 
+test('pause preserves found numbers and excludes paused time from the round', async () => {
+  const { OrderedSearch } = await LoadGameModule(gameId, 'logic/hexBoard.ts');
+  const search = new OrderedSearch(2, 1000);
+  search.tap(1, 1200);
+  search.pause(1500);
+  assert.equal(search.tap(2, 3000).ignored, true);
+  search.resume(6500);
+  search.tap(2, 7000);
+  assert.deepEqual(search.result(), { timeMs: 1000, errors: 0 });
+});
+
+test('pause freezes a visible centre check and retains its remaining response time', async () => {
+  const { CenterChecks } = await LoadGameModule(gameId, 'logic/centerChecks.ts');
+  const clock = FakeClock();
+  const checks = new CenterChecks({ minGapMs: 100, maxGapMs: 100, windowMs: 150 }, clock, () => 0, { show() {}, hide() {} });
+  checks.start();
+  clock.advance(150);
+  checks.pause();
+  assert.equal(checks.respond(), false);
+  clock.advance(1000);
+  assert.deepEqual(checks.counts(), { shown: 1, hits: 0, missed: 0 });
+  checks.resume();
+  clock.advance(99);
+  assert.equal(checks.respond(), true);
+  assert.deepEqual(checks.counts(), { shown: 1, hits: 1, missed: 0 });
+  checks.stop();
+});
+
 test('centre checks appear at spaced, seeded times and count hits and misses', async () => {
   const { CenterChecks } = await LoadGameModule(gameId, 'logic/centerChecks.ts');
   const clock = FakeClock();
@@ -79,7 +107,7 @@ test('hex Schulte results save bounded numeric rows through the private channel'
 });
 
 test('hex Schulte owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'HexSchulteGame', category: 'attention', version: '1.0.2' });
+  await CheckGamePackaging(gameId, { component: 'HexSchulteGame', category: 'attention', version: '1.1.0' });
 });
 
 test('hex Schulte private bridge accepts only its own parent and replays settings and language', async () => {

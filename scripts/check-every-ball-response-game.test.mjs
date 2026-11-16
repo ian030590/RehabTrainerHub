@@ -6,11 +6,33 @@ import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
 import { AcceptGameMessage, IsGameResult, IsGameSettings } from '../packages/ui/src/selfContainedGame.js';
+import { CreateRawDataEnvironment } from '../apps/rehabtrainerhub/functions/_lib/rawDataTestFixtures.mjs';
+import { browserApiHandlers, ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
+import { VerifyEveryBallSavedRecord } from './every-ball-response-browser.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/every-ball-response');
 const legacy = JSON.parse(await readFile(resolve(import.meta.dirname, 'fixtures/every-ball-response-legacy.json'), 'utf8'));
 const nonce = 'a'.repeat(64);
+
+test('interrupting a ball trial discards the attempt and waits to restart', async () => {
+  const { TrialInterrupt } = await Load('logic/trialInterrupt.ts');
+  const gate = new TrialInterrupt();
+  const parent = new AbortController();
+  let starts = 0;
+  const run = gate.run(parent.signal, signal => new Promise((resolve, reject) => {
+    starts++;
+    signal.addEventListener('abort', () => reject(new DOMException('Interrupted', 'AbortError')), { once: true });
+    if (starts === 2) resolve('completed');
+  }));
+  await Promise.resolve();
+  gate.pause();
+  await Promise.resolve();
+  assert.equal(starts, 1);
+  gate.resume();
+  assert.equal(await run, 'completed');
+  assert.equal(starts, 2);
+});
 
 async function Load(path, dependencies = {}) {
   const module = { exports: {} };
@@ -50,6 +72,46 @@ async function LoadFunction(path, name, context) {
   return runInNewContext(`${code}\n${name}`, context);
 }
 
+test('pause stops the ticker and audio, cancels responses, and resume restarts input', async () => {
+  const calls = [];
+  const pausedRef = { current: false };
+  const context = {
+    pausedRef, phaseRef: { current: 'playing' }, restoreStopRef: { current: false },
+    interruptRef: { current: { pause: () => calls.push('interrupt'), resume: () => calls.push('resume') } },
+    responses: { Cancel: () => calls.push('cancel') }, pointerHandledRef: { current: true },
+    appRef: { current: { ticker: { stop: () => calls.push('ticker stop'), start: () => calls.push('ticker start') } } },
+    StopMidiMusic: () => calls.push('music stop'), drawVisual: () => calls.push('hide stimulus'),
+    setPaused: value => calls.push(`paused ${value}`), setFullscreenInterrupted: () => {},
+    cameraDetectorRef: { current: null }, microphoneDetectorRef: { current: null }, settingsRef: { current: { soundSensitivity: 65 } },
+    CreateCameraGestureDetector: () => ({}), CreateMicrophoneTapDetector: () => ({}),
+  };
+  const pause = await LoadFunction('EveryBallGame.tsx', 'pause', context);
+  const resume = await LoadFunction('EveryBallGame.tsx', 'resume', context);
+  pause();
+  pause();
+  assert.equal(pausedRef.current, true);
+  assert.equal(context.pointerHandledRef.current, false);
+  assert.deepEqual(calls, ['interrupt', 'cancel', 'ticker stop', 'music stop', 'hide stimulus', 'paused true']);
+  resume();
+  assert.equal(pausedRef.current, false);
+  assert.deepEqual(calls.slice(-3), ['ticker start', 'resume', 'paused false']);
+});
+
+test('loss of the container fullscreen pauses play but normal completion does not reopen the panel', async () => {
+  const calls = [];
+  const context = { containerFullscreenRef: { current: false }, phaseRef: { current: 'playing' }, endingRef: { current: false },
+    pause: () => calls.push('pause'), setFullscreenInterrupted: value => calls.push(`fullscreen ${value}`) };
+  const changed = await LoadFunction('EveryBallGame.tsx', 'changed', context);
+  changed({ detail: false });
+  changed({ detail: true });
+  changed({ detail: false });
+  assert.deepEqual(calls, ['pause', 'fullscreen true']);
+  context.endingRef.current = true;
+  changed({ detail: true });
+  changed({ detail: false });
+  assert.deepEqual(calls, ['pause', 'fullscreen true']);
+});
+
 function FakeClock() {
   let now = 0;
   let id = 0;
@@ -83,6 +145,141 @@ const Plan = (levelId, ball, trialNumber, fixationMs = 2000) => ({
 // A hand whose 21 points sit on one spot, so its palm center is that spot.
 const Hand = (x, y) => Array.from({ length: 21 }, () => ({ x, y, z: 0 }));
 const PoseFrame = (timestamp, hands, pose = []) => ({ timestamp, videoWidth: 960, videoHeight: 720, hands, pose });
+
+test('paused ball exposure is discarded and a fresh response window excludes the pause', async () => {
+  const { RunEveryBall, CreateResponseWindow } = await LoadLogic();
+  const { TrialInterrupt } = await Load('logic/trialInterrupt.ts');
+  const clock = FakeClock();
+  const responses = CreateResponseWindow(clock);
+  const gate = new TrialInterrupt();
+  const parent = new AbortController();
+  const shown = [];
+  const run = RunEveryBall([Plan(1, 'basketball', 1, 1000)], {
+    fixationStyle: 'cross', interrupt: gate, signal: parent.signal, cancelled: () => parent.signal.aborted,
+    wait: (ms, signal) => new Promise((resolve, reject) => {
+      const timer = clock.setTimeout(() => { signal?.removeEventListener('abort', stop); resolve(); }, ms);
+      const stop = () => { clock.clearTimeout(timer); reject(new DOMException('Interrupted', 'AbortError')); };
+      signal?.addEventListener('abort', stop, { once: true });
+    }),
+    waitForResponse: (ms, signal) => {
+      const pending = responses.WaitForResponse(ms);
+      const stop = () => responses.Cancel();
+      signal?.addEventListener('abort', stop, { once: true });
+      return pending.finally(() => signal?.removeEventListener('abort', stop));
+    },
+    notify: visual => shown.push([clock.now(), visual.phase]),
+  });
+  await clock.advance(1300);
+  gate.pause();
+  await clock.advance(5000);
+  assert.equal(responses.Emit('clap', 'keyboard'), false);
+  gate.resume();
+  await clock.advance(1200);
+  assert.equal(responses.Emit('clap', 'keyboard'), true);
+  await clock.advance(2000);
+  const result = await run;
+  assert.deepEqual(shown.filter(([, phase]) => phase === 'stimulus').map(([time]) => time), [1000, 7300]);
+  assert.deepEqual(result.trials.map(row => [row.Outcome, row.Reaction_Time_ms]), [['hit', 200]]);
+});
+
+for (const withPause of [false, true]) test(`Every Ball browser verification reads saved rounds ${withPause ? 'after pause and resume' : 'without pausing'}`, async t => {
+  const { RunEveryBall, CreateResponseWindow, SummarizeEveryBallTrials } = await LoadLogic();
+  const { BuildGameScore } = await Load('score.ts');
+  const { TrialInterrupt } = await Load('logic/trialInterrupt.ts');
+  const clock = FakeClock();
+  const responses = CreateResponseWindow(clock);
+  const gate = new TrialInterrupt();
+  const controller = new AbortController();
+  const plans = Array.from({ length: 10 }, (_, index) => Plan(3, index === 1 ? 'soccer' : index === 2 ? 'tennis' : 'basketball', index + 1, 1000));
+  const expected = plans.map(plan => ({ plan, action: plan.trialNumber === 4 ? null : 'clap',
+    source: plan.trialNumber === 4 ? '' : 'keyboard', outcome: plan.trialNumber === 2 ? 'wrong_action' : plan.trialNumber === 3 ? 'false_alarm' : plan.trialNumber === 4 ? 'miss' : 'hit' }));
+  let trialNumber = 0;
+  const running = RunEveryBall(plans, {
+    fixationStyle: 'cross', interrupt: gate, signal: controller.signal, cancelled: () => controller.signal.aborted,
+    notify: visual => { if (visual.phase === 'stimulus') trialNumber = visual.trialNumber; },
+    wait: (ms, signal) => new Promise((resolve, reject) => {
+      const timer = clock.setTimeout(() => { signal.removeEventListener('abort', stop); resolve(); }, ms);
+      const stop = () => { clock.clearTimeout(timer); reject(new DOMException('Interrupted', 'AbortError')); };
+      signal.addEventListener('abort', stop, { once: true });
+    }),
+    waitForResponse: (ms, signal) => {
+      const pending = responses.WaitForResponse(ms);
+      const action = expected[trialNumber - 1].action;
+      const timer = action && clock.setTimeout(() => responses.Emit(action, 'keyboard'), 200);
+      const stop = () => { if (timer) clock.clearTimeout(timer); responses.Cancel(); };
+      signal.addEventListener('abort', stop, { once: true });
+      return pending.finally(() => signal.removeEventListener('abort', stop));
+    },
+  });
+  await clock.advance(1100);
+  if (withPause) { gate.pause(); await clock.advance(5000); gate.resume(); }
+  await clock.advance(50000);
+  const result = await running;
+  assert.equal(result.aborted, false);
+  assert.equal(result.trials.length, 10);
+
+  const bridge = await LoadBridge();
+  const config = { difficulty: 'hard', rounds: 10, inputMode: 'camera', fixationStyle: 'cross', soundSensitivity: 65 };
+  const finish = await LoadFunction('EveryBallGame.tsx', 'finish', {
+    endingRef: { current: false }, SummarizeEveryBallTrials, BuildGameScore,
+    stopSensor() {}, jsPsychLifecycleRef: { current: { finish() {} } }, setSummary() {}, setSaveState() {},
+    IsHubGame: () => true, settingsRef: { current: config }, SendGameResult: bridge.api.SendGameResult,
+    ExitContainerFullscreen: async () => {}, drawVisual() {}, setPhase() {},
+  });
+  finish(result.trials, 3);
+  const message = bridge.sent.find(item => item.type === 'result');
+  const score = BuildGameScore(SummarizeEveryBallTrials(result.trials, 3));
+  assert.deepEqual(message.payload.score.rounds, score.rounds, 'The private result message contains every completed trial.');
+  assert.equal(message.payload.score.rounds.length, 10);
+
+  const fixture = CreateRawDataEnvironment('every-ball-response', ['pose-tracking']);
+  t.after(() => fixture.sqlite.close());
+  const session = await fixture.session();
+  const input = { appId: 'rehabtrainerhub', runtimeId: 'hub', subjectId: session.subjectId,
+    officialGameVersion: session.version, runSessionToken: session.token,
+    record: { id: session.recordId, gameId: 'every-ball-response', moduleId: 'every-ball-response', config,
+      metadata: { release_version: session.version.replaceAll('.', '_') }, score: message.payload.score } };
+  let saveAttempts = 0;
+  const save = () => {
+    saveAttempts++;
+    return saveAttempts === 1 ? Promise.resolve(new Response('Temporary failure', { status: 503 }))
+      : browserApiHandlers['/api/records']({ env: fixture.env, request: new Request('https://trainerhub.cc/api/records', {
+        method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'CF-Connecting-IP': '192.0.2.212', 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+      }) });
+  };
+  assert.equal((await save()).status, 503, 'The initial save fails before reaching the API.');
+  const savedResponse = await save();
+  assert.equal(savedResponse.status, 201, await savedResponse.text());
+  assert.equal((await save()).status, 200, 'Repeating a successful save is idempotent.');
+  const row = fixture.sqlite.prepare('SELECT * FROM training_records').get();
+  const stored = JSON.parse(row.payload_json);
+  assert.deepEqual(stored.score.rounds, [], 'D1 deliberately keeps only the summary.');
+  assert.equal(stored.scoreRoundCount, 10);
+  assert.deepEqual((await ReadSavedGameRecord(row, fixture.env.RAW_DATA, session.version)).score.rounds, score.rounds);
+
+  const count = outcome => expected.filter(item => item.outcome === outcome).length;
+  await VerifyEveryBallSavedRecord({ sqlite: fixture.sqlite, rawDataBucket: fixture.env.RAW_DATA, version: session.version,
+    getSaveAttempts: () => saveAttempts, accountId: null, guestSubjectId: session.subjectId, config, expected, plans,
+    correct: count('hit') + count('correct_reject') });
+});
+
+test('the browser runner passes the local raw-data bucket to Every Ball verification', async () => {
+  const path = resolve(root, 'scripts/check-r2-game-browser.mjs');
+  const source = await readFile(path, 'utf8');
+  const tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  let call;
+  function Visit(node) {
+    if (ts.isCallExpression(node) && node.expression.getText(tree) === 'CheckEveryBall') call = node.getText(tree);
+    ts.forEachChild(node, Visit);
+  }
+  Visit(tree);
+  assert.ok(call, 'The browser runner invokes the Every Ball driver.');
+  const bucket = {};
+  const context = { CheckEveryBall: options => options, environment: { RAW_DATA: bucket }, manifest: { version: '2.1.0' },
+    game: null, evaluate: null, send: null, until: null, standalone: false, english: false, capture: null,
+    checkSpotlight: null, sqlite: null, gameContext: null, session: null, saveAttempts: 0, requests: [], errors: [], accountId: null, guestSubjectId: null };
+  assert.equal(runInNewContext(call, context).rawDataBucket, bucket);
+});
 
 test('Every Ball keeps the Hub settings and brings back the input, fixation and sound options in its own form', async () => {
   const { defaultSettings, listSettings, rangeSettings, ValidateSettings, LevelFromDifficulty } = await Load('settings.ts');
@@ -516,7 +713,7 @@ test('the ball sits where the legacy stage put it on wide, tall and short screen
 test('Every Ball owns its runtime, catalogue entry and results without Hub or camera code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-every-ball-response');
-  assert.equal(pkg.version, '2.0.1');
+  assert.equal(pkg.version, '2.1.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'microphone-level', 'pointer', 'pose-tracking', 'settings-storage', 'touch']);

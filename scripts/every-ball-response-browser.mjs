@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { ReadSavedGameRecord } from './r2-browser-fixtures.mjs';
 
 const gameRoot = new URL('../apps/rehabtrainerhub/games/every-ball-response/', import.meta.url);
 const microphone = process.argv.includes('--microphone');
@@ -10,6 +11,29 @@ const mobile = process.argv.includes('--mobile');
 // Saved rounds store each name as its position in these lists (score.ts).
 const codes = { ball: ['basketball', 'soccer', 'tennis', 'beach'], action: ['none', 'clap', 'thigh'],
   outcome: ['hit', 'correct_reject', 'miss', 'false_alarm', 'wrong_action'], source: ['', 'camera', 'microphone', 'keyboard', 'touch'] };
+
+export async function VerifyEveryBallSavedRecord({ sqlite, rawDataBucket, version, getSaveAttempts, accountId, guestSubjectId, config, expected, plans, correct }) {
+  const records = sqlite.prepare('SELECT * FROM training_records').all();
+  assert.equal(records.length, 1);
+  assert.ok(getSaveAttempts() >= 2);
+  assert.equal(records[0].user_id ?? null, accountId);
+  if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
+  const saved = await ReadSavedGameRecord(records[0], rawDataBucket, version);
+  assert.equal(saved.gameId, 'every-ball-response');
+  assert.equal(saved.metadata.release_version, version.replaceAll('.', '_'));
+  assert.deepEqual(saved.config, config);
+  const { summary, rounds } = saved.score;
+  assert.deepEqual(rounds.map(({ trial, level, correct: right, ball, expected: wanted, response, outcome, source, fixationMs }) =>
+    ({ trial, level, right, ball, wanted, response, outcome, source, fixationMs })), expected.map(({ plan, action, source, outcome }) => ({
+    trial: plan.trialNumber, level: 3, right: ['hit', 'correct_reject'].includes(outcome) ? 1 : 0, ball: codes.ball.indexOf(plan.ball),
+    wanted: codes.action.indexOf(plan.expectedAction), response: codes.action.indexOf(action ?? 'none'),
+    outcome: codes.outcome.indexOf(outcome), source: codes.source.indexOf(source), fixationMs: plan.fixationMs,
+  })));
+  assert.ok(rounds.every(row => row.response === 0 ? row.responseMs === null : row.responseMs >= 0 && row.responseMs <= 1800), JSON.stringify(rounds));
+  const hits = rounds.filter(row => row.outcome === 0);
+  assert.deepEqual({ ...summary }, { trials: plans.length, correct, accuracy: Math.round(correct / plans.length * 100), misses: 1, falseAlarms: 1, wrongActions: 1,
+    responseMs: Math.round(hits.reduce((sum, row) => sum + row.responseMs, 0) / hits.length) });
+}
 
 async function ImportGameModule(path) {
   const output = ts.transpileModule(await readFile(new URL(path, gameRoot), 'utf8'), {
@@ -58,8 +82,10 @@ export const microphoneFixtureScript = `if (window === window.top) {
   };
 }`;
 
+export const everyBallBrowserSpec = { interruptPanel: true };
+
 export async function CheckEveryBall({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
-  sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId }) {
+  sqlite, rawDataBucket, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId }) {
   const { copy } = await ImportGameModule('labels.ts');
   const { CreateEveryBallPlans } = await ImportGameModule('logic/everyBallResponse.ts');
   const labels = copy[english ? 'en' : 'zh'];
@@ -239,9 +265,24 @@ export async function CheckEveryBall({ game, evaluate, send, until, standalone, 
 
   if (process.argv.includes('--stop') || process.argv.includes('--sensor-disconnect')) {
     const stop = process.argv.includes('--stop');
-    if (stop) await tap('.every-ball-stop');
+    if (stop) {
+      await tap('.every-ball-stop');
+      if (everyBallBrowserSpec.interruptPanel) {
+        await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel');
+        assert.equal(await game(`document.querySelector('.game-interrupt-panel').getAttribute('role')`), 'dialog');
+        assert.equal(await game(`document.querySelector('.game-interrupt-panel').getAttribute('aria-modal')`), 'true');
+        await until(() => game(`document.activeElement === document.querySelector('.game-interrupt-panel .btn-primary')`), 'Continue receives focus');
+        assert.equal(await game(`document.querySelector('.every-ball-stage').inert`), true);
+        await press('Escape', 'Escape', 27);
+        await until(() => game(`!document.querySelector('.game-interrupt-panel')`), 'Escape continues');
+        await until(() => game(`document.activeElement === document.querySelector('.every-ball-stop')`), 'Stop receives focus');
+        await tap('.every-ball-stop');
+        await until(() => game(`Boolean(document.querySelector('.game-interrupt-panel'))`), 'interrupt panel reopened');
+        await tap('.game-interrupt-panel .btn-ghost');
+      }
+    }
     else await evaluate(`window.${microphone ? 'microphoneFixture.stream.getAudioTracks' : 'handFixtureStream.getVideoTracks'}()[0].dispatchEvent(new Event('ended'))`);
-    await until(() => game(`Boolean(document.querySelector('form'))`), stop ? 'Stop returns to settings' : 'a lost sensor returns to settings');
+    await until(() => game(`Boolean(document.querySelector('form'))`), stop ? 'End activity returns to settings' : 'a lost sensor returns to settings');
     if (!stop) assert.equal(await game(`document.querySelector('form [role=alert]').textContent`), labels.errors[inputMode].disconnected);
     await until(() => evaluate('document.fullscreenElement === null'), 'returning to settings leaves fullscreen');
     await until(sensorEnded, 'returning to settings turns the sensor off');
@@ -300,27 +341,7 @@ ${table}`);
     await until(() => game(`Boolean(document.querySelector('.score-retry-button'))`), 'save failure offers retry');
     await game(`document.querySelector('.score-retry-button').click()`);
     await until(() => game(`document.querySelector('.score-save-status').textContent === ${JSON.stringify(labels.saved)}`), 'retry saved');
-    const records = sqlite.prepare('SELECT * FROM training_records').all();
-    assert.equal(records.length, 1);
-    assert.ok(getSaveAttempts() >= 2);
-    assert.equal(records[0].user_id ?? null, accountId);
-    if (accountId) assert.notEqual(records[0].subject_id, guestSubjectId); else assert.equal(records[0].subject_id, guestSubjectId);
-    const saved = JSON.parse(records[0].payload_json);
-    assert.equal(saved.gameId, 'every-ball-response');
-    assert.equal(saved.metadata.release_version, version.replaceAll('.', '_'));
-    assert.deepEqual(saved.config, config);
-    const { summary, rounds } = saved.score;
-    assert.deepEqual(rounds.map(({ trial, level, correct: right, ball, expected: wanted, response, outcome, source, fixationMs }) =>
-      ({ trial, level, right, ball, wanted, response, outcome, source, fixationMs })), expected.map(({ plan, action, source, outcome }) => ({
-      trial: plan.trialNumber, level: 3, right: ['hit', 'correct_reject'].includes(outcome) ? 1 : 0, ball: codes.ball.indexOf(plan.ball),
-      wanted: codes.action.indexOf(plan.expectedAction), response: codes.action.indexOf(action ?? 'none'),
-      outcome: codes.outcome.indexOf(outcome), source: codes.source.indexOf(source), fixationMs: plan.fixationMs,
-    })));
-    // Response time starts when the ball appears and fits inside the 1.8 second window.
-    assert.ok(rounds.every(row => row.response === 0 ? row.responseMs === null : row.responseMs >= 0 && row.responseMs <= 1800), JSON.stringify(rounds));
-    const hits = rounds.filter(row => row.outcome === 0);
-    assert.deepEqual({ ...summary }, { trials: plans.length, correct, accuracy: Math.round(correct / plans.length * 100), misses: 1, falseAlarms: 1, wrongActions: 1,
-      responseMs: Math.round(hits.reduce((sum, row) => sum + row.responseMs, 0) / hits.length) });
+    await VerifyEveryBallSavedRecord({ sqlite, rawDataBucket, version, getSaveAttempts, accountId, guestSubjectId, config, expected, plans, correct });
   }
   assert.deepEqual(errors, []);
   assert.ok(!requests.some(url => /every-ball-response.*(?:settings|score)\.json/.test(url)));

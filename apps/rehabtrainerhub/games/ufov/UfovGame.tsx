@@ -34,10 +34,20 @@ export function UfovGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [pauseReason, setPauseReason] = useState<'user' | 'display' | 'fullscreen'>('user');
+  const pausedRef = useRef(false);
+  const endingRef = useRef(false);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<UfovSettings>({ ...defaultSettings });
   const [session, setSession] = useState<UfovSession | null>(null);
@@ -68,6 +78,9 @@ export function UfovGame() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     runRef.current?.stop();
     runRef.current = null;
@@ -75,26 +88,47 @@ export function UfovGame() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    pausedRef.current = true;
+    setPauseReason('user');
+    answerRef.current = null;
+    runRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    const pending = answerRef.current;
+    if (pending?.kind === 'pause') { answerRef.current = null; pending.answer(); }
+    runRef.current?.resume();
+    setPaused(false);
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setSession(null); setFiles([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setPauseReason('fullscreen'); } };
     const keys = (event: KeyboardEvent) => {
-      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); exit(); }
+      if (phaseRef.current === 'running' && event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } }
     };
     const pagehide = () => { stopRuntime(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
     window.addEventListener('game:saved', saved);
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -110,6 +144,7 @@ export function UfovGame() {
     const practice = settings.mode === 'practice';
     const fixed = settings.stopCondition === 'fixed_trials';
     const finish = (completed: UfovSession) => {
+      endingRef.current = true;
       runRef.current = null;
       answerRef.current = null;
       const score = BuildGameScore(completed);
@@ -141,7 +176,11 @@ export function UfovGame() {
       }, {
         host,
         label: title,
-        prompt: (next, answer) => { answerRef.current = answer ? { kind: next.kind, answer } : null; setPrompt(next); },
+        prompt: (next, answer) => {
+          answerRef.current = answer ? { kind: next.kind, answer } : null;
+          setPrompt(next);
+          if (next.kind === 'pause') { pausedRef.current = true; setPauseReason('display'); StopMidiMusic(); setPaused(true); }
+        },
         progress: (trial, practiceTrial) => {
           if (!progressRef.current) return;
           const english = enRef.current;
@@ -152,6 +191,7 @@ export function UfovGame() {
         },
       }, finish);
       runRef.current = run;
+      if (pausedRef.current && answerRef.current?.kind !== 'pause') run.pause();
       void run.start().catch(error => console.error('The UFOV run stopped unexpectedly.', error));
     } });
     return () => {
@@ -171,6 +211,7 @@ export function UfovGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -184,7 +225,7 @@ export function UfovGame() {
   };
   const answerFor = (kind: UfovPrompt['kind']) => (value?: number | Vehicle) => {
     const pending = answerRef.current;
-    if (pending?.kind !== kind) return;
+    if (pausedRef.current || pending?.kind !== kind) return;
     answerRef.current = null;
     pending.answer(value);
   };
@@ -292,18 +333,18 @@ export function UfovGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="ufov-stage ufov-running" aria-label={title}>
+    {phase === 'running' && <><main className="ufov-stage ufov-running" aria-label={title} inert={paused}>
       <header className="ufov-hud">
         <p ref={progressRef} className="ufov-progress" aria-live="off">{en ? 'Get ready' : '準備開始'}</p>
-        <button type="button" className="btn btn-ghost ufov-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost ufov-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
-      <div ref={hostRef} className="ufov-canvas-host" />
-      {prompt.kind !== 'watch' && <section className="ufov-answer" aria-label={en ? 'Your answer' : '作答'}>
+      <div ref={hostRef} className="ufov-canvas-host" style={{ visibility: paused ? 'hidden' : 'visible' }} />
+      {prompt.kind !== 'watch' && prompt.kind !== 'pause' && <section className="ufov-answer" aria-label={en ? 'Your answer' : '作答'}>
         {prompt.kind === 'vehicle' && <><h2>{en ? 'Which vehicle was in the center?' : '中央是哪一種車？'}</h2>
           <VehicleChoices lang={lang} className="ufov-answer-choices" onChoose={answerFor('vehicle')} /></>}
         {prompt.kind === 'direction' && <><h2>{en ? 'Where was the outer car?' : '外圈汽車在哪個方向？'}</h2>
@@ -311,14 +352,19 @@ export function UfovGame() {
         {prompt.kind === 'feedback' && <p className={`ufov-feedback ufov-feedback-${prompt.correct ? 'correct' : 'wrong'}`} role="status">
           <span aria-hidden="true">{prompt.correct ? '✓' : '×'}</span>{prompt.correct ? (en ? 'Correct' : '答對') : (en ? 'Not this time' : '答錯')}</p>}
         {prompt.kind === 'retry' && <p className="ufov-sync-note" role="status">{en ? 'The display skipped a frame, so this trial is not counted. Showing it again.' : '畫面更新不穩定，這一題不計分，馬上重新出題。'}</p>}
-        {prompt.kind === 'pause' && <section className="ufov-sync-pause"><h2>{en ? 'Paused to check the display' : '暫停，重新檢查畫面'}</h2>
-          <p>{en ? 'The last few trials were not counted because the display did not keep time. Keep this page in front, then continue.' : '最近幾題因畫面更新不穩定而不計分。請讓這個頁面保持在最前方，準備好再繼續。'}</p>
-          <button type="button" className="btn btn-primary" onClick={() => answerFor('pause')()}>{en ? 'Check and continue' : '重新檢查並繼續'}</button></section>}
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="ufov-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="ufov-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。'}</p>
+      {pauseReason === 'display' && <p>{en ? 'Recent trials were not counted because the display timing was unstable. Keep this page in front before continuing.' : '最近幾題因畫面更新不穩定而不計分。請讓這個頁面保持在最前方，再繼續。'}</p>}
+      {pauseReason === 'fullscreen' && <p>{en ? 'Fullscreen ended.' : '已退出全螢幕。'}</p>}
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && session && score && totals && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title} · {optionLabel('subtestId', session.subtest_id)}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title} · {optionLabel('subtestId', session.subtest_id)}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         {session.mode === 'formal' ? <>
           <div className="score-key-metric"><p>{en ? 'Display time threshold' : '呈現時間門檻'}</p><strong>{ms(score.summary.thresholdMs)}</strong></div>
           <div className="score-key-metric"><p>{en ? 'Shortest display time answered correctly' : '答對時最短的呈現時間'}</p><strong>{ms(score.summary.bestMs)}</strong></div>
@@ -331,6 +377,13 @@ export function UfovGame() {
           : en ? 'Practice uses a fixed display time. Choose the recorded session to let the display time adjust.' : '練習模式的呈現時間固定。選擇正式模式，呈現時間才會依作答調整。'}</p>
         {session.aborted && <p className="score-note">{en ? 'The session stopped early. Only the finished trials are listed.' : '這次活動中途停止，只列出已完成的題目。'}</p>}
       </section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       {session.subtest_id !== 1 && <section className="score-directions"><h2>{en ? 'By direction' : '各方向的結果'}</h2>
         <div className="results-scroll" role="region" aria-label={en ? 'Results by direction' : '各方向的結果'} tabIndex={0}>
           <table className="results-table ufov-direction-table">
@@ -356,10 +409,7 @@ export function UfovGame() {
           const kind = file.fileName.replace(/^ufov-\d{8}-\d{6}-/, '') as keyof typeof fileLabels;
           return <button key={file.fileName} className="btn btn-ghost" type="button" onClick={() => RequestResultDownload(file.fileName)}>{fileLabels[kind]?.[lang] ?? file.fileName}</button>;
         })}</div></section>}
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

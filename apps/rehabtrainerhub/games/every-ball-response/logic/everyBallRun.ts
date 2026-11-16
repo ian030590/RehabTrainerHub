@@ -1,4 +1,5 @@
 import { everyBallTiming, GradeEveryBallTrial, type ActionResponse, type BallId, type TrialPlan, type TrialRecord } from './everyBallResponse';
+import type { TrialInterrupt } from './trialInterrupt';
 
 export interface EveryBallVisual {
   phase: 'idle' | 'fixation' | 'stimulus' | 'blank' | 'feedback';
@@ -13,10 +14,12 @@ export interface EveryBallVisual {
 
 interface RunOptions {
   fixationStyle: 'cross' | 'blank';
-  wait: (milliseconds: number) => Promise<void>;
-  waitForResponse: (milliseconds: number) => Promise<ActionResponse | null>;
+  wait: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
+  waitForResponse: (milliseconds: number, signal?: AbortSignal) => Promise<ActionResponse | null>;
   notify: (visual: EveryBallVisual) => void;
   cancelled: () => boolean;
+  interrupt?: TrialInterrupt;
+  signal?: AbortSignal;
 }
 
 class RunStopped extends Error {}
@@ -35,22 +38,26 @@ export async function RunEveryBall(plans: readonly TrialPlan[], options: RunOpti
   try {
     for (const plan of plans) {
       if (options.cancelled()) throw new RunStopped();
-      const trialNumber = plan.trialNumber;
-      options.notify({ phase: 'fixation', trialNumber, totalTrials, fixationStyle: options.fixationStyle });
-      await checked(options.wait(plan.fixationMs));
-      options.notify({ phase: 'stimulus', trialNumber, totalTrials, ball: plan.ball, xRatio: plan.xRatio, yRatio: plan.yRatio });
-      const hidden = options.wait(everyBallTiming.stimulusMs).then(() => {
-        if (!options.cancelled()) options.notify({ phase: 'blank', trialNumber, totalTrials });
-      });
-      const response = await checked(options.waitForResponse(everyBallTiming.responseWindowMs));
-      await checked(hidden);
-      const record = GradeEveryBallTrial(plan, response);
+      const runTrial = async (signal?: AbortSignal) => {
+        const trialNumber = plan.trialNumber;
+        options.notify({ phase: 'fixation', trialNumber, totalTrials, fixationStyle: options.fixationStyle });
+        await checked(options.wait(plan.fixationMs, signal));
+        options.notify({ phase: 'stimulus', trialNumber, totalTrials, ball: plan.ball, xRatio: plan.xRatio, yRatio: plan.yRatio });
+        const hidden = options.wait(everyBallTiming.stimulusMs, signal).then(() => {
+          if (!signal?.aborted && !options.cancelled()) options.notify({ phase: 'blank', trialNumber, totalTrials });
+        });
+        const [response] = await Promise.all([checked(options.waitForResponse(everyBallTiming.responseWindowMs, signal)), checked(hidden)]);
+        const record = GradeEveryBallTrial(plan, response);
+        options.notify({ phase: 'feedback', trialNumber, totalTrials, feedbackCorrect: record.Correct });
+        await checked(options.wait(everyBallTiming.feedbackMs, signal));
+        return record;
+      };
+      const record = options.interrupt && options.signal
+        ? await options.interrupt.run(options.signal, runTrial) : await runTrial();
       trials.push(record);
-      options.notify({ phase: 'feedback', trialNumber, totalTrials, feedbackCorrect: record.Correct });
-      await checked(options.wait(everyBallTiming.feedbackMs));
     }
   } catch (error) {
-    if (!(error instanceof RunStopped)) throw error;
+    if (!(error instanceof RunStopped) && !options.signal?.aborted) throw error;
     aborted = true;
   }
   options.notify({ phase: 'idle' });

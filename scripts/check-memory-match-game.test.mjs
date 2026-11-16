@@ -2,11 +2,32 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, GameRoot, LoadGameModule } from './brain-r2-game-checks.mjs';
 
 const gameId = 'memory-match';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/memoryMatch.ts');
 const FaceUp = match => match.cards.flatMap((card, index) => card.faceUp ? [index] : []);
+
+test('pausing freezes match time and pending card and limit timers', async () => {
+  const { PauseClock } = await LoadGameModule(gameId, 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const pauseClock = new PauseClock(clock);
+  const events = [];
+  pauseClock.set(() => events.push('hide'), 750);
+  const limit = pauseClock.set(() => events.push('limit'), 1000);
+  clock.advance(250);
+  pauseClock.pause();
+  clock.advance(5000);
+  assert.equal(pauseClock.now(), 250);
+  assert.deepEqual(events, []);
+  pauseClock.resume();
+  pauseClock.clear(limit);
+  clock.advance(500);
+  assert.deepEqual(events, ['hide']);
+  clock.advance(1000);
+  assert.deepEqual(events, ['hide']);
+  pauseClock.stop();
+});
 
 test('Memory Match keeps the original boards, letters, time limits and sound setting', async () => {
   const { defaultSettings, ValidateSettings } = await LoadGameModule(gameId, 'settings.ts');
@@ -115,7 +136,7 @@ test('a found pair and a wrong pair each play their own sound, as in the origina
 });
 
 test('Memory Match owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'MemoryMatchGame', category: 'memory', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'MemoryMatchGame', category: 'memory', version: '2.1.0' });
 });
 
 test('Memory Match private bridge accepts only its own parent and replays settings and language', async () => {

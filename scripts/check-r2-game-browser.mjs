@@ -581,6 +581,7 @@ try {
     await mkdir(screenshots, { recursive: true });
     const capture = makeCapture(screenshots);
     await CheckEveryBall({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (brainGame) {
     const screenshots = resolve(root, `.tmp/${gameId}-validation`, `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
