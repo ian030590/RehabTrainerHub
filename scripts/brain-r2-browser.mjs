@@ -455,6 +455,7 @@ export const brainGameSpecs = {
     rows: 72,
   },
   'n-back': {
+    interruptPanel: true,
     title: { zh: '工作記憶更新（N-back）', en: 'Working Memory Updating (N-back)' },
     purpose: 'memory',
     settings: { exposureMs: 500, rounds: 100, practice: true },
@@ -600,6 +601,7 @@ export const brainGameSpecs = {
     rows: 108,
   },
   'digit-span': {
+    interruptPanel: true,
     title: { zh: '數字廣度記憶（Digit Span）', en: 'Digit Span Memory Capacity' },
     purpose: 'memory',
     settings: { itemExposureMs: 500, rounds: 16, practice: true },
@@ -682,6 +684,7 @@ export const brainGameSpecs = {
     rows: 18,
   },
   'spatial-span': {
+    interruptPanel: true,
     title: { zh: '空間廣度記憶（Spatial Span）', en: 'Spatial Span Memory Capacity' },
     purpose: 'memory',
     // Phones use the 3 by 3 board so both board sizes get a real session.
@@ -1360,6 +1363,7 @@ export const brainGameSpecs = {
     },
   },
   'pattern-memory': {
+    interruptPanel: true,
     title: { zh: '圖形記憶', en: 'Pattern Memory' },
     purpose: 'memory',
     settings: { trials: 20, studyMs: 1000, startLoad: 2, adaptive: true },

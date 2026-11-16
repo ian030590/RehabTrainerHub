@@ -13,6 +13,7 @@ import { DisposeAudioFeedback, PlayGameEndSound, PlayMidiMusic, PrepareAudioFeed
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Step = 'ready' | 'prompt' | 'stream' | 'answer' | 'feedback';
@@ -23,10 +24,21 @@ export function KeepTrackRecall() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<KeepTrackSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<KeepTrackRow[]>([]);
@@ -57,6 +69,9 @@ export function KeepTrackRecall() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     stopRunRef.current?.();
     stopRunRef.current = null;
@@ -64,13 +79,30 @@ export function KeepTrackRecall() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    pauseClockRef.current?.resume();
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       // Buttons answer Enter themselves; elsewhere Enter moves on: start the words, submit, or continue after practice.
       if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON' && !event.repeat) {
         event.preventDefault();
@@ -82,14 +114,16 @@ export function KeepTrackRecall() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -97,7 +131,7 @@ export function KeepTrackRecall() {
   }, [phase]);
   // Keyboard players land on the control the step needs: start, the first word, or continue.
   useEffect(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || pausedRef.current) return;
     if (step === 'prompt' || step === 'feedback') actionRef.current?.focus();
     if (step === 'answer') stageRef.current?.querySelector<HTMLButtonElement>('.kt-option')?.focus();
   }, [phase, step, blockIndex]);
@@ -109,13 +143,12 @@ export function KeepTrackRecall() {
     jsPsychLifecycleRef.current = lifecycle;
     const plan = CreateKeepTrackBlocks(settings, CreateRandom(Date.now()));
     const allRows: KeepTrackRow[] = [];
-    const timers = new Set<number>();
-    let stopped = false, index = 0, current: Step = 'ready', picked: Partial<Record<Category, string>> = {}, onset = 0;
-    const later = (callback: () => void, ms: number) => {
-      const timer = window.setTimeout(() => { timers.delete(timer); if (!stopped) callback(); }, ms);
-      timers.add(timer);
-    };
-    const stop = () => { stopped = true; for (const timer of timers) window.clearTimeout(timer); timers.clear(); };
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
+    let index = 0, current: Step = 'ready', picked: Partial<Record<Category, string>> = {}, onset = 0;
+    const later = (callback: () => void, ms: number) => clock.set(callback, ms);
+    const stop = () => { clock.stop(); if (pauseClockRef.current === clock) pauseClockRef.current = null; };
     stopRunRef.current = stop;
     const go = (next: Step) => { current = next; setStep(next); };
     // Words change outside React so each one appears on the frame it is due.
@@ -127,6 +160,7 @@ export function KeepTrackRecall() {
       if (wordIndex === null) delete element.dataset.index; else element.dataset.index = String(wordIndex);
     };
     const finish = () => {
+      endingRef.current = true;
       stop();
       controlsRef.current = null;
       const score = BuildGameScore(allRows, settings);
@@ -154,7 +188,7 @@ export function KeepTrackRecall() {
         go('stream');
         const schedule = CreateWordSchedule(plan[index].words.length, settings.itemExposureMs);
         for (const event of schedule.events) later(() => show(event.index), event.at);
-        later(() => { show(null); onset = performance.now(); go('answer'); }, schedule.answerAt);
+        later(() => { show(null); onset = clock.now(); go('answer'); }, schedule.answerAt);
       },
       choose: (category, word) => {
         if (current !== 'answer') return;
@@ -166,7 +200,7 @@ export function KeepTrackRecall() {
         if (current !== 'answer' || !block.targets.every(target => picked[target])) return;
         const result = ScoreAnswer(block, picked);
         allRows.push({ trial: allRows.length + 1, practice: block.practice, load: block.load, correctItems: result.correctItems,
-          requiredItems: result.requiredItems, rtMs: Math.round(performance.now() - onset) });
+          requiredItems: result.requiredItems, rtMs: Math.round(clock.now() - onset) });
         if (block.practice) { setLastResult(result); go('feedback'); return; }
         advance();
       },
@@ -197,6 +231,7 @@ export function KeepTrackRecall() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -267,16 +302,16 @@ export function KeepTrackRecall() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main ref={stageRef} className="kt-stage kt-running" data-state={step} aria-label={title}>
+    {phase === 'running' && <><main ref={stageRef} className="kt-stage kt-running" data-state={step} aria-label={title} inert={paused}>
       <header className="kt-hud">
         <p className="kt-progress-label">{progressLabel}</p>
         <div className="kt-progress-track"><div className="kt-progress-fill" style={{ width: `${progress}%` }} /></div>
-        <button type="button" className="btn btn-ghost kt-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost kt-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div className="kt-display">
         <p ref={wordRef} className="kt-word" aria-hidden="true" />
@@ -299,14 +334,27 @@ export function KeepTrackRecall() {
           <button type="button" className="btn btn-primary kt-submit" disabled={step !== 'answer' || !complete} onClick={() => controlsRef.current?.submit()}>{en ? 'Submit' : '送出答案'}</button>
         </footer>
       </div>
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="kt-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="kt-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Blocks all right' : '整組全對'}</p><strong>{percent(summary.accuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Words right' : '詞答對'}</p><strong>{percent(summary.itemAccuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean answer time' : '平均作答時間'}</p><strong>{summary.meanResponseMs === null ? missing : `${(summary.meanResponseMs / 1000).toFixed(1)} ${en ? 's' : '秒'}`}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.slice(0, -1).map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Blocks all right' : '全對組數'}</dt><dd>{summary.correct} / {summary.trials}</dd></div>
@@ -317,10 +365,7 @@ export function KeepTrackRecall() {
         <p className="score-note">{en ? 'A block is all right only when every category is right. Answer time runs from the last word to Submit. The practice block is listed below but not counted here.'
           : '每個類別都答對，該組才算全對。作答時間從最後一個詞結束算到按下送出。練習組列在下方明細，但不計入這些統計。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

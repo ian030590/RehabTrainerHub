@@ -1213,6 +1213,7 @@ export const migratedBrainGameSpecs = {
     get rows() { return process.argv.includes('--mobile') ? 30 : 52; },
   },
   'keep-track': {
+    interruptPanel: true,
     title: { zh: '類別記憶追蹤（Keep Track）', en: 'Keep Track' },
     purpose: 'memory',
     // Phones skip practice so both setups get a real session.
@@ -1297,6 +1298,7 @@ export const migratedBrainGameSpecs = {
     },
   },
   'letter-memory': {
+    interruptPanel: true,
     title: { zh: '字母記憶更新（Letter Memory）', en: 'Letter Memory' },
     purpose: 'memory',
     // Phones skip practice so both setups get a real session.

@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
+
+test('pausing freezes digit presentation and excludes pause time from recall timing', async () => {
+  const { PauseClock } = await LoadGameModule('digit-span', 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const run = new PauseClock(clock);
+  const shown = [];
+  run.set(() => shown.push('digit'), 1000);
+  clock.advance(400); run.pause(); clock.advance(5000);
+  assert.deepEqual(shown, []);
+  assert.equal(run.now(), 400);
+  run.resume(); clock.advance(599); assert.deepEqual(shown, []);
+  clock.advance(1); assert.deepEqual(shown, ['digit']);
+  assert.equal(run.now(), 1000);
+  run.stop();
+});
 
 const gameId = 'digit-span';
 const LoadTrials = async () => LoadGameModule(gameId, 'logic/digitSpanTrials.ts');
@@ -101,7 +116,7 @@ test('Digit span rows keep the original columns, include practice and save throu
 });
 
 test('Digit span owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'DigitSpanRecall', category: 'memory', version: '2.0.2' });
+  await CheckGamePackaging(gameId, { component: 'DigitSpanRecall', category: 'memory', version: '2.1.0' });
 });
 
 test('Digit span private bridge accepts only its own parent and replays settings and language', async () => {

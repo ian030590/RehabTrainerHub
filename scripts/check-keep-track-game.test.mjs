@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
+
+test('pause freezes word timing and excludes the pause from answer time', async () => {
+  const { PauseClock } = await LoadGameModule('keep-track', 'logic/pauseClock.ts');
+  const clock = FakeClock();
+  const run = new PauseClock(clock);
+  const shown = [];
+  run.set(() => shown.push('word'), 1000);
+  clock.advance(400); run.pause(); clock.advance(5000);
+  assert.deepEqual(shown, []);
+  assert.equal(run.now(), 400);
+  run.resume(); clock.advance(600);
+  assert.deepEqual(shown, ['word']);
+  assert.equal(run.now(), 1000);
+  run.stop();
+});
 
 const gameId = 'keep-track';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/keepTrack.ts');
@@ -105,7 +120,7 @@ test('Keep Track rows keep the original columns, include the practice block and 
 });
 
 test('Keep Track owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.1.0' });
 });
 
 test('Keep Track private bridge accepts only its own parent and replays settings and language', async () => {

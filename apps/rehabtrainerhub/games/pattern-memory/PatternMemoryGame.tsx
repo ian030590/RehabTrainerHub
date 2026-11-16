@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayFailureSound, PlayGameEndSound, PlayMidiMusic
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Step = 'ready' | 'study' | 'blank' | 'test' | 'feedback';
@@ -23,10 +24,21 @@ export function PatternMemoryGame() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<PatternSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<PatternRow[]>([]);
@@ -45,7 +57,6 @@ export function PatternMemoryGame() {
   const staircaseRef = useRef(new LoadStaircase(defaultSettings.startLoad, true));
   const trialRef = useRef<PatternTrial | null>(null);
   const testStartRef = useRef(0);
-  const timerRef = useRef(0);
   const stepRef = useRef(step);
   stepRef.current = step;
   const generationRef = useRef(0);
@@ -58,19 +69,38 @@ export function PatternMemoryGame() {
     const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
-  const stopTimers = useCallback(() => window.clearTimeout(timerRef.current), []);
+  const stopTimers = useCallback(() => { pauseClockRef.current?.stop(); pauseClockRef.current = null; }, []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     stopTimers();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, [stopTimers]);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    pauseClockRef.current?.resume();
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   const later = (callback: () => void, ms: number) => {
     const generation = generationRef.current;
-    timerRef.current = window.setTimeout(() => { if (generation === generationRef.current) callback(); }, ms);
+    pauseClockRef.current?.set(() => { if (generation === generationRef.current) callback(); }, ms);
   };
   const finish = useCallback((completed: PatternRow[]) => {
+    endingRef.current = true;
     const score = BuildGameScore(completed);
     jsPsychLifecycleRef.current?.finish({ trials: completed.length, accuracy_percent: score.summary.accuracyPercent, cowan_k: score.summary.cowanK });
     PlayGameEndSound('Victory');
@@ -92,15 +122,15 @@ export function PatternMemoryGame() {
       setStep('study');
       later(() => {
         setStep('blank');
-        later(() => { testStartRef.current = performance.now(); setStep('test'); }, blankMs);
+        later(() => { testStartRef.current = pauseClockRef.current!.now(); setStep('test'); }, blankMs);
       }, settings.studyMs);
     }, readyMs);
   };
   const answerRef = useRef<(saidChanged: boolean) => void>(() => undefined);
   answerRef.current = (saidChanged: boolean) => {
     const current = trialRef.current;
-    if (phaseRef.current !== 'running' || stepRef.current !== 'test' || !current) return;
-    const row = ScorePatternTrial(trialIndex + 1, current, saidChanged, performance.now() - testStartRef.current);
+    if (phaseRef.current !== 'running' || pausedRef.current || stepRef.current !== 'test' || !current) return;
+    const row = ScorePatternTrial(trialIndex + 1, current, saidChanged, pauseClockRef.current!.now() - testStartRef.current);
     rowsRef.current = [...rowsRef.current, row];
     staircaseRef.current.record(row.correct);
     if (row.correct) PlaySuccessSound(); else PlayFailureSound();
@@ -118,9 +148,11 @@ export function PatternMemoryGame() {
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       const same = event.code === 'KeyF' || event.key === 'ArrowLeft', changed = event.code === 'KeyJ' || event.key === 'ArrowRight';
       if (!same && !changed) return;
       event.preventDefault();
@@ -131,14 +163,16 @@ export function PatternMemoryGame() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -150,6 +184,9 @@ export function PatternMemoryGame() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
     void jsPsychLifecycleRef.current?.start({ moduleId: 'brain:pattern-memory', onStart: () => {
       randomRef.current = CreateRandom(Date.now());
       staircaseRef.current = new LoadStaircase(settings.startLoad, settings.adaptive);
@@ -170,6 +207,7 @@ export function PatternMemoryGame() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -230,17 +268,17 @@ export function PatternMemoryGame() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="pattern-stage pattern-running" aria-label={title}>
+    {phase === 'running' && <><main className="pattern-stage pattern-running" aria-label={title} inert={paused}>
       <header className="pattern-hud">
         <p className="pattern-progress-label">{en ? `Trial ${trialIndex + 1} of ${settings.trials}` : `第 ${trialIndex + 1} 題，共 ${settings.trials} 題`}</p>
         <p className="pattern-load">{en ? `${trial?.load ?? settings.startLoad} shapes` : `${trial?.load ?? settings.startLoad} 個圖形`}</p>
         <div className="pattern-progress-track"><div className="pattern-progress-fill" style={{ width: `${(trialIndex + 1) / settings.trials * 100}%` }} /></div>
-        <button type="button" className="btn btn-ghost pattern-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost pattern-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div className="pattern-board-area"><PatternBoard items={items} step={step} changedCell={changedIndex >= 0 ? trial!.test[changedIndex].cell : null} en={en} /></div>
       <div className="pattern-controls">
@@ -252,14 +290,27 @@ export function PatternMemoryGame() {
             {en ? 'Changed' : '有變'}<small>{en ? 'J or →' : 'J 或 →'}</small></button>
         </div>
       </div>
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="pattern-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="pattern-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Right' : '答對率'}</p><strong>{percent(summary.accuracyPercent)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Estimated shapes held (K)' : '估計記住的圖形數（K）'}</p><strong>{summary.cowanK ?? missing}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Most shapes on a board' : '最多的圖形數'}</p><strong>{summary.maxLoad ?? missing}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Changes spotted' : '有變時答「有變」'}</dt><dd>{percent(summary.hitRatePercent)}</dd></div>
@@ -270,10 +321,7 @@ export function PatternMemoryGame() {
         <p className="score-note">{en ? 'K is the mean number of shapes times the share of changes spotted minus the share of false "changed" answers (Cowan\'s K).'
           : 'K＝平均圖形數 ×（有變時答「有變」的比例 − 沒變卻答「有變」的比例），即 Cowan\'s K。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

@@ -13,6 +13,7 @@ import { DisposeAudioFeedback, PlayGameEndSound, PlayMidiMusic, PrepareAudioFeed
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Step = 'ready' | 'prompt' | 'stream' | 'answer' | 'feedback';
@@ -23,10 +24,21 @@ export function LetterMemoryRecall() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; stopRef.current?.focus(); } }, [paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<LetterMemorySettings>({ ...defaultSettings });
   const [rows, setRows] = useState<LetterMemoryRow[]>([]);
@@ -54,6 +66,9 @@ export function LetterMemoryRecall() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     stopRunRef.current?.();
     stopRunRef.current = null;
@@ -61,13 +76,30 @@ export function LetterMemoryRecall() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    pauseClockRef.current?.resume();
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       const controls = controlsRef.current;
       if (!controls || event.ctrlKey || event.metaKey || event.altKey) return;
       if (/^[a-z]$/i.test(event.key)) { event.preventDefault(); controls.type(event.key.toUpperCase()); }
@@ -80,14 +112,16 @@ export function LetterMemoryRecall() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime]);
+  }, [pause, resume, stopRuntime]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -95,7 +129,7 @@ export function LetterMemoryRecall() {
   }, [phase]);
   // Start has focus so Enter or Space begins the letters; while answering, focus leaves the keypad free for typing.
   useEffect(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || pausedRef.current) return;
     if (step === 'prompt') readyRef.current?.focus();
     if (step === 'answer') (document.activeElement as HTMLElement | null)?.blur();
   }, [phase, step, blockIndex]);
@@ -107,13 +141,12 @@ export function LetterMemoryRecall() {
     jsPsychLifecycleRef.current = lifecycle;
     const plan = CreateLetterMemoryBlocks(settings, CreateRandom(Date.now()));
     const allRows: LetterMemoryRow[] = [];
-    const timers = new Set<number>();
-    let stopped = false, index = 0, current: Step = 'ready', typed: string[] = [], onset = 0;
-    const later = (callback: () => void, ms: number) => {
-      const timer = window.setTimeout(() => { timers.delete(timer); if (!stopped) callback(); }, ms);
-      timers.add(timer);
-    };
-    const stop = () => { stopped = true; for (const timer of timers) window.clearTimeout(timer); timers.clear(); };
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
+    let index = 0, current: Step = 'ready', typed: string[] = [], onset = 0;
+    const later = (callback: () => void, ms: number) => clock.set(callback, ms);
+    const stop = () => { clock.stop(); if (pauseClockRef.current === clock) pauseClockRef.current = null; };
     stopRunRef.current = stop;
     const go = (next: Step) => { current = next; setStep(next); };
     // Letters change outside React so each one appears on the frame it is due.
@@ -125,6 +158,7 @@ export function LetterMemoryRecall() {
     };
     const update = (next: string[]) => { typed = next; setEntry(next); };
     const finish = () => {
+      endingRef.current = true;
       stop();
       controlsRef.current = null;
       const score = BuildGameScore(allRows, settings);
@@ -151,7 +185,7 @@ export function LetterMemoryRecall() {
         go('stream');
         const schedule = CreateLetterSchedule(plan[index].letters.length, settings.itemExposureMs);
         for (const event of schedule.events) later(() => show(event.index), event.at);
-        later(() => { show(null); onset = performance.now(); go('answer'); }, schedule.answerAt);
+        later(() => { show(null); onset = clock.now(); go('answer'); }, schedule.answerAt);
       },
       type: letter => { if (current === 'answer' && typed.length < recallCount) update([...typed, letter]); },
       back: () => { if (current === 'answer') update(typed.slice(0, -1)); },
@@ -161,7 +195,7 @@ export function LetterMemoryRecall() {
         const block = plan[index];
         const result = ScoreLetters(block.letters, typed);
         allRows.push({ trial: allRows.length + 1, practice: block.practice, length: block.letters.length, correctItems: result.correctItems,
-          requiredItems: result.requiredItems, rtMs: Math.round(performance.now() - onset) });
+          requiredItems: result.requiredItems, rtMs: Math.round(clock.now() - onset) });
         if (!block.practice) { advance(); return; }
         setLastResult({ correct: result.correct, expected: ExpectedLetters(block.letters) });
         go('feedback');
@@ -190,6 +224,7 @@ export function LetterMemoryRecall() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -259,16 +294,16 @@ export function LetterMemoryRecall() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main className="lm-stage lm-running" data-state={step} aria-label={title}>
+    {phase === 'running' && <><main className="lm-stage lm-running" data-state={step} aria-label={title} inert={paused}>
       <header className="lm-hud">
         <p className="lm-progress-label">{progressLabel}</p>
         <div className="lm-progress-track"><div className="lm-progress-fill" style={{ width: `${progress}%` }} /></div>
-        <button type="button" className="btn btn-ghost lm-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost lm-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div className="lm-display">
         <p ref={letterRef} className="lm-letter" aria-hidden="true" />
@@ -288,14 +323,27 @@ export function LetterMemoryRecall() {
           <button type="button" className="btn btn-primary lm-submit" disabled={step !== 'answer' || entry.length !== recallCount} onClick={() => controlsRef.current?.submit()}>{en ? 'Submit' : '送出答案'}</button>
         </footer>
       </div>
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="lm-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="lm-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'All four right' : '4 個全對'}</p><strong>{percent(summary.accuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Letters right' : '字母答對'}</p><strong>{percent(summary.itemAccuracy)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Mean answer time' : '平均作答時間'}</p><strong>{summary.meanResponseMs === null ? missing : `${(summary.meanResponseMs / 1000).toFixed(1)} ${en ? 's' : '秒'}`}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.slice(0, -1).map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Answers all right' : '全對題數'}</dt><dd>{summary.correct} / {summary.trials}</dd></div>
@@ -306,10 +354,7 @@ export function LetterMemoryRecall() {
         <p className="score-note">{en ? 'A letter counts when it is in its right place. Answer time runs from the last letter to Submit. Practice is listed below but not counted here.'
           : '字母在正確位置才算答對。作答時間從最後一個字母結束算到按下送出。練習題列在下方明細，但不計入這些統計。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

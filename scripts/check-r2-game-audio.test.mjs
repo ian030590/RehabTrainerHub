@@ -318,7 +318,7 @@ for (const gameId of gameIds) {
     assert.equal(calls.at(-1), 'play');
     cleanup();
     assert.equal(calls.at(-1), 'stop');
-    if (['flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid'].includes(gameId)) {
+    if (['flanker', 'stroop', 'go-nogo', 'stop-signal', 'antisaccade', 'simon-task', 'sart', 'attention-network-task', 'attentional-blink', 'continuous-performance', 'divided-attention', 'reaction-time', 'schulte-grid', 'n-back', 'digit-span', 'keep-track', 'letter-memory', 'spatial-span', 'pattern-memory'].includes(gameId)) {
       const before = calls.length;
       run(playingPhase, true)?.();
       assert.deepEqual(calls.slice(before), ['stop'], 'Paused music must not start.');

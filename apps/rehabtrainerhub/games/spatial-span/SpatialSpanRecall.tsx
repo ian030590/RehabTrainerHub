@@ -12,6 +12,7 @@ import { DisposeAudioFeedback, PlayGameEndSound, PlayMidiMusic, PrepareAudioFeed
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
+import { PauseClock } from './logic/pauseClock';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Kind = SpatialSpanSegment['kind'];
@@ -30,10 +31,20 @@ export function SpatialSpanRecall() {
   const en = lang === 'en';
   const title = t('game.title');
   const [phase, setPhase] = useState<Phase>('menu');
+  const [paused, setPaused] = useState(false);
+  const [fullscreenInterrupted, setFullscreenInterrupted] = useState(false);
+  const endingRef = useRef(false);
+  const pausedRef = useRef(false);
+  const pauseClockRef = useRef<PauseClock | null>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const restoreStopRef = useRef(false);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    if (phase === 'running' && !paused && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
     return StopMidiMusic;
-  }, [phase]);
+  }, [phase, paused]);
+  useEffect(() => { if (phase === 'results') resultHeadingRef.current?.focus(); }, [phase]);
   useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<SpatialSpanSettings>({ ...defaultSettings });
   const [rows, setRows] = useState<SpatialSpanRow[]>([]);
@@ -58,6 +69,7 @@ export function SpatialSpanRecall() {
   const runSegmentRef = useRef<((index: number) => void) | null>(null);
   const introRef = useRef(intro);
   introRef.current = intro;
+  useEffect(() => { if (paused) continueRef.current?.focus(); else if (restoreStopRef.current) { restoreStopRef.current = false; if (introRef.current) continueButtonRef.current?.focus(); else stopRef.current?.focus(); } }, [paused]);
   const generationRef = useRef(0);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -69,6 +81,9 @@ export function SpatialSpanRecall() {
     if (restored && phaseRef.current === 'menu') setSettings(restored);
   }), []);
   const stopRuntime = useCallback(() => {
+    endingRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     generationRef.current++;
     stopRunRef.current?.();
     stopRunRef.current = null;
@@ -77,6 +92,21 @@ export function SpatialSpanRecall() {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
   }, []);
   const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    setFullscreenInterrupted(false);
+    pausedRef.current = true;
+    pauseClockRef.current?.pause();
+    StopMidiMusic();
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    restoreStopRef.current = true;
+    setPaused(false);
+    pauseClockRef.current?.resume();
+  }, []);
   const backToSettings = useCallback(() => setPhase('menu'), []);
   const startNextPart = useCallback(() => {
     const current = introRef.current;
@@ -85,9 +115,11 @@ export function SpatialSpanRecall() {
   useEffect(() => {
     const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
     const configure = () => { stopRuntime(); setRows([]); setIntro(null); setPhase('menu'); };
+    const fullscreenChanged = () => { if (phaseRef.current === 'running' && !endingRef.current && !document.fullscreenElement) { pause(); setFullscreenInterrupted(true); } };
     const keys = (event: KeyboardEvent) => {
       if (phaseRef.current !== 'running') return;
-      if (event.key === 'Escape') { event.preventDefault(); exit(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); if (!event.repeat) { if (pausedRef.current) resume(); else pause(); } return; }
+      if (pausedRef.current) return;
       if (introRef.current) {
         if ((event.key === 'Enter' || event.key === ' ') && !event.repeat && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); startNextPart(); }
         return;
@@ -105,20 +137,22 @@ export function SpatialSpanRecall() {
     window.addEventListener('game:configure', configure);
     window.addEventListener('keydown', keys, true);
     window.addEventListener('pagehide', pagehide);
+    document.addEventListener('fullscreenchange', fullscreenChanged);
     return () => {
       window.removeEventListener('game:saved', saved);
       window.removeEventListener('game:configure', configure);
       window.removeEventListener('keydown', keys, true);
       window.removeEventListener('pagehide', pagehide);
+      document.removeEventListener('fullscreenchange', fullscreenChanged);
       pagehide();
     };
-  }, [exit, stopRuntime, startNextPart]);
+  }, [pause, resume, stopRuntime, startNextPart]);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
     return () => dialogRef.current?.close();
   }, [phase]);
-  useEffect(() => { if (intro) continueButtonRef.current?.focus(); }, [intro]);
+  useEffect(() => { if (intro && !pausedRef.current) continueButtonRef.current?.focus(); }, [intro]);
   useEffect(() => {
     const host = jsPsychHostRef.current;
     if (phase !== 'running' || !host) return;
@@ -128,13 +162,11 @@ export function SpatialSpanRecall() {
     const random = CreateRandom(Date.now());
     const plan = CreateSpatialSpanPlan(settings);
     const allRows: SpatialSpanRow[] = [];
-    const timers = new Set<number>();
-    let stopped = false;
-    const later = (callback: () => void, ms: number) => {
-      const timer = window.setTimeout(() => { timers.delete(timer); if (!stopped) callback(); }, ms);
-      timers.add(timer);
-    };
-    const stop = () => { stopped = true; for (const timer of timers) window.clearTimeout(timer); timers.clear(); answerRef.current = null; };
+    const clock = new PauseClock({ now: () => performance.now(), set: (callback, ms) => window.setTimeout(callback, ms), clear: timer => window.clearTimeout(timer) });
+    pauseClockRef.current = clock;
+    if (pausedRef.current) clock.pause();
+    const later = (callback: () => void, ms: number) => clock.set(callback, ms);
+    const stop = () => { clock.stop(); if (pauseClockRef.current === clock) pauseClockRef.current = null; answerRef.current = null; };
     stopRunRef.current = stop;
     const setState = (state: string) => { if (stageRef.current) stageRef.current.dataset.state = state; };
     const say = (text: string, result?: string) => {
@@ -153,6 +185,7 @@ export function SpatialSpanRecall() {
       if (cell !== null) cellButton(cell)?.classList.add('spatial-span-lit');
     };
     const finish = () => {
+      endingRef.current = true;
       stop();
       runSegmentRef.current = null;
       const score = BuildGameScore(allRows, settings);
@@ -201,7 +234,7 @@ export function SpatialSpanRecall() {
         }, event.at);
         later(() => {
           let typed: number[] = [];
-          const onset = performance.now();
+          const onset = clock.now();
           light(null);
           setState('answer');
           setEntryCount(0);
@@ -223,7 +256,7 @@ export function SpatialSpanRecall() {
               answerRef.current = null;
               setAnswering(false);
               const row: SpatialSpanRow = { trial: allRows.length + 1, practice: segment.kind === 'practice', reverse: segment.reverse, load, sequence: cells,
-                response: typed, rtMs: Math.round(performance.now() - onset) };
+                response: typed, rtMs: Math.round(clock.now() - onset) };
               allRows.push(row);
               segmentRows.push(row);
               const correct = IsRecallCorrect(cells, typed, segment.reverse);
@@ -276,6 +309,7 @@ export function SpatialSpanRecall() {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    endingRef.current = false;
     const generation = generationRef.current;
     PrepareAudioFeedback();
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
@@ -349,17 +383,17 @@ export function SpatialSpanRecall() {
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
-          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
           <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          <button className="btn btn-primary" type="button" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
         </div></footer>
       </form>
     </dialog>}
-    {phase === 'running' && <main ref={stageRef} className="spatial-span-stage spatial-span-running" data-state="ready" aria-label={title}>
+    {phase === 'running' && <><main ref={stageRef} className="spatial-span-stage spatial-span-running" data-state="ready" aria-label={title} inert={paused}>
       <header className="spatial-span-hud">
         <p ref={progressLabelRef} className="spatial-span-progress-label" aria-live="off">{en ? 'Get ready' : '準備開始'}</p>
         <p className="spatial-span-direction">{DirectionLabel(reverse, en)}</p>
         <div className="spatial-span-progress-track"><div ref={progressFillRef} className="spatial-span-progress-fill" /></div>
-        <button type="button" className="btn btn-ghost spatial-span-stop" onClick={exit}>{en ? 'Stop' : '停止'}</button>
+        <button ref={stopRef} type="button" className="btn btn-ghost spatial-span-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <p ref={messageRef} className="spatial-span-message" role="status" />
       <div className="spatial-span-board-wrap">
@@ -394,14 +428,27 @@ export function SpatialSpanRecall() {
           </div></footer>
         </div>
       </section>}
-    </main>}
+    </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="spatial-span-pause-title"
+      onKeyDown={event => { if (event.key === 'Tab') { const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button'); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1].focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0].focus(); } } }}>
+      <h2 id="spatial-span-pause-title">{en ? 'Paused' : '已暫停'}</h2>
+      <p>{fullscreenInterrupted ? (en ? 'Fullscreen ended; ending the activity will not save this session.' : '已退出全螢幕，結束後不會保存這次紀錄。') : (en ? 'Ending the activity will not save this session.' : '結束後不會保存這次紀錄。')}</p>
+      <button ref={continueRef} className="btn btn-primary" type="button" onClick={resume}>{en ? 'Continue' : '繼續'}</button>
+      <button className="btn btn-ghost" type="button" onClick={exit}>{en ? 'End activity' : '結束活動'}</button>
+    </div></div>}</>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
-      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+      <header className="score-header"><h1 ref={resultHeadingRef} tabIndex={-1}>{en ? 'Session results' : '當次成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><p className="score-complete">{en ? 'Activity complete' : '已完成本次活動'}</p><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Longest correct, forward' : '順向最長答對'}</p><strong>{squaresText(summary.forwardSpan)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Longest correct, reverse' : '逆向最長答對'}</p><strong>{squaresText(summary.reverseSpan)}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Correct' : '正確率'}</p><strong>{percent(summary.accuracy)}</strong></div>
       </div></section>
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      <div className="score-actions">
+        {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </div>
+      <details className="score-details"><summary>{en ? 'View details' : '查看詳細資料'}</summary>
       <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
         {summaryItems.slice(0, -1).map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
         <div className="score-context-item"><dt>{en ? 'Correct, forward' : '順向正確率'}</dt><dd>{percent(summary.forwardAccuracy)}</dd></div>
@@ -412,10 +459,7 @@ export function SpatialSpanRecall() {
         <p className="score-note">{en ? 'Answer time runs from when the board opens for tapping to Submit. Practice sequences are listed below but not counted here.'
           : '作答時間從方格可點選開始算到按下送出。練習題列在下方明細，但不計入這些統計。'}</p></section>
       <ScoreAnalysis rounds={score.rounds} language={lang} />
-      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
-        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
-      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
-      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </details>
     </section></div>}
   </div>;
 }

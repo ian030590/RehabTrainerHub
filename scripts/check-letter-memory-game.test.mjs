@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AcceptsResult, CheckGameBridge, CheckGamePackaging, LoadGameModule } from './brain-r2-game-checks.mjs';
+import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
+
+test('pause freezes letters and excludes the pause from recall time', async () => {
+  const { PauseClock } = await LoadGameModule('letter-memory', 'logic/pauseClock.ts');
+  const clock = FakeClock(), run = new PauseClock(clock), shown = [];
+  run.set(() => shown.push('letter'), 1000);
+  clock.advance(400); run.pause(); clock.advance(5000);
+  assert.deepEqual(shown, []); assert.equal(run.now(), 400);
+  run.resume(); clock.advance(600);
+  assert.deepEqual(shown, ['letter']); assert.equal(run.now(), 1000);
+  run.stop();
+});
 
 const gameId = 'letter-memory';
 const LoadLogic = () => LoadGameModule(gameId, 'logic/letterMemory.ts');
@@ -83,7 +94,7 @@ test('Letter Memory rows keep the original columns, include practice and save th
 });
 
 test('Letter Memory owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.0.1' });
+  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.1.0' });
 });
 
 test('Letter Memory private bridge accepts only its own parent and replays settings and language', async () => {
