@@ -122,26 +122,39 @@ for (const [gameId, kind, capabilities] of [
   await assert.rejects(() => ReadSavedGameRecord(row, fixture.env.RAW_DATA, session.version), /missing.*csv/i);
 });
 
-for (const interrupted of [false, true]) test(`Hart QR fixture closes the primary action ${interrupted ? 'after fullscreen interruption' : 'when still open'}`, async () => {
-  let paused = interrupted;
-  let qrOpen = !interrupted;
+for (const defect of ['', 'fullscreen', 'interrupt', 'dialog', 'covered']) test(`Hart QR fixture ${defect ? `rejects ${defect}` : 'closes the open dialog without interruption'}`, async () => {
+  let qrOpen = defect !== 'dialog';
+  let scrolled = false;
+  let framePassed = false;
+  let hitTested = false;
   const clicks = [];
   const game = async expression => {
-    if (expression.includes('.hart-qr-dialog .btn-primary, .game-interrupt-panel')) return qrOpen || paused;
-    if (expression.includes('!document.querySelector')) return expression.includes('game-interrupt-panel') ? !paused : !qrOpen;
-    if (expression.includes('.game-interrupt-panel')) return paused;
+    if (expression.includes('document.fullscreenElement')) return defect !== 'fullscreen';
+    if (expression.includes('.game-interrupt-panel')) return defect === 'interrupt';
+    if (expression.includes('!document.querySelector')) return !qrOpen;
+    if (expression.includes('scrollIntoView')) { scrolled = true; return; }
+    if (expression.includes('requestAnimationFrame')) { assert.ok(scrolled); framePassed = true; return; }
+    if (expression.includes('elementFromPoint')) { assert.ok(framePassed); hitTested = true; return defect !== 'covered'; }
     if (expression.includes('.hart-qr-dialog .btn-primary')) return qrOpen;
     throw new Error(`Unexpected expression: ${expression}`);
   };
   const tap = async selector => {
     clicks.push(selector);
-    if (selector === '.game-interrupt-panel .btn-primary') { assert.ok(paused); paused = false; }
-    else if (selector === '.hart-topbar-controls button:nth-of-type(2)') { assert.ok(!paused); qrOpen = true; }
-    else if (selector === '.hart-qr-dialog .btn-primary') { assert.ok(qrOpen); qrOpen = false; }
-    else throw new Error(`Unexpected selector: ${selector}`);
+    assert.equal(selector, '.hart-qr-dialog .btn-primary');
+    assert.ok(qrOpen);
+    assert.ok(hitTested);
+    qrOpen = false;
   };
-  await CloseHartQrAfterDisplay({ game, until: async predicate => assert.ok(await predicate()), tap });
-  assert.deepEqual(clicks, interrupted ? ['.game-interrupt-panel .btn-primary', '.hart-topbar-controls button:nth-of-type(2)', '.hart-qr-dialog .btn-primary'] : ['.hart-qr-dialog .btn-primary']);
+  const close = () => CloseHartQrAfterDisplay({ game, until: async predicate => assert.ok(await predicate()), tap });
+  if (defect) {
+    const messages = { fullscreen: /keeps the game fullscreen/, interrupt: /does not interrupt/, dialog: /dialog stays open/, covered: /close button.*clickable/i };
+    await assert.rejects(close, messages[defect]);
+    assert.deepEqual(clicks, []);
+  } else {
+    await close();
+    assert.deepEqual(clicks, ['.hart-qr-dialog .btn-primary']);
+    assert.equal(qrOpen, false);
+  }
 });
 
 test('driving fixture checks three key metrics, collision details and the complete table', async () => {

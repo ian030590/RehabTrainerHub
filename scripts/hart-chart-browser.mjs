@@ -6,14 +6,17 @@ import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 export async function CloseHartQrAfterDisplay({ game, until, tap, capture }) {
-  await until(() => game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary, .game-interrupt-panel'))`), 'QR dialog or fullscreen interruption');
-  if (await game(`Boolean(document.querySelector('.game-interrupt-panel'))`)) {
-    await tap('.game-interrupt-panel .btn-primary');
-    await until(() => game(`!document.querySelector('.game-interrupt-panel')`), 'continue after opening shared display');
-    await tap('.hart-topbar-controls button:nth-of-type(2)');
-    await until(() => game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary'))`), 'reopened QR dialog');
-  }
+  assert.equal(await game(`document.fullscreenElement === document.querySelector('.hart-chart-game-root')`), true, 'Opening the shared display keeps the game fullscreen.');
+  assert.equal(await game(`Boolean(document.querySelector('.game-interrupt-panel'))`), false, 'Opening the shared display does not interrupt the game.');
+  assert.equal(await game(`Boolean(document.querySelector('.hart-qr-dialog .btn-primary'))`), true, 'The QR dialog stays open.');
   if (capture) await capture('qr');
+  await game(`document.querySelector('.hart-qr-dialog .btn-primary').scrollIntoView({ block: 'nearest', behavior: 'instant' })`);
+  await game(`new Promise(resolve => requestAnimationFrame(resolve))`);
+  assert.equal(await game(`(() => {
+    const button = document.querySelector('.hart-qr-dialog .btn-primary');
+    const rect = button.getBoundingClientRect();
+    return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === button;
+  })()`), true, 'The QR close button must be clickable at its center.');
   await tap('.hart-qr-dialog .btn-primary');
   await until(() => game(`!document.querySelector('.hart-qr-dialog')`), 'QR dialog closed');
 }
@@ -163,8 +166,9 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
   assert.match(share, /package\/index\.html#\/hart-chart\/display\?seed=\d+&scale=0.9/);
   assert.equal(share.includes('characters=chinese'), chinese, 'The shared screen shows the same kind of chart.');
   const chartLetters = await game(`[...document.querySelectorAll('.hart-page .hart-chart-cell')].map(cell=>cell.textContent).join('')`);
-  const displayTarget = await send('Target.createTarget', { url: share });
+  const { browserContextId } = await send('Target.createBrowserContext');
   try {
+    const displayTarget = await send('Target.createTarget', { url: share, browserContextId, background: true });
     const displaySession = await send('Target.attachToTarget', { targetId: displayTarget.targetId, flatten: true });
     const display = async expression => {
       try {
@@ -182,7 +186,9 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
     await mkdir(screenshots, { recursive: true });
     for (const scale of [.9, .65, 1.25, 1.45]) {
       if (scale !== .9) {
-        await send('Page.navigate', { url: share.replace('scale=0.9', `scale=${scale}`) }, displaySession.sessionId);
+        const scaledShare = share.replace('scale=0.9', `scale=${scale}`);
+        await send('Page.navigate', { url: scaledShare }, displaySession.sessionId);
+        await until(() => display(`location.href === ${JSON.stringify(scaledShare)}`), 'shared display URL at selected scale');
         await send('Page.reload', {}, displaySession.sessionId);
         await until(() => display(`document.querySelectorAll('.hart-display .hart-chart-cell').length === 100
           && document.querySelector('.hart-chart-grid').style.getPropertyValue('--hart-font-min') === '${20 * scale}px'`), 'shared chart at selected scale');
@@ -215,8 +221,8 @@ export async function CheckHartChart({ game, evaluate, send, until, standalone, 
         assert.equal(layout.letters, chartLetters, 'Resizing and rotating preserve the shared chart.');
       }
     }
-  } finally { await send('Target.closeTarget', { targetId: displayTarget.targetId }); }
-  await CloseHartQrAfterDisplay({ game, until, tap, capture });
+    await CloseHartQrAfterDisplay({ game, until, tap, capture });
+  } finally { await send('Target.disposeBrowserContext', { browserContextId }); }
   // Placeholders read [column,row]: the first number counts across, the second down.
   const entries = await game(`Array.from(document.querySelectorAll('.hart-code-input')).map(input=>{const [col,row]=input.placeholder.match(/[0-9]+/g).map(Number);return document.querySelectorAll('.hart-chart-cell')[(row-1)*10+col-1].textContent;})`);
   assert.deepEqual(await game(`Array.from(document.querySelectorAll('.hart-code-input')).map(input=>{const [col,row]=input.placeholder.match(/[0-9]+/g);return input.getAttribute('aria-label')===(${english}?'Column '+col+', row '+row:'第 '+col+' 欄，第 '+row+' 列');})`),
