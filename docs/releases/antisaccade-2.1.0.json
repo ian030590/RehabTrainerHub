@@ -1,0 +1,119 @@
+{
+  "gameId": "antisaccade",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "7bdb5c7d61ecd7070801ca261b4afff13279ac994e903f66bc47a8a3acbdb2ab",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/antisaccade/",
+  "publishedAt": "2026-11-17T01:01:38.771Z",
+  "verifiedAt": "2026-11-17T01:01:38.771Z",
+  "fileCount": 5,
+  "totalBytes": 596797,
+  "files": [
+    {
+      "path": "assets/index-DxZOAL7D.js",
+      "size": 572253,
+      "sha256": "f8dac2575c62eb83c7ad22f8a9f343c6fc45f4392fa8b030592a35a169e18049",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DncEwQqm.css",
+      "size": 20369,
+      "sha256": "e14604bf055d01cac0f54dedece1d4118753759e74ec59e5d3c218d5daefad53",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 650,
+      "sha256": "daa7c37dc76364a4b5dd82da2aba9828b47897f7e08798786d964434b37ab305",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 437,
+      "sha256": "77866717bdba870bd0d9299c3fbfa3fabf644e896c5355e3b6ec706d9bb3e576",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3088,
+      "sha256": "e6c6d9203019802a9473b1b6e50faae2b8b09eed85c9694ea6196efa07c05e2e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc"
+    },
+    "2.1.0": {
+      "contentSha256": "7bdb5c7d61ecd7070801ca261b4afff13279ac994e903f66bc47a8a3acbdb2ab"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate antisaccade@2.1.0 with contentSha256 7bdb5c7d61ecd7070801ca261b4afff13279ac994e903f66bc47a8a3acbdb2ab"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "5787080e6693fbb84c1c577d52613bb09186cd11cd1b8c9ed6bd752d6c6795cc",
+    "command": "node scripts/publish-official-game.mjs antisaccade --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/antisaccade/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:24.595Z",
+    "files": [
+      {
+        "path": "assets/index-DxZOAL7D.js",
+        "status": 200,
+        "size": 572253,
+        "sha256": "f8dac2575c62eb83c7ad22f8a9f343c6fc45f4392fa8b030592a35a169e18049"
+      },
+      {
+        "path": "assets/style-DncEwQqm.css",
+        "status": 200,
+        "size": 20369,
+        "sha256": "e14604bf055d01cac0f54dedece1d4118753759e74ec59e5d3c218d5daefad53"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 650,
+        "sha256": "daa7c37dc76364a4b5dd82da2aba9828b47897f7e08798786d964434b37ab305"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 437,
+        "sha256": "77866717bdba870bd0d9299c3fbfa3fabf644e896c5355e3b6ec706d9bb3e576"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3088,
+        "sha256": "e6c6d9203019802a9473b1b6e50faae2b8b09eed85c9694ea6196efa07c05e2e"
+      }
+    ]
+  }
+}

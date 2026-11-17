@@ -1,0 +1,119 @@
+{
+  "gameId": "hex",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5a7bf3903e4ed4e2685b64cd2e83e7d459993a80ddce4f585fbc943a3f154187",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex/",
+  "publishedAt": "2026-11-17T00:50:04.104Z",
+  "verifiedAt": "2026-11-17T00:50:04.104Z",
+  "fileCount": 5,
+  "totalBytes": 607981,
+  "files": [
+    {
+      "path": "assets/index-D1zjaqEd.js",
+      "size": 570553,
+      "sha256": "20f75a388582367664c266665b778d95ace4d03338b0a9e55b648c24478da1ed",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BjbYPb6n.css",
+      "size": 20884,
+      "sha256": "bc70cf6db28c078354de2eae9156f2a741b0e5d3854c917839cce928f6bb31c5",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 493,
+      "sha256": "360dad004aa63166920e0a6072b9e0df8e33795dfdf8750535fd8aaebba7a16a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 415,
+      "sha256": "90369d591d22431653f1dacbb67cfbded4df2fac1d32e7002b321d682f536fe6",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15636,
+      "sha256": "5fa834b98e982bff8de1517bcd788fd906402ad18795709385fe525e07c04d15",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17"
+    },
+    "2.1.0": {
+      "contentSha256": "5a7bf3903e4ed4e2685b64cd2e83e7d459993a80ddce4f585fbc943a3f154187"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate hex@2.1.0 with contentSha256 5a7bf3903e4ed4e2685b64cd2e83e7d459993a80ddce4f585fbc943a3f154187"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "9c5f589bde0d0c0b857cc1622462bdeab948f78d4849673796b4b0a6bd708d17",
+    "command": "node scripts/publish-official-game.mjs hex --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hex/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:08.884Z",
+    "files": [
+      {
+        "path": "assets/index-D1zjaqEd.js",
+        "status": 200,
+        "size": 570553,
+        "sha256": "20f75a388582367664c266665b778d95ace4d03338b0a9e55b648c24478da1ed"
+      },
+      {
+        "path": "assets/style-BjbYPb6n.css",
+        "status": 200,
+        "size": 20884,
+        "sha256": "bc70cf6db28c078354de2eae9156f2a741b0e5d3854c917839cce928f6bb31c5"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 493,
+        "sha256": "360dad004aa63166920e0a6072b9e0df8e33795dfdf8750535fd8aaebba7a16a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 415,
+        "sha256": "90369d591d22431653f1dacbb67cfbded4df2fac1d32e7002b321d682f536fe6"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 15636,
+        "sha256": "5fa834b98e982bff8de1517bcd788fd906402ad18795709385fe525e07c04d15"
+      }
+    ]
+  }
+}

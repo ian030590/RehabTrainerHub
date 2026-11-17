@@ -1,0 +1,122 @@
+{
+  "gameId": "sart",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "cf10918ebf8d1a13649ed4e0bfe1414d72d27b3bbe00390e4918bef5c56ac655",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sart/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sart/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sart/",
+  "publishedAt": "2026-11-17T00:37:18.274Z",
+  "verifiedAt": "2026-11-17T00:37:18.274Z",
+  "fileCount": 5,
+  "totalBytes": 592040,
+  "files": [
+    {
+      "path": "assets/index-ZyHiMAkP.js",
+      "size": 568645,
+      "sha256": "7f5d53c0fd8387fa00be6f7dfb1e57a12e01e519b400d278a35e32d716a062ca",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BuQ0nU0m.css",
+      "size": 19644,
+      "sha256": "738dadb070b28376187931a7032b41a8a37f10ee9743ee0ad16004b67bbc73a8",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 569,
+      "sha256": "567ac51b422ce2bc8baafd2e213e899dcd5aebe2909c540f2dcd5b3ce3abf2f2",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 430,
+      "sha256": "d923d9b1bddc8e79c58597a0197ff4c270d4dae1a48fabdb8fa0fc75b4b8c52a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2752,
+      "sha256": "dea12c40c04896fd56078d30d0ad4d38435f6ccf269759406689a9c7db6d5597",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "2c221d165c7169fc05a36718d17e7e166c65acaf425ca6db51dac1ab5d63eb6e"
+    },
+    "1.0.1": {
+      "contentSha256": "78f0a0d925f5654443ec20a99fc836ee37b50e63c39abc48116dfd0f32407d5d"
+    },
+    "1.1.0": {
+      "contentSha256": "cf10918ebf8d1a13649ed4e0bfe1414d72d27b3bbe00390e4918bef5c56ac655"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate sart@1.1.0 with contentSha256 cf10918ebf8d1a13649ed4e0bfe1414d72d27b3bbe00390e4918bef5c56ac655"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "78f0a0d925f5654443ec20a99fc836ee37b50e63c39abc48116dfd0f32407d5d",
+    "command": "node scripts/publish-official-game.mjs sart --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/sart/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:42.645Z",
+    "files": [
+      {
+        "path": "assets/index-ZyHiMAkP.js",
+        "status": 200,
+        "size": 568645,
+        "sha256": "7f5d53c0fd8387fa00be6f7dfb1e57a12e01e519b400d278a35e32d716a062ca"
+      },
+      {
+        "path": "assets/style-BuQ0nU0m.css",
+        "status": 200,
+        "size": 19644,
+        "sha256": "738dadb070b28376187931a7032b41a8a37f10ee9743ee0ad16004b67bbc73a8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 569,
+        "sha256": "567ac51b422ce2bc8baafd2e213e899dcd5aebe2909c540f2dcd5b3ce3abf2f2"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 430,
+        "sha256": "d923d9b1bddc8e79c58597a0197ff4c270d4dae1a48fabdb8fa0fc75b4b8c52a"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2752,
+        "sha256": "dea12c40c04896fd56078d30d0ad4d38435f6ccf269759406689a9c7db6d5597"
+      }
+    ]
+  }
+}

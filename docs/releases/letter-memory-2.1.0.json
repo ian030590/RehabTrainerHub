@@ -1,0 +1,119 @@
+{
+  "gameId": "letter-memory",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "1042c80e6ffca9bd49139d250b0724739e703397f0d18e3c89b55e4a9a83741b",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/letter-memory/",
+  "publishedAt": "2026-11-17T01:02:42.395Z",
+  "verifiedAt": "2026-11-17T01:02:42.395Z",
+  "fileCount": 5,
+  "totalBytes": 601097,
+  "files": [
+    {
+      "path": "assets/index-DS9G05nR.js",
+      "size": 572505,
+      "sha256": "7402352c97f1126bcc759af78a4d4fa84503c1e9b4eb366dbc5a5936d66a5abe",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-aTszppbu.css",
+      "size": 20234,
+      "sha256": "ee61ad3f3d220b9de494346437a3d3cec71eee944a74cbbd9128e1abc20a0d2e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 637,
+      "sha256": "62bc9b821ecc03de91e9d58523e9321584d47301b0da7792e7a4404fa5915137",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 439,
+      "sha256": "802daf9162c215c66ac03ccdf6a9d224bce5ed1743329ea3bb859936dab650bd",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7282,
+      "sha256": "bdcd684cc622e588e44d203b144fb72fa8fda021975822ebe1db32113c5441b9",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563"
+    },
+    "2.1.0": {
+      "contentSha256": "1042c80e6ffca9bd49139d250b0724739e703397f0d18e3c89b55e4a9a83741b"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate letter-memory@2.1.0 with contentSha256 1042c80e6ffca9bd49139d250b0724739e703397f0d18e3c89b55e4a9a83741b"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "3c87ecd817da46fbb44c3092184062d9489dd6548d00cd36d4308115fcfb9563",
+    "command": "node scripts/publish-official-game.mjs letter-memory --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/letter-memory/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-3.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:27.324Z",
+    "files": [
+      {
+        "path": "assets/index-DS9G05nR.js",
+        "status": 200,
+        "size": 572505,
+        "sha256": "7402352c97f1126bcc759af78a4d4fa84503c1e9b4eb366dbc5a5936d66a5abe"
+      },
+      {
+        "path": "assets/style-aTszppbu.css",
+        "status": 200,
+        "size": 20234,
+        "sha256": "ee61ad3f3d220b9de494346437a3d3cec71eee944a74cbbd9128e1abc20a0d2e"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 637,
+        "sha256": "62bc9b821ecc03de91e9d58523e9321584d47301b0da7792e7a4404fa5915137"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 439,
+        "sha256": "802daf9162c215c66ac03ccdf6a9d224bce5ed1743329ea3bb859936dab650bd"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7282,
+        "sha256": "bdcd684cc622e588e44d203b144fb72fa8fda021975822ebe1db32113c5441b9"
+      }
+    ]
+  }
+}

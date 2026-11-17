@@ -1,0 +1,435 @@
+{
+  "gameId": "motor-cortex-rehab",
+  "version": "2.2.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "e211957a096ba2beca59cf11e16bed6db21a54b54b517f454ffff91bc9693b12",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/motor-cortex-rehab/2.2.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/motor-cortex-rehab/2.2.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/motor-cortex-rehab/",
+  "publishedAt": "2026-11-17T00:32:35.507Z",
+  "verifiedAt": "2026-11-17T00:32:35.507Z",
+  "fileCount": 30,
+  "totalBytes": 748546,
+  "files": [
+    {
+      "path": "assets/index-CyxN1BCH.js",
+      "size": 602876,
+      "sha256": "16a8d25ab774b8504dad6486da43f735f57d75c27cadce35ca7b788872262079",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/laser-hero/LICENSES.txt",
+      "size": 4039,
+      "sha256": "085e3b5a0bf39a271812fad9b2cd68b50619abee972cb898e89193e11531c176",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "assets/laser-hero/SOURCES.json",
+      "size": 7321,
+      "sha256": "cdb8ac729836a7c375f5a9f95ce78c2938adb1aee4c6da6ca7d7a22e3599591a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "assets/laser-hero/building-0.png",
+      "size": 201,
+      "sha256": "440a9be6922cf8008c07aca42db0af2921b35452102d0031e7af12afcc8b65e4",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/building-1.png",
+      "size": 194,
+      "sha256": "ff679375978107dffd11fd9d9ee8ef42a108420c5424919ab3eb6cbe10d35889",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/building-2.png",
+      "size": 209,
+      "sha256": "9d563d9e471c096b3b8f0dee459e1e38ce3350d8fb90c0144b465e1da774ea9f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/building-3.png",
+      "size": 204,
+      "sha256": "b014b3056a9be1c47f244e81e9405866d4b6676f88b0982f0be8af926037d724",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/burst-0.png",
+      "size": 170,
+      "sha256": "54d2a47c28937772a5fdbe71436b2b20628b4d3f766fe78fe13c8e76e73395fa",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/burst-1.png",
+      "size": 159,
+      "sha256": "22c0064220d49a2a7754571fd1f2d21df99a6679a40303e47c3222014311799a",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/burst-2.png",
+      "size": 159,
+      "sha256": "d43d9e4b3f0247ee095931528f391d38649200d1b3693a580e7d92f02472f548",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/burst-3.png",
+      "size": 142,
+      "sha256": "dd5a9ac816d65d55b3ce22bacc08104c4158221571fa153dcf2eda07a9c4fb43",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/charge.ogg",
+      "size": 28947,
+      "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90",
+      "contentType": "audio/ogg"
+    },
+    {
+      "path": "assets/laser-hero/complete.ogg",
+      "size": 9043,
+      "sha256": "59e7591f7a068882767bc1fd61edabf479b78787466d3a70bc49dfa0533777d2",
+      "contentType": "audio/ogg"
+    },
+    {
+      "path": "assets/laser-hero/enemy-0-step.png",
+      "size": 249,
+      "sha256": "b929b7d7d1c3175a018ff61c1240ceb6250a29ad9388ee4b03d84eedcfdb0a27",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-0.png",
+      "size": 254,
+      "sha256": "15df14143949310c001b09b2a00ed2278a5a9b4a10edd276af306b77b8c9d658",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-1-step.png",
+      "size": 249,
+      "sha256": "d136b5ca06a87f20f0ebf71c3c8de4bf5ae732a25370f29ffa61b9e7da26e011",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-1.png",
+      "size": 254,
+      "sha256": "3cca21026b26f4f6a09a1200ca2c399e6b8c9b2bc1ed0cc92d47d057a3c9feeb",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-2-step.png",
+      "size": 224,
+      "sha256": "2decd7fc3872ba6ffc712cfeb4dd048a116db6d56399dd29d84de3af6db87261",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-2.png",
+      "size": 222,
+      "sha256": "aca58ddc36d4e8d506111b1e580fc79b17383337b3cec27c28b0e6090435224a",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-3-step.png",
+      "size": 228,
+      "sha256": "e215b5f72dbaeec900f20017bf0b2ded1a32c809970f4771df9ab8e6620d7ece",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/enemy-3.png",
+      "size": 231,
+      "sha256": "70b674ae599193a38dd4c6ee1c3994fa9e9090b9a52a2549685e16018734afd1",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/hero-glove.png",
+      "size": 233,
+      "sha256": "04aa9cbd07e58d65e800f3808d0d7be28cc49779e173c27e0e088aae27cb57d5",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/hit.ogg",
+      "size": 28274,
+      "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69",
+      "contentType": "audio/ogg"
+    },
+    {
+      "path": "assets/laser-hero/laser.ogg",
+      "size": 12588,
+      "sha256": "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c",
+      "contentType": "audio/ogg"
+    },
+    {
+      "path": "assets/laser-hero/reticle.png",
+      "size": 135,
+      "sha256": "3cf5371999edad4e64b8e5f0f3493f1ccdd9363b24f3d535bf9cee0b73d7d200",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/laser-hero/smoke.png",
+      "size": 147,
+      "sha256": "f5caed8ba0ea9d2caba23dc17576986571bff363eecb6f41a5a7290cd8b635c3",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-Cn9dKhDw.css",
+      "size": 27186,
+      "sha256": "dc6b5f0ad0b31b2638dd34cbc500add44419eea8bf25d51cf60b94c1e8b6f5b9",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 586,
+      "sha256": "b1b44afe9d9e041854cd5b5deb4433de0d67f7a5fdb7869540731761754a4586",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 426,
+      "sha256": "e2aaaa3e526fabbc0c6cb4efcf98d2ca6be91f0a3d860f7b6c62da67f880b944",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 23396,
+      "sha256": "7981bc89ba8995e099d8af0c8e5b82922a9fe7895da166e4cf16ae18821ad074",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking",
+    "settings-storage"
+  ],
+  "currentVersion": "2.2.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+    },
+    "2.0.1": {
+      "contentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a"
+    },
+    "2.0.2": {
+      "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+    },
+    "2.0.3": {
+      "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+    },
+    "2.0.4": {
+      "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+    },
+    "2.1.0": {
+      "contentSha256": "3014695d7cf197ba97ce4b923f32dbe68242b09dee50f4a1fff12b0c9e196c29"
+    },
+    "2.1.1": {
+      "contentSha256": "5f668bab5197afeaa295f89ed0591f13bb9f6e5b4c10d4c184f4cd07c0d7ddf0"
+    },
+    "2.2.0": {
+      "contentSha256": "e211957a096ba2beca59cf11e16bed6db21a54b54b517f454ffff91bc9693b12"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate motor-cortex-rehab@2.2.0 with contentSha256 e211957a096ba2beca59cf11e16bed6db21a54b54b517f454ffff91bc9693b12"
+  },
+  "rollback": {
+    "version": "2.1.1",
+    "contentSha256": "5f668bab5197afeaa295f89ed0591f13bb9f6e5b4c10d4c184f4cd07c0d7ddf0",
+    "command": "node scripts/publish-official-game.mjs motor-cortex-rehab --activate-version 2.1.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/motor-cortex-rehab/2.2.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:30.739Z",
+    "files": [
+      {
+        "path": "assets/index-CyxN1BCH.js",
+        "status": 200,
+        "size": 602876,
+        "sha256": "16a8d25ab774b8504dad6486da43f735f57d75c27cadce35ca7b788872262079"
+      },
+      {
+        "path": "assets/laser-hero/LICENSES.txt",
+        "status": 200,
+        "size": 4039,
+        "sha256": "085e3b5a0bf39a271812fad9b2cd68b50619abee972cb898e89193e11531c176"
+      },
+      {
+        "path": "assets/laser-hero/SOURCES.json",
+        "status": 200,
+        "size": 7321,
+        "sha256": "cdb8ac729836a7c375f5a9f95ce78c2938adb1aee4c6da6ca7d7a22e3599591a"
+      },
+      {
+        "path": "assets/laser-hero/building-0.png",
+        "status": 200,
+        "size": 201,
+        "sha256": "440a9be6922cf8008c07aca42db0af2921b35452102d0031e7af12afcc8b65e4"
+      },
+      {
+        "path": "assets/laser-hero/building-1.png",
+        "status": 200,
+        "size": 194,
+        "sha256": "ff679375978107dffd11fd9d9ee8ef42a108420c5424919ab3eb6cbe10d35889"
+      },
+      {
+        "path": "assets/laser-hero/building-2.png",
+        "status": 200,
+        "size": 209,
+        "sha256": "9d563d9e471c096b3b8f0dee459e1e38ce3350d8fb90c0144b465e1da774ea9f"
+      },
+      {
+        "path": "assets/laser-hero/building-3.png",
+        "status": 200,
+        "size": 204,
+        "sha256": "b014b3056a9be1c47f244e81e9405866d4b6676f88b0982f0be8af926037d724"
+      },
+      {
+        "path": "assets/laser-hero/burst-0.png",
+        "status": 200,
+        "size": 170,
+        "sha256": "54d2a47c28937772a5fdbe71436b2b20628b4d3f766fe78fe13c8e76e73395fa"
+      },
+      {
+        "path": "assets/laser-hero/burst-1.png",
+        "status": 200,
+        "size": 159,
+        "sha256": "22c0064220d49a2a7754571fd1f2d21df99a6679a40303e47c3222014311799a"
+      },
+      {
+        "path": "assets/laser-hero/burst-2.png",
+        "status": 200,
+        "size": 159,
+        "sha256": "d43d9e4b3f0247ee095931528f391d38649200d1b3693a580e7d92f02472f548"
+      },
+      {
+        "path": "assets/laser-hero/burst-3.png",
+        "status": 200,
+        "size": 142,
+        "sha256": "dd5a9ac816d65d55b3ce22bacc08104c4158221571fa153dcf2eda07a9c4fb43"
+      },
+      {
+        "path": "assets/laser-hero/charge.ogg",
+        "status": 200,
+        "size": 28947,
+        "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
+      },
+      {
+        "path": "assets/laser-hero/complete.ogg",
+        "status": 200,
+        "size": 9043,
+        "sha256": "59e7591f7a068882767bc1fd61edabf479b78787466d3a70bc49dfa0533777d2"
+      },
+      {
+        "path": "assets/laser-hero/enemy-0-step.png",
+        "status": 200,
+        "size": 249,
+        "sha256": "b929b7d7d1c3175a018ff61c1240ceb6250a29ad9388ee4b03d84eedcfdb0a27"
+      },
+      {
+        "path": "assets/laser-hero/enemy-0.png",
+        "status": 200,
+        "size": 254,
+        "sha256": "15df14143949310c001b09b2a00ed2278a5a9b4a10edd276af306b77b8c9d658"
+      },
+      {
+        "path": "assets/laser-hero/enemy-1-step.png",
+        "status": 200,
+        "size": 249,
+        "sha256": "d136b5ca06a87f20f0ebf71c3c8de4bf5ae732a25370f29ffa61b9e7da26e011"
+      },
+      {
+        "path": "assets/laser-hero/enemy-1.png",
+        "status": 200,
+        "size": 254,
+        "sha256": "3cca21026b26f4f6a09a1200ca2c399e6b8c9b2bc1ed0cc92d47d057a3c9feeb"
+      },
+      {
+        "path": "assets/laser-hero/enemy-2-step.png",
+        "status": 200,
+        "size": 224,
+        "sha256": "2decd7fc3872ba6ffc712cfeb4dd048a116db6d56399dd29d84de3af6db87261"
+      },
+      {
+        "path": "assets/laser-hero/enemy-2.png",
+        "status": 200,
+        "size": 222,
+        "sha256": "aca58ddc36d4e8d506111b1e580fc79b17383337b3cec27c28b0e6090435224a"
+      },
+      {
+        "path": "assets/laser-hero/enemy-3-step.png",
+        "status": 200,
+        "size": 228,
+        "sha256": "e215b5f72dbaeec900f20017bf0b2ded1a32c809970f4771df9ab8e6620d7ece"
+      },
+      {
+        "path": "assets/laser-hero/enemy-3.png",
+        "status": 200,
+        "size": 231,
+        "sha256": "70b674ae599193a38dd4c6ee1c3994fa9e9090b9a52a2549685e16018734afd1"
+      },
+      {
+        "path": "assets/laser-hero/hero-glove.png",
+        "status": 200,
+        "size": 233,
+        "sha256": "04aa9cbd07e58d65e800f3808d0d7be28cc49779e173c27e0e088aae27cb57d5"
+      },
+      {
+        "path": "assets/laser-hero/hit.ogg",
+        "status": 200,
+        "size": 28274,
+        "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+      },
+      {
+        "path": "assets/laser-hero/laser.ogg",
+        "status": 200,
+        "size": 12588,
+        "sha256": "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c"
+      },
+      {
+        "path": "assets/laser-hero/reticle.png",
+        "status": 200,
+        "size": 135,
+        "sha256": "3cf5371999edad4e64b8e5f0f3493f1ccdd9363b24f3d535bf9cee0b73d7d200"
+      },
+      {
+        "path": "assets/laser-hero/smoke.png",
+        "status": 200,
+        "size": 147,
+        "sha256": "f5caed8ba0ea9d2caba23dc17576986571bff363eecb6f41a5a7290cd8b635c3"
+      },
+      {
+        "path": "assets/style-Cn9dKhDw.css",
+        "status": 200,
+        "size": 27186,
+        "sha256": "dc6b5f0ad0b31b2638dd34cbc500add44419eea8bf25d51cf60b94c1e8b6f5b9"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 586,
+        "sha256": "b1b44afe9d9e041854cd5b5deb4433de0d67f7a5fdb7869540731761754a4586"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 426,
+        "sha256": "e2aaaa3e526fabbc0c6cb4efcf98d2ca6be91f0a3d860f7b6c62da67f880b944"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 23396,
+        "sha256": "7981bc89ba8995e099d8af0c8e5b82922a9fe7895da166e4cf16ae18821ad074"
+      }
+    ]
+  }
+}

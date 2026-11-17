@@ -1,0 +1,122 @@
+{
+  "gameId": "exploratory-saccade",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "8cc32c459fcaef2ba1e42aa11dfa64b5136f3cdcedfbbd3af7fee3e03375b9b6",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/exploratory-saccade/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/exploratory-saccade/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/exploratory-saccade/",
+  "publishedAt": "2026-11-17T01:07:40.765Z",
+  "verifiedAt": "2026-11-17T01:07:40.765Z",
+  "fileCount": 5,
+  "totalBytes": 607745,
+  "files": [
+    {
+      "path": "assets/index-CkphcVuM.js",
+      "size": 578820,
+      "sha256": "4186e5bade4a50f87f208c917cbba0f28b5841a0e590c30702c3da7150164f08",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CW_68eGq.css",
+      "size": 19554,
+      "sha256": "73523dc8da725a9757cd57a55b245ff46d320e5765925ec991a49e7d593a9a5e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 569,
+      "sha256": "e93428402b26e46567d80fdcdab945e26db175d95eff3d3f4b685a43996ec875",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "16ba136c37d853cbf299e34b058708a372bfb9ff58c6cb0f965882630b2cdeb2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8382,
+      "sha256": "ddf8d86e987ef3e585c388a1f1f6a1f8155260b6955d1375f79c90a3e719bfdd",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "57bac27304dc156f0bb00ba676919cbce70d5ad28d45b0e6ece4bbe11a1f4186"
+    },
+    "1.0.1": {
+      "contentSha256": "6a3bcaab74370a2e9a91e9a0080473598c1f135a195bfd632b651c899bcb253e"
+    },
+    "1.1.0": {
+      "contentSha256": "8cc32c459fcaef2ba1e42aa11dfa64b5136f3cdcedfbbd3af7fee3e03375b9b6"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate exploratory-saccade@1.1.0 with contentSha256 8cc32c459fcaef2ba1e42aa11dfa64b5136f3cdcedfbbd3af7fee3e03375b9b6"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "6a3bcaab74370a2e9a91e9a0080473598c1f135a195bfd632b651c899bcb253e",
+    "command": "node scripts/publish-official-game.mjs exploratory-saccade --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/exploratory-saccade/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-7.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:39.097Z",
+    "files": [
+      {
+        "path": "assets/index-CkphcVuM.js",
+        "status": 200,
+        "size": 578820,
+        "sha256": "4186e5bade4a50f87f208c917cbba0f28b5841a0e590c30702c3da7150164f08"
+      },
+      {
+        "path": "assets/style-CW_68eGq.css",
+        "status": 200,
+        "size": 19554,
+        "sha256": "73523dc8da725a9757cd57a55b245ff46d320e5765925ec991a49e7d593a9a5e"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 569,
+        "sha256": "e93428402b26e46567d80fdcdab945e26db175d95eff3d3f4b685a43996ec875"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "16ba136c37d853cbf299e34b058708a372bfb9ff58c6cb0f965882630b2cdeb2"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8382,
+        "sha256": "ddf8d86e987ef3e585c388a1f1f6a1f8155260b6955d1375f79c90a3e719bfdd"
+      }
+    ]
+  }
+}

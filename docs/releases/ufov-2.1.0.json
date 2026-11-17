@@ -1,0 +1,120 @@
+{
+  "gameId": "ufov",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "64eec611e447af9e4b05ffe9bdbe7ad7731c19756994451e25b5ab594a606f96",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/ufov/",
+  "publishedAt": "2026-11-17T01:03:43.184Z",
+  "verifiedAt": "2026-11-17T01:03:43.184Z",
+  "fileCount": 5,
+  "totalBytes": 636381,
+  "files": [
+    {
+      "path": "assets/index-BmTP2rgF.js",
+      "size": 608763,
+      "sha256": "ec7ba93e02a9d40fe7915218538ced8ca91023a8738c847c9e085b21ad845736",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dd9XzN7D.css",
+      "size": 22332,
+      "sha256": "f90bf6f57d973737fac6a13dbfac45dcd3f31fc7a2feb92895a286b708b8e9a5",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 632,
+      "sha256": "a068c794f0fb5cc5b91e633ca2c50c51ff587d0c98b1eb471aec2a10c1f5d2d9",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "ee4cd054a047301e97dc0d0f1a41e92268a352071c3623288b3c7e7ab9dc7743",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4234,
+      "sha256": "aef910ff70bc46c34c0ebbc93d0c8a24352676f1d71fa630ce983a42476a5816",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "result-files",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5"
+    },
+    "2.1.0": {
+      "contentSha256": "64eec611e447af9e4b05ffe9bdbe7ad7731c19756994451e25b5ab594a606f96"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate ufov@2.1.0 with contentSha256 64eec611e447af9e4b05ffe9bdbe7ad7731c19756994451e25b5ab594a606f96"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "f0947fd84713c42e5ff58aeb81a69a5c36df7dd68fbeadb7204be256b9ad3cf5",
+    "command": "node scripts/publish-official-game.mjs ufov --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/ufov/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:29.721Z",
+    "files": [
+      {
+        "path": "assets/index-BmTP2rgF.js",
+        "status": 200,
+        "size": 608763,
+        "sha256": "ec7ba93e02a9d40fe7915218538ced8ca91023a8738c847c9e085b21ad845736"
+      },
+      {
+        "path": "assets/style-Dd9XzN7D.css",
+        "status": 200,
+        "size": 22332,
+        "sha256": "f90bf6f57d973737fac6a13dbfac45dcd3f31fc7a2feb92895a286b708b8e9a5"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 632,
+        "sha256": "a068c794f0fb5cc5b91e633ca2c50c51ff587d0c98b1eb471aec2a10c1f5d2d9"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "ee4cd054a047301e97dc0d0f1a41e92268a352071c3623288b3c7e7ab9dc7743"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4234,
+        "sha256": "aef910ff70bc46c34c0ebbc93d0c8a24352676f1d71fa630ce983a42476a5816"
+      }
+    ]
+  }
+}

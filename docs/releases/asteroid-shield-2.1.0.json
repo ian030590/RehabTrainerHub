@@ -1,0 +1,262 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "b98e79b74ca20a4f6ca14a7d0092edb05940f0417eead51ac4806bf78f9d6c28",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/asteroid-shield/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/asteroid-shield/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/asteroid-shield/",
+  "publishedAt": "2026-11-17T00:26:19.137Z",
+  "verifiedAt": "2026-11-17T00:26:19.137Z",
+  "fileCount": 14,
+  "totalBytes": 1822264,
+  "files": [
+    {
+      "path": "LICENSE-pixelfx.md",
+      "size": 1115,
+      "sha256": "553c30b19cb6dc6f717885e3f1c96ce905085399f82645a2ab14a7671a3eb48f",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "NOTICE.md",
+      "size": 982,
+      "sha256": "3bfd6e2b55c14076516e22d5eff58aeb93b9c3240679df72e4e574d6f4c408c9",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-yeP-YuGf.js",
+      "size": 1382841,
+      "sha256": "dbef96230603e44a8ebff2a39f860074900de0d5529412f19fb7c80e5be7c9b7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-complete-B5wkC1qZ.png",
+      "size": 198696,
+      "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-6LnNQIsO.css",
+      "size": 19108,
+      "sha256": "e8f170e5529294ec5d39ea16b0326be61aa43e29c006105b153875dea300c2be",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 483,
+      "sha256": "e371e03053abe5253d3f023ded37ae1f18f135adeb995cba14d9d59438185883",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 423,
+      "sha256": "cc570359bc47b4bf7498b317f6b57f720bdb17f4b6616a68d05672ccf8c1e86f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 19210,
+      "sha256": "3c66acc0b921a879499def6d8614bce9c5c95897872d14a50ddbd8c728d5037e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    },
+    "2.0.1": {
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+    },
+    "2.0.10": {
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+    },
+    "2.0.11": {
+      "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+    },
+    "2.0.13": {
+      "contentSha256": "4b7298823611f3faae7a9571895411303f0e5084dee44ca619ea7bd8d49d53ac"
+    },
+    "2.0.2": {
+      "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+    },
+    "2.0.3": {
+      "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+    },
+    "2.0.4": {
+      "contentSha256": "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393"
+    },
+    "2.0.5": {
+      "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97"
+    },
+    "2.0.6": {
+      "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902"
+    },
+    "2.0.7": {
+      "contentSha256": "63dee846c20307797421d9f5bae473c4c5b38de4c22e0e833d211d49fef0f011"
+    },
+    "2.0.8": {
+      "contentSha256": "8b64ea45eea1eaab277dc1881fb1a86c2d085b90ab91d87e1d8a72746d53da65"
+    },
+    "2.0.9": {
+      "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe"
+    },
+    "2.1.0": {
+      "contentSha256": "b98e79b74ca20a4f6ca14a7d0092edb05940f0417eead51ac4806bf78f9d6c28"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate asteroid-shield@2.1.0 with contentSha256 b98e79b74ca20a4f6ca14a7d0092edb05940f0417eead51ac4806bf78f9d6c28"
+  },
+  "rollback": {
+    "version": "2.0.13",
+    "contentSha256": "4b7298823611f3faae7a9571895411303f0e5084dee44ca619ea7bd8d49d53ac",
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.13"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/asteroid-shield/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:14.721Z",
+    "files": [
+      {
+        "path": "LICENSE-pixelfx.md",
+        "status": 200,
+        "size": 1115,
+        "sha256": "553c30b19cb6dc6f717885e3f1c96ce905085399f82645a2ab14a7671a3eb48f"
+      },
+      {
+        "path": "NOTICE.md",
+        "status": 200,
+        "size": 982,
+        "sha256": "3bfd6e2b55c14076516e22d5eff58aeb93b9c3240679df72e4e574d6f4c408c9"
+      },
+      {
+        "path": "assets/asteroid-blue-CY-_A_BJ.png",
+        "status": 200,
+        "size": 14034,
+        "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe"
+      },
+      {
+        "path": "assets/asteroid-dark-CW7iRJ5o.png",
+        "status": 200,
+        "size": 11856,
+        "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511"
+      },
+      {
+        "path": "assets/asteroid-green-1XKYeWRA.png",
+        "status": 200,
+        "size": 9693,
+        "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13"
+      },
+      {
+        "path": "assets/background-NBhu4YAc.png",
+        "status": 200,
+        "size": 83041,
+        "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81"
+      },
+      {
+        "path": "assets/energy-rock-CT8hMT01.png",
+        "status": 200,
+        "size": 1792,
+        "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8"
+      },
+      {
+        "path": "assets/index-yeP-YuGf.js",
+        "status": 200,
+        "size": 1382841,
+        "sha256": "dbef96230603e44a8ebff2a39f860074900de0d5529412f19fb7c80e5be7c9b7"
+      },
+      {
+        "path": "assets/shield-complete-B5wkC1qZ.png",
+        "status": 200,
+        "size": 198696,
+        "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7"
+      },
+      {
+        "path": "assets/ship-CrsWCvcK.png",
+        "status": 200,
+        "size": 78990,
+        "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f"
+      },
+      {
+        "path": "assets/style-6LnNQIsO.css",
+        "status": 200,
+        "size": 19108,
+        "sha256": "e8f170e5529294ec5d39ea16b0326be61aa43e29c006105b153875dea300c2be"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 483,
+        "sha256": "e371e03053abe5253d3f023ded37ae1f18f135adeb995cba14d9d59438185883"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 423,
+        "sha256": "cc570359bc47b4bf7498b317f6b57f720bdb17f4b6616a68d05672ccf8c1e86f"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 19210,
+        "sha256": "3c66acc0b921a879499def6d8614bce9c5c95897872d14a50ddbd8c728d5037e"
+      }
+    ]
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "gameId": "attention-network-task",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6bf02d23f108cdd080b588adedc3ff772d6f008789ab4b394d1bb1a59059e378",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attention-network-task/",
+  "publishedAt": "2026-11-17T00:44:56.527Z",
+  "verifiedAt": "2026-11-17T00:44:56.527Z",
+  "fileCount": 5,
+  "totalBytes": 603048,
+  "files": [
+    {
+      "path": "assets/index-rd5Eb3RY.js",
+      "size": 576608,
+      "sha256": "cf66bd680670e0bcb3107b0a488d2cec4fb9925611a51322e3095faac7d688aa",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DSWfNvUE.css",
+      "size": 20894,
+      "sha256": "31d479c5d6d4e70af666a94c9a773e9a72b1ea4c3400b6118f34ba5df1c0ea5f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 622,
+      "sha256": "8fae4f5f13b410004e710d32e685fca56988c19cb7e24cb3ea286d665ef27dfe",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 432,
+      "sha256": "c98370042e45e4a3b6e387dc81619a02477f36a0ce4da48041450218e7b59a34",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4492,
+      "sha256": "770ea5153e816b4e97836a92ca02343c022e07d5c450060fc8aef22fc9e06b1e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "563e8d9baadf99ceeae210b7a43fc5b182c44c9bc76ba1f008415cd71ce2e5cf"
+    },
+    "2.0.1": {
+      "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392"
+    },
+    "2.1.0": {
+      "contentSha256": "6bf02d23f108cdd080b588adedc3ff772d6f008789ab4b394d1bb1a59059e378"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate attention-network-task@2.1.0 with contentSha256 6bf02d23f108cdd080b588adedc3ff772d6f008789ab4b394d1bb1a59059e378"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "ce0654c559c97a05e1a820f02369e2a0ca9bb98815ca6b96d6eda49118752392",
+    "command": "node scripts/publish-official-game.mjs attention-network-task --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/attention-network-task/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-2.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:58.272Z",
+    "files": [
+      {
+        "path": "assets/index-rd5Eb3RY.js",
+        "status": 200,
+        "size": 576608,
+        "sha256": "cf66bd680670e0bcb3107b0a488d2cec4fb9925611a51322e3095faac7d688aa"
+      },
+      {
+        "path": "assets/style-DSWfNvUE.css",
+        "status": 200,
+        "size": 20894,
+        "sha256": "31d479c5d6d4e70af666a94c9a773e9a72b1ea4c3400b6118f34ba5df1c0ea5f"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 622,
+        "sha256": "8fae4f5f13b410004e710d32e685fca56988c19cb7e24cb3ea286d665ef27dfe"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 432,
+        "sha256": "c98370042e45e4a3b6e387dc81619a02477f36a0ce4da48041450218e7b59a34"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4492,
+        "sha256": "770ea5153e816b4e97836a92ca02343c022e07d5c450060fc8aef22fc9e06b1e"
+      }
+    ]
+  }
+}

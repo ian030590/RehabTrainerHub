@@ -1,0 +1,122 @@
+{
+  "gameId": "time-perception",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "cef496be1e18f4eb9f2a5ab3d3bf5eb9d850f18a83f4908458a75e9187b75553",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/time-perception/",
+  "publishedAt": "2026-11-17T00:41:08.855Z",
+  "verifiedAt": "2026-11-17T00:41:08.855Z",
+  "fileCount": 5,
+  "totalBytes": 598623,
+  "files": [
+    {
+      "path": "assets/index-DClx4Gac.js",
+      "size": 573229,
+      "sha256": "b4534ee067d67c584e3f5cca6a5b42a53c58b8de1320ea1e011b657229cce011",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BArIhBNX.css",
+      "size": 20017,
+      "sha256": "7859f5e13928dbb9c9076280c42860bf66380d366c85581840d4b8dd5bc199ff",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 531,
+      "sha256": "f182f4b85e256c856d160e0c6aee0b2093f5727311e27e80bf0788ad74b2e635",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "83b5f34c91b4acd00fcbbeec3c69b353a44cb5e07801dbc0878465e3574e03e2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4432,
+      "sha256": "b65eab407462c2655c528bb7421380e92d582a614babe82c552f58833e7bb429",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "a2bc4742f512f2981546d670854dafae8897cac957617ca7fbac46e332cbfff7"
+    },
+    "1.0.1": {
+      "contentSha256": "362631b27ae5981042c86a04484d8e4c89539d96e02b34fe3000d463eac735f8"
+    },
+    "1.1.0": {
+      "contentSha256": "cef496be1e18f4eb9f2a5ab3d3bf5eb9d850f18a83f4908458a75e9187b75553"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate time-perception@1.1.0 with contentSha256 cef496be1e18f4eb9f2a5ab3d3bf5eb9d850f18a83f4908458a75e9187b75553"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "362631b27ae5981042c86a04484d8e4c89539d96e02b34fe3000d463eac735f8",
+    "command": "node scripts/publish-official-game.mjs time-perception --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/time-perception/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-7.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:50.624Z",
+    "files": [
+      {
+        "path": "assets/index-DClx4Gac.js",
+        "status": 200,
+        "size": 573229,
+        "sha256": "b4534ee067d67c584e3f5cca6a5b42a53c58b8de1320ea1e011b657229cce011"
+      },
+      {
+        "path": "assets/style-BArIhBNX.css",
+        "status": 200,
+        "size": 20017,
+        "sha256": "7859f5e13928dbb9c9076280c42860bf66380d366c85581840d4b8dd5bc199ff"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 531,
+        "sha256": "f182f4b85e256c856d160e0c6aee0b2093f5727311e27e80bf0788ad74b2e635"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "83b5f34c91b4acd00fcbbeec3c69b353a44cb5e07801dbc0878465e3574e03e2"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4432,
+        "sha256": "b65eab407462c2655c528bb7421380e92d582a614babe82c552f58833e7bb429"
+      }
+    ]
+  }
+}

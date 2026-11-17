@@ -1,0 +1,119 @@
+{
+  "gameId": "lights-out",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "80e6dcff8bc62c3716cf2f488c798f2c426e7a2cab90f3f00c0705ee9f20d54d",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/lights-out/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/lights-out/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/lights-out/",
+  "publishedAt": "2026-11-17T00:51:11.343Z",
+  "verifiedAt": "2026-11-17T00:51:11.343Z",
+  "fileCount": 5,
+  "totalBytes": 598145,
+  "files": [
+    {
+      "path": "assets/index-CsnzQT0D.js",
+      "size": 569673,
+      "sha256": "ea3e763b4d682ef5655429bb35c4624db916fdb613f42bf1ab0102a003e2faad",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DBNlEJKe.css",
+      "size": 20044,
+      "sha256": "d01247b98ae266c4340bfed52e69d218b2624c51fd946e05fd8836e16b600421",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 484,
+      "sha256": "39fb796d83575b758242e4609952716dcc5d5e86a953ad1b9e6637a785c91912",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "cc627a81170850ded00f7687d7f8e952f5dc499adecd662978f5257c2e63336f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7530,
+      "sha256": "ad43e95f15ebcb1ea4e6447243e2bdbc2b85e64e8037ce5ee32a7e6ed21da3b8",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "0e81b9ffb30ca5536a630e5de8e635e90958fa185529e9b253a5522cbcb1beea"
+    },
+    "2.1.0": {
+      "contentSha256": "80e6dcff8bc62c3716cf2f488c798f2c426e7a2cab90f3f00c0705ee9f20d54d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate lights-out@2.1.0 with contentSha256 80e6dcff8bc62c3716cf2f488c798f2c426e7a2cab90f3f00c0705ee9f20d54d"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "0e81b9ffb30ca5536a630e5de8e635e90958fa185529e9b253a5522cbcb1beea",
+    "command": "node scripts/publish-official-game.mjs lights-out --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/lights-out/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-5.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:11.108Z",
+    "files": [
+      {
+        "path": "assets/index-CsnzQT0D.js",
+        "status": 200,
+        "size": 569673,
+        "sha256": "ea3e763b4d682ef5655429bb35c4624db916fdb613f42bf1ab0102a003e2faad"
+      },
+      {
+        "path": "assets/style-DBNlEJKe.css",
+        "status": 200,
+        "size": 20044,
+        "sha256": "d01247b98ae266c4340bfed52e69d218b2624c51fd946e05fd8836e16b600421"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 484,
+        "sha256": "39fb796d83575b758242e4609952716dcc5d5e86a953ad1b9e6637a785c91912"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "cc627a81170850ded00f7687d7f8e952f5dc499adecd662978f5257c2e63336f"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7530,
+        "sha256": "ad43e95f15ebcb1ea4e6447243e2bdbc2b85e64e8037ce5ee32a7e6ed21da3b8"
+      }
+    ]
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "gameId": "tower-of-london",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "0b0e4f37b29ca2eaad92c458bcff9ca3d8d877005652ee3bc217d907ef43da3b",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tower-of-london/",
+  "publishedAt": "2026-11-17T00:47:56.983Z",
+  "verifiedAt": "2026-11-17T00:47:56.983Z",
+  "fileCount": 5,
+  "totalBytes": 612100,
+  "files": [
+    {
+      "path": "assets/index-Dfw_2G7d.js",
+      "size": 576079,
+      "sha256": "e74bd336f789863b111e2ce9ad2933ef61976535eb6bece537bc027549ee4794",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CGq8UwWG.css",
+      "size": 22162,
+      "sha256": "bb47970612de05ae20b45b815f53e5061a03d351f99a63f4e22a56920278e663",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 601,
+      "sha256": "ed6041bb5d2707b7563618078d941697d314bdaa88592751c4f0a7025865ac38",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 438,
+      "sha256": "d7686d04a656a012607dc665eafdb5fade828804f677daad3ef385a59bfe0b75",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 12820,
+      "sha256": "c4a041d34f3829aca0e0cf111a3d9ee7911906b8361ca6722c7a5cc7e4fcac51",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "b4f980da59e419d1815c797f80e4d01b4b6d13310bb8b1e4aa9ace1c98fda3bf"
+    },
+    "2.0.1": {
+      "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049"
+    },
+    "2.1.0": {
+      "contentSha256": "0b0e4f37b29ca2eaad92c458bcff9ca3d8d877005652ee3bc217d907ef43da3b"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate tower-of-london@2.1.0 with contentSha256 0b0e4f37b29ca2eaad92c458bcff9ca3d8d877005652ee3bc217d907ef43da3b"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "6abea6376a04e4ee614a008693087e3e5d76fe88ca228ce568d62be8b615f049",
+    "command": "node scripts/publish-official-game.mjs tower-of-london --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/tower-of-london/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-7.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:04.333Z",
+    "files": [
+      {
+        "path": "assets/index-Dfw_2G7d.js",
+        "status": 200,
+        "size": 576079,
+        "sha256": "e74bd336f789863b111e2ce9ad2933ef61976535eb6bece537bc027549ee4794"
+      },
+      {
+        "path": "assets/style-CGq8UwWG.css",
+        "status": 200,
+        "size": 22162,
+        "sha256": "bb47970612de05ae20b45b815f53e5061a03d351f99a63f4e22a56920278e663"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 601,
+        "sha256": "ed6041bb5d2707b7563618078d941697d314bdaa88592751c4f0a7025865ac38"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 438,
+        "sha256": "d7686d04a656a012607dc665eafdb5fade828804f677daad3ef385a59bfe0b75"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 12820,
+        "sha256": "c4a041d34f3829aca0e0cf111a3d9ee7911906b8361ca6722c7a5cc7e4fcac51"
+      }
+    ]
+  }
+}

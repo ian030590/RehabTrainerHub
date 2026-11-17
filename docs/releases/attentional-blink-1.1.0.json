@@ -1,0 +1,122 @@
+{
+  "gameId": "attentional-blink",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "9074b54ef816d3a98ccbbdab11f6dbc565718b14aedc2076f0bada746a08cc06",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attentional-blink/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attentional-blink/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/attentional-blink/",
+  "publishedAt": "2026-11-17T00:40:32.578Z",
+  "verifiedAt": "2026-11-17T00:40:32.578Z",
+  "fileCount": 5,
+  "totalBytes": 593240,
+  "files": [
+    {
+      "path": "assets/index-sONxHdPC.js",
+      "size": 568573,
+      "sha256": "f3836667c1457a76e2c82980268b80a25ec03fecbc25ef602ff48f72739909d9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DIuVYol9.css",
+      "size": 19681,
+      "sha256": "5f67c078795e6a1d7dd0e66046837169d3687fb065cda9bfd789086d347029ba",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 559,
+      "sha256": "2bbaad69101a7481980b5f7273c805ae28ddd75adb29d63c0aced9b07c68d992",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "2774dea380b535f751d0c3638f7ec7604caf67af6c192b0135e1879b1ab916db",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4010,
+      "sha256": "8f1360eddeb3583c89b60ba63c8c3e6b4563bacf15fad8e3ba754bb98a7aa8ea",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "dab5e49f8610e29f6eb5333b1cb86b26fbe93d51f5c59fd5ccdc5af0c5eacd17"
+    },
+    "1.0.1": {
+      "contentSha256": "94a03d3e36d8d8ea816a8f5e79f243e368f8144d4ae2ff57c064ed3f5def4f5a"
+    },
+    "1.1.0": {
+      "contentSha256": "9074b54ef816d3a98ccbbdab11f6dbc565718b14aedc2076f0bada746a08cc06"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate attentional-blink@1.1.0 with contentSha256 9074b54ef816d3a98ccbbdab11f6dbc565718b14aedc2076f0bada746a08cc06"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "94a03d3e36d8d8ea816a8f5e79f243e368f8144d4ae2ff57c064ed3f5def4f5a",
+    "command": "node scripts/publish-official-game.mjs attentional-blink --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/attentional-blink/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-2.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:49.398Z",
+    "files": [
+      {
+        "path": "assets/index-sONxHdPC.js",
+        "status": 200,
+        "size": 568573,
+        "sha256": "f3836667c1457a76e2c82980268b80a25ec03fecbc25ef602ff48f72739909d9"
+      },
+      {
+        "path": "assets/style-DIuVYol9.css",
+        "status": 200,
+        "size": 19681,
+        "sha256": "5f67c078795e6a1d7dd0e66046837169d3687fb065cda9bfd789086d347029ba"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 559,
+        "sha256": "2bbaad69101a7481980b5f7273c805ae28ddd75adb29d63c0aced9b07c68d992"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "2774dea380b535f751d0c3638f7ec7604caf67af6c192b0135e1879b1ab916db"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4010,
+        "sha256": "8f1360eddeb3583c89b60ba63c8c3e6b4563bacf15fad8e3ba754bb98a7aa8ea"
+      }
+    ]
+  }
+}

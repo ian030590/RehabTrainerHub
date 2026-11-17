@@ -1,0 +1,122 @@
+{
+  "gameId": "flanker",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "086914773dab684e630f9abb99b6e0033df6e4d9bcad290ff249596e08413e4d",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/flanker/",
+  "publishedAt": "2026-11-17T00:43:21.010Z",
+  "verifiedAt": "2026-11-17T00:43:21.010Z",
+  "fileCount": 5,
+  "totalBytes": 599444,
+  "files": [
+    {
+      "path": "assets/index-aLDdVlJA.js",
+      "size": 573467,
+      "sha256": "609104a45168b04ee139b11b80ce1e041b7c954bb71b8370dde1775c561d7931",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CQTxkd37.css",
+      "size": 20613,
+      "sha256": "13dc15afd5a3e3197c5b665a7d3a364f952341d44bf8a2deea441ab416a37755",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 537,
+      "sha256": "fb5e6a7da063ddbe6a63703a766dd197431c700a243d66d79197773ec59b497b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 433,
+      "sha256": "3691e83f8d315ea6ec6b4a8483947c1760abedb9b538f61378c5d43b034bcd03",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4394,
+      "sha256": "737b31525edbdff8e597dd14568213e709e84dab56e5e13268e99ba7cc2455de",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5912c200f53afd7ca9e998b960caae1cdc3a9e4877708d9b59332129b9f40f11"
+    },
+    "2.0.1": {
+      "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604"
+    },
+    "2.1.0": {
+      "contentSha256": "086914773dab684e630f9abb99b6e0033df6e4d9bcad290ff249596e08413e4d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate flanker@2.1.0 with contentSha256 086914773dab684e630f9abb99b6e0033df6e4d9bcad290ff249596e08413e4d"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "adff5462b8d5fdc260eca63f62fae3ea7ba3ecc77317553ffea8a333c8b0b604",
+    "command": "node scripts/publish-official-game.mjs flanker --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/flanker/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md (pilot 930502c1)."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:55.066Z",
+    "files": [
+      {
+        "path": "assets/index-aLDdVlJA.js",
+        "status": 200,
+        "size": 573467,
+        "sha256": "609104a45168b04ee139b11b80ce1e041b7c954bb71b8370dde1775c561d7931"
+      },
+      {
+        "path": "assets/style-CQTxkd37.css",
+        "status": 200,
+        "size": 20613,
+        "sha256": "13dc15afd5a3e3197c5b665a7d3a364f952341d44bf8a2deea441ab416a37755"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 537,
+        "sha256": "fb5e6a7da063ddbe6a63703a766dd197431c700a243d66d79197773ec59b497b"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 433,
+        "sha256": "3691e83f8d315ea6ec6b4a8483947c1760abedb9b538f61378c5d43b034bcd03"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4394,
+        "sha256": "737b31525edbdff8e597dd14568213e709e84dab56e5e13268e99ba7cc2455de"
+      }
+    ]
+  }
+}

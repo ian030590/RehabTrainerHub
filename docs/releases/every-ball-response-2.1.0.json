@@ -1,0 +1,114 @@
+{
+  "gameId": "every-ball-response",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "0ad82c0f8840ab71086fa5a4ce32e0df780a63c3831e77aa2a9c0905631cb18a",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/every-ball-response/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/every-ball-response/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/every-ball-response/",
+  "publishedAt": "2026-11-17T01:04:19.003Z",
+  "verifiedAt": "2026-11-17T01:04:19.003Z",
+  "fileCount": 5,
+  "totalBytes": 1181928,
+  "files": [
+    {
+      "path": "assets/index-GP_VkfM9.js",
+      "size": 1143652,
+      "sha256": "657e107ca2b3da7a00b616c12c83d6e0f902e0735ab940fec7899ccfb9349112",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D2QNZlfo.css",
+      "size": 27955,
+      "sha256": "bac7b763486fecd0071d1f3a8687811932682bd695e8618d28111e5c7c5aa211",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 503,
+      "sha256": "b42dc10a0ed13d4758a24af5a6a99ce6962d345655f251f2728122c0e4d84f7c",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "8f336090090f5c5a3a4d2b80b7f883cfafcb7940e7d52e17baf604f7b5abe432",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 9404,
+      "sha256": "3c1d6d76a5d49ca37673a009688c4bbe74f8e604664ce77a2b9d9ccee2bdb399",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "microphone-level",
+    "pointer",
+    "pose-tracking",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.1.0": {
+      "contentSha256": "0ad82c0f8840ab71086fa5a4ce32e0df780a63c3831e77aa2a9c0905631cb18a"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate every-ball-response@2.1.0 with contentSha256 0ad82c0f8840ab71086fa5a4ce32e0df780a63c3831e77aa2a9c0905631cb18a"
+  },
+  "rollback": null,
+  "status": "published-and-verified",
+  "prefix": "releases/every-ball-response/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:30.801Z",
+    "files": [
+      {
+        "path": "assets/index-GP_VkfM9.js",
+        "status": 200,
+        "size": 1143652,
+        "sha256": "657e107ca2b3da7a00b616c12c83d6e0f902e0735ab940fec7899ccfb9349112"
+      },
+      {
+        "path": "assets/style-D2QNZlfo.css",
+        "status": 200,
+        "size": 27955,
+        "sha256": "bac7b763486fecd0071d1f3a8687811932682bd695e8618d28111e5c7c5aa211"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 503,
+        "sha256": "b42dc10a0ed13d4758a24af5a6a99ce6962d345655f251f2728122c0e4d84f7c"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "8f336090090f5c5a3a4d2b80b7f883cfafcb7940e7d52e17baf604f7b5abe432"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 9404,
+        "sha256": "3c1d6d76a5d49ca37673a009688c4bbe74f8e604664ce77a2b9d9ccee2bdb399"
+      }
+    ]
+  }
+}

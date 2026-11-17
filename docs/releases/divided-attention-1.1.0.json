@@ -1,0 +1,122 @@
+{
+  "gameId": "divided-attention",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "b0054b6a38d0bfece33c02ef86417c0ecebdbd9b6aa5c827da25da1286422c92",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/divided-attention/",
+  "publishedAt": "2026-11-17T00:41:41.864Z",
+  "verifiedAt": "2026-11-17T00:41:41.864Z",
+  "fileCount": 5,
+  "totalBytes": 599009,
+  "files": [
+    {
+      "path": "assets/index-B2oSMrtX.js",
+      "size": 572612,
+      "sha256": "301d7e252ba2bfc62201ddebe500b7f198288657e51219674ea22c12ea62f084",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BT9zMReX.css",
+      "size": 20781,
+      "sha256": "d3375c6bd977c889ec26dfecbeb3b0a7dabf5982c6c483e5ac49120495f52ee7",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 579,
+      "sha256": "e2d040c8c44bb39d77c56576aa9a19a60ff9fd666ec0680c9cf04f21a94bab3f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "ed6c62052cc360cc1bd3ac0134a88b3fec18707a0e2cf434da7acdd9bd4dee2c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4620,
+      "sha256": "7d9ca3045af18e7f1e8a4da98f84d3ead7bff2d94fb0f6be6b8a836790c0f5d8",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "b17a194e8ecd3b5df6bf02d96d4fb3df34ee6a048cd8de6335a4821afe9d4608"
+    },
+    "1.0.1": {
+      "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18"
+    },
+    "1.1.0": {
+      "contentSha256": "b0054b6a38d0bfece33c02ef86417c0ecebdbd9b6aa5c827da25da1286422c92"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate divided-attention@1.1.0 with contentSha256 b0054b6a38d0bfece33c02ef86417c0ecebdbd9b6aa5c827da25da1286422c92"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "f75b6a83227cc3616a1529e44ee3f57648d29ac941525c4a6042427a6b3f1f18",
+    "command": "node scripts/publish-official-game.mjs divided-attention --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/divided-attention/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-2.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:51.690Z",
+    "files": [
+      {
+        "path": "assets/index-B2oSMrtX.js",
+        "status": 200,
+        "size": 572612,
+        "sha256": "301d7e252ba2bfc62201ddebe500b7f198288657e51219674ea22c12ea62f084"
+      },
+      {
+        "path": "assets/style-BT9zMReX.css",
+        "status": 200,
+        "size": 20781,
+        "sha256": "d3375c6bd977c889ec26dfecbeb3b0a7dabf5982c6c483e5ac49120495f52ee7"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 579,
+        "sha256": "e2d040c8c44bb39d77c56576aa9a19a60ff9fd666ec0680c9cf04f21a94bab3f"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "ed6c62052cc360cc1bd3ac0134a88b3fec18707a0e2cf434da7acdd9bd4dee2c"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4620,
+        "sha256": "7d9ca3045af18e7f1e8a4da98f84d3ead7bff2d94fb0f6be6b8a836790c0f5d8"
+      }
+    ]
+  }
+}

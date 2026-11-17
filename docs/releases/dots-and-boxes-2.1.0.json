@@ -1,0 +1,119 @@
+{
+  "gameId": "dots-and-boxes",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "79f8220dd68bd1185fc03c02fe35fdc4c39a2dccb09dd0a11a0f746cba5160b3",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/dots-and-boxes/",
+  "publishedAt": "2026-11-17T00:50:37.780Z",
+  "verifiedAt": "2026-11-17T00:50:37.780Z",
+  "fileCount": 5,
+  "totalBytes": 603531,
+  "files": [
+    {
+      "path": "assets/index-BGrj_E51.js",
+      "size": 573615,
+      "sha256": "558b25f35d54db481d14e346bebfe17c542dc0b38003ec3c9014d83850a771a2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C0HEYFhI.css",
+      "size": 21199,
+      "sha256": "d34bbf443cd43a965693848ea8f22028519c9c8ccfb4fc5582ac63792836887f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 537,
+      "sha256": "4981329afab70ee13ad60b41562b940b195c465850a0883a1cf1f3b43795f14d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "d76ab8ba86b1b8bf08571c5186ab75f5fab870d42a649edff6d383a0979e18d6",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7766,
+      "sha256": "0365fe3b81a1560fe0ce4be0ce40184c5ec13a697fcfaad474733aa751f6a4d9",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278"
+    },
+    "2.1.0": {
+      "contentSha256": "79f8220dd68bd1185fc03c02fe35fdc4c39a2dccb09dd0a11a0f746cba5160b3"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate dots-and-boxes@2.1.0 with contentSha256 79f8220dd68bd1185fc03c02fe35fdc4c39a2dccb09dd0a11a0f746cba5160b3"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "40a2aa34cc4ddad029b59b80037ac58b0737b47cce7405567e59fbc87fa7d278",
+    "command": "node scripts/publish-official-game.mjs dots-and-boxes --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/dots-and-boxes/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-5.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:10.045Z",
+    "files": [
+      {
+        "path": "assets/index-BGrj_E51.js",
+        "status": 200,
+        "size": 573615,
+        "sha256": "558b25f35d54db481d14e346bebfe17c542dc0b38003ec3c9014d83850a771a2"
+      },
+      {
+        "path": "assets/style-C0HEYFhI.css",
+        "status": 200,
+        "size": 21199,
+        "sha256": "d34bbf443cd43a965693848ea8f22028519c9c8ccfb4fc5582ac63792836887f"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 537,
+        "sha256": "4981329afab70ee13ad60b41562b940b195c465850a0883a1cf1f3b43795f14d"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "d76ab8ba86b1b8bf08571c5186ab75f5fab870d42a649edff6d383a0979e18d6"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 7766,
+        "sha256": "0365fe3b81a1560fe0ce4be0ce40184c5ec13a697fcfaad474733aa751f6a4d9"
+      }
+    ]
+  }
+}

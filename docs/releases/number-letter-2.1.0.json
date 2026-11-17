@@ -1,0 +1,122 @@
+{
+  "gameId": "number-letter",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "0eca4a2eef9e6efc586b85cf5fc9fbcef3d998ef9c2f1b559d5947d43eace546",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/number-letter/",
+  "publishedAt": "2026-11-17T00:46:21.122Z",
+  "verifiedAt": "2026-11-17T00:46:21.122Z",
+  "fileCount": 5,
+  "totalBytes": 606904,
+  "files": [
+    {
+      "path": "assets/index-DINK5scF.js",
+      "size": 579142,
+      "sha256": "1e1486fabe6df07d2a7e90f3bfe8534cb90662e7a37295113d1e574639c82572",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DRqmoJ-S.css",
+      "size": 21168,
+      "sha256": "ab2ca422c819b86b48f3957e9990a11b95ef4e3ef6fffd1c48e69fbd569bf294",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 697,
+      "sha256": "b926fdb24d3988f1be5a416b42eabef6862919f91775c42b9432f031db71f1c4",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 439,
+      "sha256": "9b2053f25c97bf2e7a8aa8a7ac2ea68820fd5f7c85c465ad5a8a7f35cd3ac921",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5458,
+      "sha256": "cef66ebb99be2133173b0bf4952f742ea8e736def50737c6797540ae4144918e",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "41b750e4cc68947a9bf6d05823bb157bc740607006d8821fbcbfd285d36c02c2"
+    },
+    "2.0.1": {
+      "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9"
+    },
+    "2.1.0": {
+      "contentSha256": "0eca4a2eef9e6efc586b85cf5fc9fbcef3d998ef9c2f1b559d5947d43eace546"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate number-letter@2.1.0 with contentSha256 0eca4a2eef9e6efc586b85cf5fc9fbcef3d998ef9c2f1b559d5947d43eace546"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "2749cf592fae49d33fde0458185ba035fc1f33892a3bfe856d941fba5dcfd5d9",
+    "command": "node scripts/publish-official-game.mjs number-letter --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/number-letter/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-6.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:00.829Z",
+    "files": [
+      {
+        "path": "assets/index-DINK5scF.js",
+        "status": 200,
+        "size": 579142,
+        "sha256": "1e1486fabe6df07d2a7e90f3bfe8534cb90662e7a37295113d1e574639c82572"
+      },
+      {
+        "path": "assets/style-DRqmoJ-S.css",
+        "status": 200,
+        "size": 21168,
+        "sha256": "ab2ca422c819b86b48f3957e9990a11b95ef4e3ef6fffd1c48e69fbd569bf294"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 697,
+        "sha256": "b926fdb24d3988f1be5a416b42eabef6862919f91775c42b9432f031db71f1c4"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 439,
+        "sha256": "9b2053f25c97bf2e7a8aa8a7ac2ea68820fd5f7c85c465ad5a8a7f35cd3ac921"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5458,
+        "sha256": "cef66ebb99be2133173b0bf4952f742ea8e736def50737c6797540ae4144918e"
+      }
+    ]
+  }
+}

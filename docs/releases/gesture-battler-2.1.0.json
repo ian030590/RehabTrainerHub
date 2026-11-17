@@ -1,0 +1,390 @@
+{
+  "gameId": "gesture-battler",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "73e14059003fdda0892c67adca43a1b74138ebc9ca4de6d501ed066c63bd78bb",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gesture-battler/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gesture-battler/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gesture-battler/",
+  "publishedAt": "2026-11-17T00:28:35.095Z",
+  "verifiedAt": "2026-11-17T00:28:35.095Z",
+  "fileCount": 26,
+  "totalBytes": 1370698,
+  "files": [
+    {
+      "path": "assets/index-BMCTpwc1.js",
+      "size": 1174780,
+      "sha256": "76daf527b1baa425803a6ef6e0fab49dca587f5064a116490c500af93c6ed59d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DfuyLwjy.css",
+      "size": 20983,
+      "sha256": "8120c0f12dbe1f3af9cf6481948dc31df16c1441c1992b174d8d97601e1bc3e4",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "24df523dd12bc3c950f067a15e7407e716b55944c3013557b44180c44522bb4a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "03a642077b5e7c02c1e62dd4fa76ecad7066c0bf589b23604fa90279204be185",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8568,
+      "sha256": "28c25fdd914a8baf1d66e39c3a84fff62e1a48920e35b59274d65ebdcfa3fd84",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "runtime/pixelfx/LICENSE-pixelfx.md",
+      "size": 1750,
+      "sha256": "d471b874f4c57b0abd6a9007a32a68cf0915865add43c0117c178e6ee2b56bae",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/pixelfx/core/act.js",
+      "size": 24502,
+      "sha256": "a889dc43a2a29b68ab81a8454037300548406cac06eb0fb11351dd0f5472d061",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/actor.js",
+      "size": 4492,
+      "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/chain.js",
+      "size": 2183,
+      "sha256": "9aeaaa2b123f2f209432adb71473011aa970fea8cebb161e0808620eceaf910f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/color.js",
+      "size": 5370,
+      "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/font.js",
+      "size": 5487,
+      "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/fx.js",
+      "size": 5238,
+      "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/index.js",
+      "size": 924,
+      "sha256": "7f091ce296a10273cfe06d34219c0f809c062f9c3e7a218414e2efad320ef1ee",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/math.js",
+      "size": 6254,
+      "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/painter.js",
+      "size": 17070,
+      "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/particles.js",
+      "size": 3334,
+      "sha256": "2de981a69439e3543a9741dbb20c116a2be346872f6ed326fb2e09e648a6fa69",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/poses.js",
+      "size": 2260,
+      "sha256": "a817b1c0d11e21f7dd759ec942f46a753b0429309a4a225f511931a282b4c269",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/rig.js",
+      "size": 28968,
+      "sha256": "9ca03b6620ea4100ca19f5e12e2338c4f61f0b9e62ad37dacc3dabc58838b0d9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/scene.js",
+      "size": 1724,
+      "sha256": "33379b9efeb696824acc2e14a39301fb8db538808741da9640dc77b80a196866",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/shapes.js",
+      "size": 2280,
+      "sha256": "440e8244b752b626daeec565806a5031ac25049142e9292c4f25aa38dad50019",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/core/sim.js",
+      "size": 19972,
+      "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/arcane/_lib.js",
+      "size": 8768,
+      "sha256": "bbfb38a6e83bcf5afba76609931e4a8f97a749062e5fe7cc47b4886b85167fba",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/arcane/mana-burst.js",
+      "size": 6701,
+      "sha256": "f0f006342184d792fb25dd73093ae790ca028cc1c10480250a5786d1aba656ae",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/impacts/hit-spark.js",
+      "size": 4352,
+      "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/melee/sword-slash.js",
+      "size": 6725,
+      "sha256": "8a5b90c9003e611e1af531897d870bd3cb412277ba0c924a659c98579af4de42",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/pixelfx/fx/spawn/poof.js",
+      "size": 7104,
+      "sha256": "b4b0508a4d96d8ae43f732965b666431cad334c8df42b003767da677a5c95d44",
+      "contentType": "text/javascript; charset=utf-8"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking",
+    "settings-storage"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1"
+    },
+    "2.0.1": {
+      "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+    },
+    "2.0.2": {
+      "contentSha256": "cbc35d319fd69922705fb9986831b10f3731de124a9be8b215f13b21bb0dca4c"
+    },
+    "2.0.3": {
+      "contentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc"
+    },
+    "2.0.4": {
+      "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+    },
+    "2.0.5": {
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+    },
+    "2.0.6": {
+      "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+    },
+    "2.0.8": {
+      "contentSha256": "9b4c031add4ce848f30820563a056bb1a0ac078e5171e951261b69935f669f7b"
+    },
+    "2.1.0": {
+      "contentSha256": "73e14059003fdda0892c67adca43a1b74138ebc9ca4de6d501ed066c63bd78bb"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate gesture-battler@2.1.0 with contentSha256 73e14059003fdda0892c67adca43a1b74138ebc9ca4de6d501ed066c63bd78bb"
+  },
+  "rollback": {
+    "version": "2.0.8",
+    "contentSha256": "9b4c031add4ce848f30820563a056bb1a0ac078e5171e951261b69935f669f7b",
+    "command": "node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.8"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/gesture-battler/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:20.918Z",
+    "files": [
+      {
+        "path": "assets/index-BMCTpwc1.js",
+        "status": 200,
+        "size": 1174780,
+        "sha256": "76daf527b1baa425803a6ef6e0fab49dca587f5064a116490c500af93c6ed59d"
+      },
+      {
+        "path": "assets/style-DfuyLwjy.css",
+        "status": 200,
+        "size": 20983,
+        "sha256": "8120c0f12dbe1f3af9cf6481948dc31df16c1441c1992b174d8d97601e1bc3e4"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 489,
+        "sha256": "24df523dd12bc3c950f067a15e7407e716b55944c3013557b44180c44522bb4a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "03a642077b5e7c02c1e62dd4fa76ecad7066c0bf589b23604fa90279204be185"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8568,
+        "sha256": "28c25fdd914a8baf1d66e39c3a84fff62e1a48920e35b59274d65ebdcfa3fd84"
+      },
+      {
+        "path": "runtime/pixelfx/LICENSE-pixelfx.md",
+        "status": 200,
+        "size": 1750,
+        "sha256": "d471b874f4c57b0abd6a9007a32a68cf0915865add43c0117c178e6ee2b56bae"
+      },
+      {
+        "path": "runtime/pixelfx/core/act.js",
+        "status": 200,
+        "size": 24502,
+        "sha256": "a889dc43a2a29b68ab81a8454037300548406cac06eb0fb11351dd0f5472d061"
+      },
+      {
+        "path": "runtime/pixelfx/core/actor.js",
+        "status": 200,
+        "size": 4492,
+        "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b"
+      },
+      {
+        "path": "runtime/pixelfx/core/chain.js",
+        "status": 200,
+        "size": 2183,
+        "sha256": "9aeaaa2b123f2f209432adb71473011aa970fea8cebb161e0808620eceaf910f"
+      },
+      {
+        "path": "runtime/pixelfx/core/color.js",
+        "status": 200,
+        "size": 5370,
+        "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e"
+      },
+      {
+        "path": "runtime/pixelfx/core/font.js",
+        "status": 200,
+        "size": 5487,
+        "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc"
+      },
+      {
+        "path": "runtime/pixelfx/core/fx.js",
+        "status": 200,
+        "size": 5238,
+        "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7"
+      },
+      {
+        "path": "runtime/pixelfx/core/index.js",
+        "status": 200,
+        "size": 924,
+        "sha256": "7f091ce296a10273cfe06d34219c0f809c062f9c3e7a218414e2efad320ef1ee"
+      },
+      {
+        "path": "runtime/pixelfx/core/math.js",
+        "status": 200,
+        "size": 6254,
+        "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a"
+      },
+      {
+        "path": "runtime/pixelfx/core/painter.js",
+        "status": 200,
+        "size": 17070,
+        "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86"
+      },
+      {
+        "path": "runtime/pixelfx/core/particles.js",
+        "status": 200,
+        "size": 3334,
+        "sha256": "2de981a69439e3543a9741dbb20c116a2be346872f6ed326fb2e09e648a6fa69"
+      },
+      {
+        "path": "runtime/pixelfx/core/poses.js",
+        "status": 200,
+        "size": 2260,
+        "sha256": "a817b1c0d11e21f7dd759ec942f46a753b0429309a4a225f511931a282b4c269"
+      },
+      {
+        "path": "runtime/pixelfx/core/rig.js",
+        "status": 200,
+        "size": 28968,
+        "sha256": "9ca03b6620ea4100ca19f5e12e2338c4f61f0b9e62ad37dacc3dabc58838b0d9"
+      },
+      {
+        "path": "runtime/pixelfx/core/scene.js",
+        "status": 200,
+        "size": 1724,
+        "sha256": "33379b9efeb696824acc2e14a39301fb8db538808741da9640dc77b80a196866"
+      },
+      {
+        "path": "runtime/pixelfx/core/shapes.js",
+        "status": 200,
+        "size": 2280,
+        "sha256": "440e8244b752b626daeec565806a5031ac25049142e9292c4f25aa38dad50019"
+      },
+      {
+        "path": "runtime/pixelfx/core/sim.js",
+        "status": 200,
+        "size": 19972,
+        "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f"
+      },
+      {
+        "path": "runtime/pixelfx/fx/arcane/_lib.js",
+        "status": 200,
+        "size": 8768,
+        "sha256": "bbfb38a6e83bcf5afba76609931e4a8f97a749062e5fe7cc47b4886b85167fba"
+      },
+      {
+        "path": "runtime/pixelfx/fx/arcane/mana-burst.js",
+        "status": 200,
+        "size": 6701,
+        "sha256": "f0f006342184d792fb25dd73093ae790ca028cc1c10480250a5786d1aba656ae"
+      },
+      {
+        "path": "runtime/pixelfx/fx/impacts/hit-spark.js",
+        "status": 200,
+        "size": 4352,
+        "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df"
+      },
+      {
+        "path": "runtime/pixelfx/fx/melee/sword-slash.js",
+        "status": 200,
+        "size": 6725,
+        "sha256": "8a5b90c9003e611e1af531897d870bd3cb412277ba0c924a659c98579af4de42"
+      },
+      {
+        "path": "runtime/pixelfx/fx/spawn/poof.js",
+        "status": 200,
+        "size": 7104,
+        "sha256": "b4b0508a4d96d8ae43f732965b666431cad334c8df42b003767da677a5c95d44"
+      }
+    ]
+  }
+}

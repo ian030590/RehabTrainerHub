@@ -1,0 +1,122 @@
+{
+  "gameId": "schulte-grid",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5bf880f0f84cc3a58ca51eea997b0cb71bb7410479c258fe90604b0c85c9c699",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/schulte-grid/",
+  "publishedAt": "2026-11-17T00:37:49.255Z",
+  "verifiedAt": "2026-11-17T00:37:49.255Z",
+  "fileCount": 5,
+  "totalBytes": 595302,
+  "files": [
+    {
+      "path": "assets/index-CxpqNnOv.js",
+      "size": 568197,
+      "sha256": "7d014885fa686dcc199860df633d6538f995effdb09cd186dab68c49c283bb8d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C6n7mDQf.css",
+      "size": 19595,
+      "sha256": "545c92459891bcbad3bc3a6375d3c18fe185d9b0178af214af27f7f2e3060636",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "771c637a96eb98fddd454b46770114e11093fb8d9e8a5fa19ed7d16e85a469ec",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "c7e8555bc09522f46ecd5d1080fee3da528a911b740a0d285b8a57c1d93a73ea",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6616,
+      "sha256": "7022aa8e4a0343f74dceecd4699efdce4ddbe23c43315931bde746a51970290a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "ce30439975f7b807965b1b83712524ec0f955c9aaaaaad42a2b55ce1f101408d"
+    },
+    "1.0.1": {
+      "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc"
+    },
+    "1.1.0": {
+      "contentSha256": "5bf880f0f84cc3a58ca51eea997b0cb71bb7410479c258fe90604b0c85c9c699"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate schulte-grid@1.1.0 with contentSha256 5bf880f0f84cc3a58ca51eea997b0cb71bb7410479c258fe90604b0c85c9c699"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "af42a184f98c650221fd616aef08b3f46a3b1f4d6af584ab869918b005853bcc",
+    "command": "node scripts/publish-official-game.mjs schulte-grid --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/schulte-grid/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-2.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:43.916Z",
+    "files": [
+      {
+        "path": "assets/index-CxpqNnOv.js",
+        "status": 200,
+        "size": 568197,
+        "sha256": "7d014885fa686dcc199860df633d6538f995effdb09cd186dab68c49c283bb8d"
+      },
+      {
+        "path": "assets/style-C6n7mDQf.css",
+        "status": 200,
+        "size": 19595,
+        "sha256": "545c92459891bcbad3bc3a6375d3c18fe185d9b0178af214af27f7f2e3060636"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 477,
+        "sha256": "771c637a96eb98fddd454b46770114e11093fb8d9e8a5fa19ed7d16e85a469ec"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "c7e8555bc09522f46ecd5d1080fee3da528a911b740a0d285b8a57c1d93a73ea"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6616,
+        "sha256": "7022aa8e4a0343f74dceecd4699efdce4ddbe23c43315931bde746a51970290a"
+      }
+    ]
+  }
+}

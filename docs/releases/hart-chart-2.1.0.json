@@ -1,0 +1,131 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "8155b14ce4b1c383aacc995be4fae7fa7631257a8272f2d49ad6ccf40fe415dc",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/",
+  "publishedAt": "2026-11-17T00:36:03.337Z",
+  "verifiedAt": "2026-11-17T00:36:03.337Z",
+  "fileCount": 5,
+  "totalBytes": 676260,
+  "files": [
+    {
+      "path": "assets/index-DH2_paU4.js",
+      "size": 614285,
+      "sha256": "b86144991574741e2bee39f907965f587dcd7d038f63172aa6c9cba6182e9c56",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BEpdv-u5.css",
+      "size": 31768,
+      "sha256": "cc3ae94727c2c46925d5d0d896d23dc3e12c77f4eb49110e1250df19a78aafaa",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 470,
+      "sha256": "689a84ee5b85ae61d182660f7244c23129bc8414a6bece756d412a75e97e7479",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "e7ea492af5616978786e410bdc121d4758449851e1767a4cebed45f8a57e8e49",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 29320,
+      "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+    },
+    "2.0.1": {
+      "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366"
+    },
+    "2.0.2": {
+      "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+    },
+    "2.0.3": {
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    },
+    "2.0.4": {
+      "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+    },
+    "2.1.0": {
+      "contentSha256": "8155b14ce4b1c383aacc995be4fae7fa7631257a8272f2d49ad6ccf40fe415dc"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate hart-chart@2.1.0 with contentSha256 8155b14ce4b1c383aacc995be4fae7fa7631257a8272f2d49ad6ccf40fe415dc"
+  },
+  "rollback": {
+    "version": "2.0.4",
+    "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09",
+    "command": "node scripts/publish-official-game.mjs hart-chart --activate-version 2.0.4"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hart-chart/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-8.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:39.283Z",
+    "files": [
+      {
+        "path": "assets/index-DH2_paU4.js",
+        "status": 200,
+        "size": 614285,
+        "sha256": "b86144991574741e2bee39f907965f587dcd7d038f63172aa6c9cba6182e9c56"
+      },
+      {
+        "path": "assets/style-BEpdv-u5.css",
+        "status": 200,
+        "size": 31768,
+        "sha256": "cc3ae94727c2c46925d5d0d896d23dc3e12c77f4eb49110e1250df19a78aafaa"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 470,
+        "sha256": "689a84ee5b85ae61d182660f7244c23129bc8414a6bece756d412a75e97e7479"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "e7ea492af5616978786e410bdc121d4758449851e1767a4cebed45f8a57e8e49"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 29320,
+        "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b"
+      }
+    ]
+  }
+}

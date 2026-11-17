@@ -1,0 +1,168 @@
+{
+  "gameId": "driving-rehab",
+  "version": "2.2.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "bed209548004c3ab9cee17f1a5de1664ec60c4d2e8630a04de0949311f929e47",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/2.2.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/2.2.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/driving-rehab/",
+  "publishedAt": "2026-11-17T00:36:46.303Z",
+  "verifiedAt": "2026-11-17T00:36:46.303Z",
+  "fileCount": 8,
+  "totalBytes": 1307449,
+  "files": [
+    {
+      "path": "assets/car-pedals-BUT5SIMw.svg",
+      "size": 202024,
+      "sha256": "105708e831c90670dcbae9eba038cfa7774157ad45e3f059f1fa3c92cafd95aa",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/driving-sprites-BiQdvI-R.png",
+      "size": 318396,
+      "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-CuCwE6oI.js",
+      "size": 733706,
+      "sha256": "4bc425c38793944f4b1890a1b04d58119e25645a1ed8b3ae0a795e6fe4fbff61",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel--rY2Njke.svg",
+      "size": 3430,
+      "sha256": "10721e9e1ff6d0fd24325f6cbd436b5c61d1b7783a1d10fa0af8cb8037ee6aaa",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-SsV9cCRb.css",
+      "size": 19294,
+      "sha256": "3934ccf8a21a90dc602c99f9f2eedf50b4c179fd2c7d9a21c4e7132dc1e5260b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 564,
+      "sha256": "22b43507c034112738079a171cc19479ef0db2f4e0e7307e6daac272aef95bcd",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 429,
+      "sha256": "b32dfab9745f6683d5aaf82e8a19aada1485a9e0661c42b4c8eb100aacf2fc7c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 29606,
+      "sha256": "1822387a884043b3b4dd942f5f6b6a415a3a7add7ffa3753223ce754a05fbbd3",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.2.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    },
+    "2.0.1": {
+      "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+    },
+    "2.0.2": {
+      "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+    },
+    "2.1.0": {
+      "contentSha256": "af1ce685bc96b6ad3c4116472aac9b743e787cc3e103189e87fdafac72852548"
+    },
+    "2.1.1": {
+      "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec"
+    },
+    "2.2.0": {
+      "contentSha256": "bed209548004c3ab9cee17f1a5de1664ec60c4d2e8630a04de0949311f929e47"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate driving-rehab@2.2.0 with contentSha256 bed209548004c3ab9cee17f1a5de1664ec60c4d2e8630a04de0949311f929e47"
+  },
+  "rollback": {
+    "version": "2.1.1",
+    "contentSha256": "1a25dbd5882557ffd9a145436048d7b205208f523540502e5a35c47d138091ec",
+    "command": "node scripts/publish-official-game.mjs driving-rehab --activate-version 2.1.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/driving-rehab/2.2.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-8.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:41.339Z",
+    "files": [
+      {
+        "path": "assets/car-pedals-BUT5SIMw.svg",
+        "status": 200,
+        "size": 202024,
+        "sha256": "105708e831c90670dcbae9eba038cfa7774157ad45e3f059f1fa3c92cafd95aa"
+      },
+      {
+        "path": "assets/driving-sprites-BiQdvI-R.png",
+        "status": 200,
+        "size": 318396,
+        "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b"
+      },
+      {
+        "path": "assets/index-CuCwE6oI.js",
+        "status": 200,
+        "size": 733706,
+        "sha256": "4bc425c38793944f4b1890a1b04d58119e25645a1ed8b3ae0a795e6fe4fbff61"
+      },
+      {
+        "path": "assets/steering-wheel--rY2Njke.svg",
+        "status": 200,
+        "size": 3430,
+        "sha256": "10721e9e1ff6d0fd24325f6cbd436b5c61d1b7783a1d10fa0af8cb8037ee6aaa"
+      },
+      {
+        "path": "assets/style-SsV9cCRb.css",
+        "status": 200,
+        "size": 19294,
+        "sha256": "3934ccf8a21a90dc602c99f9f2eedf50b4c179fd2c7d9a21c4e7132dc1e5260b"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 564,
+        "sha256": "22b43507c034112738079a171cc19479ef0db2f4e0e7307e6daac272aef95bcd"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 429,
+        "sha256": "b32dfab9745f6683d5aaf82e8a19aada1485a9e0661c42b4c8eb100aacf2fc7c"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 29606,
+        "sha256": "1822387a884043b3b4dd942f5f6b6a415a3a7add7ffa3753223ce754a05fbbd3"
+      }
+    ]
+  }
+}

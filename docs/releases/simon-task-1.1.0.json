@@ -1,0 +1,122 @@
+{
+  "gameId": "simon-task",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6591edf76701340d1ae3e499d714697599c21b98dcd8f26856e860703c5ed167",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-task/",
+  "publishedAt": "2026-11-17T00:39:25.346Z",
+  "verifiedAt": "2026-11-17T00:39:25.346Z",
+  "fileCount": 5,
+  "totalBytes": 594228,
+  "files": [
+    {
+      "path": "assets/index--h4hULJG.js",
+      "size": 569372,
+      "sha256": "0939f227b1c432c7fc67cebdc611e9610063b1eaa19407e4c17a6d99852a1c57",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CWooAXqj.css",
+      "size": 20046,
+      "sha256": "31f3b5610ba8e8855a9a9129c9864f9cc38f0e7c8557ee8726d6e67b43775010",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "8b66cba47cc90ceb1beabb86310671bb9d4388faaa614802476966116b3450e7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "19388577a47c936f39a937af44d6e6b0479a081eb0bce13044daa7303aa2deff",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3888,
+      "sha256": "cce4a6636f6f0e5547bb438706c792c5188c232500d60791805b42852d2397d6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "9bcc15cc6e5913c0d47d2bbb8558c7c80a77fb8f9d1c75e198910d3b3611143e"
+    },
+    "1.0.1": {
+      "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a"
+    },
+    "1.1.0": {
+      "contentSha256": "6591edf76701340d1ae3e499d714697599c21b98dcd8f26856e860703c5ed167"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate simon-task@1.1.0 with contentSha256 6591edf76701340d1ae3e499d714697599c21b98dcd8f26856e860703c5ed167"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "2e07ebeeb218b695eb58a2f3b92e3def79b6a2b1650b260624109f6da945160a",
+    "command": "node scripts/publish-official-game.mjs simon-task --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/simon-task/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:47.255Z",
+    "files": [
+      {
+        "path": "assets/index--h4hULJG.js",
+        "status": 200,
+        "size": 569372,
+        "sha256": "0939f227b1c432c7fc67cebdc611e9610063b1eaa19407e4c17a6d99852a1c57"
+      },
+      {
+        "path": "assets/style-CWooAXqj.css",
+        "status": 200,
+        "size": 20046,
+        "sha256": "31f3b5610ba8e8855a9a9129c9864f9cc38f0e7c8557ee8726d6e67b43775010"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 508,
+        "sha256": "8b66cba47cc90ceb1beabb86310671bb9d4388faaa614802476966116b3450e7"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "19388577a47c936f39a937af44d6e6b0479a081eb0bce13044daa7303aa2deff"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3888,
+        "sha256": "cce4a6636f6f0e5547bb438706c792c5188c232500d60791805b42852d2397d6"
+      }
+    ]
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "gameId": "stroop",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "c1fc976c60cd253702275669241b3621152e1ab1885d7845817ecb7af5594753",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stroop/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stroop/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/stroop/",
+  "publishedAt": "2026-11-17T00:42:50.825Z",
+  "verifiedAt": "2026-11-17T00:42:50.825Z",
+  "fileCount": 5,
+  "totalBytes": 598470,
+  "files": [
+    {
+      "path": "assets/index-Djq5YQrh.js",
+      "size": 571795,
+      "sha256": "3cff57b21e9f2813811ff4b191ec5306ff3a1896fb75df4e10b401c89f7b974a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D4l877-6.css",
+      "size": 20567,
+      "sha256": "6731c0393a43637569142693d2fc1e8ba9710ef94e63e067a085aa51e91a2d55",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 538,
+      "sha256": "bf97278ae4ce773b44b3f5803dce56b1d300540324f7f083d3e27af5368f604a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 432,
+      "sha256": "9316259bb509c011cf0bfabb723e9cb7df4064b074da80f4e6dd48945dcd6c73",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5138,
+      "sha256": "06f7720988dbf4dcd9f801344348d1ce7d82f4b6e6c7ecae6cb1e1e94c935c01",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "35af611d3df3b267c91c4e4c710315c9afda3469476a9d17416b0a8b92ed7500"
+    },
+    "2.0.1": {
+      "contentSha256": "ccd5153667e0af27fd9db0c5ab748e48b05881c8adfed6e3c0ab7a7496f6853d"
+    },
+    "2.1.0": {
+      "contentSha256": "c1fc976c60cd253702275669241b3621152e1ab1885d7845817ecb7af5594753"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate stroop@2.1.0 with contentSha256 c1fc976c60cd253702275669241b3621152e1ab1885d7845817ecb7af5594753"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "ccd5153667e0af27fd9db0c5ab748e48b05881c8adfed6e3c0ab7a7496f6853d",
+    "command": "node scripts/publish-official-game.mjs stroop --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/stroop/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:54.043Z",
+    "files": [
+      {
+        "path": "assets/index-Djq5YQrh.js",
+        "status": 200,
+        "size": 571795,
+        "sha256": "3cff57b21e9f2813811ff4b191ec5306ff3a1896fb75df4e10b401c89f7b974a"
+      },
+      {
+        "path": "assets/style-D4l877-6.css",
+        "status": 200,
+        "size": 20567,
+        "sha256": "6731c0393a43637569142693d2fc1e8ba9710ef94e63e067a085aa51e91a2d55"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 538,
+        "sha256": "bf97278ae4ce773b44b3f5803dce56b1d300540324f7f083d3e27af5368f604a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 432,
+        "sha256": "9316259bb509c011cf0bfabb723e9cb7df4064b074da80f4e6dd48945dcd6c73"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5138,
+        "sha256": "06f7720988dbf4dcd9f801344348d1ce7d82f4b6e6c7ecae6cb1e1e94c935c01"
+      }
+    ]
+  }
+}

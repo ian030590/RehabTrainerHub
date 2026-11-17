@@ -1,0 +1,154 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "bde18fe8aaae880dafae58a31586286551569413f7dcc8abe3f477bc50479040",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/drawing-defense/",
+  "publishedAt": "2026-11-17T00:29:27.723Z",
+  "verifiedAt": "2026-11-17T00:29:27.723Z",
+  "fileCount": 6,
+  "totalBytes": 5886194,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-n-e8Y4nV.js",
+      "size": 1151603,
+      "sha256": "65c8e4c506f2de63d32aa6be718711c1916594bb9457838fb761b7014048dab8",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CqQuFZmC.css",
+      "size": 17303,
+      "sha256": "758a2142da32967ead3ce80c0c791a8c41d3ef8c842fe5cdce020b22680fee3c",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "c66cf8c21d0179bdac917dccf03745f04ba2fcbcb4e31d3af2eb40356f29bba0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "faa4656c1f3e159db407fbfdb6bedd283a43a7bf8183f2c0c37c5284ad592557",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 65868,
+      "sha256": "10b2f50fb9d4e23008038b5d33da93c6f1dd1a923541e3d0b9ffd44ab9dcdc9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    },
+    "2.0.3": {
+      "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+    },
+    "2.0.4": {
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+    },
+    "2.0.5": {
+      "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86"
+    },
+    "2.0.6": {
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+    },
+    "2.0.7": {
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    },
+    "2.0.8": {
+      "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+    },
+    "2.1.0": {
+      "contentSha256": "bde18fe8aaae880dafae58a31586286551569413f7dcc8abe3f477bc50479040"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate drawing-defense@2.1.0 with contentSha256 bde18fe8aaae880dafae58a31586286551569413f7dcc8abe3f477bc50479040"
+  },
+  "rollback": {
+    "version": "2.0.8",
+    "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf",
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.8"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/drawing-defense/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:23.075Z",
+    "files": [
+      {
+        "path": "assets/StarSky-COfhhfcH.png",
+        "status": 200,
+        "size": 4650499,
+        "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d"
+      },
+      {
+        "path": "assets/index-n-e8Y4nV.js",
+        "status": 200,
+        "size": 1151603,
+        "sha256": "65c8e4c506f2de63d32aa6be718711c1916594bb9457838fb761b7014048dab8"
+      },
+      {
+        "path": "assets/style-CqQuFZmC.css",
+        "status": 200,
+        "size": 17303,
+        "sha256": "758a2142da32967ead3ce80c0c791a8c41d3ef8c842fe5cdce020b22680fee3c"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 507,
+        "sha256": "c66cf8c21d0179bdac917dccf03745f04ba2fcbcb4e31d3af2eb40356f29bba0"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "faa4656c1f3e159db407fbfdb6bedd283a43a7bf8183f2c0c37c5284ad592557"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 65868,
+        "sha256": "10b2f50fb9d4e23008038b5d33da93c6f1dd1a923541e3d0b9ffd44ab9dcdc9b"
+      }
+    ]
+  }
+}

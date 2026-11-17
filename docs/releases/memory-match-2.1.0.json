@@ -1,0 +1,119 @@
+{
+  "gameId": "memory-match",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "8cf8a637326fa5abc49abb24d2fedccd87f05868105fab874f7c849e94e0dc16",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/memory-match/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/memory-match/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/memory-match/",
+  "publishedAt": "2026-11-17T00:53:22.709Z",
+  "verifiedAt": "2026-11-17T00:53:22.709Z",
+  "fileCount": 5,
+  "totalBytes": 604148,
+  "files": [
+    {
+      "path": "assets/index-cdeF8dnD.js",
+      "size": 571351,
+      "sha256": "767a5041a3b4f78af11ce43cd06273eb95d1dabfe66e4d055d9d7ac6123dcaaf",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dsga8oZC.css",
+      "size": 20966,
+      "sha256": "e24abafdcb2e40102fe4d1a6a446eaa3fb4a65181ac0bc9575859a8db43363aa",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 459,
+      "sha256": "84441f48575b759fa4f59db6f67e84b9f418a53950bcea5ce5ee5068edb42b4b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "a572c888bac9bfc7cecc92ea3fe1bc2b48c62df0f553b5eca61eea0f84ebda67",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 10958,
+      "sha256": "2cba97d3eddc961ca9fba420ca2c8203ae64293acedf2253123f7668349c41fd",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "a2647930d57893ecdb7da8d01f91ccd43dad97e947ec89119b5c8abd20e91e27"
+    },
+    "2.1.0": {
+      "contentSha256": "8cf8a637326fa5abc49abb24d2fedccd87f05868105fab874f7c849e94e0dc16"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate memory-match@2.1.0 with contentSha256 8cf8a637326fa5abc49abb24d2fedccd87f05868105fab874f7c849e94e0dc16"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "a2647930d57893ecdb7da8d01f91ccd43dad97e947ec89119b5c8abd20e91e27",
+    "command": "node scripts/publish-official-game.mjs memory-match --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/memory-match/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:16.160Z",
+    "files": [
+      {
+        "path": "assets/index-cdeF8dnD.js",
+        "status": 200,
+        "size": 571351,
+        "sha256": "767a5041a3b4f78af11ce43cd06273eb95d1dabfe66e4d055d9d7ac6123dcaaf"
+      },
+      {
+        "path": "assets/style-Dsga8oZC.css",
+        "status": 200,
+        "size": 20966,
+        "sha256": "e24abafdcb2e40102fe4d1a6a446eaa3fb4a65181ac0bc9575859a8db43363aa"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 459,
+        "sha256": "84441f48575b759fa4f59db6f67e84b9f418a53950bcea5ce5ee5068edb42b4b"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "a572c888bac9bfc7cecc92ea3fe1bc2b48c62df0f553b5eca61eea0f84ebda67"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 10958,
+        "sha256": "2cba97d3eddc961ca9fba420ca2c8203ae64293acedf2253123f7668349c41fd"
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "gameId": "tic-tac-toe",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "931c934c3967a61f28864b35aa9fa251a6bffd41cfc48fdfd30b86e97ea846ed",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tic-tac-toe/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tic-tac-toe/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tic-tac-toe/",
+  "publishedAt": "2026-11-17T00:49:00.769Z",
+  "verifiedAt": "2026-11-17T00:49:00.769Z",
+  "fileCount": 5,
+  "totalBytes": 596611,
+  "files": [
+    {
+      "path": "assets/index-DfmefkZB.js",
+      "size": 570048,
+      "sha256": "49283ed324c6a947df04d11285ebf0116b25793a5a13ade77a3ba8db69959467",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Yg5U3poC.css",
+      "size": 19312,
+      "sha256": "31013fba47acd31674d9c421557fa21b919660574a17c26fe7862ab57b3d7de8",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "3b1789aa0279f45b97610ff1fc693991068bc48fdf2716629603170f44c6f397",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "afe3f0417fba32350e4c73d6a55d7d5264c46e64d7cc3df9b24e80b76d0a282a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6360,
+      "sha256": "20a0246c7a6a0a22d9ad6fc5e3b93797aa4b7318348fd6d9217b1eeef2bbb857",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "41a28238bb03254060a1dee9519256c2a9e4b4c5962246534d8249ffdbb787d7"
+    },
+    "2.1.0": {
+      "contentSha256": "931c934c3967a61f28864b35aa9fa251a6bffd41cfc48fdfd30b86e97ea846ed"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate tic-tac-toe@2.1.0 with contentSha256 931c934c3967a61f28864b35aa9fa251a6bffd41cfc48fdfd30b86e97ea846ed"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "41a28238bb03254060a1dee9519256c2a9e4b4c5962246534d8249ffdbb787d7",
+    "command": "node scripts/publish-official-game.mjs tic-tac-toe --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/tic-tac-toe/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-6.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:06.847Z",
+    "files": [
+      {
+        "path": "assets/index-DfmefkZB.js",
+        "status": 200,
+        "size": 570048,
+        "sha256": "49283ed324c6a947df04d11285ebf0116b25793a5a13ade77a3ba8db69959467"
+      },
+      {
+        "path": "assets/style-Yg5U3poC.css",
+        "status": 200,
+        "size": 19312,
+        "sha256": "31013fba47acd31674d9c421557fa21b919660574a17c26fe7862ab57b3d7de8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 477,
+        "sha256": "3b1789aa0279f45b97610ff1fc693991068bc48fdf2716629603170f44c6f397"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "afe3f0417fba32350e4c73d6a55d7d5264c46e64d7cc3df9b24e80b76d0a282a"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6360,
+        "sha256": "20a0246c7a6a0a22d9ad6fc5e3b93797aa4b7318348fd6d9217b1eeef2bbb857"
+      }
+    ]
+  }
+}

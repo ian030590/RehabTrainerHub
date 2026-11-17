@@ -1,0 +1,122 @@
+{
+  "gameId": "go-nogo",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "38ad7166f2e1b83c814b709a6d3ef65d09d8d6ffc6017a9650ef4429277f7677",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/go-nogo/",
+  "publishedAt": "2026-11-17T00:43:52.975Z",
+  "verifiedAt": "2026-11-17T00:43:52.975Z",
+  "fileCount": 5,
+  "totalBytes": 596140,
+  "files": [
+    {
+      "path": "assets/index-CbJrgzmB.js",
+      "size": 571612,
+      "sha256": "35496e74f377524f62ba1f127c42a44e97b5d51695295f52587fea0861b077c8",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DvXmKNij.css",
+      "size": 20213,
+      "sha256": "baa5e3d4362a9131e59bd46e718da4003b463b81f3668ec29c8fb29d4f02f18b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 560,
+      "sha256": "fe9d6b57059b2eee32485ffdfbd62bb9dd45dfe6a900af991af0403b924ddc8b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 437,
+      "sha256": "a53c7749db4ef135339e3f5aaa237d3afda1c870095d418c3bef5f4f1e57f49c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3318,
+      "sha256": "749f4e20c6b47a1a34d04d79a51a7fe2587fbf96dd2cde3fb58395b9a1bfc904",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5acceb5f09dcc5388e4d62f4202303621ed1e118a253a7a15d76b31c1dca3c56"
+    },
+    "2.0.1": {
+      "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0"
+    },
+    "2.1.0": {
+      "contentSha256": "38ad7166f2e1b83c814b709a6d3ef65d09d8d6ffc6017a9650ef4429277f7677"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate go-nogo@2.1.0 with contentSha256 38ad7166f2e1b83c814b709a6d3ef65d09d8d6ffc6017a9650ef4429277f7677"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "b3a042cfdde9419e70270dede9f07d9d35cfd3d6353ccd593433a1fd7f74bab0",
+    "command": "node scripts/publish-official-game.mjs go-nogo --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/go-nogo/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-1.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:56.139Z",
+    "files": [
+      {
+        "path": "assets/index-CbJrgzmB.js",
+        "status": 200,
+        "size": 571612,
+        "sha256": "35496e74f377524f62ba1f127c42a44e97b5d51695295f52587fea0861b077c8"
+      },
+      {
+        "path": "assets/style-DvXmKNij.css",
+        "status": 200,
+        "size": 20213,
+        "sha256": "baa5e3d4362a9131e59bd46e718da4003b463b81f3668ec29c8fb29d4f02f18b"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 560,
+        "sha256": "fe9d6b57059b2eee32485ffdfbd62bb9dd45dfe6a900af991af0403b924ddc8b"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 437,
+        "sha256": "a53c7749db4ef135339e3f5aaa237d3afda1c870095d418c3bef5f4f1e57f49c"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 3318,
+        "sha256": "749f4e20c6b47a1a34d04d79a51a7fe2587fbf96dd2cde3fb58395b9a1bfc904"
+      }
+    ]
+  }
+}

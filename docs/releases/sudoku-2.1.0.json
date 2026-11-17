@@ -1,0 +1,119 @@
+{
+  "gameId": "sudoku",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "bfbc4c17c10d1c76559abb66c872ecd439af91dd8ef4b7421a722586e627e274",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sudoku/",
+  "publishedAt": "2026-11-17T00:52:48.771Z",
+  "verifiedAt": "2026-11-17T00:52:48.771Z",
+  "fileCount": 5,
+  "totalBytes": 598240,
+  "files": [
+    {
+      "path": "assets/index-CqAkL6IO.js",
+      "size": 572698,
+      "sha256": "692cbb2e3fc292a8761acc806c85ba050eb9848583ef015c3ab227c863589504",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dvh9ej1W.css",
+      "size": 19620,
+      "sha256": "a780edc4af4d7fddc46ed7697cb8c60125fc1b411e90cbf4135708f3703ba941",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 518,
+      "sha256": "6d0a1cd4e368afc54f28d7b2f7ee988ff7179fbf53331edd99eec68c4b79db8a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "fa07f5201e13423694cb689cc195b9a2d930e22e5a5e4efaf2dfd8844bc7f478",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4996,
+      "sha256": "e717f6446c92bdbe7fc00911ff4d6669191ab63664bf7f2ea21a9b7047efe73a",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439"
+    },
+    "2.1.0": {
+      "contentSha256": "bfbc4c17c10d1c76559abb66c872ecd439af91dd8ef4b7421a722586e627e274"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate sudoku@2.1.0 with contentSha256 bfbc4c17c10d1c76559abb66c872ecd439af91dd8ef4b7421a722586e627e274"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "14c8fdf53d19cd90ea41d1bedeedc7228ba7c81de1aacdf4a6dd204dbea9b439",
+    "command": "node scripts/publish-official-game.mjs sudoku --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/sudoku/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-6.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:15.081Z",
+    "files": [
+      {
+        "path": "assets/index-CqAkL6IO.js",
+        "status": 200,
+        "size": 572698,
+        "sha256": "692cbb2e3fc292a8761acc806c85ba050eb9848583ef015c3ab227c863589504"
+      },
+      {
+        "path": "assets/style-Dvh9ej1W.css",
+        "status": 200,
+        "size": 19620,
+        "sha256": "a780edc4af4d7fddc46ed7697cb8c60125fc1b411e90cbf4135708f3703ba941"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 518,
+        "sha256": "6d0a1cd4e368afc54f28d7b2f7ee988ff7179fbf53331edd99eec68c4b79db8a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "fa07f5201e13423694cb689cc195b9a2d930e22e5a5e4efaf2dfd8844bc7f478"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 4996,
+        "sha256": "e717f6446c92bdbe7fc00911ff4d6669191ab63664bf7f2ea21a9b7047efe73a"
+      }
+    ]
+  }
+}

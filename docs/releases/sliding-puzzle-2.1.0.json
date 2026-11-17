@@ -1,0 +1,119 @@
+{
+  "gameId": "sliding-puzzle",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "f39c90c1560e1eac8324282752d26504a93eb3f34003abfa3e764f4b86239aa4",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sliding-puzzle/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sliding-puzzle/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/sliding-puzzle/",
+  "publishedAt": "2026-11-17T00:51:41.442Z",
+  "verifiedAt": "2026-11-17T00:51:41.442Z",
+  "fileCount": 5,
+  "totalBytes": 598387,
+  "files": [
+    {
+      "path": "assets/index-BPtYJHkm.js",
+      "size": 570896,
+      "sha256": "fce5dbd6e3f2d5febe90b75268b9767f5d7861870ed0a685b1fa1721dd1a47b9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DdRpGvl5.css",
+      "size": 19633,
+      "sha256": "8f1b1cf156e29ce1821358be7e41062526bc472eaaf731e875cd76a8c5c8ca61",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 476,
+      "sha256": "6877d50614d8f310c8f027b05611b4dfa91f22fd6eec03e005909a3efd466b06",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "4cbc2504a4b8217802f9e9e678bcba590563a6c5d96297e6a1b2bfc7b302b0c8",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6968,
+      "sha256": "7b1f717a0970c5235a82308925bd9b6bea2b99f8ae39210835bc9685c033c826",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "755feb1080ab8f58a4cda4264697f7d39e174fefdb3ac63c7798ab40b7e1498e"
+    },
+    "2.1.0": {
+      "contentSha256": "f39c90c1560e1eac8324282752d26504a93eb3f34003abfa3e764f4b86239aa4"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate sliding-puzzle@2.1.0 with contentSha256 f39c90c1560e1eac8324282752d26504a93eb3f34003abfa3e764f4b86239aa4"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "755feb1080ab8f58a4cda4264697f7d39e174fefdb3ac63c7798ab40b7e1498e",
+    "command": "node scripts/publish-official-game.mjs sliding-puzzle --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/sliding-puzzle/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-6.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:12.199Z",
+    "files": [
+      {
+        "path": "assets/index-BPtYJHkm.js",
+        "status": 200,
+        "size": 570896,
+        "sha256": "fce5dbd6e3f2d5febe90b75268b9767f5d7861870ed0a685b1fa1721dd1a47b9"
+      },
+      {
+        "path": "assets/style-DdRpGvl5.css",
+        "status": 200,
+        "size": 19633,
+        "sha256": "8f1b1cf156e29ce1821358be7e41062526bc472eaaf731e875cd76a8c5c8ca61"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 476,
+        "sha256": "6877d50614d8f310c8f027b05611b4dfa91f22fd6eec03e005909a3efd466b06"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "4cbc2504a4b8217802f9e9e678bcba590563a6c5d96297e6a1b2bfc7b302b0c8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6968,
+        "sha256": "7b1f717a0970c5235a82308925bd9b6bea2b99f8ae39210835bc9685c033c826"
+      }
+    ]
+  }
+}

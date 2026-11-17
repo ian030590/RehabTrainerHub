@@ -1,0 +1,119 @@
+{
+  "gameId": "minesweeper",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "852b33c05ae4f6abd2b883fb6b0adf45e534def1e53da80000c2394c1fc9b0e9",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/minesweeper/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/minesweeper/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/minesweeper/",
+  "publishedAt": "2026-11-17T01:01:09.140Z",
+  "verifiedAt": "2026-11-17T01:01:09.140Z",
+  "fileCount": 5,
+  "totalBytes": 607202,
+  "files": [
+    {
+      "path": "assets/index-BBilu3Jx.js",
+      "size": 576931,
+      "sha256": "de1ee41f83446d9972993defd9ab643603289adbfb05a3a4f923fc1ea73ff361",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CXxSymrj.css",
+      "size": 20866,
+      "sha256": "a1a995fa0dffbf88acb64315413ba977c9e0d47fa36f56d399c02e76781c20c9",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 540,
+      "sha256": "791945e72fb8608296ce2f952eeec80e5a4fe27ca09e4d9a9af366e779df1ce6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "7b995064810e092a914a33f705cbc5922fbd1c1c31599e595b68d9af9cfc643d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8454,
+      "sha256": "356c758bc2e54b10e03106e5152907c3f0ffc8a555f07762c599985372a3b69f",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "b08efef066b9ab67eb06bf91cc202cab99f8ed33ca5ef536e0d16130dc585c58"
+    },
+    "2.1.0": {
+      "contentSha256": "852b33c05ae4f6abd2b883fb6b0adf45e534def1e53da80000c2394c1fc9b0e9"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate minesweeper@2.1.0 with contentSha256 852b33c05ae4f6abd2b883fb6b0adf45e534def1e53da80000c2394c1fc9b0e9"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "b08efef066b9ab67eb06bf91cc202cab99f8ed33ca5ef536e0d16130dc585c58",
+    "command": "node scripts/publish-official-game.mjs minesweeper --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/minesweeper/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-5.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:23.327Z",
+    "files": [
+      {
+        "path": "assets/index-BBilu3Jx.js",
+        "status": 200,
+        "size": 576931,
+        "sha256": "de1ee41f83446d9972993defd9ab643603289adbfb05a3a4f923fc1ea73ff361"
+      },
+      {
+        "path": "assets/style-CXxSymrj.css",
+        "status": 200,
+        "size": 20866,
+        "sha256": "a1a995fa0dffbf88acb64315413ba977c9e0d47fa36f56d399c02e76781c20c9"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 540,
+        "sha256": "791945e72fb8608296ce2f952eeec80e5a4fe27ca09e4d9a9af366e779df1ce6"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "7b995064810e092a914a33f705cbc5922fbd1c1c31599e595b68d9af9cfc643d"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8454,
+        "sha256": "356c758bc2e54b10e03106e5152907c3f0ffc8a555f07762c599985372a3b69f"
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "gameId": "keep-track",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "ebdac6794ce3184d35f441debc99472b482e6970ccd6832c937da3ac9c76bcf6",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/keep-track/",
+  "publishedAt": "2026-11-17T01:02:12.544Z",
+  "verifiedAt": "2026-11-17T01:02:12.544Z",
+  "fileCount": 5,
+  "totalBytes": 604134,
+  "files": [
+    {
+      "path": "assets/index-CNr4QSmE.js",
+      "size": 574307,
+      "sha256": "9d574f14ac4f7ec3ebf3ed2d84f8b1cda6db443eb8aa393b18abeb26310109fe",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C20GGHw6.css",
+      "size": 20731,
+      "sha256": "1aac8a922820086c6b72882e44cd605784d7274a79f67d0c46402be69541d99e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 604,
+      "sha256": "d6f6d6b6c958b3e30fac5130ce6ba593a7e3624074ab0d63bde81103c484f830",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 436,
+      "sha256": "0f2658ff929e62739c9a7dccaaca5dcdf0f4fa5480d7e51c5a80c9a4fd28034a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8056,
+      "sha256": "ff1cdb14923aff009bc411fe8f7222b2a0062ac45139a2ae0e2cd38b29f4d143",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847"
+    },
+    "2.1.0": {
+      "contentSha256": "ebdac6794ce3184d35f441debc99472b482e6970ccd6832c937da3ac9c76bcf6"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate keep-track@2.1.0 with contentSha256 ebdac6794ce3184d35f441debc99472b482e6970ccd6832c937da3ac9c76bcf6"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "7814d4aaf2584cbf58621b95ccf6e183f13c794efededec6129ae1399b352847",
+    "command": "node scripts/publish-official-game.mjs keep-track --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/keep-track/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-3.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:25.768Z",
+    "files": [
+      {
+        "path": "assets/index-CNr4QSmE.js",
+        "status": 200,
+        "size": 574307,
+        "sha256": "9d574f14ac4f7ec3ebf3ed2d84f8b1cda6db443eb8aa393b18abeb26310109fe"
+      },
+      {
+        "path": "assets/style-C20GGHw6.css",
+        "status": 200,
+        "size": 20731,
+        "sha256": "1aac8a922820086c6b72882e44cd605784d7274a79f67d0c46402be69541d99e"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 604,
+        "sha256": "d6f6d6b6c958b3e30fac5130ce6ba593a7e3624074ab0d63bde81103c484f830"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 436,
+        "sha256": "0f2658ff929e62739c9a7dccaaca5dcdf0f4fa5480d7e51c5a80c9a4fd28034a"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8056,
+        "sha256": "ff1cdb14923aff009bc411fe8f7222b2a0062ac45139a2ae0e2cd38b29f4d143"
+      }
+    ]
+  }
+}

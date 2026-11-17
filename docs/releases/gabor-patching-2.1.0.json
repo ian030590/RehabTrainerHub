@@ -1,0 +1,128 @@
+{
+  "gameId": "gabor-patching",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6db5573842157b227a3fda4a54004445cd9166f1e084caeed696f931eeb892c0",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gabor-patching/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gabor-patching/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/gabor-patching/",
+  "publishedAt": "2026-11-17T00:34:54.266Z",
+  "verifiedAt": "2026-11-17T00:34:54.266Z",
+  "fileCount": 5,
+  "totalBytes": 1163006,
+  "files": [
+    {
+      "path": "assets/index-DnBgd8oX.js",
+      "size": 1142466,
+      "sha256": "244508f6ad04103a413771476157585ebc72385afde0088f5566429937bf4dc4",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CpZWee8l.css",
+      "size": 17946,
+      "sha256": "c8bc494aa0a3a1729f2b99b7bc9104c9f25c9fe59f16f4efc35bf8719110bdac",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "b0d793f2b0467caf77bbb586f8c4acdb08314c1a1e06bc42524d291836b55d93",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1666,
+      "sha256": "7ea179f798e7ab61008284107fe990ce487280885af3065f759eabb7a6459c9c",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    },
+    "2.0.1": {
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+    },
+    "2.0.2": {
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    },
+    "2.0.3": {
+      "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+    },
+    "2.1.0": {
+      "contentSha256": "6db5573842157b227a3fda4a54004445cd9166f1e084caeed696f931eeb892c0"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate gabor-patching@2.1.0 with contentSha256 6db5573842157b227a3fda4a54004445cd9166f1e084caeed696f931eeb892c0"
+  },
+  "rollback": {
+    "version": "2.0.3",
+    "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d",
+    "command": "node scripts/publish-official-game.mjs gabor-patching --activate-version 2.0.3"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/gabor-patching/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-8.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:36.566Z",
+    "files": [
+      {
+        "path": "assets/index-DnBgd8oX.js",
+        "status": 200,
+        "size": 1142466,
+        "sha256": "244508f6ad04103a413771476157585ebc72385afde0088f5566429937bf4dc4"
+      },
+      {
+        "path": "assets/style-CpZWee8l.css",
+        "status": 200,
+        "size": 17946,
+        "sha256": "c8bc494aa0a3a1729f2b99b7bc9104c9f25c9fe59f16f4efc35bf8719110bdac"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 508,
+        "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "b0d793f2b0467caf77bbb586f8c4acdb08314c1a1e06bc42524d291836b55d93"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 1666,
+        "sha256": "7ea179f798e7ab61008284107fe990ce487280885af3065f759eabb7a6459c9c"
+      }
+    ]
+  }
+}

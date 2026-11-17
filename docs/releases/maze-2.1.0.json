@@ -1,0 +1,119 @@
+{
+  "gameId": "maze",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "66183dfe24d59354a485c2140ca2e3909afb093f74cb4550cdcae33692e5faf0",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/maze/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/maze/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/maze/",
+  "publishedAt": "2026-11-17T00:52:17.399Z",
+  "verifiedAt": "2026-11-17T00:52:17.399Z",
+  "fileCount": 5,
+  "totalBytes": 600122,
+  "files": [
+    {
+      "path": "assets/index-DYnBiBvP.js",
+      "size": 573184,
+      "sha256": "c25a9a72cabb78a1423df3c2c5bc6286f5d92a5dd0550b976788717613071d89",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BYemP8kR.css",
+      "size": 20556,
+      "sha256": "5735c4f67b0ed02224c60a780907e0d32d005492ba0a3f9a57ce980897c61ab2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 466,
+      "sha256": "750729d7dce827497e7877a5a16375f2a4f6105c240d75662ac78e530b7711fb",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "1c2156ddf56ec53c8bffaf37bf3956fedb72de6fcb2ce61b49950270bb09819d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5508,
+      "sha256": "5888cc0f73c6df498de31788a11f6ce7f4683b5d42df69ee77fd91399ca8e000",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "72eca38e7ec1b1693bf956f967a23195e03742312cb9ee902733a69810b7350c"
+    },
+    "2.1.0": {
+      "contentSha256": "66183dfe24d59354a485c2140ca2e3909afb093f74cb4550cdcae33692e5faf0"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate maze@2.1.0 with contentSha256 66183dfe24d59354a485c2140ca2e3909afb093f74cb4550cdcae33692e5faf0"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "72eca38e7ec1b1693bf956f967a23195e03742312cb9ee902733a69810b7350c",
+    "command": "node scripts/publish-official-game.mjs maze --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/maze/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-5.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:13.523Z",
+    "files": [
+      {
+        "path": "assets/index-DYnBiBvP.js",
+        "status": 200,
+        "size": 573184,
+        "sha256": "c25a9a72cabb78a1423df3c2c5bc6286f5d92a5dd0550b976788717613071d89"
+      },
+      {
+        "path": "assets/style-BYemP8kR.css",
+        "status": 200,
+        "size": 20556,
+        "sha256": "5735c4f67b0ed02224c60a780907e0d32d005492ba0a3f9a57ce980897c61ab2"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 466,
+        "sha256": "750729d7dce827497e7877a5a16375f2a4f6105c240d75662ac78e530b7711fb"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "1c2156ddf56ec53c8bffaf37bf3956fedb72de6fcb2ce61b49950270bb09819d"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5508,
+        "sha256": "5888cc0f73c6df498de31788a11f6ce7f4683b5d42df69ee77fd91399ca8e000"
+      }
+    ]
+  }
+}

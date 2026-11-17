@@ -1,0 +1,122 @@
+{
+  "gameId": "complex-search",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "8858bdf22620330756dcdc68b20d3afe0ba1e98c39cd7b3ed278a5dcf69ffc0a",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/complex-search/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/complex-search/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/complex-search/",
+  "publishedAt": "2026-11-17T01:06:42.646Z",
+  "verifiedAt": "2026-11-17T01:06:42.646Z",
+  "fileCount": 5,
+  "totalBytes": 608865,
+  "files": [
+    {
+      "path": "assets/index-Dw7guxmG.js",
+      "size": 582353,
+      "sha256": "bfe7a51fcd4a8f8d2e8807146c2157820f5d54e4840cf7e94d80dfeeab06edaa",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Ppo9M9g7.css",
+      "size": 20219,
+      "sha256": "aa1f16786b349695e38dfb6a1a1ec4687b671d0aee10edbafed038fad7093fe6",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 643,
+      "sha256": "868033ee417f0c44a604917ba774ea88425a7b538a592508e91a981a3823417a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "95dac8f7759ad2d9097f5d8c578cb09c68a0494a25cb09c0a96faf942a4bc6e4",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5236,
+      "sha256": "aafa11986b577a0e28d6619023a9448d815d79d0a5827c4d28ebf61c3ffa61f4",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "67e1c2a4ec617c5dd196e2283e714a3223666bf1b9ddfd040c77f80753046be9"
+    },
+    "1.0.1": {
+      "contentSha256": "9ed3946d5195a3ec7b0eaeecac2d0224b8cc171d29875e784f07e994c470df96"
+    },
+    "1.1.0": {
+      "contentSha256": "8858bdf22620330756dcdc68b20d3afe0ba1e98c39cd7b3ed278a5dcf69ffc0a"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate complex-search@1.1.0 with contentSha256 8858bdf22620330756dcdc68b20d3afe0ba1e98c39cd7b3ed278a5dcf69ffc0a"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "9ed3946d5195a3ec7b0eaeecac2d0224b8cc171d29875e784f07e994c470df96",
+    "command": "node scripts/publish-official-game.mjs complex-search --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/complex-search/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-7.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:36.609Z",
+    "files": [
+      {
+        "path": "assets/index-Dw7guxmG.js",
+        "status": 200,
+        "size": 582353,
+        "sha256": "bfe7a51fcd4a8f8d2e8807146c2157820f5d54e4840cf7e94d80dfeeab06edaa"
+      },
+      {
+        "path": "assets/style-Ppo9M9g7.css",
+        "status": 200,
+        "size": 20219,
+        "sha256": "aa1f16786b349695e38dfb6a1a1ec4687b671d0aee10edbafed038fad7093fe6"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 643,
+        "sha256": "868033ee417f0c44a604917ba774ea88425a7b538a592508e91a981a3823417a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "95dac8f7759ad2d9097f5d8c578cb09c68a0494a25cb09c0a96faf942a4bc6e4"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5236,
+        "sha256": "aafa11986b577a0e28d6619023a9448d815d79d0a5827c4d28ebf61c3ffa61f4"
+      }
+    ]
+  }
+}

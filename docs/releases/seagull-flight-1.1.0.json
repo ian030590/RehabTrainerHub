@@ -1,0 +1,125 @@
+{
+  "gameId": "seagull-flight",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "e408e65baae5c692195a7c961662d4e6327604d5e1774d1caefac7bd98de5d5d",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/seagull-flight/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/seagull-flight/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/seagull-flight/",
+  "publishedAt": "2026-11-17T01:04:53.881Z",
+  "verifiedAt": "2026-11-17T01:04:53.881Z",
+  "fileCount": 6,
+  "totalBytes": 1137326,
+  "files": [
+    {
+      "path": "THIRD-PARTY-NOTICES.txt",
+      "size": 3755,
+      "sha256": "44532029b388b964bf0a7ae0581d289d4a2e6534ae9b3a8328b17b8d7be02e90",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "assets/index-C4GgAqtQ.js",
+      "size": 1100087,
+      "sha256": "069efa1217ff64b6e2e21635f83ae4a897cd5d457185c38cddea1f6c2e7cc246",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BI38p3Yt.css",
+      "size": 24115,
+      "sha256": "9d8011f03b087b2615e40fbe7ed8182bab5a69d664d9fc2a2c48421154ab0184",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 527,
+      "sha256": "b6156b734bb96889bbba5464f7f703b530121992b25674b1c1531c911a9eb262",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 394,
+      "sha256": "e3020579728928aed288a4d616b14e6e664a982dd3ea2c13581c4cf107b6141a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8448,
+      "sha256": "6a315c768079165416f816359e4f80b03496fb748c941dde358fbb1161f061a6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "head-tracking",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.1.0": {
+      "contentSha256": "e408e65baae5c692195a7c961662d4e6327604d5e1774d1caefac7bd98de5d5d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate seagull-flight@1.1.0 with contentSha256 e408e65baae5c692195a7c961662d4e6327604d5e1774d1caefac7bd98de5d5d"
+  },
+  "rollback": null,
+  "status": "published-and-verified",
+  "prefix": "releases/seagull-flight/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:32.125Z",
+    "files": [
+      {
+        "path": "THIRD-PARTY-NOTICES.txt",
+        "status": 200,
+        "size": 3755,
+        "sha256": "44532029b388b964bf0a7ae0581d289d4a2e6534ae9b3a8328b17b8d7be02e90"
+      },
+      {
+        "path": "assets/index-C4GgAqtQ.js",
+        "status": 200,
+        "size": 1100087,
+        "sha256": "069efa1217ff64b6e2e21635f83ae4a897cd5d457185c38cddea1f6c2e7cc246"
+      },
+      {
+        "path": "assets/style-BI38p3Yt.css",
+        "status": 200,
+        "size": 24115,
+        "sha256": "9d8011f03b087b2615e40fbe7ed8182bab5a69d664d9fc2a2c48421154ab0184"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 527,
+        "sha256": "b6156b734bb96889bbba5464f7f703b530121992b25674b1c1531c911a9eb262"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 394,
+        "sha256": "e3020579728928aed288a4d616b14e6e664a982dd3ea2c13581c4cf107b6141a"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8448,
+        "sha256": "6a315c768079165416f816359e4f80b03496fb748c941dde358fbb1161f061a6"
+      }
+    ]
+  }
+}

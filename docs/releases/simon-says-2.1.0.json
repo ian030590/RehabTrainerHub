@@ -1,0 +1,119 @@
+{
+  "gameId": "simon-says",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5c0af958cc2f693cd89acf301222fd4d451a5f3e8a44bb54752ec9bc0c5d6b73",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/simon-says/",
+  "publishedAt": "2026-11-17T00:53:53.823Z",
+  "verifiedAt": "2026-11-17T00:53:53.823Z",
+  "fileCount": 5,
+  "totalBytes": 599455,
+  "files": [
+    {
+      "path": "assets/index-CAMLPty5.js",
+      "size": 570743,
+      "sha256": "f017ed5086c5bcc3114860903f7e53e5746ba6fe0056b4da819425996d618e30",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Slgi-Unf.css",
+      "size": 21291,
+      "sha256": "e824753960740d24f6eeca1b717a1a6eabddc330f3b8d7e7cb6b7433da7864db",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 509,
+      "sha256": "6903e17b3ce1fc4df1bcfafbc532205030591106043f954f581097362342162e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "7ca910a9e0dffbd2139db7dfd4b32441574cff55abaa2aee12f9ffb542d5210e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6498,
+      "sha256": "cb4954afdb7f786b71ee96b3d87ca4db0a800460ae33ebd9c9eadf9ad5f6fd44",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a"
+    },
+    "2.1.0": {
+      "contentSha256": "5c0af958cc2f693cd89acf301222fd4d451a5f3e8a44bb54752ec9bc0c5d6b73"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate simon-says@2.1.0 with contentSha256 5c0af958cc2f693cd89acf301222fd4d451a5f3e8a44bb54752ec9bc0c5d6b73"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "3a854c4ed63cf2fc4a4e38e88d7e7c82e753c068c7681f323280c63897f5f43a",
+    "command": "node scripts/publish-official-game.mjs simon-says --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/simon-says/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:17.310Z",
+    "files": [
+      {
+        "path": "assets/index-CAMLPty5.js",
+        "status": 200,
+        "size": 570743,
+        "sha256": "f017ed5086c5bcc3114860903f7e53e5746ba6fe0056b4da819425996d618e30"
+      },
+      {
+        "path": "assets/style-Slgi-Unf.css",
+        "status": 200,
+        "size": 21291,
+        "sha256": "e824753960740d24f6eeca1b717a1a6eabddc330f3b8d7e7cb6b7433da7864db"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 509,
+        "sha256": "6903e17b3ce1fc4df1bcfafbc532205030591106043f954f581097362342162e"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "7ca910a9e0dffbd2139db7dfd4b32441574cff55abaa2aee12f9ffb542d5210e"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6498,
+        "sha256": "cb4954afdb7f786b71ee96b3d87ca4db0a800460ae33ebd9c9eadf9ad5f6fd44"
+      }
+    ]
+  }
+}

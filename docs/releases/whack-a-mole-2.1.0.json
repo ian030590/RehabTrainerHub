@@ -1,0 +1,302 @@
+{
+  "gameId": "whack-a-mole",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "395327e4e0fc74635322a706b0868a75a3156d556b461345f30a05a4bffaf238",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/whack-a-mole/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/whack-a-mole/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/whack-a-mole/",
+  "publishedAt": "2026-11-17T00:55:22.342Z",
+  "verifiedAt": "2026-11-17T00:55:22.342Z",
+  "fileCount": 20,
+  "totalBytes": 715302,
+  "files": [
+    {
+      "path": "assets/index-rDbOqBKm.js",
+      "size": 574829,
+      "sha256": "d95b0b7cff37a572a381aabbbf3e115cc3c45ddd90093e26849cd04ed392814c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CzYMQJHP.css",
+      "size": 20297,
+      "sha256": "0c9cdbeb6f35bb81556e70766ea79c4b06ad024a154eca269c7ed60c50490132",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 457,
+      "sha256": "5b3a0cf9199d88d5a6f642e34e9b8887fc640b80bcc92bcc0a1c1582348b32e0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "928200eff78c8d7686a67d3b89736903da9915b129267c225f7ce1ef35b3a589",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/LICENSE-pixelfx.md",
+      "size": 1115,
+      "sha256": "553c30b19cb6dc6f717885e3f1c96ce905085399f82645a2ab14a7671a3eb48f",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "pixelfx/NOTICE.md",
+      "size": 555,
+      "sha256": "b26e3e43caece68a67ae6bd0cbe868871dd500a51cef047d2017157b0ff73328",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "pixelfx/core/actor.js",
+      "size": 4492,
+      "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/color.js",
+      "size": 5370,
+      "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/font.js",
+      "size": 5487,
+      "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/fx.js",
+      "size": 5238,
+      "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/index.js",
+      "size": 309,
+      "sha256": "c138bb6b2c75b407bc1158636b5ff39e6d49977964a60e034ebd6dab50851172",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/math.js",
+      "size": 6254,
+      "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/painter.js",
+      "size": 17070,
+      "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/core/sim.js",
+      "size": 19972,
+      "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/_lib.js",
+      "size": 10507,
+      "sha256": "43950b54c0c6de11254084366bef58940b673e7558359f7714207b6b6ec50872",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/blunt-hit.js",
+      "size": 6598,
+      "sha256": "c1e0ea8abf424cecd9c68ca4ad5b9a09b8e4b1d8d62c935e50fc42986924c94d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/impacts/hit-spark.js",
+      "size": 4352,
+      "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/pickups/_lib.js",
+      "size": 21334,
+      "sha256": "e3e8700dd4c82e78c41edbf78e6b91a3bd8058273a598226762985d63cc3b5cd",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "pixelfx/fx/pickups/collect-burst.js",
+      "size": 4344,
+      "sha256": "3d0f58fa6bb91bae5ebad8b32ffd7dce3af5e05bf6b36317eb6e074d50499263",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6308,
+      "sha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "d1f899cf2042b290814921902688491637683a7bb9659e48b177094d74e11135"
+    },
+    "2.0.2": {
+      "contentSha256": "d26f0b6523b46ab713d5ce6d2cb47a050e6406f642e878ca439e9c8ea2387719"
+    },
+    "2.1.0": {
+      "contentSha256": "395327e4e0fc74635322a706b0868a75a3156d556b461345f30a05a4bffaf238"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate whack-a-mole@2.1.0 with contentSha256 395327e4e0fc74635322a706b0868a75a3156d556b461345f30a05a4bffaf238"
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "d26f0b6523b46ab713d5ce6d2cb47a050e6406f642e878ca439e9c8ea2387719",
+    "command": "node scripts/publish-official-game.mjs whack-a-mole --activate-version 2.0.2"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/whack-a-mole/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:22.059Z",
+    "files": [
+      {
+        "path": "assets/index-rDbOqBKm.js",
+        "status": 200,
+        "size": 574829,
+        "sha256": "d95b0b7cff37a572a381aabbbf3e115cc3c45ddd90093e26849cd04ed392814c"
+      },
+      {
+        "path": "assets/style-CzYMQJHP.css",
+        "status": 200,
+        "size": 20297,
+        "sha256": "0c9cdbeb6f35bb81556e70766ea79c4b06ad024a154eca269c7ed60c50490132"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 457,
+        "sha256": "5b3a0cf9199d88d5a6f642e34e9b8887fc640b80bcc92bcc0a1c1582348b32e0"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "928200eff78c8d7686a67d3b89736903da9915b129267c225f7ce1ef35b3a589"
+      },
+      {
+        "path": "pixelfx/LICENSE-pixelfx.md",
+        "status": 200,
+        "size": 1115,
+        "sha256": "553c30b19cb6dc6f717885e3f1c96ce905085399f82645a2ab14a7671a3eb48f"
+      },
+      {
+        "path": "pixelfx/NOTICE.md",
+        "status": 200,
+        "size": 555,
+        "sha256": "b26e3e43caece68a67ae6bd0cbe868871dd500a51cef047d2017157b0ff73328"
+      },
+      {
+        "path": "pixelfx/core/actor.js",
+        "status": 200,
+        "size": 4492,
+        "sha256": "be6db54805c24143d11ad7e56f5360515757e59fa1dca13891c68c39f920cf5b"
+      },
+      {
+        "path": "pixelfx/core/color.js",
+        "status": 200,
+        "size": 5370,
+        "sha256": "7b66ada79a732bda905ecbce4612231e50f33f3b6bd961c22c03efde19beee5e"
+      },
+      {
+        "path": "pixelfx/core/font.js",
+        "status": 200,
+        "size": 5487,
+        "sha256": "5fdba0ac43f4886f3a80e39db35bf01c806953daf101c5bccee2592750fc9adc"
+      },
+      {
+        "path": "pixelfx/core/fx.js",
+        "status": 200,
+        "size": 5238,
+        "sha256": "87ef1a49bfb09403860abf410f1fdbcf80d96bb0aedae6d73ccadf1a113ad0d7"
+      },
+      {
+        "path": "pixelfx/core/index.js",
+        "status": 200,
+        "size": 309,
+        "sha256": "c138bb6b2c75b407bc1158636b5ff39e6d49977964a60e034ebd6dab50851172"
+      },
+      {
+        "path": "pixelfx/core/math.js",
+        "status": 200,
+        "size": 6254,
+        "sha256": "d8a788209cbd3bd21fd5d6839d4d96a95a80e9743d4ecc9812f548901c5f275a"
+      },
+      {
+        "path": "pixelfx/core/painter.js",
+        "status": 200,
+        "size": 17070,
+        "sha256": "7e6c6cf87f351abbf4519d2996c33dfcdfc44c8b6cdd158fde982408464c1e86"
+      },
+      {
+        "path": "pixelfx/core/sim.js",
+        "status": 200,
+        "size": 19972,
+        "sha256": "1446a6462ec5fdad9818a5f620e2befdf38c4eebaaa1475fe96ee077ed5f285f"
+      },
+      {
+        "path": "pixelfx/fx/impacts/_lib.js",
+        "status": 200,
+        "size": 10507,
+        "sha256": "43950b54c0c6de11254084366bef58940b673e7558359f7714207b6b6ec50872"
+      },
+      {
+        "path": "pixelfx/fx/impacts/blunt-hit.js",
+        "status": 200,
+        "size": 6598,
+        "sha256": "c1e0ea8abf424cecd9c68ca4ad5b9a09b8e4b1d8d62c935e50fc42986924c94d"
+      },
+      {
+        "path": "pixelfx/fx/impacts/hit-spark.js",
+        "status": 200,
+        "size": 4352,
+        "sha256": "b4abff89a55d5e73136c42649fdafb2852fe27228a1d0db0998e2ecd45a8e3df"
+      },
+      {
+        "path": "pixelfx/fx/pickups/_lib.js",
+        "status": 200,
+        "size": 21334,
+        "sha256": "e3e8700dd4c82e78c41edbf78e6b91a3bd8058273a598226762985d63cc3b5cd"
+      },
+      {
+        "path": "pixelfx/fx/pickups/collect-burst.js",
+        "status": 200,
+        "size": 4344,
+        "sha256": "3d0f58fa6bb91bae5ebad8b32ffd7dce3af5e05bf6b36317eb6e074d50499263"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6308,
+        "sha256": "3f0151eb8cf0e4ef58d51026dfbf45167b88e9ec6c9790078a89abc567fc1526"
+      }
+    ]
+  }
+}

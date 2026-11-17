@@ -1,0 +1,144 @@
+{
+  "gameId": "tongue-catch",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "daa26430efad95652252ed5d9573e1cfa26ad61d92beef1b528e81ec7522d522",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tongue-catch/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tongue-catch/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/tongue-catch/",
+  "publishedAt": "2026-11-17T01:05:40.974Z",
+  "verifiedAt": "2026-11-17T01:05:40.974Z",
+  "fileCount": 7,
+  "totalBytes": 1187062,
+  "files": [
+    {
+      "path": "LICENSE-pixelfx.txt",
+      "size": 1632,
+      "sha256": "0764dc31d9f1837dbb48950ab91c116132d7927e2a21a13dd7fadd286078fbb0",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "assets/apple-DMpbXMK7.svg",
+      "size": 394,
+      "sha256": "bd9d7b3c7bfe80fd2bcac6da23f0c6206e20cdd8f98c814dcb4f6118276ef76c",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/index-BAKDlDpp.js",
+      "size": 1153312,
+      "sha256": "38d8a6dffc5531df04bc2b886a6cdb04b6f01fa3b92fbe49f4e9cb80a6818867",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D8Es_tId.css",
+      "size": 27826,
+      "sha256": "3d639acdf4c1642c84c6e5c313d7efc6ddbf4ace29bfff1c6b6f7711f542c291",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 486,
+      "sha256": "cdd7290425fa436fe6b31606e1e40748c9613e80b26fe44ca608391652b6e4a9",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "7f561d01204fd12ffdff1673f734aa4baab9bb4e65a89137d8eda964cbc9dbf1",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2992,
+      "sha256": "13b1927cc94888b62b8de0f88caac833d5305f29e40ecdf829cacfa69794071d",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "tongue-tracking",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.2": {
+      "contentSha256": "61249c4e0d2a5afdab64d3b8da99d539012a4a38c478097c85be9d88ed19143f"
+    },
+    "2.1.0": {
+      "contentSha256": "daa26430efad95652252ed5d9573e1cfa26ad61d92beef1b528e81ec7522d522"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate tongue-catch@2.1.0 with contentSha256 daa26430efad95652252ed5d9573e1cfa26ad61d92beef1b528e81ec7522d522"
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "61249c4e0d2a5afdab64d3b8da99d539012a4a38c478097c85be9d88ed19143f",
+    "command": "node scripts/publish-official-game.mjs tongue-catch --activate-version 2.0.2"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/tongue-catch/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:33.880Z",
+    "files": [
+      {
+        "path": "LICENSE-pixelfx.txt",
+        "status": 200,
+        "size": 1632,
+        "sha256": "0764dc31d9f1837dbb48950ab91c116132d7927e2a21a13dd7fadd286078fbb0"
+      },
+      {
+        "path": "assets/apple-DMpbXMK7.svg",
+        "status": 200,
+        "size": 394,
+        "sha256": "bd9d7b3c7bfe80fd2bcac6da23f0c6206e20cdd8f98c814dcb4f6118276ef76c"
+      },
+      {
+        "path": "assets/index-BAKDlDpp.js",
+        "status": 200,
+        "size": 1153312,
+        "sha256": "38d8a6dffc5531df04bc2b886a6cdb04b6f01fa3b92fbe49f4e9cb80a6818867"
+      },
+      {
+        "path": "assets/style-D8Es_tId.css",
+        "status": 200,
+        "size": 27826,
+        "sha256": "3d639acdf4c1642c84c6e5c313d7efc6ddbf4ace29bfff1c6b6f7711f542c291"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 486,
+        "sha256": "cdd7290425fa436fe6b31606e1e40748c9613e80b26fe44ca608391652b6e4a9"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "7f561d01204fd12ffdff1673f734aa4baab9bb4e65a89137d8eda964cbc9dbf1"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2992,
+        "sha256": "13b1927cc94888b62b8de0f88caac833d5305f29e40ecdf829cacfa69794071d"
+      }
+    ]
+  }
+}

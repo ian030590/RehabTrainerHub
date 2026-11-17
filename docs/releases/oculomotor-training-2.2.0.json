@@ -1,0 +1,207 @@
+{
+  "gameId": "oculomotor-training",
+  "version": "2.2.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "e36d0bbd69cc4cd69a898961ca397280a9af0556d75455ab3105cb01ee84171e",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/oculomotor-training/2.2.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/oculomotor-training/2.2.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/oculomotor-training/",
+  "publishedAt": "2026-11-17T00:33:42.542Z",
+  "verifiedAt": "2026-11-17T00:33:42.542Z",
+  "fileCount": 11,
+  "totalBytes": 780243,
+  "files": [
+    {
+      "path": "assets/index-BHA7hN1i.css",
+      "size": 22721,
+      "sha256": "4b43740f9bd88364e4b08895785e0db10627dc16fede6df88de3cb119379bb23",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DSVNt916.js",
+      "size": 497064,
+      "sha256": "0585612f4b6f2c93599eeccd6fa44cb3ed7c5b338ccb3a2380a4d54d45d46021",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "f39439b0900cac011250f16556ae4dfa71d5697d4ef8c2ff17590fd5145f7d5d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 626,
+      "sha256": "34116606f63739b73f1c90102dda414899c1a2ac4cf124b9cb9538b5d53dd3a2",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/LICENSE-OcuTrain.txt",
+      "size": 35184,
+      "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 105500,
+      "sha256": "d26c6adbe33abafe7cf0c45cb714bc54bf486bee62f220bd00481718ae6b77d9",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3825,
+      "sha256": "3a578a159e6a5df98a1aa667bc2dd83442e4d2f63abde19c2e0cef0c1dfe545e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "eye-tracking",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.2.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af"
+    },
+    "2.0.1": {
+      "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+    },
+    "2.1.0": {
+      "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9"
+    },
+    "2.1.1": {
+      "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3"
+    },
+    "2.1.2": {
+      "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+    },
+    "2.1.3": {
+      "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+    },
+    "2.2.0": {
+      "contentSha256": "e36d0bbd69cc4cd69a898961ca397280a9af0556d75455ab3105cb01ee84171e"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate oculomotor-training@2.2.0 with contentSha256 e36d0bbd69cc4cd69a898961ca397280a9af0556d75455ab3105cb01ee84171e"
+  },
+  "rollback": {
+    "version": "2.1.3",
+    "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d",
+    "command": "node scripts/publish-official-game.mjs oculomotor-training --activate-version 2.1.3"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/oculomotor-training/2.2.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-?.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:33.778Z",
+    "files": [
+      {
+        "path": "assets/index-BHA7hN1i.css",
+        "status": 200,
+        "size": 22721,
+        "sha256": "4b43740f9bd88364e4b08895785e0db10627dc16fede6df88de3cb119379bb23"
+      },
+      {
+        "path": "assets/index-DSVNt916.js",
+        "status": 200,
+        "size": 497064,
+        "sha256": "0585612f4b6f2c93599eeccd6fa44cb3ed7c5b338ccb3a2380a4d54d45d46021"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 548,
+        "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 600,
+        "sha256": "f39439b0900cac011250f16556ae4dfa71d5697d4ef8c2ff17590fd5145f7d5d"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 626,
+        "sha256": "34116606f63739b73f1c90102dda414899c1a2ac4cf124b9cb9538b5d53dd3a2"
+      },
+      {
+        "path": "reference/LICENSE-OcuTrain.txt",
+        "status": 200,
+        "size": 35184,
+        "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e"
+      },
+      {
+        "path": "reference/experiment.js",
+        "status": 200,
+        "size": 105500,
+        "sha256": "d26c6adbe33abafe7cf0c45cb714bc54bf486bee62f220bd00481718ae6b77d9"
+      },
+      {
+        "path": "reference/gazeAdapter.js",
+        "status": 200,
+        "size": 3825,
+        "sha256": "3a578a159e6a5df98a1aa667bc2dd83442e4d2f63abde19c2e0cef0c1dfe545e"
+      },
+      {
+        "path": "reference/index.html",
+        "status": 200,
+        "size": 587,
+        "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983"
+      },
+      {
+        "path": "reference/jspsych.js",
+        "status": 200,
+        "size": 80994,
+        "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c"
+      },
+      {
+        "path": "reference/style.css",
+        "status": 200,
+        "size": 32594,
+        "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600"
+      }
+    ]
+  }
+}

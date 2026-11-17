@@ -1,0 +1,125 @@
+{
+  "gameId": "reading-training",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "b462cab816eeac6b22ef6fbcab89112b53086109db5036354198f696ade77bdc",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reading-training/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reading-training/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reading-training/",
+  "publishedAt": "2026-11-17T00:35:31.915Z",
+  "verifiedAt": "2026-11-17T00:35:31.915Z",
+  "fileCount": 5,
+  "totalBytes": 1211440,
+  "files": [
+    {
+      "path": "assets/index-DHQwQfrK.js",
+      "size": 1188300,
+      "sha256": "62bbcf8e35240de4e8ebea9e13d4f9a75bd6fd771ca24a320e7c1236229db409",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dxav5Lp8.css",
+      "size": 20209,
+      "sha256": "613f5ddbfb579c8599d8e0401ab9afe8a8d3926c1713ef27808dad509d9fd005",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 517,
+      "sha256": "b08ea5ca8d4e9b5c052585821a2745b3508ee14dbce0d360e8964a4d89383222",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "f8f5cc1c7fc9f303b9295bcac2b1cfd29970fe1e5f69f48b064d8736020d44e4",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1990,
+      "sha256": "b61a74dcba26f8fe0435f91ad53e735351d07c5fbc45f13b2cdd0575b50673a9",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0"
+    },
+    "2.0.1": {
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    },
+    "2.0.2": {
+      "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+    },
+    "2.1.0": {
+      "contentSha256": "b462cab816eeac6b22ef6fbcab89112b53086109db5036354198f696ade77bdc"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate reading-training@2.1.0 with contentSha256 b462cab816eeac6b22ef6fbcab89112b53086109db5036354198f696ade77bdc"
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09",
+    "command": "node scripts/publish-official-game.mjs reading-training --activate-version 2.0.2"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/reading-training/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-8.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:37.916Z",
+    "files": [
+      {
+        "path": "assets/index-DHQwQfrK.js",
+        "status": 200,
+        "size": 1188300,
+        "sha256": "62bbcf8e35240de4e8ebea9e13d4f9a75bd6fd771ca24a320e7c1236229db409"
+      },
+      {
+        "path": "assets/style-Dxav5Lp8.css",
+        "status": 200,
+        "size": 20209,
+        "sha256": "613f5ddbfb579c8599d8e0401ab9afe8a8d3926c1713ef27808dad509d9fd005"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 517,
+        "sha256": "b08ea5ca8d4e9b5c052585821a2745b3508ee14dbce0d360e8964a4d89383222"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 424,
+        "sha256": "f8f5cc1c7fc9f303b9295bcac2b1cfd29970fe1e5f69f48b064d8736020d44e4"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 1990,
+        "sha256": "b61a74dcba26f8fe0435f91ad53e735351d07c5fbc45f13b2cdd0575b50673a9"
+      }
+    ]
+  }
+}

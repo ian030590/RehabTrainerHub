@@ -1,0 +1,122 @@
+{
+  "gameId": "hex-schulte",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "7a57a1acbb70614e5f207b60829c9901c63fd9bbbe6dfb105952438f79740016",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hex-schulte/",
+  "publishedAt": "2026-11-17T00:38:20.870Z",
+  "verifiedAt": "2026-11-17T00:38:20.870Z",
+  "fileCount": 5,
+  "totalBytes": 608584,
+  "files": [
+    {
+      "path": "assets/index-C7gmAFGm.js",
+      "size": 571218,
+      "sha256": "f078c38baa1180b44142040d64d80b23c449d78562a7be9fb15ce6e490791297",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BxMryp-q.css",
+      "size": 20858,
+      "sha256": "cf3b5215c2bdca29793ec41b08b5688c458ca14b4c88dda73de1be21ec5c5fdf",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 565,
+      "sha256": "99a740916f292a15b179399c0eaec402f245f1dd024a0c3e2d5713d170512d6f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 423,
+      "sha256": "6711e1c08337aee2f6dd285c1334fe59476971f4471f6b566c575513267d180b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15520,
+      "sha256": "20c800de019c3922d67d40149814324aee5699fd996b486c202407a0b00b5143",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "3d92ae8cc394ada98a6eab518c23d41b2955cbdf501c38d01f6de2d542429844"
+    },
+    "1.0.1": {
+      "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0"
+    },
+    "1.1.0": {
+      "contentSha256": "7a57a1acbb70614e5f207b60829c9901c63fd9bbbe6dfb105952438f79740016"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate hex-schulte@1.1.0 with contentSha256 7a57a1acbb70614e5f207b60829c9901c63fd9bbbe6dfb105952438f79740016"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "170ad41861699b51b86aecb2160193dc0b1994ce601a7c7bdbcf9e2df36de5f0",
+    "command": "node scripts/publish-official-game.mjs hex-schulte --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hex-schulte/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-4.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:45.024Z",
+    "files": [
+      {
+        "path": "assets/index-C7gmAFGm.js",
+        "status": 200,
+        "size": 571218,
+        "sha256": "f078c38baa1180b44142040d64d80b23c449d78562a7be9fb15ce6e490791297"
+      },
+      {
+        "path": "assets/style-BxMryp-q.css",
+        "status": 200,
+        "size": 20858,
+        "sha256": "cf3b5215c2bdca29793ec41b08b5688c458ca14b4c88dda73de1be21ec5c5fdf"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 565,
+        "sha256": "99a740916f292a15b179399c0eaec402f245f1dd024a0c3e2d5713d170512d6f"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 423,
+        "sha256": "6711e1c08337aee2f6dd285c1334fe59476971f4471f6b566c575513267d180b"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 15520,
+        "sha256": "20c800de019c3922d67d40149814324aee5699fd996b486c202407a0b00b5143"
+      }
+    ]
+  }
+}

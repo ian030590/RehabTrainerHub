@@ -1,0 +1,119 @@
+{
+  "gameId": "connect4",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6f554ba5a6bb15d3958dae631b1692eade84639cf10b1ea1800e4fdc4dff56ed",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/connect4/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/connect4/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/connect4/",
+  "publishedAt": "2026-11-17T00:49:31.741Z",
+  "verifiedAt": "2026-11-17T00:49:31.741Z",
+  "fileCount": 5,
+  "totalBytes": 614321,
+  "files": [
+    {
+      "path": "assets/index-Bhn_JQC_.js",
+      "size": 570534,
+      "sha256": "1e9d79405377af3ebbf505560ac606d31724f7945f4d5c2d1389debf25816517",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CaU61mHu.css",
+      "size": 20470,
+      "sha256": "521c18b0660d2b50fd91a8bff6cc502c26eebdd313d107a129904819dc4514b4",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 476,
+      "sha256": "28bfee931618343fc8a07505d51fcc8e6762b69a964c9230f76cec4ef205a97e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "d6c71f44d82b1f2e6cf5bb1df98f64e0cdae7e294c1178c757c055dffee2c50c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 22430,
+      "sha256": "f14cc8a2f8fb6e38df6b026587b7da551c807e836180445f533c133327d59263",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "2950b0abd9198304bcb58e90b5a2ece1b73691400cd03a2ae34e6e0096b14587"
+    },
+    "2.1.0": {
+      "contentSha256": "6f554ba5a6bb15d3958dae631b1692eade84639cf10b1ea1800e4fdc4dff56ed"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate connect4@2.1.0 with contentSha256 6f554ba5a6bb15d3958dae631b1692eade84639cf10b1ea1800e4fdc4dff56ed"
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "2950b0abd9198304bcb58e90b5a2ece1b73691400cd03a2ae34e6e0096b14587",
+    "command": "node scripts/publish-official-game.mjs connect4 --activate-version 2.0.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/connect4/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-5.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:07.866Z",
+    "files": [
+      {
+        "path": "assets/index-Bhn_JQC_.js",
+        "status": 200,
+        "size": 570534,
+        "sha256": "1e9d79405377af3ebbf505560ac606d31724f7945f4d5c2d1389debf25816517"
+      },
+      {
+        "path": "assets/style-CaU61mHu.css",
+        "status": 200,
+        "size": 20470,
+        "sha256": "521c18b0660d2b50fd91a8bff6cc502c26eebdd313d107a129904819dc4514b4"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 476,
+        "sha256": "28bfee931618343fc8a07505d51fcc8e6762b69a964c9230f76cec4ef205a97e"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "d6c71f44d82b1f2e6cf5bb1df98f64e0cdae7e294c1178c757c055dffee2c50c"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 22430,
+        "sha256": "f14cc8a2f8fb6e38df6b026587b7da551c807e836180445f533c133327d59263"
+      }
+    ]
+  }
+}

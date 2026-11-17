@@ -1,0 +1,122 @@
+{
+  "gameId": "reaction-time",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "f447439519b85b89b2dfca90f29626539eeaf60acc6f8d5ba18060acecb48105",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reaction-time/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reaction-time/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/reaction-time/",
+  "publishedAt": "2026-11-17T00:48:28.460Z",
+  "verifiedAt": "2026-11-17T00:48:28.460Z",
+  "fileCount": 5,
+  "totalBytes": 594636,
+  "files": [
+    {
+      "path": "assets/index-DrVBN7Gf.js",
+      "size": 571194,
+      "sha256": "f1e503b954ebf8b62b081cd93bb5fb6f1d6e2bc35e06bff6128ea5ab85866f0d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-NaBrIb_B.css",
+      "size": 19729,
+      "sha256": "51fafb587b9d6fdf5a4d704e25e48fd6143bfd2bb588cf71e7f78fbd9901f209",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "0eb8606a3c8ab25f3aea0388b314186d549b29c8fb1dbbb08991e0cf86e8d2ef",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "155aed0375ddd964392ac70e48ba05b013d28c8febb4c575a9e3c70a5f07e93c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2828,
+      "sha256": "0aaeb80fa29f8dd95bf5425296a51eb6476ce42c5009f96959cdc752dea4285f",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "7ef512a0a684971b173ffeb4022b2a4f33de74289e531820376be71ea75bb9f5"
+    },
+    "2.0.1": {
+      "contentSha256": "d76fedf1660188caa997d9c0eb58b512436b8f5fc6105fe5b7eec3d00c8c2bf9"
+    },
+    "2.1.0": {
+      "contentSha256": "f447439519b85b89b2dfca90f29626539eeaf60acc6f8d5ba18060acecb48105"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate reaction-time@2.1.0 with contentSha256 f447439519b85b89b2dfca90f29626539eeaf60acc6f8d5ba18060acecb48105"
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "d76fedf1660188caa997d9c0eb58b512436b8f5fc6105fe5b7eec3d00c8c2bf9",
+    "command": "node scripts/publish-official-game.mjs reaction-time --activate-version 2.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/reaction-time/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-2.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:09:05.615Z",
+    "files": [
+      {
+        "path": "assets/index-DrVBN7Gf.js",
+        "status": 200,
+        "size": 571194,
+        "sha256": "f1e503b954ebf8b62b081cd93bb5fb6f1d6e2bc35e06bff6128ea5ab85866f0d"
+      },
+      {
+        "path": "assets/style-NaBrIb_B.css",
+        "status": 200,
+        "size": 19729,
+        "sha256": "51fafb587b9d6fdf5a4d704e25e48fd6143bfd2bb588cf71e7f78fbd9901f209"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 471,
+        "sha256": "0eb8606a3c8ab25f3aea0388b314186d549b29c8fb1dbbb08991e0cf86e8d2ef"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "155aed0375ddd964392ac70e48ba05b013d28c8febb4c575a9e3c70a5f07e93c"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2828,
+        "sha256": "0aaeb80fa29f8dd95bf5425296a51eb6476ce42c5009f96959cdc752dea4285f"
+      }
+    ]
+  }
+}

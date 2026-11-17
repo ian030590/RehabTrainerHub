@@ -1,0 +1,122 @@
+{
+  "gameId": "card-sorting",
+  "version": "1.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "d38b974d6b934cf63222cceabd55185645dfd192c87d75e84f1db164aed2e468",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/1.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/1.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/card-sorting/",
+  "publishedAt": "2026-11-17T00:39:55.129Z",
+  "verifiedAt": "2026-11-17T00:39:55.129Z",
+  "fileCount": 5,
+  "totalBytes": 597760,
+  "files": [
+    {
+      "path": "assets/index-D-OYSgiN.js",
+      "size": 570328,
+      "sha256": "2aa19738853fb7bf7b0e739598f335f082a8c7265a1ce1ade08de825447ccf17",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-hEE9FH8j.css",
+      "size": 19786,
+      "sha256": "b4f59ad9c336852f7b8cef57d0699fadc5780d61c54f275bcf6726bf84f53298",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 586,
+      "sha256": "ea90cf8d30020d73ac772a80b61461dc36c7594f3892dac252bdeba57ba0b66a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "4aa2bdec0182fba70ea4b053a17b3acd3deb3d9a5374ef01c2049705770b4904",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6640,
+      "sha256": "cf1f7052ca71ef1f07c42d669d62d2eaef11ab2ea4489a429f8f2ea7f629b189",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "1.1.0",
+  "officialHistory": {
+    "1.0.0": {
+      "contentSha256": "d7a6552de193753f546d7d037dadb69392d7f8fe117d5733601535d61fa15c84"
+    },
+    "1.0.1": {
+      "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82"
+    },
+    "1.1.0": {
+      "contentSha256": "d38b974d6b934cf63222cceabd55185645dfd192c87d75e84f1db164aed2e468"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate card-sorting@1.1.0 with contentSha256 d38b974d6b934cf63222cceabd55185645dfd192c87d75e84f1db164aed2e468"
+  },
+  "rollback": {
+    "version": "1.0.1",
+    "contentSha256": "fd482ea9c42208d56cc9134d947fdceeb52ad237f580e47b5750945e3babab82",
+    "command": "node scripts/publish-official-game.mjs card-sorting --activate-version 1.0.1"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/card-sorting/1.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-6.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:48.273Z",
+    "files": [
+      {
+        "path": "assets/index-D-OYSgiN.js",
+        "status": 200,
+        "size": 570328,
+        "sha256": "2aa19738853fb7bf7b0e739598f335f082a8c7265a1ce1ade08de825447ccf17"
+      },
+      {
+        "path": "assets/style-hEE9FH8j.css",
+        "status": 200,
+        "size": 19786,
+        "sha256": "b4f59ad9c336852f7b8cef57d0699fadc5780d61c54f275bcf6726bf84f53298"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 586,
+        "sha256": "ea90cf8d30020d73ac772a80b61461dc36c7594f3892dac252bdeba57ba0b66a"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "4aa2bdec0182fba70ea4b053a17b3acd3deb3d9a5374ef01c2049705770b4904"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 6640,
+        "sha256": "cf1f7052ca71ef1f07c42d669d62d2eaef11ab2ea4489a429f8f2ea7f629b189"
+      }
+    ]
+  }
+}

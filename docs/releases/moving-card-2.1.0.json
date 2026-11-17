@@ -1,0 +1,131 @@
+{
+  "gameId": "moving-card",
+  "version": "2.1.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "2e2cd6e7821523c7f8bfc56e40e7ecb0a6787d0d2357020e187e63cfce9914e4",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/moving-card/2.1.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/moving-card/2.1.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/moving-card/",
+  "publishedAt": "2026-11-17T00:34:18.884Z",
+  "verifiedAt": "2026-11-17T00:34:18.884Z",
+  "fileCount": 5,
+  "totalBytes": 1180654,
+  "files": [
+    {
+      "path": "assets/index-D61SZdaP.js",
+      "size": 1146484,
+      "sha256": "60ebf221b2433f8601f485018d28d02348593e35bd91225eeef1b9f0dac1daca",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BLq-dAdR.css",
+      "size": 18591,
+      "sha256": "72686eb18dccd19a8c078a11d3a54f810c4bc0f7ab27817c5293a8906bb1fb4f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "d92738e54ff225d8775610b70024e8e32e904bf4429084efdd2e550ffff12b8b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 14652,
+      "sha256": "224f2e5f7277268978afed4abe10ea7205ec75b8017eded87dfca0cf0ce24e86",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037"
+    },
+    "2.0.1": {
+      "contentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3"
+    },
+    "2.0.2": {
+      "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+    },
+    "2.0.3": {
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+    },
+    "2.0.4": {
+      "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+    },
+    "2.1.0": {
+      "contentSha256": "2e2cd6e7821523c7f8bfc56e40e7ecb0a6787d0d2357020e187e63cfce9914e4"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "給我batch upload的指令 — owner ran the batch publisher against the approved version/contentSha256 list",
+    "scope": "Publish and activate moving-card@2.1.0 with contentSha256 2e2cd6e7821523c7f8bfc56e40e7ecb0a6787d0d2357020e187e63cfce9914e4"
+  },
+  "rollback": {
+    "version": "2.0.4",
+    "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa",
+    "command": "node scripts/publish-official-game.mjs moving-card --activate-version 2.0.4"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/moving-card/2.1.0/",
+  "changes": [
+    "In-game chrome spec (apps/rehabtrainerhub/games/DESIGN.md): interrupt panel, summary-first results, single-stop chart, settings button order, category tokens. Details in docs/chrome-rollout-batch-8.md."
+  ],
+  "sourceCommit": "033f943a",
+  "platformDeploy": {
+    "commit": "033f943a",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T01:08:35.267Z",
+    "files": [
+      {
+        "path": "assets/index-D61SZdaP.js",
+        "status": 200,
+        "size": 1146484,
+        "sha256": "60ebf221b2433f8601f485018d28d02348593e35bd91225eeef1b9f0dac1daca"
+      },
+      {
+        "path": "assets/style-BLq-dAdR.css",
+        "status": 200,
+        "size": 18591,
+        "sha256": "72686eb18dccd19a8c078a11d3a54f810c4bc0f7ab27817c5293a8906bb1fb4f"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 507,
+        "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 420,
+        "sha256": "d92738e54ff225d8775610b70024e8e32e904bf4429084efdd2e550ffff12b8b"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 14652,
+        "sha256": "224f2e5f7277268978afed4abe10ea7205ec75b8017eded87dfca0cf0ce24e86"
+      }
+    ]
+  }
+}
