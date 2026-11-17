@@ -25,3 +25,7 @@
 
 - The interrupt panel says 「結束後不會保存這次紀錄。」 / “Ending the activity will not save this session.” Fullscreen loss or a disconnected wheel adds its cause. An aborted trial exits without sending a result; only the completed timeline sends one.
 - The driving scene, active hazard and vehicle state are retained. Simulation, feedback and lane-reset timers pause; reaction clocks exclude the interruption. A disconnected calibrated wheel must be reconnected before Continue is enabled. The dedicated browser fixture is updated and awaits a browser run.
+
+## hart-chart 2.2.0
+
+The default decoder dock follows viewport orientation until a saved or player-selected dock exists. Tutorial panels use available space around their target and scroll when constrained, keeping the chart visible where space permits.

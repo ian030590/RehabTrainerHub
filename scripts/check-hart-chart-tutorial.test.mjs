@@ -9,6 +9,55 @@ const gameRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games/har
 
 const han = /^\p{Script=Han}$/u;
 
+test('automatic decoder dock follows orientation until a saved or player choice exists', async () => {
+  const { ResolveDecoderDock } = await LoadModule('runtime/decoderDock.ts');
+  assert.equal(ResolveDecoderDock(true, null), 'bottom');
+  assert.equal(ResolveDecoderDock(false, null), 'right');
+  for (const choice of ['left', 'right', 'top', 'bottom']) {
+    assert.equal(ResolveDecoderDock(true, choice), choice);
+    assert.equal(ResolveDecoderDock(false, choice), choice);
+  }
+});
+
+test('dock orientation listeners stop overriding saved and keyboard choices and never save defaults', async () => {
+  for (const choice of ['saved', 'keyboard', 'none']) {
+    const scene = await RenderHart('menu', { chartSize: 'medium', rounds: 10, characterSet: 'english' }, 'en', { exerciseDock: true });
+    scene.setPortrait(true);
+    scene.frame();
+    assert.equal(scene.changes.at(-1), 'bottom');
+    scene.setPortrait(false);
+    scene.listeners.get('resize')();
+    assert.equal(scene.changes.at(-1), 'right');
+    if (choice === 'saved') scene.restore({ decoderDock: 'left' });
+    if (choice === 'keyboard') scene.find('hart-decoder-drag-handle').props.onKeyDown({ key: 'ArrowLeft', preventDefault() {} });
+    const before = scene.changes.length;
+    scene.setPortrait(true);
+    scene.listeners.get('orientationchange')();
+    if (choice === 'none') assert.equal(scene.changes.at(-1), 'bottom');
+    else assert.equal(scene.changes.length, before);
+    scene.find('training-config').props.ref.current = { reportValidity: () => true };
+    scene.find('training-config').props.onSubmit({ preventDefault() {} });
+    assert.equal(scene.saves.at(-1).decoderDock, choice === 'none' ? undefined : 'left');
+    scene.cleanup();
+    assert.equal(scene.listeners.size, 0);
+  }
+});
+
+test('tutorial placement preserves the target in narrow free regions', async () => {
+  const { PlaceTourPanel } = await LoadModule('runtime/tourPlacement.ts');
+  const target = { left: 206.9, top: 134, right: 545.1, bottom: 472.2 };
+  const result = PlaceTourPanel({ width: 752, height: 485 }, target, { width: 480, height: 243 }, 'top');
+  assert.ok(result.left + result.width <= target.left || result.left >= target.right ||
+    result.top + result.height <= target.top || result.top >= target.bottom);
+  assert.ok(result.width >= 140 && result.height >= 120);
+  assert.ok(result.left >= 0 && result.top >= 0 && result.left + result.width <= 752 && result.top + result.height <= 485);
+  const above = PlaceTourPanel({ width: 400, height: 500 }, { left: 0, top: 160, right: 400, bottom: 500 }, { width: 380, height: 300 }, 'top');
+  assert.ok(above.top + above.height <= 160);
+  assert.ok(above.height >= 120 && above.height < 300);
+  const tight = PlaceTourPanel({ width: 400, height: 400 }, { left: 140, top: 0, right: 400, bottom: 400 }, { width: 380, height: 300 }, 'top');
+  assert.ok(tight.left + tight.width <= 140, 'The gap is surrendered before covering a usable region.');
+});
+
 test('Hart spotlights explain the chart, column-row decoding and tools in both languages and both scripts', async () => {
   const { GetHartTutorialSteps } = await LoadModule('rules/tutorialSteps.ts');
   for (const language of ['zh', 'en']) for (const characterSet of ['english', 'chinese']) {
@@ -240,8 +289,14 @@ function TopLevelRules(css) {
   return rules;
 }
 
-async function RenderHart(phase, settings, language, { tourFinished = false, seed } = {}) {
+async function RenderHart(phase, settings, language, { tourFinished = false, seed, exerciseDock = false } = {}) {
   const changes = [];
+  const effects = [];
+  const saves = [];
+  const listeners = new Map();
+  let portrait = false;
+  let frame = () => {};
+  let restore = () => {};
   let finishTour = tourFinished;
   let falseStates = 0;
   const { ChartScale } = await LoadModule('settings.ts');
@@ -253,6 +308,7 @@ async function RenderHart(phase, settings, language, { tourFinished = false, see
     './logic/hartChineseChart': await LoadModule('logic/hartChineseChart.ts'),
     './logic/decoderLayout': await LoadModule('logic/decoderLayout.ts'),
     './logic/pauseClock': await LoadModule('logic/pauseClock.ts'),
+    './runtime/decoderDock': await LoadModule('runtime/decoderDock.ts'),
     './i18n/useT': { useT: () => ({ t: key => dictionary[key] ?? key, lang: language }) },
     react: {
       useState: initial => {
@@ -263,20 +319,23 @@ async function RenderHart(phase, settings, language, { tourFinished = false, see
         if (initial === false && ++falseStates === 3 && finishTour) { finishTour = false; value = true; }
         return [value, next => changes.push(next)];
       },
-      useRef: current => ({ current }), useMemo: create => create(), useEffect() {}, useCallback: callback => callback,
+      useRef: current => ({ current }), useMemo: create => create(), useEffect: effect => { if (exerciseDock) effects.push(effect); }, useCallback: callback => callback,
     },
     'react/jsx-runtime': {
       jsx: (type, props) => typeof type === 'function' ? type(props) : ({ type, props }),
       jsxs: (type, props) => typeof type === 'function' ? type(props) : ({ type, props }),
     },
-    './runtime/hubBridge': { IsHubGame: () => false },
+    './runtime/hubBridge': { IsHubGame: () => false, OnSavedSettings: callback => { restore = callback; return () => {}; }, SaveGameSettings: value => saves.push(value) },
+    './runtime/settingsMemory': { RestoreSettings: () => null },
   };
   const source = await readFile(resolve(gameRoot, 'HartChartPage.tsx'), 'utf8');
   const module = { exports: {} };
   new Function('require', 'module', 'exports', 'window', ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText)(name => dependencies[name] ?? {}, module, module.exports, {
-    location: { hash: '', href: 'https://example.test/' }, matchMedia: () => ({ matches: false }), requestAnimationFrame() {},
+    location: { hash: '', href: 'https://example.test/' }, matchMedia: () => ({ matches: portrait }),
+    requestAnimationFrame: callback => { frame = callback; return 1; }, cancelAnimationFrame() {},
+    addEventListener: (name, callback) => listeners.set(name, callback), removeEventListener: name => listeners.delete(name),
   });
   const nodes = [];
   const visit = (node, parent) => {
@@ -288,7 +347,9 @@ async function RenderHart(phase, settings, language, { tourFinished = false, see
   };
   visit(module.exports.HartChartPage());
   const all = className => nodes.filter(node => node.props?.className?.split(' ').includes(className));
-  return { all, find: className => all(className)[0], named: name => nodes.find(node => node.props?.name === name), changes };
+  const cleanups = exerciseDock ? effects.filter(effect => /OnSavedSettings|const updateDock/.test(effect.toString())).map(effect => effect()) : [];
+  return { all, find: className => all(className)[0], named: name => nodes.find(node => node.props?.name === name), changes,
+    saves, listeners, setPortrait: value => { portrait = value; }, frame: () => frame(), restore: saved => restore(saved), cleanup: () => cleanups.forEach(cleanup => cleanup?.()) };
 }
 
 test('spotlight follows targets and resize; finishing, skipping, back and disposal clean up', async () => {
@@ -372,16 +433,36 @@ test('a tall explanation in a short viewport uses the larger free side and never
   dispose();
 });
 
+test('the chart step constrains and scrolls its panel beside the bottom-docked chart', async () => {
+  const dom = CreateDocument(243, 480);
+  dom.window.innerWidth = 752;
+  dom.window.innerHeight = 485;
+  dom.targets['.chart'] = { left: 206.9, top: 134, width: 338.2, height: 338.2 };
+  const { StartTour } = await LoadModule('runtime/tour.ts', dom);
+  const dispose = StartTour([{ target: '.chart', title: 'Chart', text: 'Instructions', place: 'top' }], {
+    lang: 'en', onEvent: () => {}, onBack: () => {},
+  });
+  const panel = dom.elements.find(element => element.className === 'game-tour');
+  const bounds = panel.getBoundingClientRect();
+  const left = Number.parseFloat(panel.style.left);
+  const top = Number.parseFloat(panel.style.top);
+  assert.ok(left + bounds.width <= 206.9 || left >= 545.1 || top + bounds.height <= 134 || top >= 472.2);
+  assert.ok(Number.parseFloat(panel.style.width) < 220);
+  assert.ok(Number.parseFloat(panel.style.maxHeight) <= 485 - top);
+  dispose();
+});
+
 async function LoadModule(path, dom = {}) {
   const source = await readFile(resolve(gameRoot, path), 'utf8');
   const module = { exports: {} };
-  new Function('module', 'exports', 'document', 'window', 'HTMLElement', ts.transpileModule(source, {
+  const placement = path === 'runtime/tour.ts' ? await LoadModule('runtime/tourPlacement.ts') : {};
+  new Function('module', 'exports', 'document', 'window', 'HTMLElement', 'require', ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText)(module, module.exports, dom.document, dom.window, dom.HTMLElement);
+  }).outputText)(module, module.exports, dom.document, dom.window, dom.HTMLElement, () => placement);
   return module.exports;
 }
 
-function CreateDocument(panelHeight = 200) {
+function CreateDocument(panelHeight = 200, panelWidth = 300) {
   const elements = [];
   const listeners = new Map();
   const targets = { '.camera': { left: 100, top: 100, width: 200, height: 120 },
@@ -392,7 +473,7 @@ function CreateDocument(panelHeight = 200) {
     isConnected = true;
     setAttribute() {}
     append(...children) { this.children.push(...children); }
-    getBoundingClientRect() { return { width: Math.min(300, window.innerWidth - 16, Number.parseFloat(this.style.width) || Infinity),
+    getBoundingClientRect() { return { width: Math.min(panelWidth, window.innerWidth - 16, Number.parseFloat(this.style.width) || Infinity),
       height: Math.min(panelHeight, Number.parseFloat(this.style.maxHeight) || Infinity) }; }
     focus() { document.activeElement = this; }
     remove() { this.removed = true; this.isConnected = false; }

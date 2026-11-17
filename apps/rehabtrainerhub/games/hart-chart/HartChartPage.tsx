@@ -5,6 +5,7 @@ import { ScoreAnalysis } from './ScoreAnalysis';
 import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { RestoreSettings } from './runtime/settingsMemory';
 import { StartTour } from './runtime/tour';
+import { ResolveDecoderDock, type DecoderDock } from './runtime/decoderDock';
 import { GetHartTutorialSteps } from './rules/tutorialSteps';
 import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
@@ -32,7 +33,6 @@ import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { HartClock } from './logic/pauseClock';
 import './styles/hart-chart.css';
 
-type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
 type HartTrainingPhase = 'menu' | 'rules' | 'playing' | 'results';
 
 interface DecoderDragPreview {
@@ -155,7 +155,7 @@ function HartChartRuntime() {
   const rounds = settings.rounds;
   const characterSet = settings.characterSet;
   const [decoderOpen, setDecoderOpen] = useState(true);
-  const [decoderDock, setDecoderDock] = useState<DecoderDock>(() => window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right');
+  const [decoderDock, setDecoderDock] = useState<DecoderDock>(() => ResolveDecoderDock(window.matchMedia('(orientation: portrait)').matches, null));
   const [decoderDragging, setDecoderDragging] = useState(false);
   const [decoderDragTarget, setDecoderDragTarget] = useState<DecoderDock>(decoderDock);
   const [decoderDragPreview, setDecoderDragPreview] = useState<DecoderDragPreview | null>(null);
@@ -179,6 +179,7 @@ function HartChartRuntime() {
   const decoderPanelRef = useRef<HTMLElement>(null);
   const decoderDragActiveRef = useRef(false);
   const decoderDragTargetRef = useRef<DecoderDock>(decoderDock);
+  const decoderDockChoiceRef = useRef<DecoderDock | null>(null);
 
   const chart = useMemo(() => CreateChart(characterSet, seed), [characterSet, seed]);
   const decoder = useMemo(() => characterSet === 'chinese'
@@ -228,8 +229,24 @@ function HartChartRuntime() {
     if (phaseRef.current !== 'menu') return;
     const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
     if (restored) { setSettings(restored); setScale(ChartScale(restored.chartSize)); }
-    if (typeof saved.decoderDock === 'string' && IsDecoderDock(saved.decoderDock)) setDecoderDock(saved.decoderDock);
+    if (!decoderDockChoiceRef.current && typeof saved.decoderDock === 'string' && IsDecoderDock(saved.decoderDock)) {
+      decoderDockChoiceRef.current = saved.decoderDock;
+      setDecoderDock(saved.decoderDock);
+    }
   }), []);
+  useEffect(() => {
+    const updateDock = () => {
+      if (!decoderDockChoiceRef.current) setDecoderDock(ResolveDecoderDock(window.matchMedia('(orientation: portrait)').matches, null));
+    };
+    window.addEventListener('resize', updateDock);
+    window.addEventListener('orientationchange', updateDock);
+    const frame = window.requestAnimationFrame(updateDock);
+    return () => {
+      window.removeEventListener('resize', updateDock);
+      window.removeEventListener('orientationchange', updateDock);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
   useEffect(() => {
     if (phase !== 'menu') return;
     dialogRef.current?.showModal();
@@ -240,6 +257,11 @@ function HartChartRuntime() {
     if (phase !== 'rules') return;
     return StartTour(GetHartTutorialSteps(lang, characterSet), { lang, onEvent: () => setTourFinished(true), onBack: backToSettings });
   }, [phase, lang, characterSet, backToSettings]);
+  useEffect(() => {
+    if (phase !== 'rules') return;
+    const frame = window.requestAnimationFrame(() => window.dispatchEvent(new Event('game:tutorial-layout')));
+    return () => window.cancelAnimationFrame(frame);
+  }, [decoderDock, phase]);
   useEffect(() => { if (tourFinished) confirmationRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, [tourFinished]);
 
   useEffect(() => {
@@ -355,6 +377,7 @@ function HartChartRuntime() {
   };
 
   const setDock = (dock: DecoderDock) => {
+    decoderDockChoiceRef.current = dock;
     setDecoderDock(dock);
     setDecoderDragTarget(dock);
     decoderDragTargetRef.current = dock;
@@ -523,7 +546,7 @@ function HartChartRuntime() {
   const roundsLabel = chinese ? (en ? 'Requested decoder characters' : '要求解碼字數') : (en ? 'Requested decoder letters' : '要求解碼字母數');
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
-    SaveGameSettings({ ...settings, decoderDock });
+    SaveGameSettings({ ...settings, ...(decoderDockChoiceRef.current ? { decoderDock: decoderDockChoiceRef.current } : {}) });
     setScale(ChartScale(settings.chartSize));
     setDecoderOpen(true);
     setShowHints(false);

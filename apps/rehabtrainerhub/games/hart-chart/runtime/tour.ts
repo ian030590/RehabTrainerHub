@@ -1,3 +1,5 @@
+import { PlaceTourPanel } from './tourPlacement';
+
 export interface TourStep { target: string; title: string; text: string; place: string }
 
 // The game owns this spotlight implementation; it never imports another game.
@@ -41,36 +43,12 @@ export function StartTour(steps: TourStep[], options: {
     }
     overlay.style.width = '';
     overlay.style.maxHeight = '';
-    let panel = overlay.getBoundingClientRect();
-    let left = rect ? rect.left + (rect.width - panel.width) / 2 : (window.innerWidth - panel.width) / 2;
-    let top = (window.innerHeight - panel.height) / 2;
-    if (rect) {
-      const above = rect.top - 20 - panel.height;
-      const below = rect.bottom + 20;
-      const candidates = steps[index].place === 'bottom' ? [below, above] : [above, below];
-      const vertical = candidates.find(value => value >= 8 && value + panel.height <= window.innerHeight - 8);
-      const spaceBelow = window.innerHeight - rect.bottom - 28;
-      const spaceAbove = rect.top - 28;
-      if (vertical !== undefined) top = vertical;
-      else if (Math.max(spaceAbove, spaceBelow) >= 160) {
-        // A long explanation scrolls inside the larger free area so the target stays visible.
-        overlay.style.maxHeight = `${Math.max(spaceAbove, spaceBelow)}px`;
-        panel = overlay.getBoundingClientRect();
-        top = spaceBelow >= spaceAbove ? rect.bottom + 20 : rect.top - 20 - panel.height;
-      } else {
-        const rightSpace = window.innerWidth - rect.right - 28;
-        const leftSpace = rect.left - 28;
-        const available = Math.max(rightSpace, leftSpace);
-        if (available >= 220) {
-          overlay.style.width = `${Math.min(panel.width, available)}px`;
-          panel = overlay.getBoundingClientRect();
-          left = rightSpace >= leftSpace ? rect.right + 20 : rect.left - 20 - panel.width;
-          top = rect.top + (rect.height - panel.height) / 2;
-        }
-      }
-    }
-    overlay.style.left = `${Math.max(8, Math.min(window.innerWidth - panel.width - 8, left))}px`;
-    overlay.style.top = `${Math.max(8, Math.min(window.innerHeight - panel.height - 8, top))}px`;
+    const panel = overlay.getBoundingClientRect();
+    const placement = PlaceTourPanel({ width: window.innerWidth, height: window.innerHeight }, rect ?? null, panel, steps[index].place);
+    overlay.style.width = placement.width < panel.width ? `${placement.width}px` : '';
+    overlay.style.maxHeight = placement.width < panel.width || placement.height < panel.height ? `${placement.maxHeight}px` : '';
+    overlay.style.left = `${placement.left}px`;
+    overlay.style.top = `${placement.top}px`;
   };
   const render = () => {
     title.textContent = steps[index].title;

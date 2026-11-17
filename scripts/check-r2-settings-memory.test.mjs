@@ -15,7 +15,7 @@ const games = {
   'conjunction-search': { version: '1.1.0', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
   'exploratory-saccade': { version: '1.1.0', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
   'seagull-flight': { version: '1.1.0', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
-  'hart-chart': { version: '2.1.0', file: 'HartChartPage.tsx', settings: 'settings.ts' },
+  'hart-chart': { version: '2.2.0', file: 'HartChartPage.tsx', settings: 'settings.ts' },
   'driving-rehab': { version: '2.2.0', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.1.0', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
   'gabor-patching': { version: '2.1.0', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
