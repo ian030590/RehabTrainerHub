@@ -1,0 +1,143 @@
+{
+  "gameId": "hart-chart",
+  "version": "2.2.0",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "8238cfaee1fd1e781186bcdcfa4ea1421d6cb65e16e1e6c6c60ece5cc8f3b995",
+  "launchUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.2.0/package/index.html",
+  "pwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/2.2.0/",
+  "stablePwaUrl": "https://trainerhubgames.rainbowh9490.workers.dev/games/hart-chart/",
+  "publishedAt": "2026-11-17T02:40:56.758Z",
+  "verifiedAt": "2026-11-17T02:40:56.758Z",
+  "fileCount": 5,
+  "totalBytes": 677739,
+  "files": [
+    {
+      "path": "assets/index-D5Kv4syF.js",
+      "size": 615764,
+      "sha256": "4f4ef66b55d38e57adc124e90c96d07c87a67c92966c3b48ca6006f8a8ad93aa",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BEpdv-u5.css",
+      "size": 31768,
+      "sha256": "cc3ae94727c2c46925d5d0d896d23dc3e12c77f4eb49110e1250df19a78aafaa",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 470,
+      "sha256": "689a84ee5b85ae61d182660f7244c23129bc8414a6bece756d412a75e97e7479",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "3495a6a6c3c6e687593c5582a97dc4cd0faa6cb6ae6b55a9a31e4da918c873db",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 29320,
+      "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.2.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec"
+    },
+    "2.0.1": {
+      "contentSha256": "d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366"
+    },
+    "2.0.2": {
+      "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+    },
+    "2.0.3": {
+      "contentSha256": "97a3ad4a9d576ebaf3e0a354905bfaa17a12f5fe5fb43c5c6e2a25e27c25146d"
+    },
+    "2.0.4": {
+      "contentSha256": "751ea298b25c523cb9d0519f604de377e09d3c841039a2c3351154a74dcfde09"
+    },
+    "2.1.0": {
+      "contentSha256": "8155b14ce4b1c383aacc995be4fae7fa7631257a8272f2d49ad6ccf40fe415dc"
+    },
+    "2.2.0": {
+      "contentSha256": "8238cfaee1fd1e781186bcdcfa4ea1421d6cb65e16e1e6c6c60ece5cc8f3b995"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "ok — owner ran the publish command for the stated version/contentSha256",
+    "scope": "Publish and activate hart-chart@2.2.0 with contentSha256 8238cfaee1fd1e781186bcdcfa4ea1421d6cb65e16e1e6c6c60ece5cc8f3b995"
+  },
+  "rollback": {
+    "version": "2.1.0",
+    "contentSha256": "8155b14ce4b1c383aacc995be4fae7fa7631257a8272f2d49ad6ccf40fe415dc",
+    "command": "node scripts/publish-official-game.mjs hart-chart --activate-version 2.1.0"
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/hart-chart/2.2.0/",
+  "changes": [
+    "The default decoder dock follows the viewport orientation until the player picks or has saved one, so a briefly portrait iframe at load no longer docks a landscape screen at the bottom.",
+    "The tutorial panel takes the largest free region around its target and shrinks to fit instead of covering the chart."
+  ],
+  "sourceCommit": "6cd243dc",
+  "platformDeploy": {
+    "commit": "6cd243dc",
+    "deployed": false,
+    "note": "Game content and version only."
+  },
+  "validation": {
+    "brave": "16/16 hart-chart runs passed (12 desktop --lobby, --stop, --mobile, --signed-in --english, --tablet); 2.1.0 failed the desktop tutorial check about 1 in 4.",
+    "gates": [
+      "test:game-architecture",
+      "test:naming",
+      "test:entrypoints"
+    ]
+  },
+  "productionVerification": {
+    "checkedAt": "2026-11-17T02:41:12.463Z",
+    "files": [
+      {
+        "path": "assets/index-D5Kv4syF.js",
+        "status": 200,
+        "size": 615764,
+        "sha256": "4f4ef66b55d38e57adc124e90c96d07c87a67c92966c3b48ca6006f8a8ad93aa"
+      },
+      {
+        "path": "assets/style-BEpdv-u5.css",
+        "status": 200,
+        "size": 31768,
+        "sha256": "cc3ae94727c2c46925d5d0d896d23dc3e12c77f4eb49110e1250df19a78aafaa"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 470,
+        "sha256": "689a84ee5b85ae61d182660f7244c23129bc8414a6bece756d412a75e97e7479"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 417,
+        "sha256": "3495a6a6c3c6e687593c5582a97dc4cd0faa6cb6ae6b55a9a31e4da918c873db"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 29320,
+        "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b"
+      }
+    ]
+  }
+}
