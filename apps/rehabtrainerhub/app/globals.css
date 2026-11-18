@@ -944,15 +944,6 @@ html:has(dialog.package-game-overlay[open]) {
   z-index: 200;
 }
 
-.page-kicker {
-  margin-bottom: 5px;
-  color: var(--primary);
-  font-size: var(--type-label);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .lobby-page,
 .progress-page,
 .qa-page,
@@ -981,7 +972,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) * 1.5);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .about-site-section h2 {
@@ -1477,6 +1467,7 @@ html:has(dialog.package-game-overlay[open]) {
 .filter-option input {
   width: 22px;
   height: 22px;
+  flex: none;
   margin: 0;
   accent-color: var(--primary);
 }
@@ -1982,21 +1973,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.progress-metrics article::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 5px;
-  background: var(--primary);
-  content: "";
-}
-
-.progress-metrics article:nth-child(2)::before {
-  background: var(--accent-blue);
 }
 
 .progress-metrics article > span {
@@ -2180,7 +2156,6 @@ html:has(dialog.package-game-overlay[open]) {
   border-color: color-mix(in srgb, var(--gold) 50%, var(--gold-soft));
   color: var(--text);
   background: var(--gold-soft);
-  box-shadow: var(--shadow-sm);
 }
 
 .trophy-mark {
@@ -2425,7 +2400,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) * 1.5);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .admin-access-notice > .material-symbols-outlined {
@@ -2459,7 +2433,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) * 1.5);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .admin-tabs button {
@@ -2494,11 +2467,6 @@ html:has(dialog.package-game-overlay[open]) {
 
 .admin-tab-panel {
   min-width: 0;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) * 2);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .admin-section-toolbar {
@@ -3356,10 +3324,6 @@ html:has(dialog.package-game-overlay[open]) {
     flex-direction: column;
   }
 
-  .admin-tab-panel {
-    padding: 20px 16px;
-  }
-
   .admin-section-toolbar > .admin-button {
     width: 100%;
   }
@@ -3455,10 +3419,6 @@ html:has(dialog.package-game-overlay[open]) {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px 18px;
-  }
-
-  .lobby-welcome .page-kicker {
-    display: none;
   }
 
   .lobby-description {
@@ -3610,17 +3570,13 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 .admin-game-release details {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-muted);
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .admin-game-public-metadata {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-muted);
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .admin-game-public-metadata h4,
@@ -3653,7 +3609,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .admin-game-findings {
   display: grid;
-  gap: 10px;
+  gap: 0;
   padding: 0;
   margin: 14px 0 0;
   list-style: none;
@@ -3661,9 +3617,11 @@ html:has(dialog.package-game-overlay[open]) {
 
 .admin-game-findings li {
   display: grid;
-  padding: 10px 12px;
-  border-left: 4px solid var(--gold);
-  background: var(--surface);
+  padding: 10px 0;
+}
+
+.admin-game-findings li + li {
+  border-top: 1px solid var(--border);
 }
 
 .admin-game-findings li strong {
@@ -3738,6 +3696,7 @@ html:has(dialog.package-game-overlay[open]) {
 .admin-game-evidence input {
   width: 20px;
   height: 20px;
+  flex: none;
   margin-top: 2px;
 }
 
@@ -3865,13 +3824,11 @@ html:has(dialog.package-game-overlay[open]) {
 
 @media (forced-colors: active) {
   .hub-nav a.is-active::after,
-  .progress-metrics article::before,
   .task-progress span {
     background: Highlight;
   }
 
   .module-card,
-  .admin-tab-panel,
   .admin-kpi-grid article,
   .progress-metrics article,
   .daily-task-list article,
@@ -4008,7 +3965,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .developer-docs-sidebar a span {
   color: var(--primary);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
   font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
 }
@@ -4022,11 +3979,6 @@ html:has(dialog.package-game-overlay[open]) {
 
 .developer-docs-content :where(p, li, dd) {
   text-wrap: pretty;
-}
-
-.developer-page .page-kicker {
-  font-size: var(--type-label);
-  letter-spacing: 0.045em;
 }
 
 .developer-doc-section {
@@ -4088,7 +4040,7 @@ html:has(dialog.package-game-overlay[open]) {
   display: block;
   margin-bottom: 30px;
   color: var(--primary);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
   font-size: var(--type-label);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -4120,8 +4072,7 @@ html:has(dialog.package-game-overlay[open]) {
   align-items: start;
   padding: 18px 20px;
   border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
-  border-left: 4px solid var(--primary);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--primary-soft);
 }
 
@@ -4165,7 +4116,8 @@ html:has(dialog.package-game-overlay[open]) {
 
 .developer-step-list li > span {
   color: var(--primary);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
   font-size: var(--type-label);
   font-weight: 800;
 }
@@ -4187,7 +4139,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid color-mix(in srgb, var(--heading) 18%, var(--border));
   border-radius: 10px;
   background: color-mix(in srgb, var(--heading) 94%, var(--surface));
-  box-shadow: var(--shadow-sm);
 }
 
 .developer-code-block > div {
@@ -4197,7 +4148,7 @@ html:has(dialog.package-game-overlay[open]) {
   padding: 0 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--surface) 16%, transparent);
   color: color-mix(in srgb, var(--surface) 74%, transparent);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
   font-size: var(--type-label);
   letter-spacing: 0.015em;
 }
@@ -4377,7 +4328,8 @@ html:has(dialog.package-game-overlay[open]) {
 
 .developer-flow span {
   color: var(--primary);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
   font-size: var(--type-label);
 }
 
@@ -4493,7 +4445,8 @@ html:has(dialog.package-game-overlay[open]) {
   left: 8px;
   color: var(--primary);
   content: counter(developer-step, decimal-leading-zero);
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
   font-size: var(--type-label);
   font-weight: 800;
 }
@@ -4562,7 +4515,6 @@ html:has(dialog.package-game-overlay[open]) {
   border: 1px solid color-mix(in srgb, var(--heading) 18%, var(--border));
   border-radius: 10px;
   background: color-mix(in srgb, var(--heading) 94%, var(--surface));
-  box-shadow: var(--shadow-sm);
 }
 
 .developer-prompt-output > div {
@@ -4678,6 +4630,7 @@ html:has(dialog.package-game-overlay[open]) {
 .developer-confirmation input {
   width: 20px;
   height: 20px;
+  flex: none;
   margin-top: 2px;
 }
 

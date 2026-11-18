@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 import * as results from '../apps/rehabtrainerhub/app/lobbyResults.js';
 
 const appRoot = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
+const installStylesheet = new URL('../packages/ui/src/components/InstallAppPage.css', import.meta.url);
+const siteStylesheets = [new URL('globals.css', appRoot), new URL('practicePlans.css', appRoot), installStylesheet];
 
 function StyleRules(css, selector) {
   return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
@@ -34,8 +36,8 @@ function SiteRules(css) {
 
 test('every site text size uses a type role while verified glyph selectors keep their sizes', async () => {
   const failures = [];
-  for (const file of ['globals.css', 'practicePlans.css']) {
-    const css = await readFile(new URL(file, appRoot), 'utf8');
+  for (const file of siteStylesheets) {
+    const css = await readFile(file, 'utf8');
     for (const { selector, body } of SiteRules(css)) {
       if (/material-symbols-outlined|-icon\b|\bsvg\b/.test(selector)) continue;
       for (const [, value] of body.matchAll(/\bfont-size:\s*([^;]+);/g)) {
@@ -48,6 +50,282 @@ test('every site text size uses a type role while verified glyph selectors keep 
     }
   }
   assert.deepEqual(failures, [], 'Site text must use the shared roles with a 14px label floor.');
+});
+
+test('Hub page headings and install instructions omit eyebrow labels and their obsolete styles', async () => {
+  const files = (await readdir(appRoot, { recursive: true })).filter(file => file.endsWith('.tsx'));
+  const failures = [];
+  for (const file of files) {
+    const source = await readFile(new URL(file.replaceAll('\\', '/'), appRoot), 'utf8');
+    if (/\b(?:page-kicker|install-app-kicker|eyebrow)\b/.test(source)) failures.push(file);
+  }
+  const install = await readFile(new URL('../packages/ui/src/components/InstallAppPage.tsx', import.meta.url), 'utf8');
+  if (/\b(?:page-kicker|install-app-kicker|eyebrow)\b/.test(install)) failures.push('InstallAppPage.tsx');
+  for (const file of siteStylesheets) {
+    const css = await readFile(file, 'utf8');
+    if (/\.(?:page-kicker|install-app-kicker)\b/.test(css)) failures.push(file.pathname);
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('Hub notices and metrics use full borders instead of decorative side stripes', async () => {
+  const failures = [];
+  for (const file of siteStylesheets) {
+    const css = await readFile(file, 'utf8');
+    for (const { selector, body } of SiteRules(css)) {
+      for (const [, property, value] of body.matchAll(/\b(border-(?:left|right|inline-start|inline-end)(?:-width)?):\s*([^;]+);/g)) {
+        const pixels = value.match(/^([\d.]+)px\b/);
+        if (pixels && Number(pixels[1]) > 1) failures.push(`${selector}: ${property}: ${value}`);
+      }
+    }
+    if (/\.progress-metrics article(?::nth-child\([^)]*\))?::before/.test(css)) failures.push('progress metric stripe pseudo-element');
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('fixed width checkboxes in flex labels retain their width', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const candidates = SiteRules(css).filter(({ selector, body }) => {
+    const parent = selector.match(/^(.*?)\s+(?:>\s*)?input(?:\[type=["']?(?:checkbox|radio)["']?\])?$/)?.[1];
+    if (!parent || !/(?:^|;)\s*width:\s*\d+(?:\.\d+)?px\s*;/.test(body)) return false;
+    return [parent, `${parent} label`].some(label => StyleRules(css, label)
+      .some(rule => /(?:^|;)\s*display:\s*(?:inline-)?flex\s*;/.test(rule)));
+  });
+  for (const selector of ['.admin-game-evidence input', '.filter-option input',
+    '.developer-capabilities input', '.developer-confirmation input']) {
+    assert.ok(candidates.some(candidate => candidate.selector === selector), `Missing ${selector}`);
+  }
+  assert.deepEqual(candidates.filter(({ body }) => !/(?:^|;)\s*(?:flex:\s*none|flex-shrink:\s*0)\s*;/.test(body))
+    .map(({ selector }) => selector), [], 'Fixed width checkbox and radio inputs must not shrink in flex labels.');
+});
+
+test('admin release sections and findings use dividers instead of nested boxes', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const selectors = ['.admin-game-release details', '.admin-game-public-metadata', '.admin-game-findings li'];
+  const failures = [];
+  for (const selector of selectors) {
+    const rules = StyleRules(css, selector);
+    assert.ok(rules.length, `Missing ${selector}`);
+    for (const body of rules) {
+      for (const [, property, value] of body.matchAll(/(?:^|(?<=;))\s*([\w-]+)\s*:\s*([^;]+);/g)) {
+        if (/^(?:background(?:-.+)?|border-radius|border)$/.test(property)
+          || (property.startsWith('border-') && (property !== 'border-top' || value.trim() !== '1px solid var(--border)'))) {
+          failures.push(`${selector}: ${property}: ${value.trim()}`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(failures, [], 'Release sections and finding rows must not render as boxes.');
+  for (const selector of selectors.slice(0, 2)) {
+    const body = StyleRules(css, selector).join('\n');
+    assert.match(body, /padding-top:\s*16px;/, selector);
+    assert.match(body, /border-top:\s*1px solid var\(--border\);/, selector);
+    assert.doesNotMatch(body, /(?:^|;)\s*padding\s*:/, selector);
+  }
+  assert.match(StyleRules(css, '.admin-game-findings').join('\n'), /gap:\s*0;/);
+  assert.match(StyleRules(css, '.admin-game-findings li').join('\n'), /padding:\s*10px 0;/);
+  assert.match(StyleRules(css, '.admin-game-findings li + li').join('\n'), /border-top:\s*1px solid var\(--border\);/);
+  assert.match(StyleRules(css, '.admin-game-findings li strong').join('\n'), /color:\s*var\(--error\);/);
+  assert.match(StyleRules(css, '.admin-game-release').join('\n'), /border:\s*1px solid var\(--border\);/);
+});
+
+test('monospace is reserved for actual code while numbered developer labels use body type', async () => {
+  const failures = [];
+  for (const file of siteStylesheets) {
+    for (const { selector, body } of SiteRules(await readFile(file, 'utf8'))) {
+      if (/font-family:\s*[^;]*monospace/.test(body) && !/(?:^|[\s>+~])(?:pre|code)\b/.test(selector)) failures.push(selector);
+    }
+  }
+  assert.deepEqual(failures, []);
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of ['.developer-docs-sidebar a span', '.developer-route-number', '.developer-step-list li > span',
+    '.developer-flow span', '.developer-number-list li::before']) {
+    const rule = StyleRules(css, selector).join('\n');
+    assert.match(rule, /font-family:\s*inherit;/, selector);
+    assert.match(rule, /font-variant-numeric:\s*tabular-nums;/, selector);
+  }
+});
+
+test('progress and install cards rest flat while achieved status remains visible in text', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  for (const selector of ['.progress-metrics article', '.achievement-grid article.is-achieved']) {
+    assert.doesNotMatch(StyleRules(css, selector).join('\n'), /box-shadow\s*:/, selector);
+  }
+  assert.doesNotMatch(StyleRules(await readFile(installStylesheet, 'utf8'), '.install-guide-card').join('\n'), /box-shadow\s*:/);
+  const progress = await readFile(new URL('progress/ProgressDashboard.tsx', appRoot), 'utf8');
+  assert.match(progress, /achievement\.achieved\s*\?\s*copy\.achieved\s*:\s*t\('progress\.daysToGo'/);
+});
+
+test('browser theme metadata matches the Hub surface and background palette', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const root = css.match(/:root\s*\{([^}]+)\}/)[1];
+  const surface = root.match(/--surface:\s*(#[\da-f]+);/i)[1];
+  const background = root.match(/--background:\s*(#[\da-f]+);/i)[1];
+  const layout = await readFile(new URL('layout.tsx', appRoot), 'utf8');
+  const manifest = JSON.parse(await readFile(new URL('../public/manifest.webmanifest', appRoot), 'utf8'));
+  assert.equal(layout.match(/themeColor:\s*['"]([^'"]+)/)[1], surface);
+  assert.equal(manifest.theme_color, surface);
+  assert.equal(manifest.background_color, background);
+});
+
+test('removed heading labels leave no unused copy keys and retain the lobby guide navigation label', async () => {
+  for (const language of ['zh-TW', 'en']) {
+    const loaded = { exports: {} };
+    new Function('exports', ts.transpileModule(await readFile(new URL(`i18n/${language}.ts`, appRoot), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText)(loaded.exports);
+    const copy = (loaded.exports.zhTW ?? loaded.exports.en).hubUi;
+    for (const [section, keys] of Object.entries({
+      about: ['kicker', 'purposeKicker', 'platformKicker', 'responsibilityKicker', 'contactKicker'],
+      progress: ['kicker', 'today', 'milestones'],
+      questions: ['kicker', 'aboutKicker', 'professionalKicker'], educationArticles: ['kicker'],
+    })) for (const key of keys) assert.equal(Object.hasOwn(copy[section], key), false, `${language}.${section}.${key}`);
+    assert.ok(copy.lobby.guide.kicker);
+    assert.equal(copy.progress.recentlyPlayed, language === 'en' ? 'Recently played' : '近期遊玩',
+      'The recent activity heading still uses this copy key.');
+  }
+  const progress = await readFile(new URL('progress/ProgressDashboard.tsx', appRoot), 'utf8');
+  assert.match(progress, /<h2 id="recent-modules-title">\{copy\.recentlyPlayed\}<\/h2>/);
+  const developer = await readFile(new URL('developer/developerCopy.ts', appRoot), 'utf8');
+  assert.doesNotMatch(developer, /\b(?:eyebrow|kicker|releasesEyebrow):/);
+});
+
+test('the progress H1 matches its navigation label and keeps the daily tasks feature name in both languages', async () => {
+  const progress = await readFile(new URL('progress/ProgressDashboard.tsx', appRoot), 'utf8');
+  assert.match(progress, /<h1>\{copy\.title\}<\/h1>/);
+  for (const language of ['zh-TW', 'en']) {
+    const loaded = { exports: {} };
+    new Function('exports', ts.transpileModule(await readFile(new URL(`i18n/${language}.ts`, appRoot), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText)(loaded.exports);
+    const copy = (loaded.exports.zhTW ?? loaded.exports.en).hubUi;
+    assert.equal(copy.progress.title, copy.navigation.navigationItems[1], language);
+    assert.equal(copy.progress.dailyTasks, language === 'en' ? 'Daily tasks' : '每日任務', language);
+  }
+});
+
+test('developer headings use their topics without sidebar label prefixes in both languages', async () => {
+  const developerModule = { exports: {} };
+  new Function('exports', ts.transpileModule(await readFile(new URL('developer/developerCopy.ts', appRoot), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText)(developerModule.exports);
+  for (const language of ['zh', 'en']) {
+    const developer = developerModule.exports.GetDeveloperCopy(language);
+    const isEnglish = language === 'en';
+    assert.deepEqual([
+      developer.quickStart.title, developer.research.title, developer.accessibility.title,
+      developer.submission.signedOutTitle, developer.submission.uploadTitle,
+    ], isEnglish ? [
+      'Game submission flow', 'Define the activity before the score', 'Provide equivalent ways to operate',
+      'Sign in to submit a game', 'Upload a new version',
+    ] : [
+      '遊戲投稿流程', '先定義活動，再定義分數', '讓操作方式可被替代', '登入後投稿遊戲', '上傳新版本',
+    ], language);
+    assert.equal(developer.header.title, isEnglish ? 'Guide to building a home-practice game' : '居家練習遊戲開發指南');
+    assert.equal(developer.security.title, isEnglish ? 'Behavior blocked by automated security checks' : '安全檢查會自動阻擋的行為');
+  }
+});
+
+test('installation introductions explain adding the app in plain language', async () => {
+  for (const language of ['zh', 'en']) {
+    const installModule = { exports: {} };
+    new Function('exports', ts.transpileModule(await readFile(new URL(
+      `../packages/ui/src/i18n/installApp/${language}.ts`, import.meta.url), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText)(installModule.exports);
+    const install = installModule.exports[language === 'en' ? 'installAppEn' : 'installAppZh'];
+    assert.equal(install.intro, language === 'en'
+      ? 'Add {appName} to your device, then open it directly from your home screen or app list.'
+      : '將 {appName} 加到裝置，之後可從主畫面或應用程式列表直接開啟。', language);
+  }
+});
+
+test('the author section separates its topic heading from the name and preserves its anchor and links', async () => {
+  for (const language of ['zh-TW', 'en']) {
+    const loaded = { exports: {} };
+    new Function('exports', ts.transpileModule(await readFile(new URL(`i18n/${language}.ts`, appRoot), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText)(loaded.exports);
+    const copy = (loaded.exports.zhTW ?? loaded.exports.en).hubUi.questions;
+    assert.equal(copy.professionalTitle, language === 'en' ? 'Author background and accountability' : '作者背景與內容責任');
+    assert.equal(copy.professionalName, language === 'en' ? 'Hung-En Tsai | Occupational Therapist' : '蔡泓恩｜職能治療師');
+  }
+  const source = await readFile(new URL('qa/QuestionsContent.tsx', appRoot), 'utf8');
+  assert.match(source, /id="professional-background"/);
+  assert.match(source, /<h2 id="professional-background-title">\{copy\.professionalTitle\}<\/h2>\s*<p><strong>\{copy\.professionalName\}<\/strong><\/p>/);
+  assert.match(source, /<a href=\{personalWebsiteUrl\} rel="me">/);
+});
+
+test('version identifiers follow their headings and the missing page starts directly with its H1', async () => {
+  const portal = await readFile(new URL('developer/DeveloperPortal.tsx', appRoot), 'utf8');
+  const missing = await readFile(new URL('not-found.tsx', appRoot), 'utf8');
+  assert.match(portal, /<h4>\{game\.title\}<\/h4>\s*<p>\{game\.slug\}<\/p>/);
+  assert.match(missing, /<main\b[^>]*>\s*<h1>找不到頁面<\/h1>/);
+  assert.doesNotMatch(missing, /<p>404<\/p>/);
+});
+
+test('shared elevation shadows only mark floating layers and the phone filter sheet', async () => {
+  const allowed = new Set(['.account-popover', '.embedded-training-bar', '.package-game-toolbar', '.hub-language-toggle img']);
+  const failures = [];
+  for (const file of siteStylesheets) {
+    const css = await readFile(file, 'utf8');
+    const phone = css.match(/@media \(max-width: 1023px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
+    for (const { selector, body } of SiteRules(css)) {
+      if (!/box-shadow:\s*[^;]*var\(--shadow-(?:sm|md)\)/.test(body)) continue;
+      if (allowed.has(selector)) continue;
+      if (selector === '.filter-panel' && StyleRules(phone, selector).includes(body) && /position:\s*fixed;/.test(body)) continue;
+      failures.push(selector);
+    }
+  }
+  assert.deepEqual(failures, [], 'Resting surfaces must not use elevation shadows.');
+});
+
+test('admin panels place their content directly on the page without an outer card', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  assert.doesNotMatch(StyleRules(css, '.admin-tab-panel').join('\n'), /\b(?:border(?:-[\w-]+)?|background(?:-[\w-]+)?|box-shadow|padding(?:-[\w-]+)?):/);
+  assert.match(StyleRules(css, '.admin-tabs').join('\n'), /border:\s*1px solid var\(--border\);/);
+});
+
+test('every rendered Hub icon is present in the documented local font subset', async () => {
+  const readme = await readFile(new URL('../public/fonts/README.md', appRoot), 'utf8');
+  const names = readme.match(/icon_names=([^&\s)]+)/)[1].split(',');
+  assert.deepEqual(names, [...new Set(names)].sort(), 'The subset name list must be sorted and unique.');
+  const rendered = new Set();
+  function CollectRenderedNames(node) {
+    if (ts.isJsxText(node) || ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      const name = node.text.trim();
+      if (/^[a-z]+(?:_[a-z]+)*$/.test(name)) rendered.add(name);
+    } else if (ts.isJsxExpression(node) && node.expression) {
+      CollectRenderedNames(node.expression);
+    } else if (ts.isParenthesizedExpression(node)) {
+      CollectRenderedNames(node.expression);
+    } else if (ts.isConditionalExpression(node)) {
+      CollectRenderedNames(node.whenTrue);
+      CollectRenderedNames(node.whenFalse);
+    }
+  }
+  const files = (await readdir(appRoot, { recursive: true })).filter(file => file.endsWith('.tsx'))
+    .map(file => new URL(file.replaceAll('\\', '/'), appRoot));
+  files.push(new URL('../packages/ui/src/components/InstallAppPage.tsx', import.meta.url));
+  for (const file of files) {
+    const source = ts.createSourceFile(file.pathname, await readFile(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    function Visit(node) {
+      if (ts.isJsxElement(node) && node.openingElement.tagName.getText(source) === 'span'
+        && node.openingElement.attributes.properties.some(attribute => ts.isJsxAttribute(attribute)
+          && attribute.name.getText(source) === 'className' && attribute.initializer
+          && ts.isStringLiteral(attribute.initializer) && attribute.initializer.text.split(/\s+/).includes('material-symbols-outlined'))) {
+        node.children.forEach(CollectRenderedNames);
+      }
+      if (ts.isPropertyAssignment(node) && node.name.getText(source).replace(/['"]/g, '') === 'icon'
+        && ts.isStringLiteral(node.initializer)) CollectRenderedNames(node.initializer);
+      ts.forEachChild(node, Visit);
+    }
+    Visit(source);
+  }
+  assert.deepEqual([...rendered].filter(name => !names.includes(name)).sort(), [], 'Rendered icon names missing from the local subset.');
+  const font = await readFile(new URL('../public/fonts/material-symbols-hub.woff2', appRoot));
+  assert.equal(font.subarray(0, 4).toString(), 'wOF2');
+  assert.equal(font.length, Number(readme.match(/([\d,]+)-byte subset/)[1].replaceAll(',', '')));
 });
 
 test('admin KPI units declare the label role instead of inheriting the browser smaller size', async () => {
@@ -90,8 +368,8 @@ test('phone developer grids can shrink below long paths and route descriptions w
 
 test('site colors use shared tokens outside the two root palettes', async () => {
   const failures = [];
-  for (const file of ['globals.css', 'practicePlans.css']) {
-    const css = await readFile(new URL(file, appRoot), 'utf8');
+  for (const file of siteStylesheets) {
+    const css = await readFile(file, 'utf8');
     for (const { selector, body } of SiteRules(css)) {
       if (selector === ':root') continue;
       if (/#[\da-f]{3,8}\b|\b(?:rgba?|hsla?|oklch)\s*\(/i.test(body)) failures.push(`${file} ${selector}`);

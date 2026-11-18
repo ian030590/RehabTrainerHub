@@ -212,7 +212,7 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 
 **Display Font:** Noto Sans TC（Google Fonts 可變字重 100 到 900），後備 PingFang TC、Microsoft JhengHei、Microsoft JhengHei UI、Arial、sans-serif
 **Body Font:** 同上，單一字族
-**Icon Font:** Material Symbols Outlined，由本站提供約 10KB 子集（`/fonts/material-symbols-hub.woff2`），字型服務被阻擋時關鍵圖示仍可辨識
+**Icon Font:** Material Symbols Outlined，由本站提供約 10KB 子集（`/fonts/material-symbols-hub.woff2`），字型服務被阻擋時關鍵圖示仍可辨識。子集只含列在 `public/fonts/README.md` 的圖示名稱；新增圖示時一併重做子集，測試會比對原始碼用到的名稱，缺字時圖示會顯示成英文字串。
 
 **Character:** 單一無襯線字族，以字重與明度建立層級，不靠第二字體製造個性。繁中字形平穩，內文 500 比常見的 400 稍實，讓年長讀者在手機上也讀得清楚。
 
@@ -252,10 +252,10 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 
 ## Elevation & Depth
 
-系統是扁平的。內容之間用 1px 邊線、表面明度差（紙底、白表面、淺灰綠面）與留白分組；遊戲卡、篩選面板、搜尋框在靜止時都沒有陰影。陰影只出現在真正浮在內容上的層：帳號選單、對話框、訓練 overlay 與嵌入訓練頂欄。
+系統是扁平的。內容之間用 1px 邊線、表面明度差（紙底、白表面、淺灰綠面）與留白分組；遊戲卡、篩選面板、搜尋框在靜止時都沒有陰影。陰影只出現在真正浮在內容上的層：帳號選單、對話框、訓練 overlay、嵌入訓練頂欄、第三方遊戲工具列與手機篩選 sheet；關於、問答、管理與開發者頁的區塊都不加陰影，由測試列出允許的選擇器。
 
 ### Shadow Vocabulary
-- **貼地陰影**（`--shadow-sm`：`0 1px 2px rgba(20, 33, 43, 0.08)`）：嵌入訓練頂欄、關於頁區塊、設定與成績共用元件的輕微分層。
+- **貼地陰影**（`--shadow-sm`：`0 1px 2px rgba(20, 33, 43, 0.08)`）：嵌入訓練頂欄、語言旗幟、設定與成績共用元件的輕微分層。
 - **浮層陰影**（`--shadow-md`：`0 8px 24px rgba(20, 33, 43, 0.12)`）：浮動面板、共用設定表單、帳號 popover，以及 1024px 以下的篩選底部 sheet（sheet 另有對話框遮罩分層）。
 
 ### Named Rules
@@ -321,7 +321,7 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 ### Inner Pages
 - **進度頁**：統計、每日項目、最近使用、成就、CSV 下載，以及空白與錯誤狀態；患者清單以穩定的精簡列呈現載入、無清單及錯誤狀態，清單晚到時保持收合，由使用者決定展開。
 - **衛教與關於頁**：單欄閱讀與可查核來源。下載頁保留平台及裝置說明。
-- **開發者與管理頁**：表單、列表、狀態、操作及權限；密集資訊用表格或分隔線，不套遊戲卡。
+- **開發者與管理頁**：表單、列表、狀態、操作及權限；密集資訊用表格或分隔線，不套遊戲卡。管理後台的分頁內容直接放在頁面底色上，統計卡、表格與審核項目不再包進外層卡片（不做卡中卡）；每個審核版本是一張卡，卡內的審核單、公開內容、掃描結果與識別資料以 1px 分隔線區分，只有人工審核勾選清單保留 fieldset 框線。開發者頁的提示框用完整 1px 邊框與淡底，不用左側色條。
 
 ## Do's and Don'ts
 
@@ -336,11 +336,14 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 - **Do** 以 live region／status 呈現必要更新並避免反覆朗讀；支援減少動態及系統高對比（`forced-colors`）。
 
 ### Don't:
-- **Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。
+- **Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。瀏覽器 metadata 需要字面值：`layout.tsx` 的 `themeColor` 與 manifest 的 `theme_color` 取 `--surface`，manifest 的 `background_color` 取 `--background`，同樣由測試比對。
 - **Don't** 讓導覽、一般連結、篩選文字或分頁使用分類色或品牌藍。
 - **Don't** 使用 Instagram 漸層、X 品牌藍或黑底、Threads 社群身份元素、圖示獨佔分頁、14 到 15px 正文、三欄時間線、無限捲動、Story／按讚／追蹤／留言／轉發、虛構熱度與個人化推薦。
 - **Don't** 新增暗色模式；目前沒有需求，`color-scheme` 固定為 light。
 - **Don't** 給靜止的卡片加陰影、漂浮或放大動畫。
+- **Don't** 在標題上方放小標籤（kicker、eyebrow）。頁名由導覽與標題說明，開發者文件的區段名稱由側欄說明；也不要把標籤改成「標籤：標題」前綴。
+- **Don't** 用側邊色條標示狀態或強調（超過 1px 的單側邊框，或 `::before` 色條）；改用完整 1px 邊框、淡底或文字。
+- **Don't** 把等寬字型當裝飾；只有 `pre`、`code` 裡的程式碼使用等寬，編號用本文字型加 `tabular-nums`。
 - **Don't** 移除 outline 而只換背景作為焦點樣式。
 - **Don't** 讓 Hub 的轉場、stagger 或任何動態進入遊戲 iframe、刺激、計時與計分。
 

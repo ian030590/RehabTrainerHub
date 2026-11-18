@@ -156,7 +156,6 @@ export function DeveloperPortal() {
       <DeveloperGuide>
         <section className="developer-doc-section developer-submission-section" id="submission">
           <header>
-            <p className="page-kicker">{copy.submission.eyebrow}</p>
             <h2>{user ? copy.submission.uploadTitle : copy.submission.signedOutTitle}</h2>
           </header>
 
@@ -308,7 +307,6 @@ export function DeveloperPortal() {
               <section className="admin-tab-panel" aria-labelledby="developer-releases-title">
                 <div className="section-title-row">
                   <div>
-                    <p className="page-kicker">{copy.submission.releasesEyebrow}</p>
                     <h3 id="developer-releases-title">{copy.submission.releasesTitle}</h3>
                   </div>
                   <p>{copy.submission.counts(games.length, releaseCount)}</p>
@@ -319,8 +317,8 @@ export function DeveloperPortal() {
                   {games.map((game) => (
                     <article className="developer-release-card" key={game.id}>
                       <div>
-                        <p className="page-kicker">{game.slug}</p>
                         <h4>{game.title}</h4>
+                        <p>{game.slug}</p>
                         <p>{copy.submission.developer}: {game.developerName}</p>
                         <p>
                           {copy.submission.trainerLabel}: {trainerCategoryTags.find((tag) => tag.id === game.trainer)?.label[locale] ?? game.trainer}

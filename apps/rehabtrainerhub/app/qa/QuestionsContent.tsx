@@ -13,12 +13,10 @@ export function QuestionsContent() {
   return (
     <main className="qa-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">{copy.kicker}</p>
         <h1>{copy.title}</h1>
       </header>
 
       <section className="about-site-section" aria-labelledby="about-site-title">
-        <p className="page-kicker">{copy.aboutKicker}</p>
         <h2 id="about-site-title">{copy.aboutTitle}</h2>
         <p>{copy.aboutBody}</p>
       </section>
@@ -28,8 +26,8 @@ export function QuestionsContent() {
         aria-labelledby="professional-background-title"
         id="professional-background"
       >
-        <p className="page-kicker">{copy.professionalKicker}</p>
         <h2 id="professional-background-title">{copy.professionalTitle}</h2>
+        <p><strong>{copy.professionalName}</strong></p>
         <p>{copy.professionalBody}</p>
         <p className="professional-website-link">
           {copy.professionalWebsiteLabel}{' '}

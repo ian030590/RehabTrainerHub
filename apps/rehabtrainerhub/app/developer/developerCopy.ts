@@ -3,8 +3,7 @@ import type { HubLanguage } from '../i18n/HubLanguage';
 const copy = {
   zh: {
     header: {
-      kicker: 'Developer documentation',
-      title: '開發居家練習遊戲',
+      title: '居家練習遊戲開發指南',
       intro: '了解原生 HTML 套件與舊版 jsPsych 套件的投稿規格、安全檢查及人工審核流程。',
       version: '文件對應平台契約 v1',
       scope: '第三方投稿 + 內建遊戲貢獻',
@@ -29,7 +28,6 @@ const copy = {
       ['submission', '投稿與版本'],
     ] as const,
     overview: {
-      eyebrow: 'Overview',
       title: '先選對開發路徑',
       body: '第三方遊戲以原生 HTML／ZIP 投稿，或沿用 jsPsych 8 與平台橋樑。原生投稿包含 settings.json 與 score.json；內建遊戲仍由倉庫貢獻者維護。',
       routes: [
@@ -49,7 +47,6 @@ const copy = {
       notice: '本平台提供一般居家練習工具，不是醫療器材開發框架。活動名稱、提示與結果不得宣稱診斷、治療、恢復功能或保證療效。',
     },
     quickStart: {
-      eyebrow: 'Quick start',
       title: '遊戲投稿流程',
       intro: '原生遊戲是一般的 HTML、CSS 與 JavaScript 套件，不需要安裝 SDK。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
       steps: [
@@ -64,7 +61,6 @@ const copy = {
       installLink: '前往本機開發環境',
     },
     localEnvironment: {
-      eyebrow: 'Local environment',
       title: '從空白電腦建立本機開發環境',
       intro: '這些工具只需安裝一次。NVM 管理 Node.js 版本；Node.js 會提供 npm；Git 保存本機版本歷史；GitHub 與 GitHub CLI（gh）負責遠端倉庫、登入、fork 與 pull request。',
       requirementsTitle: '四個工具各自負責什麼',
@@ -97,7 +93,6 @@ const copy = {
       ],
     },
     aiAgent: {
-      eyebrow: 'AI-assisted development',
       title: '安裝並啟動 Codex',
       body: 'OpenAI 官方 Codex CLI 可在終端機讀取、修改與執行目前資料夾中的程式碼。安裝方式可能隨平台更新，請以官方安裝頁的作業系統分頁為準。',
       officialLink: '開啟官方 Codex CLI 安裝指南',
@@ -111,7 +106,6 @@ const copy = {
       ],
     },
     architecture: {
-      eyebrow: 'Architecture',
       title: '平台如何載入遊戲',
       flow: ['Hub 產生設定表單', '驗證 settings', '隔離 iframe', '私有通訊橋樑', '彙總結果', 'Hub 儲存紀錄'],
       body: 'Hub 只負責設定表單、容器、登入紀錄與離開流程。第三方程式在獨立網域的 sandbox="allow-scripts" iframe 執行，無法讀取主平台 Cookie；平台以 MessageChannel 傳送已驗證設定與接收彙總結果。',
@@ -123,7 +117,6 @@ const copy = {
       ],
     },
     package: {
-      eyebrow: 'Package contract',
       title: '第三方套件結構',
       body: 'ZIP 的 index.html 與 settings.json 必須直接位於根目錄。所有圖片、音效、字型、CSS、自訂 plugin 與程式碼都放在套件內，路徑只能使用 ASCII 字母、數字、點、底線、連字號與斜線。',
       rules: [
@@ -135,7 +128,6 @@ const copy = {
       ],
     },
     settings: {
-      eyebrow: 'Configuration schema',
       title: 'settings.json：由 Hub 產生設定介面',
       body: 'settings.json 是第三方投稿的設定宣告。Hub 在建立 iframe 前驗證它，並將使用者選擇的值傳給遊戲。遊戲內不得再複製一份設定畫面。內建遊戲自行呈現設定表單，沒有這個檔案。',
       rules: [
@@ -154,7 +146,6 @@ const copy = {
       ],
     },
     score: {
-      eyebrow: 'Native packages',
       title: 'score.json：原生投稿的結果投影',
       body: '原生投稿使用 score.json，宣告遊戲結果的數值／布林欄位如何呈現為表格、圖表與摘要；計分公式由遊戲執行。內建遊戲自行呈現成果，沒有這個檔案。',
       externalNotice: '原生 ZIP 必須提供 score.json，遊戲透過私有通道回傳 details 與 detailRows；舊版 jsPsych 投稿仍回傳彙總指標。',
@@ -167,7 +158,6 @@ const copy = {
       ],
     },
     bridge: {
-      eyebrow: 'Platform runtime',
       title: '舊版 jsPsych 與平台通訊橋樑',
       body: '本節適用舊版 jsPsych 投稿：執行站提供 jsPsych 8.2.3 與版本化橋樑。原生 HTML 投稿可使用自己的程式碼，透過隔離執行站的私有 MessagePort 接收設定與回傳結果。',
       runtimeTitle: '固定 runtime 路徑',
@@ -187,7 +177,6 @@ const copy = {
       ],
     },
     research: {
-      eyebrow: 'OT & research checklist',
       title: '先定義活動，再定義分數',
       body: '一個看似簡單的遊戲可能同時要求視覺搜尋、持續注意、反應抑制、動作速度與裝置操作。文件與結果只能描述實際任務，不可由遊戲表現推論疾病、日常功能或治療效果。',
       cards: [
@@ -202,7 +191,6 @@ const copy = {
       minimum: ['目標活動需求與非目標需求', '適用輸入裝置與操作姿勢', '每回合程序與隨機化方式', '設定值範圍及選擇理由', '結果公式、單位與限制', '練習／中止／錯誤處理', '雙語可見文字', '來源與最後查核日期'],
     },
     accessibility: {
-      eyebrow: 'Accessibility',
       title: '讓操作方式可被替代',
       rules: [
         '使用 main、h1–h3、p、button、ol／ul 等語意元素；不要用 div 模擬按鈕。',
@@ -214,8 +202,7 @@ const copy = {
       ],
     },
     security: {
-      eyebrow: 'Security gate',
-      title: '會被自動阻擋的行為',
+      title: '安全檢查會自動阻擋的行為',
       body: '掃描只是初步分類，不是安全邊界。通過掃描後仍會在無敏感憑證的隔離環境進行原始碼查核與人工試玩。',
       groups: [
         ['網路與外部內容', 'fetch、XHR、WebSocket、EventSource、sendBeacon、WebRTC、http(s) URL、CSS @import。'],
@@ -225,7 +212,6 @@ const copy = {
       ],
     },
     testing: {
-      eyebrow: 'Verification',
       title: '測試與送審前檢核',
       thirdPartyTitle: '第三方遊戲',
       thirdParty: [
@@ -238,7 +224,6 @@ const copy = {
       repoNote: '改動內建遊戲、共用設定或結果契約時，至少執行下列 gate；涉及 entrypoint／renderer／fullscreen 時不可省略 build:hub。',
     },
     prompt: {
-      eyebrow: 'Prompt builder',
       title: '產生可交給 AI Agent 的結構化提示詞',
       body: '先填寫活動意圖與操作條件。產生的提示詞會鎖定平台契約、研究界線、安全與驗證輸出，適合直接貼入 Codex。',
       fields: {
@@ -267,7 +252,6 @@ const copy = {
       outputLabel: '產生的 AI Agent 提示詞',
     },
     submission: {
-      eyebrow: 'Developer workspace',
       signedOutTitle: '登入後投稿遊戲',
       signedOutBody: '使用右上角帳戶按鈕登入後，即可上傳 HTML／ZIP、查看掃描結果與人工審核進度。閱讀文件與產生提示詞不需要登入。',
       uploadTitle: '上傳新版本',
@@ -293,7 +277,6 @@ const copy = {
       confirmation: '我確認原始碼未混淆、所有遊戲資產皆在包內，且不會嘗試對外通訊、讀取 Cookie 或蒐集個資。',
       submitting: '掃描並上傳中…',
       submit: '掃描並送審',
-      releasesEyebrow: 'Submissions',
       releasesTitle: '我的投稿',
       loading: '正在載入投稿…',
       empty: '尚未投稿遊戲。',
@@ -320,8 +303,7 @@ const copy = {
   },
   en: {
     header: {
-      kicker: 'Developer documentation',
-      title: 'Build a home-practice game',
+      title: 'Guide to building a home-practice game',
       intro: 'Review the native HTML and legacy jsPsych package contracts, security checks, and manual approval process.',
       version: 'Platform contract v1',
       scope: 'Third-party submissions + built-in contributions',
@@ -346,7 +328,6 @@ const copy = {
       ['submission', 'Submit & version'],
     ] as const,
     overview: {
-      eyebrow: 'Overview',
       title: 'Choose the correct development path',
       body: 'Third-party games are submitted as native HTML/ZIP packages or keep the jsPsych 8 platform bridge contract. Native submissions include settings.json and score.json; repository contributors still maintain built-in games.',
       routes: [
@@ -366,7 +347,6 @@ const copy = {
       notice: 'This platform provides general home-practice tools; it is not a medical-device development framework. Names, instructions, and results must not claim diagnosis, treatment, functional recovery, or guaranteed outcomes.',
     },
     quickStart: {
-      eyebrow: 'Quick start',
       title: 'Game submission flow',
       intro: 'Native games are ordinary HTML, CSS, and JavaScript packages; no SDK is required. Every submission still needs content, source, security, and result checks.',
       steps: [
@@ -381,7 +361,6 @@ const copy = {
       installLink: 'Set up the local environment',
     },
     localEnvironment: {
-      eyebrow: 'Local environment',
       title: 'Prepare a development machine from scratch',
       intro: 'Install these tools once. NVM manages Node.js versions; Node.js supplies npm; Git records local history; GitHub and GitHub CLI (gh) handle the remote repository, authentication, forks, and pull requests.',
       requirementsTitle: 'What each tool does',
@@ -414,7 +393,6 @@ const copy = {
       ],
     },
     aiAgent: {
-      eyebrow: 'AI-assisted development',
       title: 'Install and start Codex',
       body: 'The official OpenAI Codex CLI can inspect, edit, and run code in the current folder from a terminal. Installation methods can change; use the operating-system tab in the official guide as the source of truth.',
       officialLink: 'Open the official Codex CLI installation guide',
@@ -428,7 +406,6 @@ const copy = {
       ],
     },
     architecture: {
-      eyebrow: 'Architecture',
       title: 'How the platform loads a game',
       flow: ['Hub renders settings', 'Validate settings', 'Isolated iframe', 'Private bridge channel', 'Aggregate result', 'Hub stores record'],
       body: 'The Hub owns configuration, containment, account records, and exit flow. Third-party code runs on a separate origin in a sandbox="allow-scripts" iframe and cannot read Hub cookies. A MessageChannel carries validated settings and aggregate results.',
@@ -440,7 +417,6 @@ const copy = {
       ],
     },
     package: {
-      eyebrow: 'Package contract',
       title: 'Third-party package structure',
       body: 'index.html and settings.json must sit directly at the ZIP root. Include every image, sound, font, stylesheet, custom plugin, and source file in the package. Paths may contain only ASCII letters, numbers, dots, underscores, hyphens, and slashes.',
       rules: [
@@ -452,7 +428,6 @@ const copy = {
       ],
     },
     settings: {
-      eyebrow: 'Configuration schema',
       title: 'settings.json: Hub-generated configuration',
       body: 'Third-party submissions declare their settings in settings.json. The Hub validates it before creating the iframe and sends the selected values to the game. Do not duplicate this settings screen inside the game. Built-in games show their own settings form and have no settings.json.',
       rules: [
@@ -471,7 +446,6 @@ const copy = {
       ],
     },
     score: {
-      eyebrow: 'Native packages',
       title: 'score.json: native package results',
       body: 'Native submissions use score.json to map numeric and boolean game results to shared tables, charts, and summaries. Scoring formulas run in the game. Built-in games show their own results and have no score.json.',
       externalNotice: 'Native ZIP packages must include score.json and return details and detailRows through the private channel. Legacy jsPsych packages still return aggregates.',
@@ -484,7 +458,6 @@ const copy = {
       ],
     },
     bridge: {
-      eyebrow: 'Platform runtime',
       title: 'Legacy jsPsych and platform bridge',
       body: 'This section applies to legacy jsPsych submissions. The runner supplies jsPsych 8.2.3 and a versioned bridge. Native HTML games may use their own code and the isolated runner’s private MessagePort for settings and results.',
       runtimeTitle: 'Fixed runtime paths',
@@ -504,7 +477,6 @@ const copy = {
       ],
     },
     research: {
-      eyebrow: 'OT & research checklist',
       title: 'Define the activity before the score',
       body: 'A simple-looking game can require visual search, sustained attention, inhibition, movement speed, and device operation at the same time. Documentation and results may describe only the actual task; do not infer disease, daily function, or treatment effects from game performance.',
       cards: [
@@ -519,7 +491,6 @@ const copy = {
       minimum: ['Target and non-target task demands', 'Supported input devices and posture', 'Trial procedure and randomization', 'Setting ranges and rationale', 'Result formulas, units, and limitations', 'Practice, exit, and error handling', 'Visible copy in both languages', 'Sources and last verification date'],
     },
     accessibility: {
-      eyebrow: 'Accessibility',
       title: 'Provide equivalent ways to operate',
       rules: [
         'Use semantic main, h1–h3, p, button, ol, and ul elements. Never emulate buttons with div elements.',
@@ -531,8 +502,7 @@ const copy = {
       ],
     },
     security: {
-      eyebrow: 'Security gate',
-      title: 'Behavior blocked by automated review',
+      title: 'Behavior blocked by automated security checks',
       body: 'Scanning is triage, not the security boundary. Passing packages still undergo source review and hands-on testing in an isolated environment without sensitive credentials.',
       groups: [
         ['Network and remote content', 'fetch, XHR, WebSocket, EventSource, sendBeacon, WebRTC, http(s) URLs, and CSS @import.'],
@@ -542,7 +512,6 @@ const copy = {
       ],
     },
     testing: {
-      eyebrow: 'Verification',
       title: 'Test and pre-submission review',
       thirdPartyTitle: 'Third-party games',
       thirdParty: [
@@ -555,7 +524,6 @@ const copy = {
       repoNote: 'For built-in games or shared settings/result contracts, run at least these gates. Changes involving an entry point, renderer, or fullscreen flow also require build:hub.',
     },
     prompt: {
-      eyebrow: 'Prompt builder',
       title: 'Generate a structured prompt for an AI agent',
       body: 'Describe the activity intent and operating conditions first. The generated prompt locks in platform contracts, research boundaries, safety requirements, and verification output and can be pasted directly into Codex.',
       fields: {
@@ -584,7 +552,6 @@ const copy = {
       outputLabel: 'Generated AI agent prompt',
     },
     submission: {
-      eyebrow: 'Developer workspace',
       signedOutTitle: 'Sign in to submit a game',
       signedOutBody: 'Use the account button in the upper-right corner to sign in, upload HTML/ZIP, and review scan and approval status. The documentation and prompt builder are available without signing in.',
       uploadTitle: 'Upload a new version',
@@ -610,7 +577,6 @@ const copy = {
       confirmation: 'I confirm that the source is unobfuscated, all game assets are local, and the game does not attempt external communication, cookie access, or personal-data collection.',
       submitting: 'Scanning and uploading…',
       submit: 'Scan and submit',
-      releasesEyebrow: 'Submissions',
       releasesTitle: 'My submissions',
       loading: 'Loading submissions…',
       empty: 'No games submitted yet.',

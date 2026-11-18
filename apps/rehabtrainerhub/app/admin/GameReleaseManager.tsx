@@ -118,7 +118,6 @@ export function GameReleaseManager() {
     <div className="admin-game-review">
       <div className="admin-section-toolbar">
         <div>
-          <p className="page-kicker">Game review</p>
           <h2>遊戲版本審核</h2>
           <p>每個版本使用一張 repo Issue，原始套件保存在私有 R2。只有平台擁有者核准的相同審核雜湊版本會公開。</p>
         </div>

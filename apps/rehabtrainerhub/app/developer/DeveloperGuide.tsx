@@ -175,7 +175,6 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
     <>
       <header className="developer-hero">
         <div>
-          <p className="page-kicker">{copy.header.kicker}</p>
           <h1>{copy.header.title}</h1>
           <p>{copy.header.intro}</p>
         </div>
@@ -209,7 +208,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
         </aside>
 
         <div className="developer-docs-content">
-          <DocSection eyebrow={copy.overview.eyebrow} id="overview" title={copy.overview.title}>
+          <DocSection id="overview" title={copy.overview.title}>
             <p className="developer-docs-lead">{copy.overview.body}</p>
             <div className="developer-route-grid">
               {copy.overview.routes.map((route) => (
@@ -224,7 +223,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             <Callout icon="clinical_notes">{copy.overview.notice}</Callout>
           </DocSection>
 
-          <DocSection eyebrow={copy.quickStart.eyebrow} id="quick-start" title={copy.quickStart.title}>
+          <DocSection id="quick-start" title={copy.quickStart.title}>
             <p className="developer-docs-lead">{copy.quickStart.intro}</p>
             <ol className="developer-step-list">
               {copy.quickStart.steps.map(([title, body], index) => (
@@ -245,7 +244,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </a>
           </DocSection>
 
-          <DocSection eyebrow={copy.localEnvironment.eyebrow} id="local-environment" title={copy.localEnvironment.title}>
+          <DocSection id="local-environment" title={copy.localEnvironment.title}>
             <p className="developer-docs-lead">{copy.localEnvironment.intro}</p>
             <h3>{copy.localEnvironment.requirementsTitle}</h3>
             <dl className="developer-definition-list developer-tool-list">
@@ -288,7 +287,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </nav>
           </DocSection>
 
-          <DocSection eyebrow={copy.aiAgent.eyebrow} id="ai-agent" title={copy.aiAgent.title}>
+          <DocSection id="ai-agent" title={copy.aiAgent.title}>
             <p className="developer-docs-lead">{copy.aiAgent.body}</p>
             <a className="developer-external-link" href={codexGuideUrl} rel="noreferrer" target="_blank">
               <span className="developer-native-icon" aria-hidden="true">↗</span>
@@ -309,7 +308,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </ul>
           </DocSection>
 
-          <DocSection eyebrow={copy.architecture.eyebrow} id="architecture" title={copy.architecture.title}>
+          <DocSection id="architecture" title={copy.architecture.title}>
             <div className="developer-flow" role="img" aria-label={copy.architecture.flow.join(' → ')}>
               {copy.architecture.flow.map((item, index) => (
                 <div key={item}>
@@ -330,7 +329,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </dl>
           </DocSection>
 
-          <DocSection eyebrow={copy.package.eyebrow} id="package" title={copy.package.title}>
+          <DocSection id="package" title={copy.package.title}>
             <p className="developer-docs-lead">{copy.package.body}</p>
             <CodeBlock label="ZIP">{packageTree}</CodeBlock>
             <ul className="developer-check-list">
@@ -338,7 +337,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </ul>
           </DocSection>
 
-          <DocSection eyebrow={copy.settings.eyebrow} id="settings-json" title={copy.settings.title}>
+          <DocSection id="settings-json" title={copy.settings.title}>
             <p className="developer-docs-lead">{copy.settings.body}</p>
             <ul className="developer-check-list">
               {copy.settings.rules.map((item) => <li key={item}>{item}</li>)}
@@ -355,7 +354,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </dl>
           </DocSection>
 
-          <DocSection eyebrow={copy.score.eyebrow} id="score-json" title={copy.score.title}>
+          <DocSection id="score-json" title={copy.score.title}>
             <p className="developer-docs-lead">{copy.score.body}</p>
             <Callout icon="account_tree">{copy.score.externalNotice}</Callout>
             <ul className="developer-check-list">
@@ -364,7 +363,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             <CodeBlock label="score.json">{scoreExample}</CodeBlock>
           </DocSection>
 
-          <DocSection eyebrow={copy.bridge.eyebrow} id="bridge" title={copy.bridge.title}>
+          <DocSection id="bridge" title={copy.bridge.title}>
             <p className="developer-docs-lead">{copy.bridge.body}</p>
             <h3>{copy.bridge.runtimeTitle}</h3>
             <CodeBlock label="Runtime">{runtimePaths}</CodeBlock>
@@ -378,7 +377,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </ol>
           </DocSection>
 
-          <DocSection eyebrow={copy.research.eyebrow} id="research" title={copy.research.title}>
+          <DocSection id="research" title={copy.research.title}>
             <p className="developer-docs-lead">{copy.research.body}</p>
             <div className="developer-research-grid">
               {copy.research.cards.map(([title, body]) => (
@@ -394,13 +393,13 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </ul>
           </DocSection>
 
-          <DocSection eyebrow={copy.accessibility.eyebrow} id="accessibility" title={copy.accessibility.title}>
+          <DocSection id="accessibility" title={copy.accessibility.title}>
             <ol className="developer-number-list">
               {copy.accessibility.rules.map((item) => <li key={item}>{item}</li>)}
             </ol>
           </DocSection>
 
-          <DocSection eyebrow={copy.security.eyebrow} id="security" title={copy.security.title}>
+          <DocSection id="security" title={copy.security.title}>
             <p className="developer-docs-lead">{copy.security.body}</p>
             <dl className="developer-definition-list">
               {copy.security.groups.map(([term, description]) => (
@@ -412,7 +411,7 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </dl>
           </DocSection>
 
-          <DocSection eyebrow={copy.testing.eyebrow} id="testing" title={copy.testing.title}>
+          <DocSection id="testing" title={copy.testing.title}>
             <div className="developer-test-columns">
               <div>
                 <h3>{copy.testing.thirdPartyTitle}</h3>
@@ -438,19 +437,16 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
 
 function DocSection({
   children,
-  eyebrow,
   id,
   title,
 }: {
   children: ReactNode;
-  eyebrow: string;
   id: string;
   title: string;
 }) {
   return (
     <section className="developer-doc-section" id={id}>
       <header>
-        <p className="page-kicker">{eyebrow}</p>
         <h2>{title}</h2>
       </header>
       {children}
@@ -521,7 +517,6 @@ function PromptBuilder({ language }: { language: HubLanguage }) {
   return (
     <section className="developer-doc-section developer-prompt-section" id="prompt-builder">
       <header>
-        <p className="page-kicker">{copy.prompt.eyebrow}</p>
         <h2>{copy.prompt.title}</h2>
       </header>
       <p className="developer-docs-lead">{copy.prompt.body}</p>

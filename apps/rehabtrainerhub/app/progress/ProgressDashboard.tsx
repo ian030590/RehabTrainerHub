@@ -187,7 +187,6 @@ export function ProgressDashboard() {
   return (
     <main className="progress-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">{copy.kicker}</p>
         <h1>{copy.title}</h1>
       </header>
 
@@ -230,7 +229,6 @@ export function ProgressDashboard() {
       <section className="daily-section" aria-labelledby="daily-title">
         <header className="section-title-row">
           <div>
-            <p className="page-kicker">{copy.today}</p>
             <h2 id="daily-title">{copy.dailyTasks}</h2>
           </div>
           {visibleProgress && (
@@ -269,7 +267,6 @@ export function ProgressDashboard() {
       <section className="recent-module-section" aria-labelledby="recent-modules-title">
         <header className="section-title-row">
           <div>
-            <p className="page-kicker">{copy.recentlyPlayed}</p>
             <h2 id="recent-modules-title">{copy.recentlyPlayed}</h2>
           </div>
         </header>
@@ -318,7 +315,6 @@ export function ProgressDashboard() {
       <section className="achievement-section" aria-labelledby="achievement-title">
         <header className="section-title-row">
           <div>
-            <p className="page-kicker">{copy.milestones}</p>
             <h2 id="achievement-title">{copy.achievements}</h2>
           </div>
           <p>{visibleProgress ? t('progress.achievedCount', {

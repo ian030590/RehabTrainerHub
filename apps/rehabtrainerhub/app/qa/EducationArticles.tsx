@@ -11,7 +11,6 @@ export function EducationArticles() {
     <section className="education-articles-section" aria-labelledby="education-articles-title">
       <header className="section-title-row">
         <div>
-          <p className="page-kicker">{copy.kicker}</p>
           <h2 id="education-articles-title">{copy.title}</h2>
         </div>
       </header>

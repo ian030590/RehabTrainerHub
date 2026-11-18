@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T01:02:32.078Z",
+  "generatedAt": "2026-11-16T04:27:43.648Z",
   "title": "Design System: 居家訓練網",
   "extensions": {
     "colorMeta": {
@@ -625,11 +625,14 @@
       "**Do** 以 live region／status 呈現必要更新並避免反覆朗讀；支援減少動態及系統高對比（`forced-colors`）。"
     ],
     "donts": [
-      "**Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。",
+      "**Don't** 在元件或樣式表內寫死色碼（The No-Hardcode Rule）。`globals.css` 與 `practicePlans.css` 的色碼只存在兩個 `:root` 色票區塊，其他規則用 token 或 token 的 `color-mix()`，由測試檢查。瀏覽器 metadata 需要字面值：`layout.tsx` 的 `themeColor` 與 manifest 的 `theme_color` 取 `--surface`，manifest 的 `background_color` 取 `--background`，同樣由測試比對。",
       "**Don't** 讓導覽、一般連結、篩選文字或分頁使用分類色或品牌藍。",
       "**Don't** 使用 Instagram 漸層、X 品牌藍或黑底、Threads 社群身份元素、圖示獨佔分頁、14 到 15px 正文、三欄時間線、無限捲動、Story／按讚／追蹤／留言／轉發、虛構熱度與個人化推薦。",
       "**Don't** 新增暗色模式；目前沒有需求，`color-scheme` 固定為 light。",
       "**Don't** 給靜止的卡片加陰影、漂浮或放大動畫。",
+      "**Don't** 在標題上方放小標籤（kicker、eyebrow）。頁名由導覽與標題說明，開發者文件的區段名稱由側欄說明；也不要把標籤改成「標籤：標題」前綴。",
+      "**Don't** 用側邊色條標示狀態或強調（超過 1px 的單側邊框，或 `::before` 色條）；改用完整 1px 邊框、淡底或文字。",
+      "**Don't** 把等寬字型當裝飾；只有 `pre`、`code` 裡的程式碼使用等寬，編號用本文字型加 `tabular-nums`。",
       "**Don't** 移除 outline 而只換背景作為焦點樣式。",
       "**Don't** 讓 Hub 的轉場、stagger 或任何動態進入遊戲 iframe、刺激、計時與計分。"
     ]

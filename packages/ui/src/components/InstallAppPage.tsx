@@ -64,7 +64,6 @@ export function InstallAppPage({
   return (
     <main className="install-app-page" id="main-content">
       <header className="install-app-hero">
-        <p className="install-app-kicker">Progressive Web App</p>
         <h1>{copy.title}</h1>
         <p>{withAppName(copy.intro)}</p>
         <button className="install-app-button" disabled={installed} onClick={() => void handleInstall()} type="button">

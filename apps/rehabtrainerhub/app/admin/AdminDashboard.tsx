@@ -108,7 +108,6 @@ function AdminAccessMessage({
   return (
     <main className="admin-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">Administration</p>
         <h1>管理後台</h1>
       </header>
       <section className="admin-access-notice" role="status">
@@ -306,7 +305,6 @@ export function AdminDashboard() {
     <main className="admin-page" id="main-content">
       <header className="admin-page-heading">
         <div>
-          <p className="page-kicker">Administration</p>
           <h1>管理後台</h1>
           <p>查看使用者訓練資料與下載紀錄。</p>
         </div>
@@ -357,7 +355,6 @@ export function AdminDashboard() {
       >
         <div className="admin-section-toolbar">
           <div>
-            <p className="page-kicker">Overview</p>
             <h2>數據總覽</h2>
             <p>統計範圍會依目前帳號可管理的使用者權限顯示。</p>
           </div>
@@ -439,7 +436,6 @@ export function AdminDashboard() {
             <section className="admin-patient-section" aria-labelledby="admin-patient-title">
               <div className="section-title-row">
                 <div>
-                  <p className="page-kicker">Users</p>
                   <h2 id="admin-patient-title">使用者摘要</h2>
                 </div>
                 <p>{patients.length} 位使用者</p>
@@ -497,7 +493,6 @@ export function AdminDashboard() {
       >
         <div className="admin-section-toolbar">
           <div>
-            <p className="page-kicker">Training records</p>
             <h2>訓練紀錄</h2>
             <p>依使用者、日期與訓練器篩選，或下載目前篩選範圍的 CSV。</p>
           </div>
