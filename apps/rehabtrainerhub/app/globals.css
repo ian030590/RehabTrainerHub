@@ -875,6 +875,14 @@ html:has(dialog.package-game-overlay[open]) {
   border-radius: var(--radius-xl);
   background: var(--surface);
   box-shadow: var(--shadow-md);
+  transition: opacity 160ms cubic-bezier(0.2, 0.75, 0.25, 1), transform 160ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+@starting-style {
+  .account-popover {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .account-popover::before {
@@ -3495,6 +3503,7 @@ html:has(dialog.package-game-overlay[open]) {
   .hub-nav-icon {
     display: inline-flex;
     font-size: 24px;
+    transition: font-variation-settings 180ms ease;
   }
 
   .hub-nav a[aria-current="page"] .hub-nav-icon {
@@ -4687,6 +4696,57 @@ html:has(dialog.package-game-overlay[open]) {
 .release-status-rejected,
 .release-status-revoked {
   color: var(--error);
+}
+
+@supports (animation-timeline: scroll()) {
+  @property --edge-fade-start {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @property --edge-fade-end {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @keyframes horizontal-edge-fade {
+    from, to {
+      mask-image: linear-gradient(to right, transparent, var(--text) var(--edge-fade-start), var(--text) calc(100% - var(--edge-fade-end)), transparent);
+    }
+
+    from {
+      --edge-fade-start: 0px;
+      --edge-fade-end: 24px;
+    }
+
+    10%, 90% {
+      --edge-fade-start: 24px;
+      --edge-fade-end: 24px;
+    }
+
+    to {
+      --edge-fade-start: 24px;
+      --edge-fade-end: 0px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+    .admin-tabs:not(:focus-visible, :has(:focus-visible)),
+    .admin-table-wrap:not(:focus-visible, :has(:focus-visible)),
+    .developer-flow:not(:focus-visible, :has(:focus-visible)) {
+      animation: horizontal-edge-fade auto linear both;
+      animation-timeline: scroll(self inline);
+    }
+
+    @media (max-width: 920px) {
+      .developer-docs-sidebar:not(:focus-visible, :has(:focus-visible)) {
+        animation: horizontal-edge-fade auto linear both;
+        animation-timeline: scroll(self inline);
+      }
+    }
+  }
 }
 
 @media (max-width: 920px) {

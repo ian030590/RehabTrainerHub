@@ -62,6 +62,60 @@ test('open game overlays release the stable lobby gutter and lock root scrolling
   }
 });
 
+test('horizontal scroll fades indicate hidden content and leave inactive or focused rows unmasked', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const rules = CssRules(css);
+  const selectors = ['.admin-tabs', '.admin-table-wrap', '.developer-flow', '.developer-docs-sidebar'];
+  for (const selector of selectors) {
+    const scrollRules = rules.filter(rule => rule.selectors.includes(selector) && rule.declarations['overflow-x'] === 'auto');
+    assert.equal(scrollRules.length, 1, `${selector} must have a horizontal scrollport.`);
+    assert.equal(scrollRules[0].declarations['mask-image'], undefined, `${selector} must stay unmasked without a timeline.`);
+  }
+
+  const supportedCss = css.match(/@supports \(animation-timeline: scroll\(\)\) \{([\s\S]*?)\r?\n\}/)?.[1];
+  assert.ok(supportedCss, 'The edge fade must be gated on scroll timeline support.');
+  assert.match(supportedCss, /@media \(prefers-reduced-motion: no-preference\) and \(forced-colors: none\)/);
+  const supportedRules = CssRules(supportedCss);
+  for (const edge of ['start', 'end']) {
+    const property = supportedRules.find(rule => rule.selectors.includes(`@property --edge-fade-${edge}`));
+    assert.deepEqual(property?.declarations, { syntax: '"<length>"', inherits: 'false', 'initial-value': '0px' });
+  }
+
+  const frames = supportedCss.match(/@keyframes horizontal-edge-fade \{([\s\S]*?)\r?\n  \}/)?.[1];
+  assert.ok(frames, 'The scroll positions must share one edge fade animation.');
+  assert.match(frames, /mask-image:\s*linear-gradient\(to right,\s*transparent,\s*var\(--text\) var\(--edge-fade-start\),\s*var\(--text\) calc\(100% - var\(--edge-fade-end\)\),\s*transparent\)/);
+  const keyframes = CssRules(frames);
+  for (const [position, start, end] of [['from', '0px', '24px'], ['10%', '24px', '24px'], ['to', '24px', '0px']]) {
+    const frame = keyframes.find(rule => rule.selectors.includes(position) && '--edge-fade-start' in rule.declarations);
+    assert.equal(frame?.declarations['--edge-fade-start'], start, `Leading fade at ${position}`);
+    assert.equal(frame?.declarations['--edge-fade-end'], end, `Trailing fade at ${position}`);
+  }
+
+  const scrollingRows = supportedCss.match(/([^{}]+)\{\s*animation:\s*horizontal-edge-fade auto linear both;\s*animation-timeline:\s*scroll\(self inline\);\s*\}/g) ?? [];
+  assert.equal(scrollingRows.length, 2, 'The animation shorthand must precede both timeline declarations.');
+  for (const selector of selectors) {
+    assert.ok(scrollingRows.some(rule => rule.includes(`${selector}:not(:focus-visible, :has(:focus-visible))`)), `${selector} must leave keyboard focus unmasked.`);
+  }
+  assert.match(supportedCss, /@media \(max-width: 920px\) \{\s*\.developer-docs-sidebar:not\(/);
+});
+
+test('the mobile navigation icon transitions its fill when the current page changes', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const rules = CssRules(css);
+  const mobileIcon = rules.find(rule => rule.selectors.includes('.hub-nav-icon') && rule.declarations['font-size'] === '24px');
+  const current = rules.find(rule => rule.selectors.includes('.hub-nav a[aria-current="page"].hub-nav-icon'));
+  assert.equal(mobileIcon?.declarations.transition, 'font-variation-settings 180ms ease');
+  assert.equal(current?.declarations['font-variation-settings'], '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24');
+});
+
+test('the account popover enters from its trigger and snaps open with reduced motion', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const popover = CssRules(css).find(rule => rule.selectors.includes('.account-popover'));
+  assert.equal(popover?.declarations.transition, 'opacity 160ms cubic-bezier(0.2, 0.75, 0.25, 1), transform 160ms cubic-bezier(0.2, 0.75, 0.25, 1)');
+  assert.match(css, /@starting-style\s*\{\s*\.account-popover\s*\{\s*opacity:\s*0;\s*transform:\s*translateY\(-4px\);\s*\}/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\*,\s*\*::before,\s*\*::after \{[^{}]*transition-duration: 0\.01ms !important;/);
+});
+
 test('card stagger animates only newly visible results and keeps every action available', async () => {
   const motion = await LoadModule(new URL('hubMotion.ts', appRoot));
   const cards = [Element('retained'), Element('first', 20), Element('second', 240), Element('offscreen', 1200)];

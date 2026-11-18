@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T04:27:43.648Z",
+  "generatedAt": "2026-11-18T18:30:51.685Z",
   "title": "Design System: 居家訓練網",
   "extensions": {
     "colorMeta": {
@@ -484,6 +484,21 @@
         "name": "shared-element",
         "value": "220ms cubic-bezier(0.2, 0.75, 0.25, 1)",
         "purpose": "選定卡片與訓練視窗背景的 view transition；不含遊戲 iframe。"
+      },
+      {
+        "name": "horizontal-scroll-edge-fade",
+        "value": "24px, scroll(self inline)",
+        "purpose": "管理分頁與表格、開發流程及窄螢幕側欄的邊緣淡出提示還有內容可捲動。內容全可見、列內有鍵盤焦點、減少動態或系統高對比時顯示完整內容。"
+      },
+      {
+        "name": "mobile-nav-icon-fill",
+        "value": "180ms ease",
+        "purpose": "切換頁面時，目的地圖示由空心轉為實心，標示目前所在分頁。"
+      },
+      {
+        "name": "account-popover-enter",
+        "value": "160ms cubic-bezier(0.2, 0.75, 0.25, 1)",
+        "purpose": "選單從上方 4px 的位置淡入，讓使用者看出選單由頁首的帳號按鈕開啟。"
       },
       {
         "name": "frame-ready",
