@@ -60,6 +60,12 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 700
     lineHeight: 1.3
+  code:
+    fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace"
+    fontSize: "0.875rem"
+    fontWeight: 500
+    lineHeight: 1.55
+    letterSpacing: "0"
 rounded:
   sm: "4px"
   md: "8px"
@@ -212,6 +218,7 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 2。安靜不喧嘩；大廳的卡片網格�
 
 **Display Font:** Noto Sans TC（Google Fonts 可變字重 100 到 900），後備 PingFang TC、Microsoft JhengHei、Microsoft JhengHei UI、Arial、sans-serif
 **Body Font:** 同上，單一字族
+**Code Font:** 系統等寬字型 `ui-monospace, SFMono-Regular, Consolas, monospace`，不另載入網路字型。只用在開發者頁程式碼區塊與提示詞輸出的 `pre`（`.developer-code-block pre`、`.developer-prompt-output pre`），字級為 label、行高 1.55、字距 0。
 **Icon Font:** Material Symbols Outlined，由本站提供約 10KB 子集（`/fonts/material-symbols-hub.woff2`），字型服務被阻擋時關鍵圖示仍可辨識。子集只含列在 `public/fonts/README.md` 的圖示名稱；新增圖示時一併重做子集，測試會比對原始碼用到的名稱，缺字時圖示會顯示成英文字串。
 
 **Character:** 單一無襯線字族，以字重與明度建立層級，不靠第二字體製造個性。繁中字形平穩，內文 500 比常見的 400 稍實，讓年長讀者在手機上也讀得清楚。
