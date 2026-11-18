@@ -44,6 +44,7 @@ import tongueCatchCatalog from './tongue-catch/public/game.json';
 import seagullFlightCatalog from './seagull-flight/public/game.json';
 import popoutSearchCatalog from './popout-search/public/game.json';
 import exploratorySaccadeCatalog from './exploratory-saccade/public/game.json';
+import brakeReactionCatalog from './brake-reaction/public/game.json';
 import conjunctionSearchCatalog from './conjunction-search/public/game.json';
 import complexSearchCatalog from './complex-search/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
@@ -793,6 +794,18 @@ const seeds: readonly TrainingCatalogSeed[] = [
     path: '/?module=exploratory-saccade',
     zh: [exploratorySaccadeCatalog.copy['zh-TW'].title, exploratorySaccadeCatalog.copy['zh-TW'].description],
     en: [exploratorySaccadeCatalog.copy.en.title, exploratorySaccadeCatalog.copy.en.description],
+  },
+  {
+    id: 'brake-reaction',
+    trainer: brakeReactionCatalog.trainer as 'vision',
+    purpose: brakeReactionCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/brake-reaction/${brakeReactionCatalog.preview}`,
+    kind: 'vision',
+    path: '/?module=brake-reaction',
+    zh: [brakeReactionCatalog.copy['zh-TW'].title, brakeReactionCatalog.copy['zh-TW'].description],
+    en: [brakeReactionCatalog.copy.en.title, brakeReactionCatalog.copy.en.description],
+    titleKey: 'home.module.brakeReaction.title',
+    descriptionKey: 'home.module.brakeReaction.desc',
   },
 ] as const;
 

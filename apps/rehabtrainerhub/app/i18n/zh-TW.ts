@@ -1,4 +1,9 @@
 export const zhTW = {
+  home: {
+    module: {
+      brakeReaction: { title: '跟車煞車反應練習', desc: '在夜間道路上辨認同車道的煞車燈，記錄當次反應。' },
+    },
+  },
   hubUi: {
     practicePlans: {
       heading: '練習清單',

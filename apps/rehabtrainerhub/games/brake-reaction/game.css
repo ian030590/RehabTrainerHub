@@ -1,0 +1,167 @@
+:root {
+  --primary: #006c47;
+  --primary-hover: #005235;
+  --primary-soft: color-mix(in srgb, var(--primary) 8%, #fff);
+  --background: #f6f7f9;
+  --surface: #fff;
+  --text: #202428;
+  --heading: #14212b;
+  --text-muted: #51616a;
+  --border: #d4d9de;
+  --border-strong: #7d868e;
+  --text-on-accent: #fff;
+  --radius: 8px;
+  --bg-overlay: rgb(20 33 43 / .35);
+  --sky: #101d2e;
+  --shoulder: #18232a;
+  --road: #333d48;
+  --wet-road: #394b58;
+  --lane: #acbac0;
+  --edge: #ece1aa;
+  --car: #8697a7;
+  --car-roof: #526d83;
+  --decoy: #657983;
+  --tail: #a34552;
+  --signal: #ffc363;
+  --brake: #ff646d;
+  --dash: #111b27;
+  --contact-light: #ffcf78;
+  --contact-moderate: #ff9f7c;
+  --contact-severe: #ff7589;
+  color: var(--text);
+  background: var(--background);
+  font: 700 100% / 1.5 system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+button, select { font: inherit; }
+h2, h3, p, dl, figure { margin: 0; }
+h2 { color: var(--heading); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
+h3 { color: var(--heading); font-size: 1.25rem; }
+#game {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--background);
+}
+#game:fullscreen { width: 100%; }
+.jspsych-trial { display: none; }
+.training-config, .training-panel, .experiment-results {
+  width: min(100%, 42rem);
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.training-config-header, .training-config-body, .config-actions { padding: clamp(12px, 3vw, 24px); }
+.training-config-header { border-bottom: 1px solid var(--border); }
+.training-config-header p { color: var(--text-muted); margin-top: .35rem; }
+.training-config-body { overflow: auto; font-size: 1.15rem; }
+.training-config-body > p { margin-top: .75rem; }
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: start; }
+.training-setting { padding: 12px; background: var(--background); border-radius: 6px; }
+.training-setting select {
+  width: 100%; min-height: 44px; margin-top: 8px; padding: 6px;
+  color: var(--text); background: var(--surface); border-radius: 6px; border: 1px solid var(--border-strong);
+}
+.config-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--border); }
+.btn { min-height: 44px; border: 1px solid transparent; border-radius: 8px; padding: 7px 16px; cursor: pointer; }
+.btn:disabled { cursor: default; opacity: .65; }
+.btn-primary { min-height: 48px; color: var(--text-on-accent); background: var(--primary); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-ghost { background: var(--surface); border-color: var(--border-strong); color: var(--heading); }
+.btn-ghost:hover:not(:disabled) { background: var(--background); }
+.btn[aria-pressed="true"] { color: var(--text-on-accent); background: var(--primary); }
+:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+h2:focus { outline: none; }
+.metrics { display: flex; flex-wrap: wrap; gap: 8px; }
+.metrics > div { flex: 1 1 9.5rem; padding: 8px 12px; border-left: 2px solid var(--border); }
+.metrics dd { margin: 0; color: var(--heading); font-size: 1.2em; }
+.metrics dt { color: var(--text-muted); }
+.metrics .score-key-metric { border-color: var(--primary); }
+.score-key-metric dd { font-size: clamp(1.9rem, 5vw, 3rem); font-variant-numeric: tabular-nums; }
+#game.drive-screen { height: 100dvh; min-height: 0; }
+.driving {
+  display: grid; grid-template-rows: auto minmax(70px, 1fr) auto;
+  width: min(100%, 90rem); height: 100%; min-height: 0; min-width: 0; overflow: auto;
+}
+.driving:has(.messages) { grid-template-rows: auto minmax(70px, 1fr) auto auto; }
+.drive-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 8px; }
+.drive-toolbar h2 { flex: 1 1 auto; font-size: clamp(1rem, 4vw, 1.5rem); }
+.road-frame { position: relative; overflow: hidden; background: var(--sky); border-radius: 6px; }
+.road-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.road-caption {
+  position: absolute; inset: auto 8px 8px; text-align: center; color: var(--text-on-accent);
+  background: var(--dash); padding: 5px 8px; border-radius: 6px;
+}
+.road-caption:empty { visibility: hidden; }
+.road-frame[data-contact] { box-shadow: inset 0 0 0 3px var(--contact-tone); }
+.road-frame[data-contact] canvas { animation: contact-shake .32s ease-out; }
+.road-frame[data-contact="light"] { --contact-tone: var(--contact-light); --marker-size: 20px; --shake: 2px; }
+.road-frame[data-contact="moderate"] { --contact-tone: var(--contact-moderate); --marker-size: 33px; --shake: 4px; }
+.road-frame[data-contact="severe"] { --contact-tone: var(--contact-severe); --marker-size: 47px; --shake: 6px; }
+.contact-marker {
+  position: absolute; inset: 49% auto auto 50%; translate: -50% -50%; width: var(--marker-size); aspect-ratio: 1;
+  border: 3px solid var(--contact-tone); border-radius: 50%; background: color-mix(in srgb, var(--contact-tone) 24%, transparent);
+}
+.road-frame[data-contact]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: color-mix(in srgb, var(--contact-tone) 13%, transparent);
+}
+@keyframes contact-shake {
+  25%, 75% { transform: translateX(var(--shake)); }
+  50% { transform: translateX(calc(-1 * var(--shake))); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .road-frame[data-contact] canvas { animation: none; }
+}
+.brake-controls { display: grid; place-items: center; gap: 4px; padding-block: 8px 0; }
+#brake { min-height: 56px; width: min(100%, 26rem); font-size: 1.2rem; touch-action: manipulation; }
+.brake-controls p { color: var(--text-muted); }
+.messages { padding-top: 8px; display: grid; place-items: center; gap: 4px; }
+.answers { display: flex; justify-content: center; gap: 8px; }
+.answers button { min-width: 54px; }
+@media (max-width: 560px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .config-actions { display: grid; }
+  .score-save-status { margin: 0; }
+  .metrics > div { flex-basis: 7.5rem; }
+  .drive-toolbar .btn { padding-inline: 10px; }
+}
+.training-config, .training-panel { font-size: 1.15rem; }
+.training-config-header h2 { font-size: 1.725rem; }
+.training-config-body { padding: 20px; }
+.training-config input[type=range],
+.training-config input[type=checkbox],
+.training-config input[type=radio] { accent-color: var(--primary); }
+@media (min-width: 640px) {
+  .training-config-header h2 { font-size: 2.15625rem; }
+  .training-config-body { padding: 24px 32px; }
+}
+.game-settings-dialog {
+  width: min(calc(100% - 32px), 42rem);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.game-settings-dialog::backdrop { background: var(--bg-overlay); }
+.game-settings-dialog .training-config { width: 100%; }
+.game-interrupt-panel {
+  position: absolute;
+  z-index: 1;
+  width: min(calc(100% - 32px), 28rem);
+  box-shadow: 0 0 0 100vmax var(--bg-overlay);
+}
+@media (max-width: 639px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .game-settings-dialog .config-actions, .training-config-navigation-buttons { display: grid; }
+}

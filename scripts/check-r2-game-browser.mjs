@@ -21,6 +21,7 @@ import { LoadEyeCameraFixture } from './eye-camera-fixtures.mjs';
 import { CheckGaborPatching } from './gabor-patching-browser.mjs';
 import { CheckDrivingRehab } from './driving-rehab-r2-browser.mjs';
 import { CheckReadingTraining } from './reading-training-browser.mjs';
+import { CheckBrakeReaction } from './brake-reaction-browser.mjs';
 import { CheckHartChart } from './hart-chart-browser.mjs';
 import { CheckMovingCard } from './moving-card-browser.mjs';
 import { CheckBrainGame, brainGameSpecs } from './brain-r2-browser.mjs';
@@ -33,9 +34,10 @@ import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-g
 import { CreateGameCapture, PreviewCaptured } from './game-preview-capture.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'every-ball-response', 'tongue-catch', 'seagull-flight', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'every-ball-response', 'tongue-catch', 'seagull-flight', 'brake-reaction', ...Object.keys(brainGameSpecs)].includes(gameId), 'Unknown browser game fixture');
 const brainGame = Object.hasOwn(brainGameSpecs, gameId);
 const specTrainer = brainGame ? (brainGameSpecs[gameId].trainer ?? 'brain') : 'brain';
+const visionGame = ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight', 'brake-reaction'].includes(gameId);
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 // Every Ball uses the container's pose and microphone proxies; it sits with the attention games.
 const sensorGame = gameId === 'every-ball-response';
@@ -173,8 +175,8 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: brainPurpose ? specTrainer : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor', category: brainPurpose ?? (tongueGame ? 'oral' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'general' : 'upper-limb'), developerName: 'Sample author', updatedAt: '2026-10-08',
+        const oldGame = { id: (visionGame || gameId === 'motor-cortex-rehab') ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: brainPurpose ? specTrainer : tongueGame ? 'mouth' : visionGame ? 'vision' : 'motor', category: brainPurpose ?? (tongueGame ? 'oral' : (visionGame || gameId === 'motor-cortex-rehab') ? 'general' : 'upper-limb'), developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -378,7 +380,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainPurpose ? specTrainer : tongueGame ? 'mouth' : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${brainPurpose ? specTrainer : tongueGame ? 'mouth' : visionGame ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -411,7 +413,7 @@ try {
   if (lobby && !standalone) {
     await selectLobbyGame();
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, vision: english ? /vision/i : /視覺/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training', 'seagull-flight'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), brainPurpose ? { attention: english ? /attention/i : /注意力/, memory: english ? /memory/i : /記憶/, vision: english ? /vision/i : /視覺/, 'higher-cognition': english ? /higher cognition/i : /高階認知/ }[brainPurpose] : tongueGame ? (english ? /oral/i : /口腔/) : visionGame ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.module-card[data-runtime-id=${gameId}] img')).objectFit`), 'contain', 'The Hub shows the entire gameplay screenshot, including edge controls.');
@@ -590,6 +592,11 @@ try {
     await CheckBrainGame(gameId, { game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       rawDataBucket: environment.RAW_DATA,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId });
+  } else if (gameId === 'brake-reaction') {
+    const screenshots = resolve(root, '.tmp/brake-reaction-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}${english ? '-en' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    await CheckBrakeReaction({ game, evaluate, send, until, standalone, english, touch: viewportMode !== 'desktop', capture: makeCapture(screenshots),
+      sqlite, rawDataBucket: environment.RAW_DATA, gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId });
   } else if (gameId === 'hart-chart') {
     const screenshots = resolve(root, '.tmp/hart-chart-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });

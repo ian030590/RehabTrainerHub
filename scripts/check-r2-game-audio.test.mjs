@@ -294,7 +294,7 @@ for (const gameId of gameIds) {
   });
 
   test(`${gameId}: configured music starts in gameplay and stops on results, settings and unmount`, async () => {
-    const components = { 'hart-chart': ['HartChartPage.tsx', 'playing'], 'driving-rehab': ['DrivingRehabGame.tsx', 'running'], 'asteroid-shield': ['AsteroidShieldGame.tsx', 'playing'], 'drawing-defense': ['DrawingTowerDefenseGame.tsx', 'playing'],
+    const components = { 'brake-reaction': ['BrakeReactionGame.tsx', 'running'], 'hart-chart': ['HartChartPage.tsx', 'playing'], 'driving-rehab': ['DrivingRehabGame.tsx', 'running'], 'asteroid-shield': ['AsteroidShieldGame.tsx', 'playing'], 'drawing-defense': ['DrawingTowerDefenseGame.tsx', 'playing'],
       'gesture-battler': ['GestureBattlerGame.tsx', 'combat'], 'motor-cortex-rehab': ['MotorCortexRehabGame.tsx', 'playing'],
       'gabor-patching': ['GaborPatchingGame.tsx', 'running'], 'reading-training': ['ReadingTrainingGame.tsx', 'running'], 'moving-card': ['MovingCardGame.tsx', 'running'], 'oculomotor-training': ['OculomotorTrainingGame.tsx', 'running'],
       'popout-search': ['PopoutSearchGame.tsx', 'running'], 'exploratory-saccade': ['ExploratorySaccadeGame.tsx', 'running'], 'conjunction-search': ['ConjunctionSearchGame.tsx', 'running'], 'complex-search': ['ComplexSearchGame.tsx', 'running'], sart: ['SartGame.tsx', 'running'], 'schulte-grid': ['SchulteGridGame.tsx', 'running'], 'hex-schulte': ['HexSchulteGame.tsx', 'running'], 'continuous-performance': ['ContinuousPerformanceGame.tsx', 'running'], 'simon-task': ['SimonTaskGame.tsx', 'running'], 'card-sorting': ['CardSortingGame.tsx', 'running'], 'attentional-blink': ['AttentionalBlinkGame.tsx', 'running'], 'time-perception': ['TimePerceptionGame.tsx', 'running'], 'divided-attention': ['DividedAttentionGame.tsx', 'running'], 'pattern-memory': ['PatternMemoryGame.tsx', 'running'], stroop: ['StroopGame.tsx', 'running'], flanker: ['FlankerGame.tsx', 'running'], 'go-nogo': ['GoNoGoGame.tsx', 'running'], 'stop-signal': ['StopSignalGame.tsx', 'running'], 'attention-network-task': ['AttentionNetworkGame.tsx', 'running'], 'n-back': ['NBackLetters.tsx', 'running'], 'number-letter': ['NumberLetterSwitch.tsx', 'running'], 'digit-span': ['DigitSpanRecall.tsx', 'running'], 'spatial-span': ['SpatialSpanRecall.tsx', 'running'], 'tower-of-london': ['TowerPlanning.tsx', 'running'], 'reaction-time': ['ReactionSignal.tsx', 'running'], 'tic-tac-toe': ['TicTacToeGame.tsx', 'running'], 'connect4': ['Connect4Game.tsx', 'running'], hex: ['HexGame.tsx', 'running'], 'dots-and-boxes': ['DotsAndBoxesGame.tsx', 'running'], 'lights-out': ['LightsOutGame.tsx', 'running'], 'sliding-puzzle': ['SlidingPuzzleGame.tsx', 'running'], maze: ['MazeGame.tsx', 'running'], sudoku: ['SudokuGame.tsx', 'running'], 'memory-match': ['MemoryMatchGame.tsx', 'running'], 'simon-says': ['SimonSaysGame.tsx', 'running'], 'whack-a-mole': ['WhackAMoleGame.tsx', 'running'], minesweeper: ['MinesweeperGame.tsx', 'running'], antisaccade: ['AntisaccadeGame.tsx', 'running'], 'keep-track': ['KeepTrackRecall.tsx', 'running'], 'letter-memory': ['LetterMemoryRecall.tsx', 'running'], 'plus-minus': ['PlusMinusSwitch.tsx', 'running'], ufov: ['UfovGame.tsx', 'running'], 'every-ball-response': ['EveryBallGame.tsx', 'playing'], 'tongue-catch': ['TongueCatchGame.tsx', 'playing'], 'seagull-flight': ['SeagullFlightGame.tsx', 'playing'] };
@@ -339,6 +339,20 @@ for (const gameId of gameIds) {
     assert.ok(effects.some(effect => effect.includes('DisposeAudioFeedback')), 'Unmount must release the game audio context.');
   });
 }
+
+test('brake-reaction: contact severity cues remain distinct and mute releases every voice', async () => {
+  const { api, state } = await LoadSound('brake-reaction');
+  api.PrepareAudioFeedback();
+  for (const severity of ['light', 'moderate', 'severe']) api.PlayBrakeCue(severity);
+  assert.deepEqual(state.instruments.flatMap(voice => voice.played.map(([frequency]) => frequency)),
+    [170, 85, 120, 55, 85, 33]);
+  assert.deepEqual(state.instruments.map(voice => voice.options.options.oscillator.type), ['triangle', 'sawtooth']);
+  api.SetSoundEnabled(false);
+  api.PlayBrakeCue('severe');
+  assert.equal(state.instruments.length, 2);
+  assert.ok(state.instruments.every(voice => voice.disposed));
+  assert.equal(state.contexts[0].closed, true);
+});
 
 async function LoadSound(gameId) {
   const state = { contexts: [], instruments: [], nodes: [] };

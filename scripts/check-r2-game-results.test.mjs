@@ -8,6 +8,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'brake-reaction', defaultMetric: 'r', alternate: 'gap', row: { r: 2, scenario: 0, gap: 15, falseStarts: 0, timedOut: 0, contact: 0, relativeKmh: null, beforeBraking: 37, remainingMeters: 6 } },
   { id: 'popout-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },
   { id: 'complex-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },
   { id: 'conjunction-search', defaultMetric: 'rtMs', alternate: 'correct', row: { trial: 1, block: 1, setSize: 8, present: 1, targetSide: 0, targetQuadrant: 0, response: 1, correct: 1, rtMs: 2, timeLimitMs: 1500 } },

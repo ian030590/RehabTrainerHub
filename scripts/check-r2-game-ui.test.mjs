@@ -9,6 +9,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'brake-reaction', component: 'BrakeReactionGame', tutorial: 'BrakeReactionTutorial', logic: { '../src/road': 'src/road.ts' } },
   { id: 'popout-search', component: 'PopoutSearchGame', tutorial: 'PopoutSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
   { id: 'complex-search', component: 'ComplexSearchGame', tutorial: 'ComplexSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
   { id: 'conjunction-search', component: 'ConjunctionSearchGame', tutorial: 'ConjunctionSearchTutorial', logic: { '../settings': 'settings.ts', '../logic/levels': 'logic/levels.ts', '../Glyph': 'Glyph.tsx' } },
@@ -81,7 +82,7 @@ for (const fixture of cases) {
           useState: initial => [fixture.id === 'moving-card' && typeof initial === 'object' ? initial : true, () => {}],
           useRef: () => ({ current: null }) },
         'react/jsx-runtime': jsxRuntime,
-        '../i18n/useT': { useT: () => ({ lang: language, t: key => key }) },
+        '../i18n/useT': { useT: () => ({ lang: language, t: key => key, copy: { start: 'Start', backSettings: 'Back' } }) },
         '../runtime/tour': {}, '../runtime/tour.css': {}, './tutorialSteps': {},
         '../settings': { PixelFromMillimeter: value => value },
         '../gaborTexture': { gaborTextureSpecs: [{ freq: .05 }, { freq: .08 }, { freq: .03 }] },

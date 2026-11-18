@@ -1,0 +1,30 @@
+.tutorial-road { position: relative; overflow: hidden; background: var(--sky); border-radius: 6px; }
+.tutorial-road canvas { width: 100%; height: clamp(120px, 28dvh, 210px); display: block; }
+.spotlight { color: var(--text-on-accent); background: var(--dash); padding: 10px 16px; }
+
+.settings-preview {
+  position: absolute;
+  inset: 0;
+  opacity: .25;
+  pointer-events: none;
+}
+.settings-preview canvas { height: 100dvh; }
+.training-config-navigation-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.training-panel .config-actions button:focus-visible,
+.training-config-navigation-buttons .btn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+.training-config-summary-item + .training-config-summary-item { margin-top: 4px; }
+.tutorial-scene { position: relative; overflow: hidden; }
+.tutorial-lamp-focus {
+  position: absolute;
+  inset: calc(34% - 9px) auto auto 50%;
+  translate: -50%;
+  inline-size: 54px;
+  block-size: 28px;
+  border: 2px solid var(--signal);
+  box-shadow: 0 0 0 100vmax var(--bg-overlay);
+  pointer-events: none;
+}
+.spotlight { position: relative; }

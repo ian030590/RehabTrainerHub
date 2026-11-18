@@ -68,6 +68,7 @@ for (const [gameId, kind, capabilities] of [
   ['moving-card', null, ['pointer']],
   ['reading-training', null, ['pointer']],
   ['hart-chart', null, ['pointer']],
+  ['brake-reaction', null, ['keyboard', 'pointer', 'touch']],
 ]) test(`${gameId}: browser fixture uploads coordinates and verifies persisted rounds from private CSV`, async t => {
   const fixture = CreateRawDataEnvironment(gameId, capabilities);
   t.after(() => fixture.sqlite.close());

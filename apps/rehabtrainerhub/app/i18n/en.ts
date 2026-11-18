@@ -1,4 +1,9 @@
 export const en = {
+  home: {
+    module: {
+      brakeReaction: { title: 'Brake Reaction Practice', desc: 'Watch for brake lights in your lane on a night road and record your reactions.' },
+    },
+  },
   hubUi: {
     practicePlans: {
       heading: 'Practice lists',

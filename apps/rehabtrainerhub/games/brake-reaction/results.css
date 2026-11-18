@@ -1,0 +1,39 @@
+.experiment-results { width: min(100%, 78rem); }
+.score-context, .score-analysis { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); }
+.score-context .training-config-summary { margin-top: 12px; }
+.score-section-title { margin-block: 16px 6px; }
+.table-scroll { overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { padding: 8px; border-bottom: 1px solid var(--border); text-align: start; }
+th { color: var(--heading); }
+.score-save-status { margin-inline-end: auto; }
+
+.score-details { margin-block-start: 20px; }
+.score-details > summary { cursor: pointer; min-height: 44px; padding-block: 10px; }
+.score-analysis { min-width: 0; }
+.score-analysis select, .score-pagination button { min-height: 44px; max-width: 100%; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); }
+.score-statistics, .score-quality { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 12px; }
+.score-statistics dd, .score-quality dd { margin-inline: 0; }
+.score-chart svg { display: block; width: 100%; max-height: 250px; }
+.score-chart text { fill: var(--text); }
+.chart-axis, .chart-mean, .chart-trend { fill: none; stroke: var(--border-strong); }
+.chart-mean { stroke-dasharray: 6 4; }
+.chart-trend { stroke: var(--primary); stroke-width: 2; }
+.score-chart circle { fill: var(--primary); }
+.results-scroll { overflow: auto; }
+.score-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.experiment-results { grid-template-rows: auto minmax(0, 1fr); }
+.score-header h1 { margin: 0; color: var(--heading); font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; }
+.experiment-results h1:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.experiment-results h1:focus:not(:focus-visible) { outline: none; }
+.score-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.score-key-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.score-key-grid .score-key-metric { color: var(--text-on-accent); background: var(--primary); }
+.score-key-grid .score-key-metric :is(dt, dd) { color: inherit; }
+@media (max-width: 600px) {
+  .score-key-grid { grid-template-columns: 1fr; }
+  .score-key-grid > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+}

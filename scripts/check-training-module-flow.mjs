@@ -360,6 +360,11 @@ const implementationGroups = [
     files: ['seagull-flight/SeagullFlightGame.tsx'],
     tokens: ["setPhase('rules')", "setPhase('calibration')", "setPhase('playing')", "setPhase('results')", 'SendGameResult', 'SeagullTutorial', 'ValidateSettings(settings)'],
   },
+  {
+    ids: ['vision:brake-reaction'],
+    files: ['brake-reaction/BrakeReactionGame.tsx'],
+    tokens: ["setPhase('rules')", "setPhase('confirm')", "setPhase('running')", "setPhase('results')", 'BrakeReactionTutorial', 'ValidateSettings(settings)', 'SendGameResult'],
+  },
 ];
 
 const implementationIds = implementationGroups.flatMap(({ ids }) => ids);
@@ -448,6 +453,7 @@ const jsPsychLifecycleGroups = [
     'vision:complex-search': 'complex-search/ComplexSearchGame.tsx',
     'vision:conjunction-search': 'conjunction-search/ConjunctionSearchGame.tsx',
     'vision:seagull-flight': 'seagull-flight/SeagullFlightGame.tsx',
+    'vision:brake-reaction': 'brake-reaction/BrakeReactionGame.tsx',
     'brain:every-ball-response': 'every-ball-response/EveryBallGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',

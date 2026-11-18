@@ -493,5 +493,14 @@
     "screenshotHeight": 720,
     "screenshotSha256": "54a66ee2a2d96b3e52ccd1ac61b36853e5267ac94edcf331af6f2f73f6fcd6dc",
     "previewSha256": "ddf8d86e987ef3e585c388a1f1f6a1f8155260b6955d1375f79c90a3e719bfdd"
+  },
+  {
+    "gameId": "brake-reaction",
+    "version": "1.0.0",
+    "phase": "gameplay",
+    "screenshotWidth": 1280,
+    "screenshotHeight": 720,
+    "screenshotSha256": "7630219246feb63884581737e2478e1dc0c9b2ddd30904f8293d6d08612a4943",
+    "previewSha256": "bc763b73c395e27bc137035ead2595b7088982db0f26c9b411d854529a549a3c"
   }
 ]

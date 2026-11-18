@@ -218,5 +218,9 @@
   "exploratory-saccade": {
     "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
     "name": "探索掃視練習"
+  },
+  "brake-reaction": {
+    "origin": "https://trainerhubgames.rainbowh9490.workers.dev",
+    "name": "跟車煞車反應練習"
   }
 }

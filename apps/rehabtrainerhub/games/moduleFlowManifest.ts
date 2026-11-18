@@ -90,6 +90,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['vision:complex-search', 'complex-search/ComplexSearchGame.tsx', 'none', 'external-runtime-adapter'],
   ['vision:conjunction-search', 'conjunction-search/ConjunctionSearchGame.tsx', 'none', 'external-runtime-adapter'],
   ['vision:exploratory-saccade', 'exploratory-saccade/ExploratorySaccadeGame.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:brake-reaction', 'brake-reaction/BrakeReactionGame.tsx', 'none', 'external-runtime-adapter'],
   ['vision:seagull-flight', 'seagull-flight/SeagullFlightGame.tsx', 'camera-optional', 'external-runtime-adapter'],
   ['mouth:tongue-catch', 'tongue-catch/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],
 ];

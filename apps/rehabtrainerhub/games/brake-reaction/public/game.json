@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "brake-reaction",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "跟車煞車反應練習", "description": "在夜間道路上辨認同車道的煞車燈，記錄當次反應。" },
+    "en": { "title": "Brake Reaction Practice", "description": "Watch for brake lights in your lane on a night road and record your reactions." }
+  }
+}
