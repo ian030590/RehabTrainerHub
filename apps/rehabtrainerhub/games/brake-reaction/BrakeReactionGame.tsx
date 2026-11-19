@@ -13,10 +13,10 @@ import { BrakeReactionTutorial } from './rules/BrakeReactionTutorial';
 import { RunningView } from './RunningView';
 import { RoundStats, SessionSummary, SessionMetrics } from './SessionSummary';
 import { ScoreAnalysis } from './ScoreAnalysis';
-import { ModelFor } from './src/physics';
-import { MakeRound, RandomFrom, ScenarioFor } from './src/round';
+import { ModelFor, Motion } from './src/physics';
+import { MakeRound, RandomFrom, ScenarioPlan } from './src/round';
 import type { Row } from './src/score';
-import type { MakeRoad } from './src/road';
+import { LoadCarAtlas, MakeRoad } from './src/road';
 
 type Phase = 'menu' | 'rules' | 'confirm' | 'running' | 'paused' | 'feedback' | 'results';
 type SaveState = 'saving' | 'saved' | 'error';
@@ -42,13 +42,14 @@ export function BrakeReactionGame() {
   const root = useRef<HTMLElement>(null);
   const jsPsychDisplay = useRef<HTMLDivElement>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle>(null);
-  const scenario = useRef<Scenario>('plain');
+  const plan = useRef<Scenario[]>([]);
   const random = useRef(RandomFrom(0));
   const lastBrakeInput = useRef(-Infinity);
   const starting = useRef(false);
   const runGeneration = useRef(0);
 
   useEffect(() => {
+    void LoadCarAtlas();
     const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychDisplay.current! }));
     jsPsychLifecycleRef.current = lifecycle;
     const unsubscribe = OnSavedSettings(saved => {
@@ -119,20 +120,18 @@ export function BrakeReactionGame() {
     setPhase('rules');
   };
 
-  const drawPreview = useCallback((draw: ReturnType<typeof MakeRoad>) => {
-    const example = MakeRound(settings, 'plain', 0, RandomFrom(1));
-    draw(example, ModelFor(settings), example.onset, true, 10, 0, settings.road === 'wet');
+  const drawPreview = useCallback((canvas: HTMLCanvasElement, atlas: HTMLImageElement | null) => {
+    const model = ModelFor(settings);
+    const example = { ...MakeRound(settings, 'plain', 0, RandomFrom(1)), gap: 16, decoys: [] };
+    const draw = MakeRoad(canvas, atlas, example, settings.leadType);
+    const motion = Motion(model, example.gap, 10, 0);
+    return () => draw(model, example.onset, motion, 0, settings.road === 'wet', true);
   }, [settings]);
 
   const runRound = useCallback((index: number, falseStarts = 0, note = '') => {
-    setAttempt({ round: MakeRound(settings, scenario.current, index, random.current), falseStarts, note });
+    setAttempt({ round: MakeRound(settings, plan.current[index], index, random.current), falseStarts, note });
     setPhase('running');
   }, [settings]);
-
-  function NextRound(index: number) {
-    scenario.current = ScenarioFor(settings.scenario, index, scenario.current, random.current);
-    runRound(index);
-  }
 
   function Start(isDemo: boolean) {
     if (starting.current || !ValidateSettings(settings)) return;
@@ -140,10 +139,10 @@ export function BrakeReactionGame() {
     setDemo(isDemo);
     setRows([]);
     random.current = RandomFrom(crypto.getRandomValues(new Uint32Array(1))[0]);
-    scenario.current = 'plain';
+    plan.current = ScenarioPlan(settings.scenario, random.current);
     lastBrakeInput.current = -Infinity;
     if (isDemo) {
-      NextRound(0);
+      runRound(0);
       return;
     }
     starting.current = true;
@@ -159,7 +158,7 @@ export function BrakeReactionGame() {
         }
         starting.current = false;
         SendGameEvent('active');
-        NextRound(0);
+        runRound(0);
       },
     }).then(started => {
       if (!started && generation === runGeneration.current) starting.current = false;
@@ -203,7 +202,7 @@ export function BrakeReactionGame() {
     setRows(completed);
     if (completed.length < 6) {
       PrepareAudioFeedback();
-      NextRound(completed.length);
+      runRound(completed.length);
       return;
     }
 
@@ -219,6 +218,16 @@ export function BrakeReactionGame() {
   const summaryItems = Object.entries(settings).map(([key, value]) => ({ label: t[key as CopyKey], value: label(value) }));
   const leaveLabel = IsHubGame() ? t.lobby : t.standaloneExit;
 
+  function SettingSelect(key: keyof Settings) {
+    const values = options[key];
+    return <label>{t[key]}<select id={key} name={key} value={settings[key]} onChange={event => {
+      const selected = values.find(value => String(value) === event.target.value);
+      if (selected !== undefined) setSettings(previous => ({ ...previous, [key]: selected }));
+    }}>
+      {values.map(value => <option key={value} value={value}>{label(value)}</option>)}
+    </select></label>;
+  }
+
   return <main id="game" ref={root} className={(phase === 'running' || phase === 'paused') ? 'drive-screen brake-reaction-phase-playing' : `brake-reaction-phase-${phase}`}
     onKeyDown={event => {
       if (event.key === 'Escape' && !event.repeat && (phase === 'running' || phase === 'paused')) {
@@ -229,31 +238,37 @@ export function BrakeReactionGame() {
     }}>
     <div className="jspsych-trial" ref={jsPsychDisplay} aria-hidden="true" />
     {phase === 'menu' && <>
-      <div className="settings-preview" inert><BrakeReactionTutorial title={t.title} ready={false} summaryItems={summaryItems} drawPreview={drawPreview} onBack={Exit} onStart={() => Start(false)} /></div>
+      <div className="brake-preview" aria-hidden="true">
+        <div className="brake-preview-sky" />
+        <div className="brake-preview-road"><span className="brake-preview-divider" /></div>
+        <div className="brake-preview-lead"><span className="brake-preview-car-window" /></div>
+        <div className="brake-preview-own"><span className="brake-preview-car-window" /></div>
+      </div>
       <dialog className="game-settings-dialog brake-reaction-phase-menu" ref={settingsDialog} aria-labelledby="title" onCancel={event => {
         event.preventDefault();
         Exit();
       }}>
         <form className="training-config" ref={formRef} aria-labelledby="title" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
-          onKeyDown={event => { if (event.key === 'Enter' && event.target instanceof HTMLSelectElement) { event.preventDefault(); confirmSettings(); } }}>
+          onKeyDown={event => { if (event.key === 'Enter' && !(event.target instanceof HTMLButtonElement)) { event.preventDefault(); confirmSettings(); } }}>
           <header className="training-config-header"><h2 id="title" tabIndex={-1}>{t.title}</h2></header>
           <div className="training-config-body">
-            <div className="settings-grid">
-              {Object.entries(options).map(([key, values]) => <section className="training-setting" key={key}>
-                <h3><label htmlFor={key}>{t[key as CopyKey]}</label></h3>
-                <select id={key} name={key} value={settings[key as keyof Settings]} onChange={event => {
-                  const selected = values.find(value => String(value) === event.target.value);
-                  if (selected !== undefined) setSettings(previous => ({ ...previous, [key]: selected }));
-                }}>
-                  {values.map(value => <option key={value} value={value}>{label(value)}</option>)}
-                </select>
-              </section>)}
-            </div>
+            <section className="training-setting"><h3>{t.settings}</h3>
+              <p>{t.settingsDescription}</p>
+              {SettingSelect('traffic')}
+              {SettingSelect('scenario')}
+              {SettingSelect('speedKmh')}
+              {SettingSelect('road')}
+            </section>
+            <section className="training-setting"><h3>{t.vehicles}</h3>
+              <p>{t.vehiclesDescription}</p>
+              {SettingSelect('leadType')}
+              {SettingSelect('ownType')}
+            </section>
           </div>
           <footer className="config-actions">
             <div className="training-config-navigation-buttons">
               <button className="btn btn-ghost" type="button" onClick={Exit}>{leaveLabel}</button>
-              <button className="btn btn-primary" type="button" onClick={confirmSettings} disabled={!ready}>{t.tutorial}</button>
+              <button className="btn btn-primary" type="button" onClick={confirmSettings} disabled={!ready}>{t.confirmSettings}</button>
             </div>
           </footer>
         </form>
@@ -262,7 +277,7 @@ export function BrakeReactionGame() {
     {(phase === 'rules' || phase === 'confirm') && <BrakeReactionTutorial title={phase === 'rules' ? t.tutorial : t.confirmation}
       ready={phase === 'confirm'} summaryItems={summaryItems} drawPreview={drawPreview}
       onContinue={() => setPhase('confirm')} onDemo={() => Start(true)} onStart={() => Start(false)} onBack={() => setPhase('menu')} />}
-    {(phase === 'running' || phase === 'paused') && attempt && <RunningView key={attempt.round.messageSeed} round={attempt.round} settings={settings} scenario={scenario.current}
+    {(phase === 'running' || phase === 'paused') && attempt && <RunningView key={attempt.round.messageSeed} round={attempt.round} settings={settings} scenario={attempt.round.scenario}
       index={rows.length} demo={demo} paused={phase === 'paused'} falseStarts={attempt.falseStarts} note={attempt.note} lastBrakeInput={lastBrakeInput}
       onFalseStart={onFalseStart} onFeedback={onFeedback} onPause={onPause} stopControl={<button className="btn btn-ghost" id="stop" ref={stopRef} onClick={onPause}>{en ? 'Stop' : '停止'}</button>}
       sound={sound} onSound={setSound} />}

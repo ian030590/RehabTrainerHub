@@ -10,7 +10,7 @@ export const options = {
 export type Settings = { [K in keyof typeof options]: (typeof options)[K][number] };
 export type Scenario = Exclude<Settings['scenario'], 'mixed'>;
 export const defaults: Settings = {
-  traffic: 'lead-only', scenario: 'plain', speedKmh: 100, leadType: 'sedan', ownType: 'sedan', road: 'dry',
+  traffic: 'lead-only', scenario: 'mixed', speedKmh: 100, leadType: 'sedan', ownType: 'sedan', road: 'dry',
 };
 
 export function RestoreSettings(saved: Record<string, unknown>): Settings {

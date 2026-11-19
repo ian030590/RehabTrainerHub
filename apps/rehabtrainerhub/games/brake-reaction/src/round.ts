@@ -25,6 +25,15 @@ export function ScenarioFor(setting: Settings['scenario'], index: number, previo
   return allowed[Between(random, 0, allowed.length - 1)];
 }
 
+export function ScenarioPlan(setting: Settings['scenario'], random: Random): Scenario[] {
+  const plan: Scenario[] = [];
+  for (let index = 0; index < 6; index++) {
+    plan.push(ScenarioFor(setting, index, plan[index - 1] ?? 'plain', random));
+  }
+  // In mixed mode, round 3 follows plain, and at most one of rounds 4 and 5 can be plain.
+  return plan;
+}
+
 export function MakeRound(settings: Settings, scenario: Scenario, index: number, random: Random) {
   const gap = GapFor(ModelFor(settings), index);
   const wait = index === 5 ? Between(random, 4200, 8500) : Between(random, 1400, 5000);

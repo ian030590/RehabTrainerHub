@@ -14,7 +14,7 @@ const games = {
   'complex-search': { version: '1.1.0', file: 'ComplexSearchGame.tsx', settings: 'settings.ts' },
   'conjunction-search': { version: '1.1.0', file: 'ConjunctionSearchGame.tsx', settings: 'settings.ts' },
   'exploratory-saccade': { version: '1.1.0', file: 'ExploratorySaccadeGame.tsx', settings: 'settings.ts' },
-  'brake-reaction': { version: '1.0.0', file: 'BrakeReactionGame.tsx', settings: 'settings.ts' },
+  'brake-reaction': { version: '1.1.0', file: 'BrakeReactionGame.tsx', settings: 'settings.ts' },
   'seagull-flight': { version: '1.1.0', file: 'SeagullFlightGame.tsx', settings: 'settings.ts' },
   'hart-chart': { version: '2.2.0', file: 'HartChartPage.tsx', settings: 'settings.ts' },
   'driving-rehab': { version: '2.2.0', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },

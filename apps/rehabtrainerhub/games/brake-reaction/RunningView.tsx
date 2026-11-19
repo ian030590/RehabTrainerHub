@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject, type ReactNode } from 'react';
 import { useT } from './i18n/useT';
-import { MakeRoad } from './src/road';
-import { ModelFor, Severity, Simulate, step } from './src/physics';
+import { LoadCarAtlas, MakeRoad } from './src/road';
+import { ModelFor, Motion, Severity, Simulate, step } from './src/physics';
 import { Judge, RandomFrom, type MakeRound } from './src/round';
 import type { Row } from './src/score';
 import type { Settings, Scenario } from './settings';
@@ -35,12 +35,13 @@ export function RunningView({ round, settings, scenario, index, demo, paused, fa
     const Element = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
     const model = ModelFor(settings);
     const stream = RandomFrom(round.messageSeed);
-    const draw = MakeRoad(Element('canvas'));
+    let draw: ReturnType<typeof MakeRoad>;
     let frame = 0;
     const unbrakedEnd = Simulate(model, round.gap, 10).end;
     const banner = Element('#banner');
     const brake = Element<HTMLButtonElement>('#brake');
-    const started = performance.now();
+    const speed = Element('#speed');
+    let started = Infinity;
     const events = new AbortController();
     const listeners = { signal: events.signal };
     let status: 'waiting' | 'settling' | 'done' = 'waiting';
@@ -122,7 +123,7 @@ export function RunningView({ round, settings, scenario, index, demo, paused, fa
 
     function BrakeInput(event: Event) {
       const input = InputTime(event);
-      if (input - lastBrakeInput.current < 1000 * step) return;
+      if (input < started || input - lastBrakeInput.current < 1000 * step) return;
       lastBrakeInput.current = input;
       React(input);
     }
@@ -146,7 +147,10 @@ export function RunningView({ round, settings, scenario, index, demo, paused, fa
       const elapsed = onset === undefined ? 0 : Math.floor((now - onset) / (1000 * step)) * step;
       const timeline = onset === undefined ? sinceStart : round.onset + now - onset;
       const end = record?.outcome.end ?? unbrakedEnd;
-      draw(round, model, timeline, onset !== undefined, playerDelay, Math.min(elapsed, end), settings.road === 'wet');
+      const motion = onset === undefined ? undefined : Motion(model, round.gap, playerDelay, Math.min(elapsed, end));
+      draw(model, timeline, motion, Math.min(elapsed, end), settings.road === 'wet');
+      const speedLabel = Math.round((motion?.ownSpeed ?? model.speed) * 3.6) + ' km/h';
+      if (speed.textContent !== speedLabel) speed.textContent = speedLabel;
       if (record && !brakePlayed && elapsed >= playerDelay && playerDelay < end) {
         brakePlayed = true;
         PlayBrakeCue('brake');
@@ -190,7 +194,14 @@ export function RunningView({ round, settings, scenario, index, demo, paused, fa
     brake.addEventListener('click', event => {
       if (event.detail === 0) BrakeInput(event);
     }, listeners);
-    frame = requestAnimationFrame(Paint);
+    brake.disabled = true;
+    void LoadCarAtlas().then(atlas => {
+      if (status === 'done') return;
+      draw = MakeRoad(Element('canvas'), atlas, round, settings.leadType, Element('.drive-bottom'));
+      started = performance.now();
+      brake.disabled = false;
+      frame = requestAnimationFrame(Paint);
+    });
     return () => {
       status = 'done';
       cancelAnimationFrame(frame);
@@ -199,30 +210,37 @@ export function RunningView({ round, settings, scenario, index, demo, paused, fa
   }, [paused, round, settings, scenario, distraction, falseStarts, t, lastBrakeInput, onFalseStart, onFeedback, onPause]);
 
   return <section className="driving" ref={rootRef} inert={paused} aria-labelledby={paused ? undefined : "title"}>
-    <header className="drive-toolbar">
-      <h2 id={paused ? undefined : "title"} tabIndex={-1}>{title}</h2>
-      <span>{settings.speedKmh} km/h</span>
-      <button className="btn btn-ghost" id="sound" aria-pressed={sound} onClick={() => {
-        SetSoundEnabled(!sound);
-        if (!sound) PrepareAudioFeedback();
-        onSound(!sound);
-      }}>{t.sound}</button>
-      {stopControl}
-    </header>
     <div className="road-frame">
       <canvas aria-hidden="true" />
-      <p id="banner" className="road-caption" role="status">{note || t.ready}</p>
       <span className="contact-marker" hidden aria-hidden="true" />
     </div>
-    {distraction && <section className="messages" aria-label={t.messages}>
-      <p id="message" aria-live="polite">{note ? t.noMessage : t.distractionInstruction}</p>
-      <div id="answers" className="answers">{[0, 1, 2].map(i =>
-        <button key={i} className="btn btn-ghost" data-answer={i} disabled>…</button>,
-      )}</div>
-    </section>}
-    <div className="brake-controls">
-      <button className="btn btn-primary" id="brake" aria-describedby="brake-help">{t.brake}</button>
-      <p id="brake-help">{t.pressHelp}</p>
+    <div className="drive-top">
+      <header className="drive-toolbar">
+        <h2 id={paused ? undefined : "title"} tabIndex={-1}>{title}</h2>
+        <span id="speed" className="drive-speed">{settings.speedKmh} km/h</span>
+        <div className="drive-actions">
+          <button className="btn btn-ghost" id="sound" aria-pressed={sound} onClick={() => {
+            SetSoundEnabled(!sound);
+            if (!sound) PrepareAudioFeedback();
+            onSound(!sound);
+          }}>{t.sound}</button>
+          {stopControl}
+        </div>
+      </header>
+      <p id="banner" className="road-caption" role="status">{note || t.ready}</p>
+    </div>
+    <div className="drive-stimulus" aria-hidden="true" />
+    <div className="drive-bottom">
+      {distraction && <section className="messages" aria-label={t.messages}>
+        <p id="message" aria-live="polite">{note ? t.noMessage : t.distractionInstruction}</p>
+        <div id="answers" className="answers">{[0, 1, 2].map(i =>
+          <button key={i} className="btn btn-ghost" data-answer={i} disabled>…</button>,
+        )}</div>
+      </section>}
+      <div className="brake-controls">
+        <button className="btn btn-primary" id="brake" aria-describedby="brake-help">{t.brake}</button>
+        <p id="brake-help">{t.pressHelp}</p>
+      </div>
     </div>
   </section>;
 }

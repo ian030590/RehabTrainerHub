@@ -2,6 +2,9 @@ import type { en } from './en.js';
 
 export const zh: typeof en = {
   title: '跟車煞車反應練習', settings: '練習設定',
+  settingsDescription: '前車同車道的煞車燈亮起時盡快按煞車，本練習不判定實際駕駛能力。',
+  vehicles: '車輛', vehiclesDescription: '車種會影響煞車距離。',
+  confirmSettings: '確認設定',
   traffic: '車流', scenario: '情境', speedKmh: '時速', leadType: '前車車種', ownType: '自車車種', road: '路面',
   'lead-only': '只有前車', light: '少量干擾車', busy: '多量干擾車', plain: '前車煞車',
   'swerve-away': '前車換道閃避', 'out-and-back': '前車換出再換回', mixed: '混合情境',
@@ -9,7 +12,7 @@ export const zh: typeof en = {
   tutorial: '操作教學', instruction: '同車道的紅色煞車燈亮起時，請按「煞車」或空白鍵。',
   ignore: '看到方向燈、換道或旁邊車道的車燈時，繼續觀察。',
   demo: '試玩一關（不計分）', skipDemo: '前往確認', confirmation: '確認練習設定',
-  backSettings: '返回設定', start: '開始練習', lobby: '返回大廳', standaloneExit: '關閉練習',
+  backSettings: '返回設定', start: '開始練習', lobby: '返回大廳', standaloneExit: '返回入口',
   stop: '停止', stopTitle: '要停止這次練習嗎？', restart: '重新開始此關',
   sound: '音效', brake: '煞車', cue: '同車道煞車燈亮起', round: '關卡', distraction: '分心關',
   distractionInstruction: '留意同車道，並試著回答訊息。', ready: '準備',

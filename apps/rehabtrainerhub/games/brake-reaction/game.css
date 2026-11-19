@@ -6,28 +6,50 @@
   --surface: #fff;
   --text: #202428;
   --heading: #14212b;
-  --text-muted: #51616a;
+  --text-muted: #606970;
   --border: #d4d9de;
   --border-strong: #7d868e;
   --text-on-accent: #fff;
   --radius: 8px;
-  --bg-overlay: rgb(20 33 43 / .35);
-  --sky: #101d2e;
-  --shoulder: #18232a;
-  --road: #333d48;
-  --wet-road: #394b58;
-  --lane: #acbac0;
-  --edge: #ece1aa;
+  --bg-overlay: rgb(20 24 28 / .54);
+  --shadow-dialog: 0 8px 24px rgb(20 33 43 / .12);
+  --shadow-setting: 0 1px 2px rgb(20 33 43 / .08);
+  --night: #0d1422;
+  --sky: #101c33;
+  --sky-low: #34415d;
+  --dusk: #987080;
+  --star: #d6deee;
+  --mountain: #242c40;
+  --grass: #243934;
+  --shoulder: #414a4e;
+  --road: #353a43;
+  --wet-road: #272e39;
+  --lane: #f5f6f8;
+  --edge-yellow: #f0cc62;
+  --guardrail: #757b81;
+  --post: #596068;
+  --lamp-pole: #232934;
+  --lamp-light: #ffe8ae;
+  --lamp-clear: rgb(255 232 174 / 0);
   --car: #8697a7;
   --car-roof: #526d83;
-  --decoy: #657983;
-  --tail: #a34552;
-  --signal: #ffc363;
-  --brake: #ff646d;
+  --tail: #a23b46;
+  --signal: #ffbd4b;
+  --brake: #ff4858;
   --dash: #111b27;
   --contact-light: #ffcf78;
   --contact-moderate: #ff9f7c;
   --contact-severe: #ff7589;
+  --preview-ground: #a9bcc3;
+  --preview-sky: #ccdee6;
+  --preview-horizon: #8a9f90;
+  --preview-road: #465057;
+  --preview-divider: #f7f1c9;
+  --preview-car-border: #202b34;
+  --preview-car-shadow: #172128;
+  --preview-lead: #d26743;
+  --preview-own: #e6edf0;
+  --preview-window: #293f4c;
   color: var(--text);
   background: var(--background);
   font: 700 100% / 1.5 system-ui, sans-serif;
@@ -40,22 +62,27 @@ h2, h3, p, dl, figure { margin: 0; }
 h2 { color: var(--heading); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
 h3 { color: var(--heading); font-size: 1.25rem; }
 #game {
+  --safe-top: max(8px, env(safe-area-inset-top));
+  --safe-right: max(12px, env(safe-area-inset-right));
+  --safe-bottom: max(8px, env(safe-area-inset-bottom));
+  --safe-left: max(12px, env(safe-area-inset-left));
+  --panel-height: calc(100dvh - max(16px, var(--safe-top)) - max(16px, var(--safe-bottom)));
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: max(16px, var(--safe-top)) max(16px, var(--safe-right)) max(16px, var(--safe-bottom)) max(16px, var(--safe-left));
   background: var(--background);
 }
 #game:fullscreen { width: 100%; }
 .jspsych-trial { display: none; }
 .training-config, .training-panel, .experiment-results {
   width: min(100%, 42rem);
-  max-height: calc(100dvh - 32px);
+  max-height: var(--panel-height);
   min-width: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
 }
@@ -64,15 +91,9 @@ h3 { color: var(--heading); font-size: 1.25rem; }
 .training-config-header p { color: var(--text-muted); margin-top: .35rem; }
 .training-config-body { overflow: auto; font-size: 1.15rem; }
 .training-config-body > p { margin-top: .75rem; }
-.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: start; }
-.training-setting { padding: 12px; background: var(--background); border-radius: 6px; }
-.training-setting select {
-  width: 100%; min-height: 44px; margin-top: 8px; padding: 6px;
-  color: var(--text); background: var(--surface); border-radius: 6px; border: 1px solid var(--border-strong);
-}
 .config-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--border); }
-.btn { min-height: 44px; border: 1px solid transparent; border-radius: 8px; padding: 7px 16px; cursor: pointer; }
-.btn:disabled { cursor: default; opacity: .65; }
+.btn { min-height: 44px; border: 1px solid transparent; border-radius: var(--radius); padding: 7px 16px; cursor: pointer; }
+.btn:disabled { cursor: not-allowed; opacity: .6; }
 .btn-primary { min-height: 48px; color: var(--text-on-accent); background: var(--primary); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 .btn-ghost { background: var(--surface); border-color: var(--border-strong); color: var(--heading); }
@@ -86,23 +107,56 @@ h2:focus { outline: none; }
 .metrics dt { color: var(--text-muted); }
 .metrics .score-key-metric { border-color: var(--primary); }
 .score-key-metric dd { font-size: clamp(1.9rem, 5vw, 3rem); font-variant-numeric: tabular-nums; }
-#game.drive-screen { height: 100dvh; min-height: 0; }
+
+#game.drive-screen { height: 100dvh; min-height: 0; padding: 0; background: var(--night); }
 .driving {
-  display: grid; grid-template-rows: auto minmax(70px, 1fr) auto;
-  width: min(100%, 90rem); height: 100%; min-height: 0; min-width: 0; overflow: auto;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  color: var(--text-on-accent);
 }
-.driving:has(.messages) { grid-template-rows: auto minmax(70px, 1fr) auto auto; }
-.drive-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 8px; }
-.drive-toolbar h2 { flex: 1 1 auto; font-size: clamp(1rem, 4vw, 1.5rem); }
-.road-frame { position: relative; overflow: hidden; background: var(--sky); border-radius: 6px; }
+.drive-top {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-block-size: 28dvh;
+  gap: 6px;
+}
+.road-frame[data-contact] + .drive-top { min-block-size: 0; }
+.driving[inert] .drive-top, .driving[inert] .drive-bottom { visibility: hidden; }
+.drive-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px 8px;
+}
+.drive-toolbar h2 { color: inherit; font-size: clamp(1rem, 3vw, 1.5rem); line-height: 1.4; overflow-wrap: anywhere; }
+.drive-speed { justify-self: end; font-variant-numeric: tabular-nums; }
+.drive-actions { justify-self: end; display: flex; gap: 8px; }
+.drive-actions .btn { min-width: 44px; }
+.drive-actions .btn:focus-visible, #brake:focus-visible { outline-color: var(--text-on-accent); }
+.road-frame { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: var(--night); }
 .road-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .road-caption {
-  position: absolute; inset: auto 8px 8px; text-align: center; color: var(--text-on-accent);
-  background: var(--dash); padding: 5px 8px; border-radius: 6px;
+  align-self: center;
+  max-width: 100%;
+  min-block-size: 32px;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  background: var(--dash);
+  text-align: center;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .road-caption:empty { visibility: hidden; }
 .road-frame[data-contact] { box-shadow: inset 0 0 0 3px var(--contact-tone); }
-.road-frame[data-contact] canvas { animation: contact-shake .32s ease-out; }
+.road-frame[data-contact] .contact-marker { animation: contact-shake .32s ease-out; }
 .road-frame[data-contact="light"] { --contact-tone: var(--contact-light); --marker-size: 20px; --shake: 2px; }
 .road-frame[data-contact="moderate"] { --contact-tone: var(--contact-moderate); --marker-size: 33px; --shake: 4px; }
 .road-frame[data-contact="severe"] { --contact-tone: var(--contact-severe); --marker-size: 47px; --shake: 6px; }
@@ -119,49 +173,174 @@ h2:focus { outline: none; }
   50% { transform: translateX(calc(-1 * var(--shake))); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .road-frame[data-contact] canvas { animation: none; }
+  .road-frame[data-contact] .contact-marker { animation: none; }
 }
-.brake-controls { display: grid; place-items: center; gap: 4px; padding-block: 8px 0; }
-#brake { min-height: 56px; width: min(100%, 26rem); font-size: 1.2rem; touch-action: manipulation; }
-.brake-controls p { color: var(--text-muted); }
-.messages { padding-top: 8px; display: grid; place-items: center; gap: 4px; }
-.answers { display: flex; justify-content: center; gap: 8px; }
-.answers button { min-width: 54px; }
+.drive-bottom { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 8px; }
+.brake-controls {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+#brake { min-height: 56px; width: 100%; font-size: 1.2rem; touch-action: manipulation; }
+.brake-controls p { padding-inline: 6px; background: var(--dash); border-radius: 4px; line-height: 1.25; }
+.messages {
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  background: var(--dash);
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.messages p { min-width: 0; }
+.answers { display: flex; flex-shrink: 0; justify-content: center; gap: 4px; }
+.answers button { min-width: 44px; padding-inline: 8px; }
+@media (orientation: landscape) and (min-width: 560px) {
+  .brake-controls { width: min(100%, 22rem); }
+  .drive-bottom:has(.messages) { grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr); align-items: end; }
+}
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 501px) {
+  .drive-bottom:has(.messages) { grid-template-columns: minmax(0, 1fr) 22rem minmax(0, 1fr); }
+  .messages { justify-self: end; }
+}
 @media (max-width: 560px) {
-  .settings-grid { grid-template-columns: 1fr; }
   .config-actions { display: grid; }
   .score-save-status { margin: 0; }
   .metrics > div { flex-basis: 7.5rem; }
   .drive-toolbar .btn { padding-inline: 10px; }
 }
+@media (max-width: 480px) {
+  .drive-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .drive-actions { grid-column: 1 / -1; }
+}
+@media (max-height: 500px) {
+  .drive-top { min-block-size: 0; }
+  .drive-bottom { gap: 6px; }
+  .drive-toolbar h2, .drive-speed, #brake { font-size: 1rem; }
+  .road-caption, .drive-actions, .messages, #brake-help { font-size: .875rem; }
+  .road-caption { min-block-size: 27px; padding-block: 4px; }
+  .brake-controls { gap: 3px; }
+  #brake { min-height: 44px; }
+}
+.brake-preview { position: absolute; inset: 0; overflow: hidden; background: var(--preview-ground); }
+.brake-preview-sky {
+  position: absolute;
+  inset: 0 0 50%;
+  border-bottom: 32px solid var(--preview-horizon);
+  background: var(--preview-sky);
+}
+.brake-preview-road {
+  position: absolute;
+  inset: 32% -20% 0;
+  background: var(--preview-road);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+}
+.brake-preview-divider {
+  position: absolute;
+  inset: 0 auto 0 49%;
+  border-left: 6px dashed var(--preview-divider);
+}
+.brake-preview-lead, .brake-preview-own {
+  position: absolute;
+  left: 60%;
+  width: 64px;
+  height: 100px;
+  border: 4px solid var(--preview-car-border);
+  border-radius: 16px;
+  box-shadow: -8px 10px 0 var(--preview-car-shadow);
+  translate: -50%;
+}
+.brake-preview-lead { top: 41%; background: var(--preview-lead); transform: scale(.72); }
+.brake-preview-own { top: 65%; background: var(--preview-own); }
+.brake-preview-car-window {
+  display: block;
+  height: 26px;
+  margin: 12px 6px;
+  border-radius: 6px;
+  background: var(--preview-window);
+}
+
 .training-config, .training-panel { font-size: 1.15rem; }
-.training-config-header h2 { font-size: 1.725rem; }
+.training-config-header h2 { font-size: 1.725rem; line-height: 1.3; }
 .training-config-body { padding: 20px; }
 .training-config input[type=range],
 .training-config input[type=checkbox],
 .training-config input[type=radio] { accent-color: var(--primary); }
-@media (min-width: 640px) {
-  .training-config-header h2 { font-size: 2.15625rem; }
-  .training-config-body { padding: 24px 32px; }
-}
 .game-settings-dialog {
-  width: min(calc(100% - 32px), 42rem);
-  max-height: calc(100dvh - 32px);
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  width: calc(100% - max(16px, var(--safe-left)) - max(16px, var(--safe-right)));
+  max-width: 42rem;
+  max-height: var(--panel-height);
+  margin: auto;
   padding: 0;
+  overflow: hidden;
   border: 0;
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
+  box-shadow: var(--shadow-dialog);
 }
-.game-settings-dialog::backdrop { background: var(--bg-overlay); }
-.game-settings-dialog .training-config { width: 100%; }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { width: 100%; line-height: 1.6; }
+.game-settings-dialog .training-config-header { padding: 20px; }
+.game-settings-dialog h2 { font-weight: 900; letter-spacing: -.025em; line-height: 1.25; }
+.game-settings-dialog .training-config-body {
+  display: grid;
+  gap: 20px;
+  background: var(--background);
+  scrollbar-gutter: stable;
+}
+.training-setting {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-setting);
+}
+.training-setting > h3 { margin-bottom: 12px; font-size: calc(1.125rem * 1.15); font-weight: 900; line-height: 1.35; }
+.training-setting > p { color: var(--text-muted); }
+.training-setting > label { display: block; margin-top: 16px; }
+.training-setting select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+}
+.training-setting select:disabled { cursor: not-allowed; }
+.training-setting select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.game-settings-dialog .config-actions { display: block; padding: 16px 20px; }
+.game-settings-dialog .training-config-navigation-buttons { justify-content: flex-end; gap: 12px; }
+.game-settings-dialog .btn { padding-block: 8px; font-size: calc(.875rem * 1.15); font-weight: 800; }
+.game-settings-dialog .btn-primary { padding-inline: 24px; }
+.game-settings-dialog .btn-ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.game-settings-dialog .btn:active:not(:disabled) { translate: 0 1px; }
 .game-interrupt-panel {
   position: absolute;
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 1;
-  width: min(calc(100% - 32px), 28rem);
+  width: min(calc(100% - max(16px, var(--safe-left)) - max(16px, var(--safe-right))), 28rem);
+  height: fit-content;
+  margin: auto;
   box-shadow: 0 0 0 100vmax var(--bg-overlay);
 }
-@media (max-width: 639px) {
-  .settings-grid { grid-template-columns: 1fr; }
-  .game-settings-dialog .config-actions, .training-config-navigation-buttons { display: grid; }
+@media (min-width: 640px) {
+  .training-config-header h2 { font-size: 2.15625rem; }
+  .training-config-body, .game-settings-dialog .training-config-header { padding: 24px 32px; }
+  .game-settings-dialog .config-actions { padding-inline: 32px; }
+  .game-settings-dialog .training-setting { padding: 24px; }
 }

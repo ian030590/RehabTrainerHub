@@ -1,5 +1,8 @@
 export const en = {
   title: 'Brake Reaction Practice', settings: 'Practice settings',
+  settingsDescription: 'Press brake as soon as the lead car in your lane shows brake lights. This practice does not determine real driving ability.',
+  vehicles: 'Vehicles', vehiclesDescription: 'Vehicle types affect braking distance.',
+  confirmSettings: 'Confirm settings',
   traffic: 'Traffic', scenario: 'Scenario', speedKmh: 'Speed', leadType: 'Lead vehicle', ownType: 'Your vehicle', road: 'Road',
   'lead-only': 'Lead vehicle only', light: 'Light traffic', busy: 'Busy traffic', plain: 'Lead vehicle brakes',
   'swerve-away': 'Lead vehicle moves aside', 'out-and-back': 'Lead vehicle leaves and returns', mixed: 'Mixed scenarios',
@@ -7,7 +10,7 @@ export const en = {
   tutorial: 'How to play', instruction: 'Press Brake or Space when the red brake lights come on in your lane.',
   ignore: 'Keep watching through turn signals, lane changes and lights in adjacent lanes.',
   demo: 'Try an unscored round', skipDemo: 'Continue to confirmation', confirmation: 'Confirm settings',
-  backSettings: 'Back to settings', start: 'Start practice', lobby: 'Back to lobby', standaloneExit: 'Close practice',
+  backSettings: 'Back to settings', start: 'Start practice', lobby: 'Back to lobby', standaloneExit: 'Back to entry',
   stop: 'Stop', stopTitle: 'Stop this practice?', restart: 'Restart this round',
   sound: 'Sound', brake: 'Brake', cue: 'Brake lights in your lane', round: 'Round', distraction: 'Distraction round',
   distractionInstruction: 'Answer messages if you can while watching your lane.', ready: 'Get ready',

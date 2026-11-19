@@ -27,6 +27,34 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
     }
   };
   await until(() => game(`!document.querySelector('form .btn-primary').disabled && document.querySelector('form h2').textContent === ${JSON.stringify(english ? 'Brake Reaction Practice' : '跟車煞車反應練習')}`), 'private init and language');
+  const controls = await game(`(() => {
+    const dialog = document.querySelector('dialog.game-settings-dialog');
+    const cards = [...dialog.querySelectorAll('.training-config-body > section.training-setting')];
+    const buttons = [...dialog.querySelectorAll('footer button')];
+    const wide = innerWidth >= 640;
+    const [back, confirm] = buttons.map(button => button.getBoundingClientRect());
+    return {
+      cards: cards.map(card => ({
+        title: card.querySelector('h3').textContent,
+        fields: [...card.querySelectorAll('label > select')].map(select => select.name)
+      })),
+      buttons: buttons.map(button => button.textContent),
+      scenario: dialog.querySelector('[name=scenario]').value,
+      backdrop: getComputedStyle(dialog, '::backdrop').backdropFilter,
+      fits: dialog.scrollWidth <= dialog.clientWidth,
+      targets: [...buttons, ...dialog.querySelectorAll('select')].every(control => control.getBoundingClientRect().height >= 44),
+      order: wide ? confirm.left > back.left : confirm.top > back.top && confirm.width === back.width
+    };
+  })()`);
+  assert.deepEqual(controls.cards, [
+    { title: english ? 'Practice settings' : '練習設定', fields: ['traffic', 'scenario', 'speedKmh', 'road'] },
+    { title: english ? 'Vehicles' : '車輛', fields: ['leadType', 'ownType'] },
+  ]);
+  assert.deepEqual(controls.buttons, [english ? (standalone ? 'Back to entry' : 'Back to lobby') : (standalone ? '返回入口' : '返回大廳'),
+    english ? 'Confirm settings' : '確認設定']);
+  assert.equal(controls.scenario, 'mixed');
+  assert.equal(controls.backdrop, 'blur(12px)');
+  assert.ok(controls.fits && controls.targets && controls.order);
   await capture('settings');
   await click('form .btn-primary');
   await waitFor('.spotlight');

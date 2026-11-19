@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useT } from '../i18n/useT';
-import { MakeRoad } from '../src/road';
+import { LoadCarAtlas } from '../src/road';
 
 type SummaryItem = { label: string; value: string };
 
@@ -10,7 +10,7 @@ export function BrakeReactionTutorial({ title, ready, summaryItems, onStart, onB
   summaryItems: SummaryItem[];
   onStart: () => void;
   onBack: () => void;
-  drawPreview?: (draw: ReturnType<typeof MakeRoad>) => void;
+  drawPreview?: (canvas: HTMLCanvasElement, atlas: HTMLImageElement | null) => () => void;
   onContinue?: () => void;
   onDemo?: () => void;
 }) {
@@ -19,13 +19,20 @@ export function BrakeReactionTutorial({ title, ready, summaryItems, onStart, onB
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !drawPreview) return;
-    const draw = MakeRoad(canvas);
-    const update = () => drawPreview(draw);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(canvas);
-    return () => observer.disconnect();
-  }, [drawPreview]);
+    let active = true;
+    let observer: ResizeObserver | undefined;
+    void LoadCarAtlas().then(atlas => {
+      if (!active) return;
+      const update = drawPreview(canvas, atlas);
+      update();
+      observer = new ResizeObserver(update);
+      observer.observe(canvas);
+    });
+    return () => {
+      active = false;
+      observer?.disconnect();
+    };
+  }, [ready, drawPreview]);
 
   if (ready) return <section className="training-panel training-config training-confirmation" aria-labelledby="title">
     <header className="training-config-header"><h2 id="title" tabIndex={-1}>{title}</h2></header>
@@ -46,7 +53,6 @@ export function BrakeReactionTutorial({ title, ready, summaryItems, onStart, onB
   const preview = <div className="tutorial-road">
     <div className="tutorial-scene">
       <canvas ref={canvasRef} aria-hidden="true" />
-      {onContinue && <span className="tutorial-lamp-focus" aria-hidden="true" />}
     </div>
     {onContinue && <p className="spotlight">{copy.instruction}</p>}
   </div>;
