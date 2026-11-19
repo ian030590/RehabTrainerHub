@@ -1,4 +1,20 @@
 .tutorial-lead-car { position: absolute; pointer-events: none; }
+.brake-tutorial-ready {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, var(--safe-top)) max(16px, var(--safe-right)) max(16px, var(--safe-bottom)) max(16px, var(--safe-left));
+  background: var(--bg-overlay);
+  backdrop-filter: blur(12px);
+}
+.training-confirmation {
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  box-shadow: var(--shadow-dialog);
+}
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
 .game-tour-spotlight {
   position: fixed;
@@ -32,7 +48,7 @@
 @media (max-width: 639px) {
   .game-settings-dialog .training-config-navigation-buttons { display: grid; grid-template-columns: minmax(0, 1fr); }
   .training-panel .training-config-navigation-buttons { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .training-confirmation > .config-actions { grid-template-columns: minmax(0, 1fr); }
+  .training-confirmation .training-config-navigation-buttons { justify-content: stretch; }
 }
 .training-panel .config-actions button:focus-visible,
 .training-config-navigation-buttons .btn:focus-visible {

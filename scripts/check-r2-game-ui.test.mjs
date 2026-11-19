@@ -115,11 +115,12 @@ for (const fixture of cases) {
       }, module, module.exports, { innerWidth: 390, innerHeight: 844 });
       let starts = 0;
       let backs = 0;
+      let demos = 0;
       const tree = module.exports[fixture.tutorial]({
         title: 'Session', active: true, ready: true, shieldSizePercent: 75,
         settings: { controlMode: 'arrow', passage: 0, wordsPerMinute: 240, crowding: 100, contrast: 100, durationSec: 60, maxSpots: 8, rounds: 10, optionCount: 18, difficulty: 'medium', targetPhysicalSizeMm: 15, optionPhysicalSizeMm: 10, calibrationLengthMm: 149 },
         summaryItems: [{ label: 'Duration', value: '30s' }, { label: 'Threshold', value: '65%' }],
-        onStart: () => starts++, onBack: () => backs++,
+        onStart: () => starts++, onBack: () => backs++, onDemo: () => demos++,
       });
       const confirmation = Find(tree, element => HasClass(element, 'training-confirmation'));
       assert.ok(confirmation, 'The final settings use a named confirmation panel.');
@@ -133,7 +134,11 @@ for (const fixture of cases) {
       assert.match(markup, /<p class="training-config-summary-item"><strong>Threshold.*65%/);
       assert.match(markup, /<footer class="config-actions">/);
       Find(confirmation, element => element.type === 'button' && HasClass(element, 'btn-primary')).props.onClick();
-      Find(confirmation, element => element.type === 'button' && HasClass(element, 'btn-ghost')).props.onClick();
+      Find(confirmation, element => element.type === 'button' && HasClass(element, 'btn-ghost') && element.props.id !== 'demo').props.onClick();
+      if (fixture.id === 'brake-reaction') {
+        Find(confirmation, element => element.type === 'button' && HasClass(element, 'btn-ghost') && element.props.id === 'demo').props.onClick();
+        assert.equal(demos, 1);
+      }
       assert.equal(starts, 1);
       assert.equal(backs, 1);
       assert.ok(AllDivsNamed(confirmation), 'Confirmation divs identify their content or purpose.');

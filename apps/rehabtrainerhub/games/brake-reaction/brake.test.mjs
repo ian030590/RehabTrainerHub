@@ -200,6 +200,111 @@ test('canvas cars provide four distinct rear profiles with valid lamp rectangles
   }
 });
 
+test('50 px rear views have inset cabins, full shoulders, and distinct car anatomy', async () => {
+  const { PaintVehicle, vehicleStyles } = await import('./src/vehicles.ts');
+  const { palette } = await import('./src/scenePalette.ts');
+  const { ProjectCar, ProjectLamp, ProjectPoint, SceneMetrics } = await import('./src/projection.ts');
+  const scene = SceneMetrics(1280, 800);
+  const widths = { sedan: 1.8, suv: 1.9, ev: 1.78, sport: 1.85 };
+  const profiles = {};
+  for (const type of options.leadType) {
+    const style = vehicleStyles[type];
+    assert.equal(style.widthMeters, widths[type]);
+    const depth = scene.focal * style.widthMeters / 50;
+    const car = ProjectCar(scene, 0, depth, style.widthMeters, style.aspect);
+    const ground = ProjectPoint(scene, 0, depth).y;
+    const { ctx, polygons, rectangles, strokes } = RecordVehiclePaint();
+    const lamps = PaintVehicle(ctx, car, type, 50 / style.widthMeters, 12, false, 0, undefined, 0);
+    assert.deepEqual(lamps, Object.values(style.lamps).map(lamp => ProjectLamp(car, lamp)));
+
+    const body = polygons.filter(shape => shape.color.stops?.includes(palette[type][0]));
+    const hatch = polygons.find(shape => shape.color.stops?.includes(palette.glass[0]));
+    const widthAt = fraction => {
+      const row = car.y + car.height * fraction;
+      const edges = body.flatMap(shape => EdgesAt(shape.points, row));
+      return edges.length ? Math.max(...edges) - Math.min(...edges) : 0;
+    };
+    assert.ok(widthAt(.25) < 43, `${type} has an inset cabin`);
+    assert.ok(widthAt(.56) >= 44, `${type} spans the shoulders`);
+    assert.ok(Math.abs(widthAt(.56) - widthAt(.73)) <= 4, `${type} has near-vertical sides below the shoulder`);
+    for (const [x, y, width, height] of lamps) {
+      for (const [lampX, lampY] of [[x, y], [x + width, y], [x, y + height], [x + width, y + height]]) {
+        assert.ok(body.some(shape => {
+          const edges = EdgesAt(shape.points, lampY);
+          return lampX >= Math.min(...edges) && lampX <= Math.max(...edges);
+        }), `${type} lamp corner is on the body`);
+      }
+    }
+    const tyres = rectangles.filter(rect => rect.color === palette.tyre && Math.abs(rect.y + rect.height - ground) < .001);
+    assert.equal(tyres.length, 2, `${type} both tyres reach the ground contact point`);
+    const glassYs = hatch.points.map(([, y]) => y);
+    const bodyBottom = Math.max(...body.flatMap(shape => shape.points.map(([, y]) => y)));
+    const [tail] = lamps;
+    profiles[type] = { height: car.height, glassHeight: Math.max(...glassYs) - Math.min(...glassYs),
+      deck: tail[1] - Math.max(...glassYs), cabin: widthAt(.25), clearance: ground - bodyBottom, tail };
+
+    if (type === 'ev') {
+      const [left, right] = lamps;
+      assert.ok(rectangles.some(rect => rect.color === palette.tail &&
+        rect.x <= left[0] + left[2] && rect.x + rect.width >= right[0]), 'EV light bar connects both lamps');
+    }
+
+    const damage = RecordVehiclePaint();
+    PaintVehicle(damage.ctx, car, type, 50 / style.widthMeters, 12, true, 0, 'severe', -1);
+    assert.ok(damage.rectangles.filter(rect => rect.color === palette.brokenLamp).length >= 2);
+    assert.ok(damage.strokes.some(stroke => stroke.color === palette.crease));
+    assert.ok(damage.strokes.some(stroke => stroke.color === palette.scratch && stroke.clipped), 'rear window has a clipped crack');
+    assert.ok(strokes.some(stroke => stroke.color === palette.seam), 'a visible panel seam divides the rear');
+  }
+  const { sedan, suv, ev, sport } = profiles;
+  assert.ok(sedan.deck >= 3, 'sedan trunk deck is visible at distance');
+  assert.ok(sedan.tail[2] > 2 * sedan.tail[3], 'sedan lamps are horizontal');
+  assert.ok(suv.height > sedan.height + 4 && suv.glassHeight > sedan.glassHeight + 2);
+  assert.ok(suv.tail[3] > suv.tail[2] && suv.clearance > sedan.clearance + 2);
+  assert.ok(sport.height < ev.height - 5 && sport.cabin < ev.cabin && sport.glassHeight < ev.glassHeight);
+});
+
+function RecordVehiclePaint() {
+  const polygons = [];
+  const rectangles = [];
+  const strokes = [];
+  const states = [];
+  let points = [];
+  const ctx = {
+    fillStyle: '', strokeStyle: '', clipped: false,
+    createLinearGradient() {
+      const stops = [];
+      return { stops, addColorStop(_offset, color) { stops.push(color); } };
+    },
+    createRadialGradient() { return { addColorStop() {} }; },
+    save() { states.push([this.fillStyle, this.strokeStyle, this.clipped]); },
+    restore() { [this.fillStyle, this.strokeStyle, this.clipped] = states.pop(); },
+    beginPath() { points = []; },
+    moveTo(x, y) { points.push([x, y]); },
+    lineTo(x, y) { points.push([x, y]); },
+    quadraticCurveTo(cx, cy, x, y) {
+      const [x0, y0] = points.at(-1);
+      points.push([(x0 + 2 * cx + x) / 4, (y0 + 2 * cy + y) / 4], [x, y]);
+    },
+    closePath() {},
+    ellipse() {},
+    translate() {},
+    scale() {},
+    clip() { this.clipped = true; },
+    fill() { if (points.length) polygons.push({ color: this.fillStyle, points }); },
+    stroke() { strokes.push({ color: this.strokeStyle, clipped: this.clipped }); },
+    fillRect(x, y, width, height) { rectangles.push({ color: this.fillStyle, x, y, width, height }); },
+  };
+  return { ctx, polygons, rectangles, strokes };
+}
+
+function EdgesAt(points, row) {
+  return points.flatMap(([x, y], index) => {
+    const [nextX, nextY] = points[(index + 1) % points.length];
+    return (y > row) === (nextY > row) ? [] : [x + (nextX - x) * (row - y) / (nextY - y)];
+  });
+}
+
 test('roadside fixtures use world spacing and share the car depth order', async () => {
   const { BuildRoadside, CompareDepth } = await import('./src/projection.ts');
   const fixtures = BuildRoadside(10, 5, 150, 5);
@@ -433,6 +538,63 @@ test('settings group six labeled fields and keep Back before Confirm', async () 
       [['traffic', 'scenario', 'speedKmh', 'road'], ['leadType', 'ownType']]);
     const buttons = [...markup.matchAll(/<button[^>]+>([^<]+)<\/button>/g)].map(button => button[1]);
     assert.deepEqual(buttons, [back, confirm]);
+  }
+});
+
+test('confirmation draws the inert tour preview and presents the start, demo and back actions in order', async () => {
+  const source = readFileSync(new URL('./rules/BrakeReactionTutorial.tsx', import.meta.url), 'utf8');
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  });
+  const require = createRequire(import.meta.url);
+  for (const lang of ['en', 'zh']) {
+    const copy = (await import(`./i18n/${lang}.ts`))[lang];
+    const exports = {};
+    const effects = [];
+    const refs = [];
+    const calls = [];
+    const focusStart = () => calls.push('focus');
+    const canvas = { dataset: { targetRect: '10,10,50,40' }, getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+    const controls = {};
+    const car = { style: {} };
+    const modules = {
+      react: { useEffect: effect => effects.push(effect), useRef: () => { const ref = { current: null }; refs.push(ref); return ref; } },
+      '../i18n/useT': { useT: () => ({ lang, copy }) },
+      '../runtime/tour': { StartTour: () => assert.fail('confirmation should not start another spotlight tour') },
+      './tutorialSteps': {},
+    };
+    runInNewContext(outputText, {
+      exports, Event, window: { dispatchEvent() {} },
+      ResizeObserver: class {
+        observe() {}
+        disconnect() { calls.push('disconnect'); }
+      },
+      require: id => modules[id] ?? require(id),
+    });
+    const view = exports.BrakeReactionTutorial({
+      title: copy.confirmation, ready: true, settings: defaults, sound: true, roundCount: 6,
+      summaryItems: [{ label: 'Mode', value: 'Mixed' }],
+      drawPreview: (canvasRef, controlsRef) => {
+        assert.equal(canvasRef, canvas);
+        assert.equal(controlsRef, controls);
+        return () => calls.push('draw');
+      },
+    });
+    const markup = renderToStaticMarkup(view);
+    assert.match(markup, /<section class="driving brake-tutorial-scene" inert="" aria-hidden="true">.*<canvas[^>]*>/);
+    assert.match(markup, /<section class="training-panel brake-tutorial-ready" role="dialog" aria-modal="true"[^>]*><div class="training-config training-confirmation">/);
+    const summaryHeading = lang === 'en' ? 'Confirm settings' : '\u78ba\u8a8d\u8a2d\u5b9a';
+    assert.ok(markup.includes(`<section class="training-setting"><h3>${summaryHeading}</h3>`));
+    assert.match(markup, /<strong>Mode\uff1a<\/strong>Mixed/);
+    const panel = markup.slice(markup.indexOf('class="training-panel brake-tutorial-ready"'));
+    assert.deepEqual([...panel.matchAll(/<button[^>]+>([^<]+)<\/button>/g)].map(button => button[1]),
+      [copy.start, copy.demo, copy.backSettings]);
+    const start = { focus: focusStart };
+    refs.forEach((ref, index) => { ref.current = [canvas, controls, car, start][index]; });
+    effects.map(effect => effect()).forEach(cleanup => cleanup?.());
+    assert.ok(calls.includes('draw'));
+    assert.ok(calls.includes('focus'));
+    assert.ok(calls.includes('disconnect'));
   }
 });
 

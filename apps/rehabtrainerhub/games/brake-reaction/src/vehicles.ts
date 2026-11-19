@@ -6,19 +6,59 @@ import { Alpha, Bloom, palette } from './scenePalette.js';
 
 type Vehicle = Settings['leadType'];
 type Lamp = readonly [number, number, number, number];
-type Style = { widthMeters: number; aspect: number; roof: number; spoiler?: boolean; lightBar?: boolean;
-  lamps: { tailLeft: Lamp; tailRight: Lamp; third: Lamp } };
+type Point = readonly [number, number];
+type Style = {
+  widthMeters: number;
+  aspect: number;
+  cabin: readonly Point[];
+  window: readonly Point[];
+  rear: readonly [Point, Point, Point, Point, Point, Point];
+  bumperTop: number;
+  tyre: readonly [number, number, number];
+  spoiler?: boolean;
+  lightBar?: boolean;
+  lamps: { tailLeft: Lamp; tailRight: Lamp; third: Lamp };
+};
 
 export const vehicleStyles: Record<Vehicle, Style> = {
-  sedan: { widthMeters: 1.8, aspect: .90, roof: .28,
-    lamps: { tailLeft: [.105, .53, .20, .077], tailRight: [.695, .53, .20, .077], third: [.39, .18, .22, .031] } },
-  suv: { widthMeters: 1.9, aspect: .96, roof: .19,
-    lamps: { tailLeft: [.11, .48, .084, .16], tailRight: [.806, .48, .084, .16], third: [.38, .15, .24, .033] } },
-  ev: { widthMeters: 1.78, aspect: .89, roof: .27, lightBar: true,
-    lamps: { tailLeft: [.11, .48, .18, .055], tailRight: [.71, .48, .18, .055], third: [.40, .17, .20, .03] } },
-  sport: { widthMeters: 1.85, aspect: .82, roof: .34, spoiler: true,
-    lamps: { tailLeft: [.09, .53, .18, .065], tailRight: [.73, .53, .18, .065], third: [.38, .21, .24, .032] } },
+  // Each outline runs up or down the left side and is mirrored on the right.
+  sedan: {
+    widthMeters: 1.8, aspect: .84,
+    cabin: [[.19, .49], [.295, .155], [.35, .116]],
+    window: [[.246, .397], [.328, .171]],
+    rear: [[.109, .454], [.041, .491], [.025, .56], [.03, .755], [.048, .845], [.105, .905]],
+    bumperTop: .747, tyre: [.072, .70, .155],
+    lamps: { tailLeft: [.078, .524, .227, .074], tailRight: [.695, .524, .227, .074], third: [.40, .346, .20, .041] },
+  },
+  suv: {
+    widthMeters: 1.9, aspect: .96,
+    cabin: [[.086, .57], [.127, .135], [.174, .095]],
+    window: [[.178, .456], [.199, .158]],
+    rear: [[.105, .49], [.059, .52], [.047, .60], [.014, .69], [.021, .779], [.084, .839]],
+    bumperTop: .716, tyre: [.055, .63, .18],
+    lamps: { tailLeft: [.136, .304, .064, .245], tailRight: [.80, .304, .064, .245], third: [.38, .116, .24, .037] },
+  },
+  ev: {
+    widthMeters: 1.78, aspect: .81, lightBar: true,
+    cabin: [[.145, .49], [.235, .222], [.288, .14], [.36, .1]],
+    window: [[.199, .425], [.258, .235], [.32, .174]],
+    rear: [[.142, .454], [.08, .462], [.04, .49], [.026, .71], [.048, .835], [.13, .902]],
+    bumperTop: .767, tyre: [.069, .71, .145],
+    lamps: { tailLeft: [.067, .514, .175, .069], tailRight: [.758, .514, .175, .069], third: [.40, .181, .20, .036] },
+  },
+  sport: {
+    widthMeters: 1.85, aspect: .65, spoiler: true,
+    cabin: [[.249, .52], [.308, .185], [.366, .135]],
+    window: [[.285, .355], [.351, .198]],
+    rear: [[.149, .481], [.071, .49], [.014, .552], [.026, .768], [.051, .87], [.124, .925]],
+    bumperTop: .736, tyre: [.049, .69, .177],
+    lamps: { tailLeft: [.068, .515, .19, .084], tailRight: [.742, .515, .19, .084], third: [.40, .238, .20, .040] },
+  },
 };
+
+function MirrorOutline(left: readonly Point[]): Point[] {
+  return [...left, ...left.map(([x, y]): Point => [1 - x, y]).reverse()];
+}
 
 export function VehicleTypes(lead: Vehicle, seed: number, decoyCount: number) {
   const random = RandomFrom(seed);
@@ -39,10 +79,15 @@ export function PaintVehicle(ctx: CanvasRenderingContext2D, car: ReturnType<type
   const { x, y, width, height } = car;
   const lamps: ReturnType<typeof ProjectLamp>[] = [];
   const dent = damage === 'severe' ? .09 : damage === 'moderate' ? .047 : 0;
+  const dentLeft = dentSide < 0 ? dent : 0;
+  const dentRight = dentSide > 0 ? dent : 0;
   const brokenLeft = damage === 'severe' || (damage === 'moderate' && dentSide < 0);
   const brokenRight = damage === 'severe' || (damage === 'moderate' && dentSide > 0);
   const body = ctx.createLinearGradient(0, y + height * .12, 0, y + height * .90);
-  palette[type].forEach((tone, index) => body.addColorStop(index * .5, tone));
+  const [roofTone, panelTone, lowerTone] = palette[type];
+  body.addColorStop(0, roofTone);
+  body.addColorStop(.62, panelTone);
+  body.addColorStop(1, lowerTone);
   const glass = ctx.createLinearGradient(0, y + height * .12, 0, y + height * .48);
   glass.addColorStop(0, palette.glass[1]);
   glass.addColorStop(1, palette.glass[0]);
@@ -57,40 +102,67 @@ export function PaintVehicle(ctx: CanvasRenderingContext2D, car: ReturnType<type
   }
   ctx.fillStyle = palette.tyre;
   ctx.beginPath();
-  ctx.ellipse(x + width * .5, y + height * .94, width * .55, height * .085, 0, 0, 2 * Math.PI);
+  ctx.ellipse(x + width * .5, y + height * .985, width * .50, height * .05, 0, 0, 2 * Math.PI);
   ctx.fill();
-  Box(palette.tyre, .08, .68, .13, .28);
-  Box(palette.tyre, .79, .68, .13, .28);
+  const [tyreLeft, tyreTop, tyreWidth] = style.tyre;
+  Box(palette.tyre, tyreLeft, tyreTop, tyreWidth, 1 - tyreTop);
+  Box(palette.tyre, 1 - tyreLeft - tyreWidth, tyreTop, tyreWidth, 1 - tyreTop);
 
-  const roof = style.roof;
-  Shape([[.06, .82 + (dentSide < 0 ? dent : 0)], [.025, .65], [.09, .45], [roof, .12],
-    [roof + .07, .08], [.93 - roof, .08], [1 - roof, .12], [.91, .45], [.975, .65],
-    [.94, .82 + (dentSide > 0 ? dent : 0)], [.71, .87], [.29, .87]], body, palette.shade, Math.max(.6, Math.min(5, scale * .039)));
+  if (type === 'suv') {
+    for (const side of [.20, .65]) {
+      Stroke([[side, .102], [side + .025, .047], [side + .125, .047], [side + .15, .102]],
+        palette.hoodRim, Math.max(.8, scale * .042));
+    }
+  }
+  const bodyOutline = Math.max(.6, Math.min(4, scale * .032));
+  Shape(MirrorOutline(style.cabin), body, palette.shade, bodyOutline, type === 'ev');
 
+  const [glassLeft, glassBottom] = style.window[0];
+  const [, glassTop] = style.window[style.window.length - 1];
+  const glassHeight = glassBottom - glassTop;
   ctx.save();
-  Shape([[roof + .025, .15], [.975 - roof, .15], [.83, .43], [.17, .43]], glass, palette.shade, Math.max(.5, scale * .024));
+  Shape(MirrorOutline(style.window), glass, palette.shade, Math.max(.5, scale * .024), type === 'ev');
   ctx.clip();
   for (const offset of [0, .11]) {
-    Stroke([[.33 + offset, .45], [.48 + offset, .12]], Alpha(palette.glassReflection, offset ? .15 : .26), Math.max(.55, scale * .04));
+    Stroke([[glassLeft + .10 + offset, glassBottom], [glassLeft + .24 + offset, glassTop]],
+      Alpha(palette.glassReflection, offset ? .15 : .26), Math.max(.55, scale * .04));
   }
   if (damage === 'severe') {
-    Stroke([[.48, .31], [.43, .25], [.41, .17]], palette.scratch, 1.1);
-    Stroke([[.48, .31], [.54, .27], [.59, .18]], palette.scratch, 1.1);
-    Stroke([[.48, .31], [.57, .37], [.66, .42]], palette.scratch, 1.1);
-    Stroke([[.48, .31], [.40, .36], [.35, .42]], palette.scratch, 1.1);
+    const center: Point = [.48, glassTop + glassHeight * .58];
+    Stroke([center, [.43, glassTop + glassHeight * .36], [.41, glassTop]], palette.scratch, 1.1);
+    Stroke([center, [.54, glassTop + glassHeight * .32], [.59, glassTop]], palette.scratch, 1.1);
+    Stroke([center, [.57, glassBottom - glassHeight * .20], [.66, glassBottom]], palette.scratch, 1.1);
+    Stroke([center, [.40, glassBottom - glassHeight * .24], [.35, glassBottom]], palette.scratch, 1.1);
   }
   ctx.restore();
 
-  Stroke([[.15, .49], [.31, .50], [.52, .50 + dent * .5], [.72, .50], [.85, .49]], palette.seam, Math.max(.6, scale * .025));
-  Shape([[.065, .73], [.35, .755], [.64, .75], [.935, .73 + (dentSide > 0 ? dent : 0)],
-    [.92, .835 + (dentSide > 0 ? dent * .65 : 0)], [.7, .86], [.28, .86 + (dentSide < 0 ? dent * .7 : 0)],
-    [.08, .82 + (dentSide < 0 ? dent : 0)]], palette.shade);
+  const [deck, corner, shoulder, flank, [cornerX, cornerY], [sillX, sillY]] = style.rear;
+  const rear = (sideDent: number): Point[] => [deck, corner, shoulder, flank,
+    [cornerX + sideDent * .55, cornerY + sideDent * .36],
+    [sillX + sideDent * .38, sillY + sideDent * .30]];
+  const rearBody = [...rear(dentLeft), ...rear(dentRight).reverse().map(([px, py]): Point => [1 - px, py])];
+  Shape(rearBody, body, palette.shade, bodyOutline, type === 'ev');
+  const [deckX, deckY] = deck;
+  Stroke([[deckX, deckY + .02], [.32, deckY + .031], [.68, deckY + .031], [1 - deckX, deckY + .02]],
+    Alpha(palette.glassReflection, .32), Math.max(.6, scale * .026));
+  const seam = deckY + .116;
+  Stroke([[.12, seam], [.29, seam + .02], [.50, seam + .022 + dent * .35], [.71, seam + .02], [.88, seam]],
+    palette.seam, Math.max(.55, scale * .025));
+
+  const bumper = style.bumperTop;
+  const cladding = type === 'suv' ? .028 : .061;
+  Shape([[cladding, bumper], [.32, bumper + .03], [.68, bumper + .03], [1 - cladding, bumper],
+    [1 - cornerX - dentRight * .55, cornerY + dentRight * .36], [1 - sillX, sillY + dentRight * .22],
+    [sillX, sillY + dentLeft * .22], [cornerX + dentLeft * .55, cornerY + dentLeft * .36]],
+    type === 'ev' ? lowerTone : palette.shade, undefined, 1, type === 'ev');
   if (style.spoiler) {
-    Box(palette.shade, .17, .375, .037, .1);
-    Box(palette.shade, .793, .375, .037, .1);
-    Shape([[.075, .355], [.925, .355], [.87, .412], [.13, .412]], palette.shade);
-    Box(palette.hoodRim, .15, .802, .10, .033);
-    Box(palette.hoodRim, .75, .802, .10, .033);
+    for (const post of [.195, .765]) Box(palette.shade, post, .383, .04, .126);
+    Shape(MirrorOutline([[.064, .359], [.09, .423]]), palette.shade, palette.hoodRim, bodyOutline);
+    Shape(MirrorOutline([[.13, .786], [.17, .884]]), palette.tyre);
+    for (const tip of [.16, .73]) {
+      Box(palette.hoodRim, tip, .817, .11, .049);
+      Box(palette.tyre, tip + .022, .827, .066, .026);
+    }
   }
   Box(palette.plate, .37, .65, .26, .096);
   if (width >= 62) {
@@ -111,10 +183,13 @@ export function PaintVehicle(ctx: CanvasRenderingContext2D, car: ReturnType<type
   }
 
   if (style.lightBar) {
-    const state = brokenLeft || brokenRight ? 'broken' : brakes ? 'brake' : 'tail';
-    const width = state === 'broken' ? .27 : .56;
-    const start = brokenLeft && !brokenRight ? .50 : .22;
-    LampAt([start, .492, width, .033], state === 'broken' && brokenLeft !== brokenRight && brakes ? 'brake' : state, false);
+    const state = brakes ? 'brake' : 'tail';
+    if (brokenLeft !== brokenRight) {
+      LampAt([.21, .533, .29, .032], brokenLeft ? 'broken' : state, false);
+      LampAt([.50, .533, .29, .032], brokenRight ? 'broken' : state, false);
+    } else {
+      LampAt([.21, .533, .58, .032], brokenLeft ? 'broken' : state, false);
+    }
   }
   LampAt(style.lamps.tailLeft, brokenLeft ? 'broken' : brakes ? 'brake' : signal < 0 ? 'signal' : 'tail');
   LampAt(style.lamps.tailRight, brokenRight ? 'broken' : brakes ? 'brake' : signal > 0 ? 'signal' : 'tail');
@@ -127,14 +202,15 @@ export function PaintVehicle(ctx: CanvasRenderingContext2D, car: ReturnType<type
     ctx.fillRect(x + left * width, y + top * height, w * width, h * height);
   }
 
-  function Path(points: readonly (readonly [number, number])[]) {
+  function Path(points: readonly Point[]) {
     ctx.beginPath();
     ctx.moveTo(x + points[0][0] * width, y + points[0][1] * height);
     for (const [px, py] of points.slice(1)) ctx.lineTo(x + px * width, y + py * height);
   }
 
-  function Shape(points: readonly (readonly [number, number])[], fill: string | CanvasGradient, outline?: string, weight = 1) {
-    Path(points);
+  function Shape(points: readonly Point[], fill: string | CanvasGradient, outline?: string, weight = 1, smooth = false) {
+    if (smooth) RoundedPath(points);
+    else Path(points);
     ctx.closePath();
     ctx.fillStyle = fill;
     ctx.fill();
@@ -145,7 +221,19 @@ export function PaintVehicle(ctx: CanvasRenderingContext2D, car: ReturnType<type
     }
   }
 
-  function Stroke(points: readonly (readonly [number, number])[], color: string, weight: number) {
+  function RoundedPath(points: readonly Point[]) {
+    const inset = ([px, py]: Point, [nx, ny]: Point): Point => [x + (px + (nx - px) * .20) * width,
+      y + (py + (ny - py) * .20) * height];
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      const start = inset(point, points.at(index - 1)!);
+      if (index === 0) ctx.moveTo(...start);
+      else ctx.lineTo(...start);
+      ctx.quadraticCurveTo(x + point[0] * width, y + point[1] * height, ...inset(point, points[(index + 1) % points.length]));
+    });
+  }
+
+  function Stroke(points: readonly Point[], color: string, weight: number) {
     Path(points);
     ctx.strokeStyle = color;
     ctx.lineWidth = weight;

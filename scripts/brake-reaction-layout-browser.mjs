@@ -7,6 +7,7 @@ import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve, sep } from 'node:path';
 import { setTimeout as Delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
+import { options } from '../apps/rehabtrainerhub/games/brake-reaction/settings.ts';
 import { GapFor, ModelFor, Severity, Simulate } from '../apps/rehabtrainerhub/games/brake-reaction/src/physics.ts';
 
 const viewports = [[320, 568], [360, 640], [390, 844], [768, 1024], [1024, 768], [1280, 800],
@@ -15,7 +16,7 @@ const copy = {
   zh: { locale: 'zh-TW', title: '跟車煞車反應練習', swerve: '前車換道閃避', timeout: '逾時' },
   en: { locale: 'en-US', title: 'Brake Reaction Practice', swerve: 'Lead vehicle moves aside', timeout: 'Timed out' },
 };
-const { values } = parseArgs({ options: { viewport: { type: 'string' }, language: { type: 'string' } } });
+const { values } = parseArgs({ options: { viewport: { type: 'string' }, language: { type: 'string' }, vehicles: { type: 'boolean' } } });
 const selected = viewports.filter(([width, height]) => !values.viewport || values.viewport === width + 'x' + height);
 const languages = values.language ? [values.language] : ['zh', 'en'];
 assert.ok(selected.length, 'Choose a supported --viewport, for example 390x844.');
@@ -89,7 +90,7 @@ try {
         await Send('Network.setUserAgentOverride', { userAgent, acceptLanguage: copy[language].locale });
         await Send('Page.navigate', { url: 'about:blank' });
         await Send('Page.navigate', { url: pageUrl });
-        await CheckFlow(connection, { width, height, language, tag }, issues);
+        await CheckFlow(connection, { width, height, language, tag, captureVehicles: values.vehicles }, issues);
       } catch (error) {
         issues.push(error.message);
         await Capture(Send, tag, 'failure').catch(() => undefined);
@@ -347,7 +348,7 @@ function ObserveReviewFrame(selector, sample) {
   });
 }
 
-async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, issues) {
+async function CheckFlow({ Send, Evaluate }, { width, height, language, tag, captureVehicles }, issues) {
   let stage = 'settings';
   const feedbackPanel = '.round-feedback';
   const activeScene = '.brake-reaction-phase-playing .driving:not([inert])';
@@ -442,10 +443,56 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
     await WaitFor("!!document.querySelector('.training-confirmation #start')", 'confirmation after completing the tour');
     assert.ok(await Evaluate("!document.querySelector('.game-tour, .game-tour-spotlight, .game-tour-blocker')"), 'Tour overlays are removed.');
     assert.ok(await Evaluate("document.activeElement.id === 'start'"), 'Start practice receives focus.');
+    await Screenshot('confirmation');
     await PressKey('Tab', 9);
-    assert.ok(await Evaluate("document.activeElement.matches('.training-confirmation footer button:first-child')"), 'Tab wraps forward in confirmation.');
+    assert.ok(await Evaluate("document.activeElement.id === 'demo'"), 'Tab moves from Start to the demo in confirmation.');
+    await PressKey('Tab', 9);
+    assert.ok(await Evaluate("document.activeElement.matches('.training-confirmation footer button:last-child')"), 'Tab moves from the demo to Back in confirmation.');
+    await PressKey('Tab', 9);
+    assert.ok(await Evaluate("document.activeElement.id === 'start'"), 'Tab wraps forward in confirmation.');
     await PressKey('Tab', 9, 8);
-    assert.ok(await Evaluate("document.activeElement.id === 'start'"), 'Tab wraps backward in confirmation.');
+    assert.ok(await Evaluate("document.activeElement.matches('.training-confirmation footer button:last-child')"), 'Shift+Tab wraps backward to Back in confirmation.');
+    await PressKey('Tab', 9);
+  }
+
+  async function CaptureVehicles() {
+    for (const leadType of options.leadType) {
+      stage = 'vehicle ' + leadType;
+      const settings = { traffic: 'lead-only', scenario: 'plain', leadType };
+      await Evaluate(`(() => {
+        for (const [name, value] of Object.entries(${JSON.stringify(settings)})) {
+          const select = document.querySelector('dialog[open] select[name="' + name + '"]');
+          select.value = value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })()`);
+      await WaitFor(`(() => {
+        const form = new FormData(document.querySelector('dialog[open] form'));
+        return Object.entries(${JSON.stringify(settings)}).every(([name, value]) => form.get(name) === value);
+      })()`, 'selected vehicle settings');
+      await Click('dialog[open] .btn-primary');
+      await WaitFor("!!document.querySelector('.game-tour')", 'vehicle preview tour');
+      await PressKey('Escape', 27);
+      await WaitFor("!!document.querySelector('.training-confirmation #demo')", 'vehicle preview demo');
+      await Click('#demo');
+      await ArmBrake();
+
+      await Screenshot('vehicle-' + leadType + '-cruising', async () => {
+        const frame = await Evaluate(`(${ObserveReviewFrame.toString()})(${JSON.stringify(activeScene)}, scene => {
+          const canvas = scene.querySelector('canvas[data-target-rect]:not([data-brake-lit-at])');
+          return !!canvas && scene.querySelector('#banner')?.textContent === '';
+        })`);
+        assert.ok(frame, 'Could not find a cruising frame with the target in view.');
+      });
+      await Screenshot('vehicle-' + leadType + '-brake', () => ReadyToBrake(true));
+
+      await Click(activeScene + ' #stop');
+      await WaitFor("!!document.querySelector('.game-interrupt-panel .btn-ghost')", 'paused vehicle demo');
+      await Click('.game-interrupt-panel .btn-ghost');
+      await WaitFor("!!document.querySelector('.game-tour-actions button:last-child')", 'return from vehicle demo');
+      await Click('.game-tour-actions button:last-child');
+      await WaitFor("!!document.querySelector('dialog[open] .btn-primary:not(:disabled)')", 'vehicle settings');
+    }
   }
 
   async function ReadyToBrake(pause = false) {
@@ -572,6 +619,10 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
     assert.ok(await Evaluate("matchMedia('(prefers-reduced-motion: no-preference)').matches"), 'Gameplay review needs full movement.');
     const title = await Evaluate("document.querySelector('dialog[open] h2')?.textContent");
     if (title !== copy[language].title) issues.push('settings: expected the localized heading ' + copy[language].title);
+    if (captureVehicles) {
+      await CaptureVehicles();
+      return;
+    }
     const settings = await Evaluate("Object.fromEntries(new FormData(document.querySelector('form.training-config')))");
     const speedKmh = Number(settings.speedKmh);
     const model = ModelFor({ ...settings, speedKmh });

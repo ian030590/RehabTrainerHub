@@ -239,7 +239,7 @@ export function BrakeReactionGame() {
   }
 
   const driving = phase === 'running' || phase === 'paused' || phase === 'feedback';
-  return <main id="game" ref={root} className={`${driving || phase === 'rules' ? 'drive-screen ' : ''}brake-reaction-phase-${phase === 'running' || phase === 'paused' ? 'playing' : phase}`}
+  return <main id="game" ref={root} className={`${driving || phase === 'rules' || phase === 'confirm' ? 'drive-screen ' : ''}brake-reaction-phase-${phase === 'running' || phase === 'paused' ? 'playing' : phase}`}
     onKeyDown={event => {
       if (event.key === 'Escape' && !event.repeat && (phase === 'running' || phase === 'paused')) {
         event.preventDefault();

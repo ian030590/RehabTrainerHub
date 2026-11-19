@@ -54,7 +54,7 @@ h3 { color: var(--heading); font-size: 1.25rem; }
 }
 #game:fullscreen { width: 100%; }
 .jspsych-trial { display: none; }
-.training-config, .training-panel, .experiment-results {
+.training-config, .game-interrupt-panel, .experiment-results {
   width: min(100%, 42rem);
   max-height: var(--panel-height);
   min-width: 0;
@@ -347,9 +347,9 @@ h2:focus { outline: none; }
 }
 .game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
 .game-settings-dialog .training-config { width: 100%; line-height: 1.6; }
-.game-settings-dialog .training-config-header { padding: 20px; }
-.game-settings-dialog h2 { font-weight: 900; letter-spacing: -.025em; line-height: 1.25; }
-.game-settings-dialog .training-config-body {
+.game-settings-dialog .training-config-header, .training-confirmation .training-config-header { padding: 20px; }
+.game-settings-dialog h2, .training-confirmation h2 { font-weight: 900; letter-spacing: -.025em; line-height: 1.25; }
+.game-settings-dialog .training-config-body, .training-confirmation .training-config-body {
   display: grid;
   gap: 20px;
   background: var(--background);
@@ -380,12 +380,12 @@ h2:focus { outline: none; }
 }
 .training-setting select:disabled { cursor: not-allowed; }
 .training-setting select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
-.game-settings-dialog .config-actions { display: block; padding: 16px 20px; }
-.game-settings-dialog .training-config-navigation-buttons { justify-content: flex-end; gap: 12px; }
-.game-settings-dialog .btn { padding-block: 8px; font-size: calc(.875rem * 1.15); font-weight: 800; }
-.game-settings-dialog .btn-primary { padding-inline: 24px; }
-.game-settings-dialog .btn-ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-.game-settings-dialog .btn:active:not(:disabled) { translate: 0 1px; }
+.game-settings-dialog .config-actions, .training-confirmation .config-actions { display: block; padding: 16px 20px; }
+.game-settings-dialog .training-config-navigation-buttons, .training-confirmation .training-config-navigation-buttons { justify-content: flex-end; gap: 12px; }
+.game-settings-dialog .btn, .training-confirmation .btn { padding-block: 8px; font-size: calc(.875rem * 1.15); font-weight: 800; }
+.game-settings-dialog .btn-primary, .training-confirmation .btn-primary { padding-inline: 24px; }
+.game-settings-dialog .btn-ghost:hover:not(:disabled), .training-confirmation .btn-ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.game-settings-dialog .btn:active:not(:disabled), .training-confirmation .btn:active:not(:disabled) { translate: 0 1px; }
 .game-interrupt-panel {
   position: absolute;
   inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
@@ -397,7 +397,7 @@ h2:focus { outline: none; }
 }
 @media (min-width: 640px) {
   .training-config-header h2 { font-size: 2.15625rem; }
-  .training-config-body, .game-settings-dialog .training-config-header { padding: 24px 32px; }
-  .game-settings-dialog .config-actions { padding-inline: 32px; }
-  .game-settings-dialog .training-setting { padding: 24px; }
+  .training-config-body, .game-settings-dialog .training-config-header, .training-confirmation .training-config-header { padding: 24px 32px; }
+  .game-settings-dialog .config-actions, .training-confirmation .config-actions { padding-inline: 32px; }
+  .game-settings-dialog .training-setting, .training-confirmation .training-setting { padding: 24px; }
 }
