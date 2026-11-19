@@ -106,11 +106,13 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
       else {
         await game(`document.querySelector('[data-answer="${choice}"]').focus()`);
         const enter = { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 };
-        await send('Input.dispatchKeyEvent', { ...enter, type: 'keyDown' }, session);
+        await send('Input.dispatchKeyEvent', { ...enter, type: 'keyDown', text: '\r', unmodifiedText: '\r' }, session);
         await send('Input.dispatchKeyEvent', { ...enter, type: 'keyUp' }, session);
       }
       await until(() => game("!document.querySelector('.drive-notification [data-answer]:not(:disabled)')"), 'answer input clears the question');
       assert.equal(await exists(feedbackCard), false, 'Answer input must not brake.');
+      assert.equal(await exists(brakeControl), true, 'The round must still be running after the answer.');
+      if (!touch) assert.equal(await game('document.activeElement.id'), 'brake', 'Enter must return focus to Brake.');
       await waitFor('.drive-notification [data-answer]:not(:disabled)');
     }
     await cue();

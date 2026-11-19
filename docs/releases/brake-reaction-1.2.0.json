@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "brake-reaction",
+  "version": "1.2.0",
+  "name": "跟車煞車反應練習",
+  "description": "在夜間道路上辨認同車道的煞車燈，記錄當次反應。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CdOaW9sF.js",
+      "size": 608213,
+      "sha256": "15227e65d3e43ffd013768261070375e58e01c7e4bcede5dbacdcbdaed2b7e94",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-h_1WKG3v.css",
+      "size": 17265,
+      "sha256": "513b08676b3f11a6fb948bc0e82214bb0a0dd73ca0cb0c3b1ffdf155eaa2ccf2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 467,
+      "sha256": "e66850302f376ebd332e9d379d597ee2237a5396e35b213843284e9355e28056",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 388,
+      "sha256": "b6e010348abcc4220b1cf8f56d120e6cad1326ca2d19b4b6ea3c483a44d35763",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13218,
+      "sha256": "297c84a3a2b2597b52a96cc0ada8a72077c1ff785530d1eb9bc3a89181f57558",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "e535cfae60c25da7e78d58ca573ce1fa10d5cfdbeccfca3ee026007b9eb561ec",
+  "approvedAt": "2026-11-19T11:32:42.723Z"
+}
