@@ -16,6 +16,7 @@
 ## 遊戲團隊流程（2026-11-09 擁有者決策）
 
 - 所有新遊戲都必須經過遊戲團隊流程，入口見 `.claude/docs/rehab-game-team.md`。新增 `apps/rehabtrainerhub/games/` 下的遊戲目錄，或在 `apps/rehabtrainerhub/games/catalog.ts` 新增遊戲項目，都適用此規則。
+- 所有遊戲都須有明確的中英文聚光燈教學。改動遊戲內容時，步驟須明確說明受影響的內容，必要時同步更新。Claude Code 提交 hook 檢查受影響的遊戲並提醒核對步驟，`scripts/check-game-spotlight-tour.test.mjs` 檢查所有遊戲的教學結構。
 - 每款新遊戲必須有 `design/gdd/<gameId>.md`，包含六個二級標題：`## Summary`、`## Overview`、`## Detailed Design`、`## Edge Cases`、`## Dependencies`、`## Acceptance Criteria`。`scripts/check-game-team-design.test.mjs` 經 `test:game-architecture` 納入 CI；`scripts/game-team-legacy-games.json` 凍結 2026-11-09 現有遊戲的豁免清單，不得加入新遊戲，移除遊戲時才刪除對應項目。
 - Claude 負責協調，透過 `.claude/scripts/codex-agent.sh` 執行團隊成員作為 Codex workers，不使用 Claude 子代理；機制以 `.claude/docs/codex-workers.md` 為準。Codex 使用團隊技能時，依轉接器說明逐一承擔角色，不從 Codex 呼叫 wrapper。
 - 團隊技能以 `.claude/skills/` 為單一來源；Codex 透過 `.agents/skills/` 的產生檔使用。修改 `.claude/skills/` 後執行 `npm run sync:team-skills`，不得手改轉接器。`scripts/check-codex-team-skills.test.mjs` 的同步檢查與 `scripts/check-codex-agent-wrapper.test.mjs` 一併由 `test:game-architecture` 執行。

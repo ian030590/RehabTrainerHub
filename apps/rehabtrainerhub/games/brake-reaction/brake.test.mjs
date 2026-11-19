@@ -76,8 +76,8 @@ test('projection keeps the measured car size on full-width desktop and phone scr
 test('the road, shoulders, roadside rows, mountains and dashboard span the ultrawide view', async () => {
   const { SceneMetrics, SceneGeometry, ProjectPoint } = await import('./src/projection.ts');
   const scene = SceneMetrics(2560, 1080);
-  const { roadEdge, shoulderEdge, nearZ, railX, railStart, lampStart, mountain, dashboard } = SceneGeometry(scene);
-  for (const [distance, depth] of [[roadEdge, nearZ], [shoulderEdge, nearZ], [railX, railStart], [railX, lampStart]]) {
+  const { roadEdge, shoulderEdge, nearZ, railX, railStart, mountain, dashboard } = SceneGeometry(scene);
+  for (const [distance, depth] of [[roadEdge, nearZ], [shoulderEdge, nearZ], [railX, railStart]]) {
     assert.ok(ProjectPoint(scene, -distance, depth).x <= .001);
     assert.ok(ProjectPoint(scene, distance, depth).x >= scene.width - .001);
   }
@@ -92,15 +92,14 @@ test('the road, shoulders, roadside rows, mountains and dashboard span the ultra
 
 test('the sedan grows to 105 percent of the reference scene width and holds its contact size', async () => {
   const { SceneMetrics, ProjectTargetCar, eyeOffset } = await import('./src/projection.ts');
-  const { frames } = JSON.parse(readFileSync(new URL('./sprites/cars.json', import.meta.url), 'utf8'));
-  const { sedan } = frames;
+  const { vehicleStyles: { sedan } } = await import('./src/vehicles.ts');
   for (const [width, height] of [[390, 844], [1280, 800]]) {
     const scene = SceneMetrics(width, height);
     const expected = 1.05 * Math.min(width, .7 * height);
     let lastWidth = 0;
     for (const gap of [55, 30, 20, 12, 10, 8, 6.1, 4, 2, 1, 0]) {
       const depth = gap + eyeOffset;
-      const car = ProjectTargetCar(scene, 0, depth, sedan.widthMeters, sedan.h / sedan.w, .82 * height);
+      const car = ProjectTargetCar(scene, 0, depth, sedan.widthMeters, sedan.aspect, .82 * height);
       const trueWidth = sedan.widthMeters * (scene.focal / depth);
       assert.ok(Math.abs(car.width - Math.min(expected, trueWidth)) < .001);
       assert.ok(car.width >= lastWidth);
@@ -112,15 +111,15 @@ test('the sedan grows to 105 percent of the reference scene width and holds its 
 
 test('each possible contact target keeps its lamps in view while the dashboard covers the bumper', async () => {
   const { SceneMetrics, SceneGeometry, ProjectTargetCar, ProjectLamp, VisibleCarRect, eyeOffset } = await import('./src/projection.ts');
-  const { frames } = JSON.parse(readFileSync(new URL('./sprites/cars.json', import.meta.url), 'utf8'));
+  const { vehicleStyles } = await import('./src/vehicles.ts');
   for (const [width, height] of [[320, 568], [360, 640], [390, 844], [768, 1024], [1024, 768], [1280, 800],
     [1440, 900], [1920, 1080], [2560, 1080], [844, 390], [667, 375]]) {
     const scene = SceneMetrics(width, height);
     const footer = height < 500 ? 76 : width <= height ? 150 : 105;
     const { dashboard } = SceneGeometry(scene, height - footer);
     for (const key of options.leadType) {
-      const frame = frames[key];
-      const car = ProjectTargetCar(scene, 0, eyeOffset, frame.widthMeters, frame.h / frame.w, dashboard.centerY);
+      const frame = vehicleStyles[key];
+      const car = ProjectTargetCar(scene, 0, eyeOffset, frame.widthMeters, frame.aspect, dashboard.centerY);
       const [left, top, visibleWidth] = VisibleCarRect(car, width, height, dashboard);
       assert.ok(car.y + car.height > dashboard.centerY, `${width}x${height} ${key} bumper`);
       const referenceWidth = Math.min(width, .7 * height);
@@ -156,8 +155,8 @@ test('full-width road sits behind a grid with a reserved target row', () => {
   assert.match(view, /className="drive-top"[\s\S]+id="banner"[\s\S]+className="drive-stimulus"[\s\S]+className="drive-bottom"/);
 });
 
-test('world dashes slide continuously and each road surface has one token', async () => {
-  const { BuildSegments, LaneDashes, roadSurfaces } = await import('./src/projection.ts');
+test('world dashes slide continuously and road segments stay joined', async () => {
+  const { BuildSegments, LaneDashes } = await import('./src/projection.ts');
   const dashes = LaneDashes(0, 0, 34);
   assert.deepEqual(dashes, [[0, 4], [10, 14], [20, 24], [30, 34]]);
   assert.deepEqual(LaneDashes(10, 0, 34), dashes);
@@ -168,37 +167,238 @@ test('world dashes slide continuously and each road surface has one token', asyn
   for (const [index, segment] of segments.entries()) {
     assert.equal(segment.far - segment.near, length);
     if (index) assert.equal(segment.near, segments[index - 1].far);
-    assert.deepEqual(segment.surfaces, roadSurfaces);
   }
-  assert.deepEqual(roadSurfaces, { grass: 'grass', shoulder: 'shoulder', dry: 'road', wet: 'wet-road' });
 });
 
-test('all selected sprites have atlas frames with valid lamp rectangles', async () => {
-  const { CarFrames } = await import('./src/carFrames.ts');
-  const { width, height, frames } = JSON.parse(readFileSync(new URL('./sprites/cars.json', import.meta.url), 'utf8'));
-  const keys = new Set();
+test('canvas cars provide four distinct rear profiles with valid lamp rectangles', async () => {
+  const { VehicleTypes, vehicleStyles, LampGlow } = await import('./src/vehicles.ts');
+  const road = readFileSync(new URL('./src/road.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(road, /LoadCarAtlas|cars\.json|cars\.webp|drawImage\(/);
+  assert.match(road, /PaintVehicle\(/);
+  assert.equal(new Set(Object.values(vehicleStyles).map(style => style.aspect)).size, 4);
+  assert.equal(vehicleStyles.ev.lightBar, true);
+  assert.equal(vehicleStyles.sport.spoiler, true);
+  assert.equal(LampGlow(1200, 200), 12);
+  assert.equal(LampGlow(1200, 2), 90);
+  assert.equal(LampGlow(1200, 24), 40);
   for (const lead of options.leadType) {
     for (let seed = 0; seed < 100; seed++) {
-      const cars = CarFrames(lead, seed, 8);
+      const cars = VehicleTypes(lead, seed, 8);
       assert.equal(cars.lead, lead);
       assert.ok(options.leadType.includes(cars.far));
       assert.notEqual(cars.far, lead);
       assert.equal(cars.decoys.length, 8);
-      assert.ok(cars.decoys.every(key => key.startsWith('decoy-')));
-      assert.deepEqual(cars, CarFrames(lead, seed, 8));
-      for (const key of [cars.lead, cars.far, ...cars.decoys]) keys.add(key);
+      assert.ok(cars.decoys.every(key => options.leadType.includes(key)));
+      assert.deepEqual(cars, VehicleTypes(lead, seed, 8));
     }
-  }
-  assert.deepEqual([...keys].sort(), Object.keys(frames).sort());
-  for (const key of keys) {
-    const frame = frames[key];
-    assert.ok(frame.x >= 0 && frame.y >= 0 && frame.x + frame.w <= width && frame.y + frame.h <= height);
-    assert.ok(frame.w > 0 && frame.h > 0 && frame.widthMeters > 0);
+    const frame = vehicleStyles[lead];
+    assert.ok(frame.widthMeters > 0);
     for (const lamp of ['tailLeft', 'tailRight', 'third']) {
       const [x, y, w, h] = frame.lamps[lamp];
-      assert.ok(x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= 1 && y + h <= 1, `${key} ${lamp}`);
+      assert.ok(x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= 1 && y + h <= 1, `${lead} ${lamp}`);
     }
   }
+});
+
+test('roadside fixtures use world spacing and share the car depth order', async () => {
+  const { BuildRoadside, CompareDepth } = await import('./src/projection.ts');
+  const fixtures = BuildRoadside(10, 5, 150, 5);
+  assert.deepEqual(fixtures.filter(item => item.kind === 'reflector').map(item => item.z), [15, 40, 65, 90, 115, 140]);
+  assert.deepEqual(fixtures.filter(item => item.kind === 'lamp' && item.side === 1).map(item => item.z), [40, 90, 140]);
+  assert.deepEqual(BuildRoadside(13, 5, 150, 5).filter(item => item.kind === 'lamp' && item.side === 1).map(item => item.z), [37, 87, 137]);
+  assert.ok(fixtures.filter(item => item.kind === 'rail').every(item => item.far - item.z <= 5));
+  assert.deepEqual([{ z: 25, kind: 'car' }, { z: 25, kind: 'rail' }, { z: 14, kind: 'post' }, { z: 40, kind: 'lamp' }]
+    .sort(CompareDepth).map(item => item.kind), ['lamp', 'rail', 'car', 'post']);
+});
+
+test('world travel comes from simulated distance and stops when the car stops', async () => {
+  const { DrivingFrame } = await import('./src/drivePresentation.ts');
+  const model = ModelFor(defaults);
+  const cruise = DrivingFrame(model, 80, 4500, undefined, 0, 10, Infinity);
+  assert.equal(cruise.distance, model.speed * 4.5);
+  const waiting = DrivingFrame(model, 80, 4600, 4500, .1, 10, Infinity);
+  assert.equal(waiting.speed, model.speed);
+  assert.ok(waiting.motion.gap < 80);
+  const braking = DrivingFrame(model, 80, 5500, 4500, 1, .45, Infinity);
+  assert.ok(braking.speed < model.speed && braking.pitch > 0);
+  const stopped = DrivingFrame(model, 80, 12000, 4500, 7.5, .45, Infinity);
+  assert.equal(stopped.speed, 0);
+  assert.equal(stopped.pitch, 0);
+  assert.equal(DrivingFrame(model, 80, 14000, 4500, 9.5, .45, Infinity).distance, stopped.distance);
+});
+
+test('impact tiers settle at different depths and reduced motion uses a still end state', async () => {
+  const { impactProfiles, ImpactAt } = await import('./src/impact.ts');
+  for (const [grade, shake, gap, zoom, count, delay] of [
+    ['light', 5, .5, .5, 8, 1], ['moderate', 14, 1.2, .46, 26, 1.5], ['severe', 30, 2.4, .42, 60, 2.1],
+  ]) {
+    const profile = impactProfiles[grade];
+    assert.deepEqual([profile.shake, profile.push, profile.zoom, profile.debris, profile.feedbackDelay], [shake, gap, zoom, count, delay]);
+    assert.equal(ImpactAt(grade, .1, false).zoom, 1);
+    assert.ok(ImpactAt(grade, .4, false).push > 0);
+    const settled = ImpactAt(grade, delay, false);
+    assert.equal(settled.zoom, zoom);
+    assert.equal(settled.push, gap);
+    assert.equal(settled.flash, 0);
+    const reduced = ImpactAt(grade, .1, true);
+    assert.deepEqual(reduced, ImpactAt(grade, delay, true));
+    assert.equal(reduced.push, gap);
+    assert.equal(reduced.shake, 0);
+    assert.equal(reduced.flash, 0);
+    assert.equal(reduced.airbag, 0);
+    assert.equal(reduced.debris, 0);
+  }
+  assert.ok(ImpactAt('severe', .08, false).airbag > .8);
+  for (const time of [.25, .52]) assert.equal(ImpactAt('severe', time, false).airbag, 1);
+  assert.ok(ImpactAt('severe', .60, false).airbag < 1);
+  assert.equal(ImpactAt('severe', 1.8, false).airbag, 0);
+  assert.equal(ImpactAt('light', .1, false).smoke, 0);
+});
+
+test('the canvas draws visible braking lamps and retains a reduced-motion damaged scene', async () => {
+  const { MakeRoad } = await import('./src/road.ts');
+  const { DrivingFrame } = await import('./src/drivePresentation.ts');
+  const { ImpactAt } = await import('./src/impact.ts');
+  const { palette } = await import('./src/scenePalette.ts');
+  const dpr = Object.getOwnPropertyDescriptor(globalThis, 'devicePixelRatio');
+  Object.defineProperty(globalThis, 'devicePixelRatio', { value: 1, configurable: true });
+  try {
+    const model = ModelFor(defaults);
+    const round = MakeRound(defaults, 'plain', 0, RandomFrom(5));
+    const paints = [];
+    const methods = ['beginPath', 'moveTo', 'lineTo', 'closePath', 'stroke', 'fill', 'clip', 'rect', 'save', 'restore',
+      'translate', 'scale', 'rotate', 'ellipse', 'quadraticCurveTo', 'bezierCurveTo', 'setTransform', 'fillText'];
+    const context = {
+      ...Object.fromEntries(methods.map(name => [name, () => undefined])),
+      createLinearGradient: () => ({ addColorStop() {} }),
+      createRadialGradient: () => ({ addColorStop() {} }),
+      fillRect() { paints.push(this.fillStyle); },
+    };
+    const canvas = { dataset: {}, getContext: () => context, getBoundingClientRect: () => ({ x: 0, y: 0, width: 390, height: 844 }) };
+    const controls = { getBoundingClientRect: () => ({ top: 748 }) };
+    const draw = MakeRoad(canvas, round, defaults, controls);
+    const frame = { time: round.onset, elapsed: 0, reducedMotion: true };
+    const drive = DrivingFrame(model, round.gap, round.onset, round.onset, 0, 10, Infinity);
+    draw(drive, frame);
+    assert.equal(paints.filter(color => color === palette.brakeCore).length, 3);
+    assert.equal(JSON.parse(canvas.dataset.targetLamps).length, 3);
+    const before = Number(canvas.dataset.targetRect.split(',')[2]);
+    const impact = ImpactAt('severe', 0, true);
+    paints.length = 0;
+    draw(drive, { ...frame, impact });
+    assert.equal(canvas.dataset.impact, 'severe');
+    assert.equal(canvas.dataset.cameraZoom, '0.42');
+    assert.ok(Number(canvas.dataset.targetRect.split(',')[2]) > before);
+    assert.ok(paints.includes(palette.brokenLamp));
+    assert.ok(!paints.some(color => typeof color === 'string' && color.startsWith('rgb(' + palette.flash)));
+  } finally {
+    if (dpr) Object.defineProperty(globalThis, 'devicePixelRatio', dpr);
+    else delete globalThis.devicePixelRatio;
+  }
+});
+
+test('the target brake-light onset leaves the localized banner and live status unchanged', async () => {
+  const { en } = await import('./i18n/en.ts');
+  const { zh } = await import('./i18n/zh.ts');
+  const presentation = await import('./src/drivePresentation.ts');
+  const physics = await import('./src/physics.ts');
+  const source = readFileSync(new URL('./RunningView.tsx', import.meta.url), 'utf8');
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  });
+  const require = createRequire(import.meta.url);
+  for (const [lang, copy] of [['en', en], ['zh', zh]]) {
+    for (const scenario of ['plain', 'swerve-away', 'out-and-back']) {
+      const round = MakeRound(defaults, scenario, 0, RandomFrom(5));
+      const sound = [];
+      const banner = { textContent: copy.ready };
+      const canvas = { dataset: {} };
+      const nodes = { canvas, '#banner': banner, '#speed': {}, '#brake': new EventTarget() };
+      const root = { querySelector: selector => nodes[selector], querySelectorAll: () => [] };
+      let now = 100;
+      let paint;
+      let mount;
+      let lights;
+      const exports = {};
+      const modules = {
+        react: { useEffect: effect => { mount = effect; }, useRef: value => ({ current: value === null ? root : value }) },
+        './i18n/useT': { useT: () => ({ lang, copy }) },
+        './src/road': { MakeRoad: () => drive => { lights = Boolean(drive.motion); } },
+        './src/drivePresentation': presentation,
+        './src/impact': {},
+        './src/physics': physics,
+        './src/round': { RandomFrom, distractionRoundIndex: 5, sessionRoundCount: 6 },
+        './runtime/soundManager': { PlayBrakeCue: name => sound.push(name) },
+      };
+      runInNewContext(outputText, {
+        exports, require: id => Object.hasOwn(modules, id) ? modules[id] : require(id), AbortController,
+        document: new EventTarget(), window: new EventTarget(), matchMedia: () => ({ matches: false }),
+        performance: { now: () => now }, requestAnimationFrame: callback => { paint = callback; return 1; },
+        cancelAnimationFrame() {},
+      });
+      const markup = renderToStaticMarkup(createElement(exports.RunningView, { round, settings: defaults, index: 0 }));
+      assert.match(markup, /<canvas aria-hidden="true"/);
+      assert.ok(markup.includes(`role="status">${copy.ready}</p>`));
+      const unmount = mount();
+      const start = now;
+      now = start + round.onset - 1;
+      paint();
+      assert.equal(lights, false);
+      assert.equal(banner.textContent, '');
+      const previousBanner = banner.textContent;
+      now = start + round.onset;
+      paint();
+      assert.equal(lights, true);
+      assert.equal(banner.textContent, previousBanner, `${lang} ${scenario} banner at onset`);
+      assert.equal(Number(canvas.dataset.brakeLitAt), now);
+      assert.deepEqual(sound, ['brake']);
+      unmount();
+    }
+  }
+});
+
+test('Space always brakes from focused controls while Enter remains native', async () => {
+  const { IsBrakeKey } = await import('./src/drivePresentation.ts');
+  const view = readFileSync(new URL('./RunningView.tsx', import.meta.url), 'utf8');
+  assert.ok(IsBrakeKey({ code: 'Space', target: { tagName: 'BUTTON' } }));
+  assert.ok(!IsBrakeKey({ code: 'Enter' }));
+  assert.ok(!IsBrakeKey({ code: 'Space', repeat: true }));
+  assert.ok(!IsBrakeKey({ code: 'Space', ctrlKey: true }));
+  assert.match(view, /addEventListener\('keydown',[\s\S]*?event\.preventDefault\(\)[\s\S]*?capture: true/);
+  assert.match(view, /className="drive-notification messages"/);
+});
+
+test('the distraction card centers the heading above three equally sized answers', async () => {
+  const { en } = await import('./i18n/en.ts');
+  const { zh } = await import('./i18n/zh.ts');
+  const css = readFileSync(new URL('./game.css', import.meta.url), 'utf8');
+  assert.equal(en.messageSender, 'Message · now');
+  assert.equal(zh.messageSender, '訊息 · 現在');
+  assert.match(css, /\.drive-notification\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(35rem,/);
+  assert.match(css, /\.drive-notification\s*\{[^}]*border:\s*2px solid var\(--text\)/);
+  assert.match(css, /\.notification-question\s*\{[^}]*font-size:\s*1\.5rem;[^}]*font-weight:\s*900/);
+  assert.match(css, /--notification-heavy-font:\s*"Arial Black", "Segoe UI Black", Arial, sans-serif;/);
+  assert.match(css, /\.notification-question\s*\{[^}]*font-family:\s*var\(--notification-heavy-font\)/);
+  assert.match(css, /\.notification-sender\s*\{[^}]*color:\s*var\(--text\);[^}]*font-family:\s*Arial, "Microsoft JhengHei", sans-serif;[^}]*font-weight:\s*700/);
+  assert.match(css, /\.answers\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.answers \.btn\s*\{[^}]*min-height:\s*48px;[^}]*border:\s*2px solid var\(--text\)/);
+  assert.match(css, /\.answers \.btn\s*\{[^}]*font-family:\s*var\(--notification-heavy-font\);[^}]*font-weight:\s*900/);
+});
+
+test('round feedback uses a frozen scene, a bottom card and a shared scale for both distances', async () => {
+  const { FeedbackVerdict, DistanceBars } = await import('./src/drivePresentation.ts');
+  const game = readFileSync(new URL('./BrakeReactionGame.tsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('./game.css', import.meta.url), 'utf8');
+  assert.equal(FeedbackVerdict('early'), 'earlyPress');
+  assert.equal(FeedbackVerdict({ outcome: { rel: null, remaining: 2.99 } }), 'closeCall');
+  assert.equal(FeedbackVerdict({ outcome: { rel: null, remaining: 3 } }), 'stopped');
+  assert.equal(FeedbackVerdict({ outcome: { rel: 30 } }), 'severe');
+  assert.deepEqual(DistanceBars(60, 30), [1, .5]);
+  assert.deepEqual(DistanceBars(30, 60), [.5, 1]);
+  assert.match(game, /frozen=\{phase === 'feedback'\}/);
+  assert.match(css, /\.round-feedback\s*\{[^}]*bottom:/);
+  assert.match(css, /\.round-feedback \.training-config-body\s*\{[^}]*display:\s*grid;[^}]*overscroll-behavior:\s*contain/);
+  assert.match(css, /@media \(min-width: 640px\)\s*\{\s*\.round-feedback \.training-config-body\s*\{[^}]*grid-template-columns:/);
 });
 
 test('settings group six labeled fields and keep Back before Confirm', async () => {

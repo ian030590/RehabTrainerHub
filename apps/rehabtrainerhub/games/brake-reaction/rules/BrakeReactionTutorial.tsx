@@ -1,41 +1,87 @@
 import { useEffect, useRef } from 'react';
 import { useT } from '../i18n/useT';
-import { LoadCarAtlas } from '../src/road';
+import { StartTour } from '../runtime/tour';
+import type { Settings } from '../settings';
+import { GetBrakeTutorialSteps } from './tutorialSteps';
 
 type SummaryItem = { label: string; value: string };
 
-export function BrakeReactionTutorial({ title, ready, summaryItems, onStart, onBack, drawPreview, onContinue, onDemo }: {
+export function BrakeReactionTutorial({ title, ready, settings, sound, showDistraction, roundCount, summaryItems,
+  onStart, onBack, drawPreview, onContinue, onDemo }: {
   title: string;
   ready: boolean;
+  settings: Settings;
+  sound: boolean;
+  showDistraction: boolean;
+  roundCount: number;
   summaryItems: SummaryItem[];
   onStart: () => void;
   onBack: () => void;
-  drawPreview?: (canvas: HTMLCanvasElement, atlas: HTMLImageElement | null) => () => void;
-  onContinue?: () => void;
-  onDemo?: () => void;
+  drawPreview: (canvas: HTMLCanvasElement, controls: HTMLElement) => () => void;
+  onContinue: () => void;
+  onDemo: () => void;
 }) {
   const { copy, lang } = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const carRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !drawPreview) return;
-    let active = true;
-    let observer: ResizeObserver | undefined;
-    void LoadCarAtlas().then(atlas => {
-      if (!active) return;
-      const update = drawPreview(canvas, atlas);
-      update();
-      observer = new ResizeObserver(update);
-      observer.observe(canvas);
-    });
-    return () => {
-      active = false;
-      observer?.disconnect();
+    const controls = controlsRef.current;
+    const car = carRef.current;
+    if (!canvas || !controls || !car) return;
+    const draw = drawPreview(canvas, controls);
+
+    const updatePreview = () => {
+      draw();
+      const bounds = canvas.dataset.targetRect;
+      if (bounds) {
+        const [left, top, width, height] = bounds.split(',').map(Number);
+        const rect = canvas.getBoundingClientRect();
+        Object.assign(car.style, {
+          left: `${left - rect.left}px`, top: `${top - rect.top}px`, width: `${width}px`, height: `${height}px`,
+        });
+      }
+      car.hidden = !bounds;
+      window.dispatchEvent(new Event('game:tutorial-layout'));
     };
+
+    updatePreview();
+    const observer = new ResizeObserver(updatePreview);
+    observer.observe(canvas);
+    observer.observe(controls);
+    return () => observer.disconnect();
   }, [ready, drawPreview]);
 
-  if (ready) return <section className="training-panel training-config training-confirmation" aria-labelledby="title">
-    <header className="training-config-header"><h2 id="title" tabIndex={-1}>{title}</h2></header>
+  useEffect(() => {
+    if (ready) {
+      startRef.current?.focus();
+      return;
+    }
+    return StartTour(GetBrakeTutorialSteps(lang, showDistraction), {
+      lang,
+      onEvent: event => { if (event === 'tour_done' || event === 'tour_skip') onContinue(); },
+      onBack,
+    });
+  }, [ready, lang, showDistraction, onContinue, onBack]);
+
+  if (ready) return <section className="training-panel training-config training-confirmation" role="dialog" aria-modal="true"
+    aria-labelledby="title" onKeyDown={event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onBack();
+      }
+      if (event.key === 'Tab') {
+        const buttons = [...event.currentTarget.querySelectorAll('button')];
+        const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        const offset = event.shiftKey ? buttons.length - 1 : 1;
+        event.preventDefault();
+        buttons[(index + offset) % buttons.length]?.focus();
+      }
+    }}>
+    <header className="training-config-header"><h2 id="title">{title}</h2></header>
     <div className="training-config-body">
       <section className="training-setting">
         <h3>{lang === 'en' ? 'Confirm settings' : '確認設定'}</h3>
@@ -44,26 +90,44 @@ export function BrakeReactionTutorial({ title, ready, summaryItems, onStart, onB
         </div>
       </section>
     </div>
-    <footer className="config-actions">
-      <button className="btn btn-ghost" onClick={onBack}>{copy.backSettings}</button>
-      <button className="btn btn-primary" id="start" onClick={onStart}>{copy.start}</button>
-    </footer>
+    <footer className="config-actions"><div className="training-config-navigation-buttons">
+      <button type="button" className="btn btn-ghost" onClick={onBack}>{copy.backSettings}</button>
+      <button type="button" className="btn btn-ghost" id="demo" onClick={onDemo}>{copy.demo}</button>
+      <button type="button" className="btn btn-primary" id="start" ref={startRef} onClick={onStart}>{copy.start}</button>
+    </div></footer>
   </section>;
 
-  const preview = <div className="tutorial-road">
-    <div className="tutorial-scene">
+  return <section className="driving brake-tutorial-scene" inert aria-hidden="true">
+    <div className="road-frame">
       <canvas ref={canvasRef} aria-hidden="true" />
+      <div className="tutorial-lead-car" ref={carRef} />
     </div>
-    {onContinue && <p className="spotlight">{copy.instruction}</p>}
-  </div>;
-  if (!onContinue) return preview;
-  return <section className="training-panel" aria-labelledby="title">
-    <header className="training-config-header"><h2 id="title" tabIndex={-1}>{title}</h2></header>
-    <div className="training-config-body">{preview}<p>{copy.ignore}</p></div>
-    <footer className="config-actions training-config-navigation-buttons">
-      <button className="btn btn-ghost" onClick={onBack}>{copy.backSettings}</button>
-      <button className="btn btn-ghost" id="continue" onClick={onContinue}>{copy.skipDemo}</button>
-      <button className="btn btn-primary" id="demo" onClick={onDemo}>{copy.demo}</button>
-    </footer>
+    <div className="drive-top">
+      <header className="drive-toolbar">
+        <h2 className="tutorial-round">{lang === 'en' ? copy.round : '第'} 1 / {roundCount}</h2>
+        <span className="drive-speed">{settings.speedKmh} km/h</span>
+        <div className="drive-actions">
+          <button type="button" className="btn btn-ghost" aria-pressed={sound}>{copy.sound}</button>
+          <button type="button" className="btn btn-ghost" id="stop">{copy.stop}</button>
+        </div>
+      </header>
+      {showDistraction && <section className="drive-notification messages" aria-label={copy.messages}>
+        <div className="notification-copy">
+          <p className="notification-sender">{copy.messageSender}</p>
+          <p className="notification-question"><strong>3</strong> + <strong>4</strong> = ?</p>
+        </div>
+        <div className="answers">{[5, 7, 9].map(answer =>
+          <button type="button" key={answer} className="btn btn-ghost">{answer}</button>,
+        )}</div>
+      </section>}
+      <p className="road-caption">{copy.ready}</p>
+    </div>
+    <div className="drive-stimulus" />
+    <div className="drive-bottom" ref={controlsRef}>
+      <div className="brake-controls">
+        <button type="button" className="btn btn-primary" id="brake">{copy.brake}</button>
+        <p id="brake-help">{copy.pressHelp}</p>
+      </div>
+    </div>
   </section>;
 }

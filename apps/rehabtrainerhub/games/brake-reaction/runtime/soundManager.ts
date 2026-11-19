@@ -7,12 +7,13 @@ export interface MidiScore { tracks: { notes: MidiNote[]; instrument?: { percuss
 export interface MidiMusicOptions { waveforms?: MusicWaveform[]; loop?: boolean; loopEnd?: number }
 let audio: Context | null = null;
 const cueVoices = new Map<string, PolySynth<Synth>>();
+let tyreVoice: NoiseSynth | undefined;
 const cues = {
   brake: [155, 65, .22, .11, 'triangle'],
   ping: [760, 920, .12, .07, 'sine'],
-  light: [170, 85, .14, .10, 'triangle'],
-  moderate: [120, 55, .23, .17, 'triangle'],
-  severe: [85, 33, .32, .23, 'sawtooth'],
+  light: [170, 85, .17, .16, 'triangle'],
+  moderate: [120, 55, .30, .26, 'triangle'],
+  severe: [85, 33, .41, .36, 'sawtooth'],
 } as const;
 let musicVoices: (PolySynth<Synth> | NoiseSynth)[] = [];
 let enabled = true;
@@ -52,6 +53,14 @@ export function PlayBrakeCue(cue: keyof typeof cues) {
   const time = audio.now();
   voice.triggerAttackRelease(initial, duration / 2, time, velocity);
   voice.triggerAttackRelease(final, duration / 2, time + duration / 2, velocity * .65);
+}
+
+export function PlayTyreScreech(brakingTime: number) {
+  if (!enabled || !audio || brakingTime <= 0) return;
+  tyreVoice ??= new NoiseSynth({ context: audio, volume: -16, noise: { type: 'pink' },
+    envelope: { attack: .037, decay: .22, sustain: .22, release: .17 },
+  }).connect(audio.destination);
+  tyreVoice.triggerAttackRelease(Math.min(1, brakingTime), audio.now(), .52);
 }
 
 export const PlaySuccessSound = () => PlayBrakeCue('ping');
@@ -136,6 +145,8 @@ export function DisposeAudioFeedback() {
   StopMidiMusic();
   for (const voice of cueVoices.values()) voice.dispose();
   cueVoices.clear();
+  tyreVoice?.dispose();
+  tyreVoice = undefined;
   if (audio) {
     void audio.close().catch(() => undefined);
     audio.dispose();

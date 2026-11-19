@@ -15,31 +15,7 @@
   --shadow-dialog: 0 8px 24px rgb(20 33 43 / .12);
   --shadow-setting: 0 1px 2px rgb(20 33 43 / .08);
   --night: #0d1422;
-  --sky: #101c33;
-  --sky-low: #34415d;
-  --dusk: #987080;
-  --star: #d6deee;
-  --mountain: #242c40;
-  --grass: #243934;
-  --shoulder: #414a4e;
-  --road: #353a43;
-  --wet-road: #272e39;
-  --lane: #f5f6f8;
-  --edge-yellow: #f0cc62;
-  --guardrail: #757b81;
-  --post: #596068;
-  --lamp-pole: #232934;
-  --lamp-light: #ffe8ae;
-  --lamp-clear: rgb(255 232 174 / 0);
-  --car: #8697a7;
-  --car-roof: #526d83;
-  --tail: #a23b46;
-  --signal: #ffbd4b;
-  --brake: #ff4858;
   --dash: #111b27;
-  --contact-light: #ffcf78;
-  --contact-moderate: #ff9f7c;
-  --contact-severe: #ff7589;
   --preview-ground: #a9bcc3;
   --preview-sky: #ccdee6;
   --preview-horizon: #8a9f90;
@@ -50,6 +26,9 @@
   --preview-lead: #d26743;
   --preview-own: #e6edf0;
   --preview-window: #293f4c;
+  --notification-paper: color-mix(in srgb, var(--surface) 91%, var(--preview-divider));
+  --notification-shadow: 0 8px 24px var(--bg-overlay);
+  --notification-heavy-font: "Arial Black", "Segoe UI Black", Arial, sans-serif;
   color: var(--text);
   background: var(--background);
   font: 700 100% / 1.5 system-ui, sans-serif;
@@ -108,7 +87,7 @@ h2:focus { outline: none; }
 .metrics .score-key-metric { border-color: var(--primary); }
 .score-key-metric dd { font-size: clamp(1.9rem, 5vw, 3rem); font-variant-numeric: tabular-nums; }
 
-#game.drive-screen { height: 100dvh; min-height: 0; padding: 0; background: var(--night); }
+#game.drive-screen { position: relative; height: 100dvh; min-height: 0; padding: 0; background: var(--night); }
 .driving {
   position: relative;
   isolation: isolate;
@@ -128,8 +107,11 @@ h2:focus { outline: none; }
   min-block-size: 28dvh;
   gap: 6px;
 }
-.road-frame[data-contact] + .drive-top { min-block-size: 0; }
-.driving[inert] .drive-top, .driving[inert] .drive-bottom { visibility: hidden; }
+.drive-top:has(.drive-notification) { justify-content: flex-start; }
+.brake-reaction-phase-playing .driving[inert] .drive-top,
+.brake-reaction-phase-playing .driving[inert] .drive-bottom,
+.brake-reaction-phase-feedback .driving .drive-top,
+.brake-reaction-phase-feedback .driving .drive-bottom { visibility: hidden; }
 .drive-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -155,26 +137,8 @@ h2:focus { outline: none; }
   overflow-wrap: anywhere;
 }
 .road-caption:empty { visibility: hidden; }
-.road-frame[data-contact] { box-shadow: inset 0 0 0 3px var(--contact-tone); }
-.road-frame[data-contact] .contact-marker { animation: contact-shake .32s ease-out; }
-.road-frame[data-contact="light"] { --contact-tone: var(--contact-light); --marker-size: 20px; --shake: 2px; }
-.road-frame[data-contact="moderate"] { --contact-tone: var(--contact-moderate); --marker-size: 33px; --shake: 4px; }
-.road-frame[data-contact="severe"] { --contact-tone: var(--contact-severe); --marker-size: 47px; --shake: 6px; }
-.contact-marker {
-  position: absolute; inset: 49% auto auto 50%; translate: -50% -50%; width: var(--marker-size); aspect-ratio: 1;
-  border: 3px solid var(--contact-tone); border-radius: 50%; background: color-mix(in srgb, var(--contact-tone) 24%, transparent);
-}
-.road-frame[data-contact]::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: color-mix(in srgb, var(--contact-tone) 13%, transparent);
-}
-@keyframes contact-shake {
-  25%, 75% { transform: translateX(var(--shake)); }
-  50% { transform: translateX(calc(-1 * var(--shake))); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .road-frame[data-contact] .contact-marker { animation: none; }
-}
+.road-frame:has(canvas[data-impact]) + .drive-top .road-caption,
+.road-frame:has(canvas[data-impact]) + .drive-top .drive-notification { visibility: hidden; }
 .drive-bottom { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 8px; }
 .brake-controls {
   width: 100%;
@@ -186,49 +150,142 @@ h2:focus { outline: none; }
 }
 #brake { min-height: 56px; width: 100%; font-size: 1.2rem; touch-action: manipulation; }
 .brake-controls p { padding-inline: 6px; background: var(--dash); border-radius: 4px; line-height: 1.25; }
-.messages {
-  width: fit-content;
-  max-width: 100%;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+.drive-notification {
+  align-self: center;
+  width: min(35rem, calc(100% - 8px));
+  padding: 10px 14px;
+  display: grid;
+  gap: 8px;
+  border: 2px solid var(--text);
   border-radius: var(--radius);
-  background: var(--dash);
-  text-align: center;
+  background: var(--notification-paper);
+  color: var(--text);
+  box-shadow: var(--notification-shadow);
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
-.messages p { min-width: 0; }
-.answers { display: flex; flex-shrink: 0; justify-content: center; gap: 4px; }
-.answers button { min-width: 44px; padding-inline: 8px; }
+.notification-sender {
+  color: var(--text);
+  font-family: Arial, "Microsoft JhengHei", sans-serif;
+  font-size: .875rem;
+  font-weight: 700;
+}
+.notification-question {
+  margin-top: 2px;
+  font-family: var(--notification-heavy-font);
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+.notification-question strong { color: var(--primary); font-weight: 900; }
+.answers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.answers .btn {
+  min-height: 48px;
+  padding: 5px 8px;
+  border: 2px solid var(--text);
+  font-family: var(--notification-heavy-font);
+  font-size: 1.125rem;
+  font-weight: 900;
+}
 @media (orientation: landscape) and (min-width: 560px) {
   .brake-controls { width: min(100%, 22rem); }
-  .drive-bottom:has(.messages) { grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr); align-items: end; }
-}
-@media (orientation: landscape) and (min-width: 900px) and (min-height: 501px) {
-  .drive-bottom:has(.messages) { grid-template-columns: minmax(0, 1fr) 22rem minmax(0, 1fr); }
-  .messages { justify-self: end; }
 }
 @media (max-width: 560px) {
   .config-actions { display: grid; }
   .score-save-status { margin: 0; }
   .metrics > div { flex-basis: 7.5rem; }
   .drive-toolbar .btn { padding-inline: 10px; }
+  .drive-notification { width: 100%; padding: 8px 10px; }
+  .notification-question { font-size: 1.375rem; }
 }
 @media (max-width: 480px) {
   .drive-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
   .drive-actions { grid-column: 1 / -1; }
 }
+@media (max-height: 600px) {
+  .drive-notification { padding: 4px 8px; gap: 4px; }
+  .notification-copy { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; }
+  .notification-question { margin-top: 0; line-height: 1; }
+  .drive-top:has(.drive-notification) .road-caption {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--safe-bottom) + 86px);
+    width: max-content;
+    max-width: calc(100% - var(--safe-left) - var(--safe-right));
+    translate: -50%;
+  }
+}
 @media (max-height: 500px) {
   .drive-top { min-block-size: 0; }
   .drive-bottom { gap: 6px; }
   .drive-toolbar h2, .drive-speed, #brake { font-size: 1rem; }
-  .road-caption, .drive-actions, .messages, #brake-help { font-size: .875rem; }
+  .road-caption, .drive-actions, #brake-help { font-size: .875rem; }
   .road-caption { min-block-size: 27px; padding-block: 4px; }
   .brake-controls { gap: 3px; }
   #brake { min-height: 44px; }
+}
+
+.brake-reaction-phase-feedback { overflow: hidden; }
+.round-feedback {
+  position: absolute;
+  left: max(14px, var(--safe-left));
+  right: max(14px, var(--safe-right));
+  bottom: max(10px, var(--safe-bottom));
+  z-index: 1;
+  width: auto;
+  max-width: 52rem;
+  max-height: calc(57dvh - var(--safe-bottom));
+  margin-inline: auto;
+  box-shadow: var(--shadow-dialog);
+}
+.round-feedback[data-verdict="earlyPress"] { grid-template-rows: auto auto; }
+.round-feedback .training-config-header,
+.round-feedback .training-config-body,
+.round-feedback .config-actions { padding: clamp(10px, 1.6vw, 16px) clamp(12px, 2.2vw, 24px); }
+.round-feedback .training-config-header h2 { font-size: clamp(1.35rem, 4.5vw, 2.15rem); }
+.round-feedback .training-config-header p { margin-top: .22rem; }
+.round-feedback .training-config-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  align-items: start;
+  gap: 10px;
+  overscroll-behavior: contain;
+}
+.round-feedback .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.round-feedback .metrics > div { min-width: 0; padding: 4px 8px; }
+.round-feedback .metrics dt { font-size: .92rem; }
+.round-feedback .metrics dd { font-size: 1.15rem; }
+.round-feedback .config-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.round-feedback .config-actions button { overflow-wrap: anywhere; }
+.round-distance-bars { display: grid; gap: 8px; }
+.round-distance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  font-size: .92rem;
+}
+.round-distance dd { margin: 0; font-variant-numeric: tabular-nums; }
+.round-distance-track {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: var(--radius);
+  background: var(--background);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.round-distance-track > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.round-distance + .round-distance .round-distance-track > span { background: var(--heading); }
+.round-distraction h3 { font-size: 1.05rem; }
+.round-distraction p { font-size: .95rem; }
+@media (min-width: 640px) {
+  .round-feedback .training-config-body { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); column-gap: 20px; }
+  .round-distraction { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .round-feedback { animation: round-feedback-enter .25s ease-out; }
+}
+@keyframes round-feedback-enter {
+  from { transform: translateY(calc(100% + var(--safe-bottom))); }
 }
 .brake-preview { position: absolute; inset: 0; overflow: hidden; background: var(--preview-ground); }
 .brake-preview-sky {

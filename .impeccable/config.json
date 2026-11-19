@@ -35,6 +35,15 @@
         ],
         "createdAt": "2026-11-16T15:34:20.970Z",
         "reason": "Agent: the tutorial depicts the sea as a literal boundary beneath the flight instructions; this is not a decorative card accent."
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          "apps/rehabtrainerhub/games/brake-reaction/game.css"
+        ],
+        "createdAt": "2026-11-19T10:49:03.003Z",
+        "reason": "Codex: Arial supplies a bold fallback for the brake-reaction notification. Review screenshots showed thin numerals with the system UI stack."
       }
     ]
   }

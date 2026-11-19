@@ -7,11 +7,10 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
   const click = selector => game(`document.querySelector(${JSON.stringify(selector)}).click()`);
   const exists = selector => game(`Boolean(document.querySelector(${JSON.stringify(selector)}))`);
   const waitFor = selector => until(() => exists(selector), selector);
-  const cue = async () => {
-    const text = english ? 'Brake lights in your lane' : '同車道煞車燈亮起';
-    await until(() => game(`document.querySelector('#banner')?.textContent === ${JSON.stringify(text)}`), 'same-lane brake cue');
-  };
-  const press = async () => {
+  const brakeControl = '.brake-reaction-phase-playing #brake:not(:disabled)';
+  const feedbackCard = '.round-feedback';
+  const cue = () => until(() => exists('.brake-reaction-phase-playing canvas[data-brake-lit-at]'), 'same-lane brake cue');
+  const press = async (focus = '#brake') => {
     if (touch) {
       const point = await game(`(() => {
         const rect = document.querySelector('#brake').getBoundingClientRect();
@@ -20,7 +19,7 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
       await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] }, gameContext.session || session);
       await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, gameContext.session || session);
     } else {
-      await game("document.querySelector('#brake').focus()");
+      await game(`document.querySelector(${JSON.stringify(focus)}).focus()`);
       const key = { key: ' ', code: 'Space', windowsVirtualKeyCode: 32 };
       await send('Input.dispatchKeyEvent', { ...key, type: 'keyDown' }, session);
       await send('Input.dispatchKeyEvent', { ...key, type: 'keyUp' }, session);
@@ -57,22 +56,25 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
   assert.ok(controls.fits && controls.targets && controls.order);
   await capture('settings');
   await click('form .btn-primary');
-  await waitFor('.spotlight');
+  await waitFor('.game-tour-spotlight');
   await capture('tutorial');
+  await click('.game-tour-actions button:nth-child(2)');
+  await waitFor('.training-confirmation');
   await click('#demo');
-  await waitFor('#brake');
+  await waitFor(brakeControl);
   assert.equal(await game('document.fullscreenElement === null'), true);
   await cue();
   await new Promise(resolve => setTimeout(resolve, 130));
   await press();
-  await waitFor('.brake-reaction-phase-feedback');
+  await waitFor(feedbackCard);
+  assert.equal(await game("document.activeElement.id"), 'continue');
   assert.equal(getSaveAttempts(), 0);
   await click('#continue');
   await waitFor('.training-confirmation');
   await CheckConfirmationPresentation(game);
   await capture('confirmation');
   await click('#start');
-  await waitFor('#brake');
+  await waitFor(brakeControl);
   await until(() => game('document.fullscreenElement === document.querySelector("#game")'), 'scored practice fullscreen');
   assert.equal(await game('document.documentElement.scrollWidth <= innerWidth'), true);
   await click('#sound');
@@ -86,23 +88,39 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
   await until(async () => !(await exists('#resume')), 'resumed round');
   assert.equal(await game("document.activeElement.id"), 'stop');
   await press();
-  await until(() => game(`document.querySelector('#banner')?.textContent === ${JSON.stringify(english ? 'Wait for brake lights in your lane. Try again.' : '請等同車道的煞車燈亮起，再試一次。')}`), 'early brake restarts the round');
+  await waitFor('.round-feedback[data-verdict="earlyPress"]');
+  assert.equal(await game("document.activeElement.id"), 'continue');
+  await click('#continue');
 
   for (let index = 0; index < 6; index++) {
-    await waitFor('#brake');
+    await waitFor(brakeControl);
     if (index === 5) {
-      await waitFor('[data-answer]:not(:disabled)');
-      await game(`(() => {
+      await waitFor('.drive-notification [data-answer]:not(:disabled)');
+      const choice = await game(`(() => {
         const [a, operation, b] = document.querySelector('#message').textContent.split(' ');
         const answer = operation === '×' ? Number(a) * Number(b) : Number(a) + Number(b);
-        [...document.querySelectorAll('[data-answer]')].find(button => Number(button.textContent) === answer).click();
+        const button = [...document.querySelectorAll('[data-answer]')].find(button => Number(button.textContent) === answer);
+        return button.dataset.answer;
       })()`);
+      if (touch) await click(`[data-answer="${choice}"]`);
+      else {
+        await game(`document.querySelector('[data-answer="${choice}"]').focus()`);
+        const enter = { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 };
+        await send('Input.dispatchKeyEvent', { ...enter, type: 'keyDown' }, session);
+        await send('Input.dispatchKeyEvent', { ...enter, type: 'keyUp' }, session);
+      }
+      await until(() => game("!document.querySelector('.drive-notification [data-answer]:not(:disabled)')"), 'answer input clears the question');
+      assert.equal(await exists(feedbackCard), false, 'Answer input must not brake.');
+      await waitFor('.drive-notification [data-answer]:not(:disabled)');
     }
     await cue();
     if (index === 0) await capture('gameplay');
     await new Promise(resolve => setTimeout(resolve, 130));
-    if (index !== 1) await press();
-    await waitFor('.brake-reaction-phase-feedback');
+    if (index !== 1) await press(index === 5 ? '.drive-notification [data-answer]:not(:disabled)' : '#brake');
+    await waitFor(feedbackCard);
+    assert.equal(await game("document.activeElement.id"), 'continue');
+    assert.equal(await exists('.driving[inert] .road-frame canvas[data-world-distance]'), true);
+    if (index === 5) assert.equal(await exists('.round-distraction'), true);
     await click('#continue');
   }
   await waitFor('.experiment-results');
@@ -130,6 +148,7 @@ export async function CheckBrakeReaction({ game, evaluate, send, until, standalo
   }
   assert.deepEqual(errors, []);
   assert.ok(!requests.some(url => /brake-reaction.*(?:settings|score)\.json/.test(url)));
+  assert.ok(!requests.some(url => /\/assets\/cars-[^/]+\.webp(?:$|\?)/.test(url)), 'Car graphics must be painted locally.');
   await click('.score-return-button');
   await until(() => standalone ? exists('form') : evaluate("!document.querySelector('dialog iframe')"), 'return to source');
 }

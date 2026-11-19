@@ -7,12 +7,13 @@ import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve, sep } from 'node:path';
 import { setTimeout as Delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
+import { GapFor, ModelFor, Severity, Simulate } from '../apps/rehabtrainerhub/games/brake-reaction/src/physics.ts';
 
 const viewports = [[320, 568], [360, 640], [390, 844], [768, 1024], [1024, 768], [1280, 800],
   [1440, 900], [1920, 1080], [2560, 1080], [844, 390], [667, 375]];
 const copy = {
-  zh: { locale: 'zh-TW', title: '跟車煞車反應練習', cue: '同車道煞車燈亮起', swerve: '前車換道閃避', timeout: '逾時' },
-  en: { locale: 'en-US', title: 'Brake Reaction Practice', cue: 'Brake lights in your lane', swerve: 'Lead vehicle moves aside', timeout: 'Timed out' },
+  zh: { locale: 'zh-TW', title: '跟車煞車反應練習', swerve: '前車換道閃避', timeout: '逾時' },
+  en: { locale: 'en-US', title: 'Brake Reaction Practice', swerve: 'Lead vehicle moves aside', timeout: 'Timed out' },
 };
 const { values } = parseArgs({ options: { viewport: { type: 'string' }, language: { type: 'string' } } });
 const selected = viewports.filter(([width, height]) => !values.viewport || values.viewport === width + 'x' + height);
@@ -64,6 +65,9 @@ try {
   closeDebugger = connection.Close;
   await Send('Page.enable');
   await Send('Runtime.enable');
+  await Send('Page.addScriptToEvaluateOnNewDocument', {
+    source: `(${InstallFixtureClock.toString()})(${JSON.stringify(origin)})`,
+  });
   const userAgent = await Evaluate('navigator.userAgent');
 
   for (const [width, height] of selected) {
@@ -81,6 +85,7 @@ try {
           screenOrientation: { type: landscape ? 'landscapePrimary' : 'portraitPrimary', angle: landscape ? 90 : 0 },
         });
         await Send('Emulation.setTouchEmulationEnabled', { enabled: phone });
+        await SetReducedMotionPreference(Send, 'no-preference');
         await Send('Network.setUserAgentOverride', { userAgent, acceptLanguage: copy[language].locale });
         await Send('Page.navigate', { url: 'about:blank' });
         await Send('Page.navigate', { url: pageUrl });
@@ -196,15 +201,163 @@ async function Connect(debuggerUrl, origin) {
   return { Send, Evaluate, errors, Close: () => socket.close() };
 }
 
+function ReactionFor(model, roundIndex, grade) {
+  const gap = GapFor(model, roundIndex);
+  const matches = [];
+  for (let ms = 100; ms < 2500; ms++) {
+    const { rel } = Simulate(model, gap, ms / 1000 + .2);
+    if (rel !== null && Severity(rel) === grade) matches.push(ms);
+  }
+  assert.ok(matches.length, `Round ${roundIndex + 1} has no reaction time for ${grade} contact.`);
+  return matches[Math.floor(matches.length / 2)];
+}
+
+function SetReducedMotionPreference(send, value) {
+  return send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value }] });
+}
+
+function InstallFixtureClock(origin) {
+  if (location.origin !== origin || window.top !== window) return;
+
+  const nativeNow = performance.now.bind(performance);
+  const epoch = Date.now() - nativeNow();
+  const nativeFrame = window.requestAnimationFrame.bind(window);
+  const nativeCancelFrame = window.cancelAnimationFrame.bind(window);
+  const nativeTimeout = window.setTimeout.bind(window);
+  const nativeClearTimeout = window.clearTimeout.bind(window);
+  const frames = new Map();
+  const timers = new Map();
+  let frameId = 0;
+  let timerId = 0;
+  let frameRequest;
+  let pausedAt;
+  let pausedDuration = 0;
+
+  function Now() {
+    return (pausedAt ?? nativeNow()) - pausedDuration;
+  }
+
+  function RequestFrame() {
+    if (pausedAt !== undefined || frameRequest !== undefined || !frames.size) return;
+    frameRequest = nativeFrame(() => {
+      frameRequest = undefined;
+      const time = Now();
+      for (const id of [...frames.keys()]) {
+        if (pausedAt !== undefined) break;
+        const callback = frames.get(id);
+        if (!callback) continue;
+        frames.delete(id);
+        try { callback(time); }
+        catch (error) { window.reportError(error); }
+      }
+      RequestFrame();
+    });
+  }
+
+  function ArmTimer(id, timer) {
+    const remaining = Math.max(0, Math.ceil(timer.due - Now()));
+    timer.request = nativeTimeout(() => {
+      timer.request = undefined;
+      if (pausedAt !== undefined || !timers.has(id)) return;
+      if (timer.due > Now()) {
+        ArmTimer(id, timer);
+        return;
+      }
+      if (timer.repeat) {
+        timer.due = Now() + timer.delay;
+        ArmTimer(id, timer);
+      } else timers.delete(id);
+      timer.callback.apply(window, timer.args);
+    }, remaining);
+  }
+
+  function AddTimer(callback, delay, args, repeat) {
+    delay = Math.max(0, Number(delay) | 0);
+    const id = ++timerId;
+    const timer = { callback, delay, args, repeat, due: Now() + delay, request: undefined };
+    timers.set(id, timer);
+    if (pausedAt === undefined) ArmTimer(id, timer);
+    return id;
+  }
+
+  function CancelTimer(id) {
+    const timer = timers.get(Number(id));
+    if (timer?.request !== undefined) nativeClearTimeout(timer.request);
+    timers.delete(Number(id));
+  }
+
+  function Pause() {
+    if (pausedAt !== undefined) return;
+    pausedAt = nativeNow();
+    if (frameRequest !== undefined) nativeCancelFrame(frameRequest);
+    frameRequest = undefined;
+    for (const timer of timers.values()) {
+      if (timer.request !== undefined) nativeClearTimeout(timer.request);
+      timer.request = undefined;
+    }
+  }
+
+  function Resume() {
+    if (pausedAt === undefined) return;
+    pausedDuration += nativeNow() - pausedAt;
+    pausedAt = undefined;
+    for (const [id, timer] of timers) ArmTimer(id, timer);
+    RequestFrame();
+  }
+
+  function AfterPaint() {
+    return new Promise(resolve => nativeFrame(() => nativeFrame(resolve)));
+  }
+
+  Object.defineProperty(performance, 'now', { value: Now, configurable: true });
+  Date.now = () => Math.floor(epoch + Now());
+  window.requestAnimationFrame = callback => {
+    const id = ++frameId;
+    frames.set(id, callback);
+    RequestFrame();
+    return id;
+  };
+  window.cancelAnimationFrame = id => frames.delete(id);
+  window.setTimeout = (callback, delay, ...args) => AddTimer(callback, delay, args, false);
+  window.setInterval = (callback, delay, ...args) => AddTimer(callback, delay, args, true);
+  window.clearTimeout = window.clearInterval = CancelTimer;
+  window.__fixtureClock = { pause: Pause, resume: Resume, afterPaint: AfterPaint };
+}
+
+function DispatchBrake(brake, timeStamp = performance.now()) {
+  if (!brake?.isConnected || brake.disabled) return false;
+  const event = new MouseEvent('click', { bubbles: true });
+  Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+  brake.dispatchEvent(event);
+  return true;
+}
+
+function ObserveReviewFrame(selector, sample) {
+  const deadline = performance.now() + 9000;
+  return new Promise(resolve => {
+    function Observe() {
+      const now = performance.now();
+      const scene = document.querySelector(selector);
+      const frame = scene && sample(scene, now);
+      if (frame) window.__fixtureClock.pause();
+      if (frame || now >= deadline || document.querySelector('.round-feedback')) resolve(frame);
+      else requestAnimationFrame(Observe);
+    }
+    requestAnimationFrame(Observe);
+  });
+}
+
 async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, issues) {
   let stage = 'settings';
-  const feedbackPanel = '.brake-reaction-phase-feedback .training-panel';
+  const feedbackPanel = '.round-feedback';
+  const activeScene = '.brake-reaction-phase-playing .driving:not([inert])';
 
   async function WaitFor(expression, label, timeout = 12000) {
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
       try {
-        if (await Evaluate(expression)) return;
+        const result = await Evaluate(expression);
+        if (result) return result;
       } catch (error) {
         if (!/execution context.*destroyed|cannot find context|inspected target navigated/i.test(error.message)) throw error;
       }
@@ -230,54 +383,239 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
     issues.push(...problems.map(problem => phase + ': ' + problem));
   }
 
-  async function Screenshot(name) {
-    await Capture(Send, tag, name).catch(error => issues.push(name + ' screenshot: ' + error.message));
+  async function Screenshot(name, selectFrame = () => Evaluate('window.__fixtureClock.pause()'), checkLayout) {
+    try {
+      await selectFrame();
+      await Evaluate('window.__fixtureClock.afterPaint()');
+      await Promise.all([
+        Capture(Send, tag, name).catch(error => issues.push(name + ' screenshot: ' + error.message)),
+        checkLayout?.(),
+      ]);
+    } finally {
+      await Evaluate('window.__fixtureClock.resume()');
+    }
   }
 
-  async function ReadyToBrake() {
-    await WaitFor(`document.querySelector('#banner')?.textContent === ${JSON.stringify(copy[language].cue)} &&
-      !!document.querySelector('#brake:not(:disabled)')`, 'the brake cue and an enabled brake button', 15000);
+  async function PressKey(key, windowsVirtualKeyCode, modifiers = 0) {
+    const input = { key, code: key, windowsVirtualKeyCode, modifiers };
+    const down = key === 'Enter' ? { type: 'keyDown', text: '\r', unmodifiedText: '\r' } : { type: 'rawKeyDown' };
+    await Send('Input.dispatchKeyEvent', { ...input, ...down });
+    await Send('Input.dispatchKeyEvent', { ...input, type: 'keyUp' });
+  }
+
+  async function CompleteTour() {
+    const targets = ['.tutorial-lead-car', '.brake-controls', '.road-caption', '.drive-speed', '.messages', '.tutorial-round', '#stop'];
+    await WaitFor("!!document.querySelector('.brake-tutorial-scene canvas[data-target-rect]')", 'drawn road preview');
+    assert.ok(await Evaluate("document.activeElement.matches('.game-tour .btn-primary')"), 'The first tour action receives focus.');
+    await PressKey('Tab', 9, 8);
+    assert.ok(await Evaluate("document.activeElement.matches('.game-tour-actions button:last-child')"), 'Tab wraps backward in the tour.');
+    await PressKey('Tab', 9);
+    assert.ok(await Evaluate("document.activeElement.matches('.game-tour .btn-primary')"), 'Tab wraps forward in the tour.');
+
+    for (const target of targets) {
+      const layout = await Evaluate(`(() => {
+        const scene = document.querySelector('.brake-tutorial-scene');
+        const panel = document.querySelector('.game-tour');
+        const spotlight = document.querySelector('.game-tour-spotlight');
+        const point = scene.querySelector(${JSON.stringify(target)}).getBoundingClientRect();
+        const bounds = spotlight.getBoundingClientRect();
+        const rect = panel.getBoundingClientRect();
+        return {
+          targetLit: point.width > 0 && point.height > 0 && !spotlight.hidden &&
+            bounds.left <= point.left && bounds.right >= point.right &&
+            bounds.top <= point.top && bounds.bottom >= point.bottom,
+          targetClear: rect.right <= point.left || rect.left >= point.right ||
+            rect.bottom <= point.top || rect.top >= point.bottom,
+          fits: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight &&
+            document.documentElement.scrollWidth === innerWidth && panel.scrollWidth <= panel.clientWidth,
+          buttons: [...panel.querySelectorAll('button')].every(button => {
+            const box = button.getBoundingClientRect();
+            return box.width >= 44 && box.height >= 44;
+          }),
+          inert: scene.inert && document.fullscreenElement === null,
+        };
+      })()`);
+      assert.ok(Object.values(layout).every(Boolean), target + ': ' + JSON.stringify(layout));
+      if (target === targets[0]) await Screenshot('tutorial');
+      await Click('.game-tour .btn-primary');
+    }
+    await WaitFor("!!document.querySelector('.training-confirmation #start')", 'confirmation after completing the tour');
+    assert.ok(await Evaluate("!document.querySelector('.game-tour, .game-tour-spotlight, .game-tour-blocker')"), 'Tour overlays are removed.');
+    assert.ok(await Evaluate("document.activeElement.id === 'start'"), 'Start practice receives focus.');
+    await PressKey('Tab', 9);
+    assert.ok(await Evaluate("document.activeElement.matches('.training-confirmation footer button:first-child')"), 'Tab wraps forward in confirmation.');
+    await PressKey('Tab', 9, 8);
+    assert.ok(await Evaluate("document.activeElement.id === 'start'"), 'Tab wraps backward in confirmation.');
+  }
+
+  async function ReadyToBrake(pause = false) {
+    const caption = await WaitFor(`(() => {
+      const change = document.querySelector('${activeScene} canvas[data-brake-lit-at]')?.fixtureCueCaption;
+      if (change && ${pause}) window.__fixtureClock.pause();
+      return change;
+    })()`, 'the brake cue in the active round', 15000);
+    assert.equal(caption.after, caption.before, 'The banner must not change when the target brake lights come on.');
+    assert.equal(caption.mutated, false, 'The banner must not update its live status at brake-light onset.');
+  }
+
+  async function ArmBrake(reactionMs = null, waitForScreenshot = false) {
+    await WaitFor(`!!document.querySelector('${activeScene} #brake:not(:disabled)')`, 'active brake control');
+    const armed = await Evaluate(`(() => {
+      const scene = document.querySelector('${activeScene}');
+      const canvas = scene?.querySelector('canvas');
+      const banner = scene?.querySelector('#banner');
+      const brake = scene?.querySelector('#brake');
+      if (!canvas || !banner || !brake || canvas.dataset.brakeLitAt !== undefined) return false;
+      let before = banner.textContent;
+      const observer = new MutationObserver(records => {
+        const cue = canvas.dataset.brakeLitAt;
+        if (cue === undefined) {
+          before = banner.textContent;
+          return;
+        }
+        observer.disconnect();
+        canvas.fixtureCueCaption = { before, after: banner.textContent, mutated: records.some(record => record.target !== canvas) };
+        const delay = ${reactionMs};
+        if (delay === null) return;
+        const cueTime = Number(cue);
+        const scheduledTime = cueTime + delay;
+        function ScheduleBrake() {
+          const now = performance.now();
+          delete brake.fixtureBrake;
+          if (!brake.isConnected || brake.disabled || now - cueTime >= 2500) return false;
+          setTimeout(${DispatchBrake.toString()}, Math.max(0, scheduledTime - now), brake, scheduledTime);
+          return true;
+        }
+        if (${waitForScreenshot}) brake.fixtureBrake = ScheduleBrake;
+        else ScheduleBrake();
+      });
+      observer.observe(canvas, { attributes: true, attributeFilter: ['data-brake-lit-at'] });
+      observer.observe(banner, { childList: true, characterData: true, subtree: true });
+      return true;
+    })()`);
+    assert.ok(armed, 'Could not schedule the reaction before the cue.');
+  }
+
+  async function CaptureMidBraking(speedKmh) {
+    await Screenshot('mid-braking', async () => {
+      const frame = await Evaluate(`(${ObserveReviewFrame.toString()})(${JSON.stringify(activeScene)}, scene => {
+        const speed = parseInt(scene.querySelector('#speed')?.textContent, 10);
+        return speed > 0 && speed < ${speedKmh * .75} && scene.querySelector('#brake')?.disabled ? speed : false;
+      })`);
+      assert.ok(frame, 'The round ended before a mid-braking frame was observed.');
+    });
+  }
+
+  async function CaptureImpact(grade) {
+    const name = (grade === 'light' ? 'minor' : grade) + '-contact';
+    let firstImpact;
+
+    async function CaptureImpactFrame(suffix, elapsed, reduced = false, checkLayout) {
+      await Screenshot(name + suffix, async () => {
+        const frame = await Evaluate(`(() => {
+          let firstImpact = ${firstImpact};
+          return (${ObserveReviewFrame.toString()})(${JSON.stringify(activeScene)}, (scene, now) => {
+            const canvas = scene.querySelector('canvas');
+            const impact = canvas?.dataset.impact;
+            if (!impact) return false;
+            if (impact !== ${JSON.stringify(grade)}) return { impact };
+            firstImpact ??= now;
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const staticEnd = Number(canvas.dataset.cameraZoom) === .42;
+            return now - firstImpact >= ${elapsed} && reduced === ${reduced} &&
+              (!reduced || staticEnd) && { impact, firstImpact };
+          });
+        })()`);
+        assert.equal(frame?.impact, grade, 'The simulated reaction must show the planned contact grade before feedback.');
+        firstImpact = frame.firstImpact;
+      }, checkLayout);
+    }
+
+    if (grade !== 'light') await CaptureImpactFrame('-early', 250);
+    await CaptureImpactFrame('', 400, false, grade === 'severe' ? () => Layout('close-range') : undefined);
+    if (grade === 'severe') {
+      try {
+        await SetReducedMotionPreference(Send, 'reduce');
+        await CaptureImpactFrame('-reduced', 400, true);
+      } finally {
+        await SetReducedMotionPreference(Send, 'no-preference');
+      }
+    }
+  }
+
+  async function CaptureDistractionNotification() {
+    await WaitFor(`!!document.querySelector('${activeScene} #answers button:not(:disabled)')`, 'the distraction notification');
+    const responses = await Evaluate("document.querySelectorAll('#answers button:not(:disabled)').length");
+    if (responses !== 3) issues.push(stage + ': expected three enabled responses to the distraction message, got ' + responses);
+    await Screenshot('distraction-notification');
   }
 
   async function Feedback() {
-    await WaitFor(`!!document.querySelector(${JSON.stringify(feedbackPanel)})`, 'round feedback');
-  }
-
-  async function Brake(screenshot) {
-    const pendingBrake = Evaluate(`(async () => {
-      await new Promise(resolve => setTimeout(resolve, 160));
-      const brake = document.querySelector('#brake:not(:disabled)');
-      if (!brake) return false;
-      brake.click();
-      return true;
-    })()`, true);
-    const [pressed] = await Promise.all([pendingBrake, screenshot ? Screenshot(screenshot) : undefined]);
-    assert.ok(pressed, 'Brake was unavailable after the cue.');
-    await Feedback();
+    await WaitFor(`(() => {
+      const card = document.querySelector(${JSON.stringify(feedbackPanel)});
+      return card && document.activeElement.id === 'continue' && !card.getAnimations().some(animation => animation.playState === 'running');
+    })()`, 'round feedback and next-button focus');
+    const still = await Evaluate(`(async () => {
+      const scene = document.querySelector('.driving[inert]');
+      const canvas = scene?.querySelector('canvas');
+      if (!canvas?.dataset.worldDistance) return false;
+      const frame = canvas.toDataURL();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return frame === canvas.toDataURL();
+    })()`);
+    assert.ok(still, 'The same canvas must keep its final frame while the card is open.');
   }
 
   try {
     await WaitFor(`document.documentElement.lang === ${JSON.stringify(language === 'zh' ? 'zh-TW' : 'en')} &&
       !!document.querySelector('dialog[open] .btn-primary:not(:disabled)')`, 'localized settings for ' + language);
+    assert.ok(await Evaluate("matchMedia('(prefers-reduced-motion: no-preference)').matches"), 'Gameplay review needs full movement.');
     const title = await Evaluate("document.querySelector('dialog[open] h2')?.textContent");
     if (title !== copy[language].title) issues.push('settings: expected the localized heading ' + copy[language].title);
+    const settings = await Evaluate("Object.fromEntries(new FormData(document.querySelector('form.training-config')))");
+    const speedKmh = Number(settings.speedKmh);
+    const model = ModelFor({ ...settings, speedKmh });
+    const contactRounds = ['light', 'moderate'];
     await Layout('settings');
     await Screenshot('settings');
     await Click('dialog[open] .btn-primary');
 
+    stage = 'tutorial';
+    await WaitFor("!!document.querySelector('.game-tour-actions')", 'spotlight tour');
+    await Click('.game-tour-actions button:last-child');
+    await WaitFor("!!document.querySelector('dialog[open]')", 'settings after leaving the tour');
+    await Click('dialog[open] .btn-primary');
+    await CompleteTour();
+
     stage = 'demo';
     await WaitFor("!!document.querySelector('#demo')", 'demo button');
     await Click('#demo');
-    await ReadyToBrake();
+    await WaitFor("!!document.querySelector('.brake-reaction-phase-playing #brake')", 'demo brake control');
     await Layout('demo');
-    await Brake('demo-cue');
+    assert.ok(await Evaluate(`(${DispatchBrake.toString()})(document.querySelector('${activeScene} #brake'))`), 'The early brake must reach the demo.');
+    await Feedback();
+    assert.ok(await Evaluate("!!document.querySelector('.round-feedback[data-verdict=earlyPress]')"), 'Early presses use the feedback card.');
+    await PressKey('Enter', 13);
+    await WaitFor("!!document.querySelector('.brake-reaction-phase-playing #brake')", 'demo restarted by Enter');
+    await ArmBrake(450, true);
+    await WaitFor(`!!document.querySelector('${activeScene} canvas[data-world-distance]:not([data-brake-lit-at])')`, 'cruising with brake lights off');
+    await Screenshot('cruising');
+    await Screenshot('brake-lights', () => ReadyToBrake(true));
+    await Promise.all([
+      CaptureMidBraking(speedKmh),
+      Evaluate(`document.querySelector('${activeScene} #brake:not(:disabled)')?.fixtureBrake?.()`).then(applied => {
+        assert.ok(applied, 'The demo brake must be available after the paused cue capture.');
+      }),
+    ]);
+    await Feedback();
     await Layout('feedback');
-    await Screenshot('demo-feedback');
-    await Click('#continue');
+    assert.ok(await Evaluate("!!document.querySelector('.round-feedback[data-verdict=stopped]')"), 'The demo should stop safely.');
+    await Screenshot('stopped-feedback');
+    await PressKey('Enter', 13);
     await WaitFor("!!document.querySelector('.training-confirmation .btn-ghost')", 'settings confirmation');
 
     stage = 'scored settings';
-    await Click('.training-confirmation .btn-ghost');
+    await PressKey('Escape', 27);
     await WaitFor("!!document.querySelector('dialog[open] select[name=scenario]')", 'reopened settings');
     await Evaluate(`(() => {
       const scenario = document.querySelector('select[name=scenario]');
@@ -285,8 +623,8 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
       scenario.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await Click('dialog[open] .btn-primary');
-    await WaitFor("!!document.querySelector('#continue')", 'skip demo button');
-    await Click('#continue');
+    await WaitFor("!!document.querySelector('.game-tour')", 'spotlight after settings change');
+    await PressKey('Escape', 27);
     await WaitFor("!!document.querySelector('.training-confirmation #start')", 'Start practice button');
     if (!await Evaluate(`[...document.querySelectorAll('.training-config-summary-item')].some(item =>
       item.textContent.includes(${JSON.stringify(copy[language].swerve)}))`)) {
@@ -304,25 +642,29 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
 
     for (let index = 0; index < 6; index++) {
       stage = 'scored round ' + (index + 1);
-      await ReadyToBrake();
+      const grade = contactRounds[index];
       if (index === 5) {
-        const responses = await Evaluate("document.querySelectorAll('#answers button:not(:disabled)').length");
-        if (responses !== 3) issues.push(stage + ': expected three enabled responses to the distraction message, got ' + responses);
-        await Layout('distraction');
-        await Screenshot('distraction-cue');
-        await WaitFor("!!document.querySelector('.road-frame[data-contact]')", 'contact after the brake timeout');
-        await Promise.all([Layout('close-range'), Screenshot('close-range')]);
+        await ArmBrake();
+        await CaptureDistractionNotification();
+        await ReadyToBrake();
+        await Promise.all([CaptureImpact('severe'), Layout('distraction')]);
         await Feedback();
         const timedOut = await Evaluate(`document.querySelector(${JSON.stringify(feedbackPanel + ' .metrics')})?.textContent
           .includes(${JSON.stringify(copy[language].timeout)})`);
         if (!timedOut) issues.push(stage + ': expected a timed-out round record');
+        if (!await Evaluate("!!document.querySelector('.round-distraction')")) issues.push(stage + ': missing distraction comparison');
         await Layout('feedback');
-        await Screenshot('distraction-feedback');
+        await Screenshot('severe-feedback');
       } else {
-        if (!await Evaluate("!!document.querySelector('.road-frame canvas')?.dataset.targetRect")) {
-          issues.push(stage + ': the target car has no drawn rectangle at the brake cue');
-        }
-        await Brake();
+        await ArmBrake(grade ? ReactionFor(model, index, grade) : 160);
+        await ReadyToBrake();
+        await Promise.all([
+          grade && CaptureImpact(grade),
+          Evaluate("!!document.querySelector('.road-frame canvas')?.dataset.targetRect").then(visible => {
+            if (!visible) issues.push(stage + ': the target car has no drawn rectangle at the brake cue');
+          }),
+        ]);
+        await Feedback();
       }
       await Click('#continue');
     }
@@ -333,7 +675,9 @@ async function CheckFlow({ Send, Evaluate }, { width, height, language, tag }, i
 }
 
 async function Capture(send, tag, phase) {
-  const { data } = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  const { data } = await send('Page.captureScreenshot', {
+    format: 'png', fromSurface: true, captureBeyondViewport: false, optimizeForSpeed: true,
+  });
   await writeFile(join(output, tag + '-' + phase + '.png'), Buffer.from(data, 'base64'));
 }
 
@@ -394,7 +738,7 @@ function InspectLayout(kind, width, height) {
   }
 
   if (kind === 'settings' || kind === 'pause' || kind === 'feedback') {
-    const selector = { settings: 'dialog[open]', pause: '.game-interrupt-panel', feedback: '.brake-reaction-phase-feedback .training-panel' }[kind];
+    const selector = { settings: 'dialog[open]', pause: '.game-interrupt-panel', feedback: '.round-feedback' }[kind];
     const panel = Visible(selector);
     const children = [Visible(selector + ' h2', true),
       ...[...document.querySelectorAll(selector + ' footer button')].map((button, index) =>
@@ -407,6 +751,14 @@ function InspectLayout(kind, width, height) {
       if (!document.querySelector(child.selector)?.contains(document.elementFromPoint(x, y))) issues.push(child.selector + ' is covered');
     }
     NonOverlapping(children);
+    if (kind === 'feedback' && panel) {
+      const body = document.querySelector(selector + ' .training-config-body');
+      if (body && ((width >= 1024 && height >= 768) || (width >= 390 && height >= 844)) &&
+          body.scrollHeight > body.clientHeight + 1) issues.push('feedback content scrolls at a review viewport');
+      if (panel.rect.top < height * .40 || panel.rect.bottom < height - 24) issues.push('feedback is not anchored to the bottom with room above');
+      if (!document.querySelector('.driving[inert] canvas[data-world-distance]')) issues.push('feedback is missing its frozen road');
+      if (document.activeElement.id !== 'continue') issues.push('feedback primary action does not have focus');
+    }
     return issues;
   }
 
@@ -420,10 +772,21 @@ function InspectLayout(kind, width, height) {
       issues.push('the ultrawide canvas has an unpainted corner');
     }
   }
-  const topEntries = [
-    Visible('.drive-toolbar h2', true), Visible('#speed', true), Visible('#banner', true),
-    Visible('#sound', true, true), Visible('#stop', true, true),
-  ];
+  const closeRange = kind === 'close-range';
+  const topEntries = [Visible('.drive-toolbar h2', true), Visible('#speed', true),
+    Visible('#sound', true, true), Visible('#stop', true, true)];
+  if (!closeRange && document.querySelector('#banner')?.textContent.trim()) topEntries.push(Visible('#banner', true));
+  const panel = kind === 'distraction' ? Visible('.drive-notification') : undefined;
+  if (panel) {
+    const toolbar = document.querySelector('.drive-toolbar').getBoundingClientRect();
+    const gutter = width <= 560 ? 12 : 16;
+    if (Math.abs(panel.rect.top - toolbar.bottom - 6) > 1 ||
+        Math.abs(panel.rect.left + panel.rect.width / 2 - width / 2) > 1 ||
+        Math.abs(panel.rect.width - Math.min(560, width - 2 * gutter)) > 1) {
+      issues.push('notification is not centered at the expected size directly below the toolbar');
+    }
+    topEntries.push(panel);
+  }
   const bottomZone = Visible('.drive-bottom');
   const brake = Visible('#brake', true, true);
   const help = Visible('#brake-help', true);
@@ -442,7 +805,6 @@ function InspectLayout(kind, width, height) {
   if (!Number.isFinite(dashboardTop) || dashboardTop <= 0 || dashboardTop >= innerHeight) {
     issues.push('missing or invalid dashboardTop (' + dataset?.dashboardTop + ')');
   }
-  const closeRange = kind === 'close-range';
   const raw = dataset?.targetRect;
   const [x, y, carWidth, carHeight] = raw?.split(',').map(Number) ?? [];
   let carRect;
@@ -452,9 +814,10 @@ function InspectLayout(kind, width, height) {
     carRect = { left: x, top: y, right: x + carWidth, bottom: y + carHeight, width: carWidth, height: carHeight };
     if (!inside(carRect, viewport)) issues.push('drawn targetRect is outside the viewport (' + describe(carRect) + ')');
     if (closeRange && canvas) {
-      const referenceWidth = Math.min(canvas.rect.width, .7 * canvas.rect.height);
-      if (carWidth < .9 * referenceWidth || carWidth > 1.1 * referenceWidth) {
-        issues.push('close-range target is outside 90–110% of the reference width (' + carWidth.toFixed(1) + 'px)');
+      const zoom = Number(dataset.cameraZoom);
+      const referenceWidth = Math.min(canvas.rect.width, .7 * canvas.rect.height) * zoom;
+      if (!(zoom >= .42 && zoom <= 1) || carWidth < .85 * referenceWidth || carWidth > 1.1 * referenceWidth) {
+        issues.push('close-range target falls outside its projected crash width (' + carWidth.toFixed(1) + 'px)');
       }
     }
   }
@@ -481,11 +844,9 @@ function InspectLayout(kind, width, height) {
     }
   }
 
-  const panel = (kind === 'distraction' || closeRange) ? Visible('.messages') : undefined;
-  if (panel) bottomEntries.push(panel);
   if (panel && brake && bottomZone && (width < 560 || width <= height)) {
     if (panel.rect.bottom > brake.rect.top + epsilon || brake.rect.width < bottomZone.rect.width - epsilon) {
-      issues.push('portrait distraction controls must stack above a full-width brake button');
+      issues.push('the top notification must clear the full-width portrait brake button');
     }
   }
   for (const entry of bottomEntries.filter(Boolean)) {
@@ -501,14 +862,26 @@ function InspectLayout(kind, width, height) {
       if (intersects(entry.rect, carRect)) issues.push(entry.selector + ' overlaps target car');
     }
   }
-  if (kind === 'distraction' || closeRange) {
+  if (kind === 'distraction') {
+    const sender = Visible('.notification-sender', true);
     const question = Visible('#message', true);
     const answers = [1, 2, 3].map(index => Visible('#answers button:nth-of-type(' + index + ')', true, true));
-    const messages = [question, ...answers];
-    if (question && answers.some(answer => answer && (question.rect.right > answer.rect.left + epsilon ||
-      Math.abs(question.rect.top + question.rect.height / 2 - answer.rect.top - answer.rect.height / 2) > epsilon))) {
-      issues.push('the distraction question and answers are not in one row');
+    const messages = [sender, question, ...answers];
+    if (question) {
+      const style = getComputedStyle(document.querySelector('.notification-question'));
+      if (Number.parseFloat(style.fontSize) < (width <= 560 ? 22 : 24)) issues.push('the notification question is too small');
+      if (!(Number(style.fontWeight) >= 800)) issues.push('notification question font weight is ' + style.fontWeight + ', expected at least 800');
     }
+    const weights = [...document.querySelectorAll('.drive-notification .answers .btn')].map(button => getComputedStyle(button).fontWeight);
+    if (weights.length !== 3 || weights.some(weight => !(Number(weight) >= 700))) {
+      issues.push('notification answer weights must be at least 700, found ' + weights.join(', '));
+    }
+    if (answers[0] && answers.some(answer => answer && (Math.abs(answers[0].rect.top - answer.rect.top) > epsilon ||
+        Math.abs(answers[0].rect.width - answer.rect.width) > epsilon || answer.rect.height < 48 - epsilon ||
+        (question && answer.rect.top < question.rect.bottom - epsilon)))) {
+      issues.push('the three notification answers must be equally sized below the question');
+    }
+    if (question && document.querySelectorAll('#message strong').length !== 2) issues.push('notification numbers are not emphasized');
     for (const child of messages.filter(Boolean)) {
       if (panel && !inside(child.rect, panel.rect)) issues.push(child.selector + ' escapes the distraction panel');
     }

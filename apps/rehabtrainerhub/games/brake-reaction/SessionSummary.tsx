@@ -17,16 +17,6 @@ function OutcomeText(row: Row, t: Copy) {
     t.drop + ' ' + ((relative / 3.6) ** 2 / (2 * 9.81)).toFixed(2) + ' m'].join(' · ');
 }
 
-export function RoundStats({ row, copy: t }: { row: Row; copy: Copy }) {
-  return <>
-    <dl className="metrics">
-      <div className="metric"><dt>{t.reaction}</dt><dd>{seconds(row.r)}{row.timedOut && ' · ' + t.timeout}</dd></div>
-      <div className="metric"><dt>{t.beforeBraking}</dt><dd>{meters(row.outcome.beforeBraking)}</dd></div>
-    </dl>
-    <p>{OutcomeText(row, t)}</p>
-  </>;
-}
-
 export function SessionSummary({ settings, rows, copy: t, summaryItems }: {
   settings: Settings; rows: Row[]; copy: Copy; summaryItems: { label: string; value: string }[];
 }) {

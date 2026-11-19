@@ -1,11 +1,38 @@
-.tutorial-road { position: relative; overflow: hidden; background: var(--sky); border-radius: 6px; }
-.tutorial-road canvas { width: 100%; height: clamp(120px, 28dvh, 210px); display: block; }
-.spotlight { color: var(--text-on-accent); background: var(--dash); padding: 10px 16px; }
+.tutorial-lead-car { position: absolute; pointer-events: none; }
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight {
+  position: fixed;
+  z-index: 9998;
+  border-radius: var(--radius);
+  pointer-events: none;
+  box-shadow: 0 0 0 100vmax var(--bg-overlay);
+  outline: 2px solid var(--surface);
+}
+.game-tour {
+  position: fixed;
+  z-index: 9999;
+  width: min(calc(100% - 16px), 29rem);
+  max-height: calc(100dvh - 16px);
+  overflow: auto;
+  padding: clamp(12px, 3vw, 24px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.game-tour h2 { font-size: clamp(1.125rem, 3vw, 1.5rem); }
+.game-tour p { margin-block: 8px 12px; }
+.game-tour-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.game-tour-actions .btn { min-width: 44px; max-width: 100%; }
+.game-tour-actions .btn:active { translate: 0 1px; }
 
 .training-config-navigation-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 639px) {
   .game-settings-dialog .training-config-navigation-buttons { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .training-panel .training-config-navigation-buttons { display: grid; }
+  .training-panel .training-config-navigation-buttons { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .training-confirmation > .config-actions { grid-template-columns: minmax(0, 1fr); }
 }
 .training-panel .config-actions button:focus-visible,
 .training-config-navigation-buttons .btn:focus-visible {
@@ -13,5 +40,3 @@
   outline-offset: 3px;
 }
 .training-config-summary-item + .training-config-summary-item { margin-top: 4px; }
-.tutorial-scene { position: relative; overflow: hidden; }
-.spotlight { position: relative; }

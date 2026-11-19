@@ -2,7 +2,6 @@ export const eyeOffset = 2.5;
 export const cameraHeight = 1;
 export const laneWidth = 3.75;
 export const laneDividers = [-laneWidth / 2, laneWidth / 2];
-export const roadSurfaces = { grass: 'grass', shoulder: 'shoulder', dry: 'road', wet: 'wet-road' } as const;
 const segmentLength = 5;
 const dashLength = 4;
 const dashCycle = 10;
@@ -24,8 +23,8 @@ export function ProjectCar(scene: ReturnType<typeof SceneMetrics>, laneX: number
 }
 
 export function ProjectTargetCar(scene: ReturnType<typeof SceneMetrics>, laneX: number, z: number, widthMeters: number,
-  aspect: number, dashboardTop: number) {
-  const contactWidth = 1.05 * Math.min(scene.width, .7 * scene.height);
+  aspect: number, dashboardTop: number, zoom = 1) {
+  const contactWidth = 1.05 * Math.min(scene.width, .7 * scene.height) * zoom;
   const contactDepth = widthMeters * scene.focal / contactWidth;
   const depth = Math.max(z, contactDepth);
   const car = ProjectCar(scene, laneX, depth, widthMeters, aspect);
@@ -64,7 +63,6 @@ export function SceneGeometry(scene: ReturnType<typeof SceneMetrics>, controlsTo
     roadEdge, shoulderEdge: roadEdge + .8, railX,
     nearZ: focal * cameraHeight / (height - horizon),
     railStart: Math.min(5, edgeDepth),
-    lampStart: Math.min(35, edgeDepth),
     mountain,
     dashboard: {
       left: { x: 0, y: centerY + rise },
@@ -99,7 +97,6 @@ export function BuildSegments(cameraPosition: number, near: number, far: number)
     return {
       near: index * segmentLength - cameraPosition,
       far: (index + 1) * segmentLength - cameraPosition,
-      surfaces: roadSurfaces,
     };
   });
 }
@@ -113,4 +110,33 @@ export function LaneDashes(cameraPosition: number, near: number, far: number) {
     if (end > near) dashes.push([Math.max(start, near), end]);
   }
   return dashes;
+}
+
+type RoadsideKind = 'rail' | 'post' | 'reflector' | 'lamp';
+type Roadside = { kind: RoadsideKind; side: -1 | 1; z: number; far: number };
+
+export function BuildRoadside(distance: number, near: number, far: number, railNear: number) {
+  const fixtures: Roadside[] = [];
+  for (const side of [-1, 1] as const) {
+    for (const segment of BuildSegments(distance, railNear, far)) {
+      const z = Math.max(railNear, segment.near);
+      const end = Math.min(far, segment.far);
+      if (end > z) fixtures.push({ kind: 'rail', side, z, far: end });
+    }
+    AddRow('post', 10, railNear, side);
+    AddRow('lamp', 50, near, side);
+  }
+  AddRow('reflector', 25, near, 1);
+
+  function AddRow(kind: RoadsideKind, spacing: number, start: number, side: -1 | 1) {
+    for (let z = Math.ceil((distance + start) / spacing) * spacing - distance; z <= far; z += spacing) {
+      fixtures.push({ kind, side, z, far: z });
+    }
+  }
+
+  return fixtures;
+}
+
+export function CompareDepth(first: { z: number; kind: string }, second: { z: number; kind: string }) {
+  return second.z - first.z || Number(first.kind === 'car') - Number(second.kind === 'car');
 }

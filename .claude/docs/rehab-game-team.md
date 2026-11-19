@@ -41,6 +41,8 @@ worker 修改 `.claude/skills/**`（含 frontmatter `name`／`description` 或�
    `## Dependencies`、`## Acceptance Criteria`。
    minimal 可縮短內容，不能以 `design/game-brief.md` 取代這份 GDD；full 的額外
    設計章節仍適用。接受條件涵蓋設定、教學、開始、完成、保存／重試、返回與行動操作。
+   所有遊戲都須有明確的中英文聚光燈教學。遊戲內容變動時，確認步驟明確說明受影響的內容。
+   提交 hook 提醒核對步驟，`scripts/check-game-spotlight-tour.test.mjs` 檢查教學結構。
 3. 依內容選 `/team-combat`、`/team-ui`、`/team-audio`、`/team-level` 等技能，
    用 `/dev-story` 實作適合的最小切片。每次先寫可執行行為測試、看到需求缺少造成的
    失敗，再修改產品碼；不得用縮小需求、刪功能或放寬安全檢查換取通過。

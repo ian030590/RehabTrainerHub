@@ -11,16 +11,18 @@ import { DisposeAudioFeedback, PlayMidiMusic, PrepareAudioFeedback, StopMidiMusi
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BrakeReactionTutorial } from './rules/BrakeReactionTutorial';
 import { RunningView } from './RunningView';
-import { RoundStats, SessionSummary, SessionMetrics } from './SessionSummary';
+import { RoundFeedback } from './RoundFeedback';
+import { SessionSummary, SessionMetrics } from './SessionSummary';
 import { ScoreAnalysis } from './ScoreAnalysis';
-import { ModelFor, Motion } from './src/physics';
-import { MakeRound, RandomFrom, ScenarioPlan } from './src/round';
+import { DrivingFrame } from './src/drivePresentation';
+import { ModelFor } from './src/physics';
+import { distractionRoundIndex, MakeRound, RandomFrom, ScenarioPlan, sessionRoundCount } from './src/round';
 import type { Row } from './src/score';
-import { LoadCarAtlas, MakeRoad } from './src/road';
+import { MakeRoad } from './src/road';
 
 type Phase = 'menu' | 'rules' | 'confirm' | 'running' | 'paused' | 'feedback' | 'results';
 type SaveState = 'saving' | 'saved' | 'error';
-type Attempt = { round: ReturnType<typeof MakeRound>; falseStarts: number; note: string };
+type Attempt = { round: ReturnType<typeof MakeRound>; falseStarts: number };
 
 export function BrakeReactionGame() {
   const { lang, copy: t } = useT();
@@ -31,7 +33,7 @@ export function BrakeReactionGame() {
   const [sound, setSound] = useState(true);
   const [demo, setDemo] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
-  const [feedback, setFeedback] = useState<Row>();
+  const [feedback, setFeedback] = useState<Row | 'early'>();
   const [attempt, setAttempt] = useState<Attempt>();
   const [saveState, setSaveState] = useState<SaveState>('saving');
   const settingsDialog = useRef<HTMLDialogElement>(null);
@@ -49,7 +51,6 @@ export function BrakeReactionGame() {
   const runGeneration = useRef(0);
 
   useEffect(() => {
-    void LoadCarAtlas();
     const lifecycle = new JsPsychExternalLifecycle(initJsPsych({ display_element: jsPsychDisplay.current! }));
     jsPsychLifecycleRef.current = lifecycle;
     const unsubscribe = OnSavedSettings(saved => {
@@ -101,7 +102,7 @@ export function BrakeReactionGame() {
     } else if (phase === 'running' && restoreStopFocus.current) {
       restoreStopFocus.current = false;
       stopRef.current?.focus();
-    } else {
+    } else if (phase !== 'feedback') {
       root.current?.querySelector<HTMLElement>('h1, h2')?.focus({ preventScroll: true });
     }
   }, [phase, attempt]);
@@ -120,16 +121,18 @@ export function BrakeReactionGame() {
     setPhase('rules');
   };
 
-  const drawPreview = useCallback((canvas: HTMLCanvasElement, atlas: HTMLImageElement | null) => {
+  const drawPreview = useCallback((canvas: HTMLCanvasElement, controls: HTMLElement) => {
     const model = ModelFor(settings);
     const example = { ...MakeRound(settings, 'plain', 0, RandomFrom(1)), gap: 16, decoys: [] };
-    const draw = MakeRoad(canvas, atlas, example, settings.leadType);
-    const motion = Motion(model, example.gap, 10, 0);
-    return () => draw(model, example.onset, motion, 0, settings.road === 'wet', true);
+    const draw = MakeRoad(canvas, example, settings, controls);
+    const drive = DrivingFrame(model, example.gap, example.onset, example.onset, 0, 10, Infinity);
+    return () => draw(drive, { time: example.onset, elapsed: 0, reducedMotion: true });
   }, [settings]);
+  const showConfirmation = useCallback(() => setPhase('confirm'), []);
+  const backToSettings = useCallback(() => setPhase('menu'), []);
 
-  const runRound = useCallback((index: number, falseStarts = 0, note = '') => {
-    setAttempt({ round: MakeRound(settings, plan.current[index], index, random.current), falseStarts, note });
+  const runRound = useCallback((index: number, falseStarts = 0) => {
+    setAttempt({ round: MakeRound(settings, plan.current[index], index, random.current), falseStarts });
     setPhase('running');
   }, [settings]);
 
@@ -170,8 +173,10 @@ export function BrakeReactionGame() {
   }
 
   const onFalseStart = useCallback(() => {
-    runRound(rows.length, (attempt?.falseStarts ?? 0) + 1, t.falseStart);
-  }, [runRound, rows.length, attempt, t.falseStart]);
+    DisposeAudioFeedback();
+    setFeedback('early');
+    setPhase('feedback');
+  }, []);
 
   const onPause = useCallback(() => {
     DisposeAudioFeedback();
@@ -193,6 +198,11 @@ export function BrakeReactionGame() {
   }
 
   function Continue() {
+    if (feedback === 'early') {
+      PrepareAudioFeedback();
+      runRound(rows.length, (attempt?.falseStarts ?? 0) + 1);
+      return;
+    }
     if (demo) {
       setPhase('confirm');
       return;
@@ -200,7 +210,7 @@ export function BrakeReactionGame() {
     if (!feedback) return;
     const completed = [...rows, feedback];
     setRows(completed);
-    if (completed.length < 6) {
+    if (completed.length < sessionRoundCount) {
       PrepareAudioFeedback();
       runRound(completed.length);
       return;
@@ -228,7 +238,8 @@ export function BrakeReactionGame() {
     </select></label>;
   }
 
-  return <main id="game" ref={root} className={(phase === 'running' || phase === 'paused') ? 'drive-screen brake-reaction-phase-playing' : `brake-reaction-phase-${phase}`}
+  const driving = phase === 'running' || phase === 'paused' || phase === 'feedback';
+  return <main id="game" ref={root} className={`${driving || phase === 'rules' ? 'drive-screen ' : ''}brake-reaction-phase-${phase === 'running' || phase === 'paused' ? 'playing' : phase}`}
     onKeyDown={event => {
       if (event.key === 'Escape' && !event.repeat && (phase === 'running' || phase === 'paused')) {
         event.preventDefault();
@@ -275,13 +286,18 @@ export function BrakeReactionGame() {
       </dialog>
     </>}
     {(phase === 'rules' || phase === 'confirm') && <BrakeReactionTutorial title={phase === 'rules' ? t.tutorial : t.confirmation}
-      ready={phase === 'confirm'} summaryItems={summaryItems} drawPreview={drawPreview}
-      onContinue={() => setPhase('confirm')} onDemo={() => Start(true)} onStart={() => Start(false)} onBack={() => setPhase('menu')} />}
-    {(phase === 'running' || phase === 'paused') && attempt && <RunningView key={attempt.round.messageSeed} round={attempt.round} settings={settings} scenario={attempt.round.scenario}
-      index={rows.length} demo={demo} paused={phase === 'paused'} falseStarts={attempt.falseStarts} note={attempt.note} lastBrakeInput={lastBrakeInput}
-      onFalseStart={onFalseStart} onFeedback={onFeedback} onPause={onPause} stopControl={<button className="btn btn-ghost" id="stop" ref={stopRef} onClick={onPause}>{en ? 'Stop' : '停止'}</button>}
+      ready={phase === 'confirm'} settings={settings} sound={sound} showDistraction={distractionRoundIndex < sessionRoundCount}
+      roundCount={sessionRoundCount} summaryItems={summaryItems} drawPreview={drawPreview}
+      onContinue={showConfirmation} onDemo={() => Start(true)} onStart={() => Start(false)} onBack={backToSettings} />}
+    {driving && attempt && <RunningView key={attempt.round.messageSeed} round={attempt.round} settings={settings} scenario={attempt.round.scenario}
+      index={rows.length} demo={demo} paused={phase === 'paused'} frozen={phase === 'feedback'} falseStarts={attempt.falseStarts} lastBrakeInput={lastBrakeInput}
+      onFalseStart={onFalseStart} onFeedback={onFeedback} onPause={onPause} stopControl={<button type="button" className="btn btn-ghost" id="stop" ref={stopRef} onClick={onPause}>{en ? 'Stop' : '停止'}</button>}
       sound={sound} onSound={setSound} />}
-    {(phase === 'paused' || phase === 'feedback') && <section className={phase === 'paused' ? 'training-panel game-interrupt-panel' : 'training-panel'} role="dialog" aria-modal="true" aria-labelledby="title"
+    {phase === 'feedback' && feedback && <RoundFeedback feedback={feedback} settings={settings} previous={rows}
+      exitLabel={demo ? t.tutorial : en ? 'End activity' : '結束活動'}
+      nextLabel={feedback === 'early' ? t.tryAgain : demo ? t.skipDemo : rows.length === sessionRoundCount - 1 ? t.review : t.next}
+      onExit={demo ? () => setPhase('rules') : Exit} onNext={Continue} />}
+    {phase === 'paused' && <section className="training-panel game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="title"
       onKeyDown={event => {
         if (event.key !== 'Tab') return;
         const buttons = event.currentTarget.querySelectorAll('button');
@@ -292,15 +308,13 @@ export function BrakeReactionGame() {
           opposite.focus();
         }
       }}>
-      <header className="training-config-header"><h2 id="title" tabIndex={-1}>{phase === 'paused' ? (en ? 'Paused' : '已暫停') : t.feedback}</h2></header>
+      <header className="training-config-header"><h2 id="title" tabIndex={-1}>{en ? 'Paused' : '已暫停'}</h2></header>
       <div className="training-config-body">
-        {phase === 'paused' ? <p>{t.interrupted} {en ? 'Ending now discards this record.' : '現在結束就不會保存這次紀錄。'}</p> : feedback && <RoundStats row={feedback} copy={t} />}
+        <p>{t.interrupted} {en ? 'Ending now discards this record.' : '現在結束就不會保存這次紀錄。'}</p>
       </div>
       <footer className="config-actions">
-        <button className="btn btn-ghost" onClick={demo ? () => setPhase('rules') : Exit}>{demo ? t.tutorial : en ? 'End activity' : '結束活動'}</button>
-        {phase === 'paused' ?
-          <button className="btn btn-primary" id="resume" ref={resumeRef} onClick={Resume}>{en ? 'Continue' : '繼續'}</button> :
-          <button className="btn btn-primary" id="continue" onClick={Continue}>{demo ? t.skipDemo : rows.length === 5 ? t.review : t.next}</button>}
+        <button type="button" className="btn btn-ghost" onClick={demo ? () => setPhase('rules') : Exit}>{demo ? t.tutorial : en ? 'End activity' : '結束活動'}</button>
+        <button type="button" className="btn btn-primary" id="resume" ref={resumeRef} onClick={Resume}>{en ? 'Continue' : '繼續'}</button>
       </footer>
     </section>}
     {phase === 'results' && <section className="experiment-results" aria-labelledby="title">

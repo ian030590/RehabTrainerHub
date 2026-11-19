@@ -15,6 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 遊戲團隊
 
 新增遊戲目錄或 catalog 項目必須走遊戲團隊，入口見 `.claude/docs/rehab-game-team.md`，並提供含六個指定二級標題的 `design/gdd/<gameId>.md`；既有遊戲依凍結清單豁免，不得把新遊戲加入清單。
+所有遊戲都須有明確的中英文聚光燈教學，步驟須說明遊戲內容的變動。提交 hook 檢查受影響的遊戲並提醒核對步驟，`scripts/check-game-spotlight-tour.test.mjs` 檢查所有遊戲的教學結構。
 Claude 協調成員，依 `.claude/docs/codex-workers.md` 透過 `.claude/scripts/codex-agent.sh` 執行 Codex workers，不使用 Claude 子代理。Codex 使用 `.agents/skills/` 的團隊技能轉接器；框架與倉庫規範衝突時以 `AGENTS.md` 為準。
 
 ## 常用指令

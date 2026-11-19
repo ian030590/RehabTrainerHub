@@ -6,6 +6,9 @@ type Lane = -1 | 0 | 1;
 type Move = { from: Lane; to: Lane; signal: number; start: number; end: number };
 type Decoy = { lane: Lane; gap: number; speedDelta: number; appears: number; brakes: [number, number][] };
 
+export const sessionRoundCount = 6;
+export const distractionRoundIndex = 5;
+
 export function RandomFrom(seed: number) {
   return () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -20,14 +23,14 @@ function Between(random: Random, low: number, high: number) {
 export function ScenarioFor(setting: Settings['scenario'], index: number, previous: Scenario, random: Random): Scenario {
   if (setting !== 'mixed') return setting;
   if (index < 2) return 'plain';
-  const choices: Scenario[] = index === 5 ? ['plain', 'swerve-away'] : ['plain', 'swerve-away', 'out-and-back'];
-  const allowed = index === 5 ? choices : choices.filter(choice => choice !== previous);
+  const choices: Scenario[] = index === distractionRoundIndex ? ['plain', 'swerve-away'] : ['plain', 'swerve-away', 'out-and-back'];
+  const allowed = index === distractionRoundIndex ? choices : choices.filter(choice => choice !== previous);
   return allowed[Between(random, 0, allowed.length - 1)];
 }
 
 export function ScenarioPlan(setting: Settings['scenario'], random: Random): Scenario[] {
   const plan: Scenario[] = [];
-  for (let index = 0; index < 6; index++) {
+  for (let index = 0; index < sessionRoundCount; index++) {
     plan.push(ScenarioFor(setting, index, plan[index - 1] ?? 'plain', random));
   }
   // In mixed mode, round 3 follows plain, and at most one of rounds 4 and 5 can be plain.
@@ -36,7 +39,7 @@ export function ScenarioPlan(setting: Settings['scenario'], random: Random): Sce
 
 export function MakeRound(settings: Settings, scenario: Scenario, index: number, random: Random) {
   const gap = GapFor(ModelFor(settings), index);
-  const wait = index === 5 ? Between(random, 4200, 8500) : Between(random, 1400, 5000);
+  const wait = index === distractionRoundIndex ? Between(random, 4200, 8500) : Between(random, 1400, 5000);
   const moves: Move[] = [];
   const side: Lane = random() < .5 ? -1 : 1;
   const makeMove = (from: Lane, to: Lane, signal: number) => ({ from, to, signal, start: signal + 800, end: signal + 2000 });
