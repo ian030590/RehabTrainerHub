@@ -1041,12 +1041,18 @@ html:has(dialog.package-game-overlay[open]) {
   color: var(--text);
   font-size: var(--type-body);
   text-decoration: none;
+  cursor: pointer;
 }
 
 .lobby-link-label {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
+}
+
+.lobby-guide-link:hover .lobby-link-label,
+.lobby-guide-links a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .lobby-tour-button:focus-visible,
@@ -1358,6 +1364,7 @@ html:has(dialog.package-game-overlay[open]) {
   color: var(--primary);
   font-weight: 750;
   text-underline-offset: 4px;
+  cursor: pointer;
 }
 
 .filter-panel {

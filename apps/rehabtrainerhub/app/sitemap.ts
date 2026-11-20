@@ -3,7 +3,7 @@ import { siteContentLastModified } from './seo';
 import { siteUrls } from './siteUrls';
 
 export const dynamic = 'force-static';
-export const publicSitemapPaths = ['/', '/about/', '/qa/', '/privacy/', '/download/'] as const;
+export const publicSitemapPaths = ['/', '/about/', '/qa/', '/privacy/', '/download/', '/activity-map/'] as const;
 
 export default function Sitemap(): MetadataRoute.Sitemap {
   return publicSitemapPaths.map((path) => ({

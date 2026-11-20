@@ -883,5 +883,18 @@
       {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendation dictionaries state the content-similarity limits without regulatory claims"},
       {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendations hide during search or purpose filtering and use the lobby card launch"}
     ]
+  },
+  {
+    "id": "AG-REC-05",
+    "summary": "公開活動地圖只用建置時計算的內容相似度座標，說明不代表個人能力或練習建議，並提供鍵盤與列表操作。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"activity map is deterministic and separates identical profiles without losing their neighborhood"},
+      {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"activity map signs use the largest absolute coordinate and break ties by id"},
+      {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"pipeline checks every generated activity map coordinate and rejects tampering"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"activity map keyboard moves to the nearest point in the chosen direction with catalog-order ties"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"public activity map renders every catalog marker and list item once with matching launch paths and bilingual caption"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"activity map is included in the public sitemap and built SEO checks"}
+    ]
   }
 ]

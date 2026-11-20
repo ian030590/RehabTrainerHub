@@ -112,6 +112,7 @@ function ValidateLlmsTxt(source, file, siteUrl, appFailures) {
   const urls = [...source.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]);
   const expectedUrls = [
     siteUrl,
+    `${siteUrl}activity-map/`,
     `${siteUrl}about/`,
     `${siteUrl}qa/`,
     `${siteUrl}download/`,
@@ -217,7 +218,7 @@ function ValidateSitemap(source, file, siteUrl, role, appFailures) {
   }
 
   const expectedUrls = role === 'hub'
-    ? ['', 'about/', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
+    ? ['', 'about/', 'qa/', 'privacy/', 'download/', 'activity-map/'].map((path) => `${siteUrl}${path}`)
     : [siteUrl];
   if (!HaveSameValues(urls, expectedUrls)) {
     appFailures.push(`${file}: expected only these canonical public URLs: ${expectedUrls.join(', ')}.`);

@@ -1066,7 +1066,7 @@ for (const language of ['zh-TW', 'en']) {
         'The full answer must exist in the initial render, before interaction.');
     }
     assert.deepEqual(guide.filter(node => node.type === 'a').map(node => node.props.href),
-      ['/about/', '/qa/', '/privacy/']);
+      ['/about/', '/qa/', '/privacy/', '/activity-map/']);
     assert.doesNotMatch(Text(guide), /5000|5%|escape-character|iframe|Worker/,
       'Developer implementation details do not belong in the lobby guide.');
   });

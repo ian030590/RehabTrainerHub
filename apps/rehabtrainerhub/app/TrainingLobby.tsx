@@ -136,7 +136,8 @@ export function TrainingLobby() {
     });
   };
   const { language, locale, t } = useHubLanguage();
-  const copy = GetHubUiCopy(language).lobby;
+  const hubCopy = GetHubUiCopy(language);
+  const copy = hubCopy.lobby;
   const platformCopy = language === 'en'
     ? {
         author: 'Author',
@@ -317,6 +318,9 @@ export function TrainingLobby() {
             <a className="lobby-guide-link" href="#lobby-guide">
               <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
               <span className="lobby-link-label">{copy.readGuide}</span>
+            </a>
+            <a className="lobby-guide-link" href="/activity-map/">
+              <span className="lobby-link-label">{hubCopy.activityMap.title}</span>
             </a>
           </div>
         </div>
@@ -711,6 +715,7 @@ export function TrainingLobby() {
           <a href="/about/">{copy.guide.aboutLink}</a>
           <a href="/qa/">{copy.guide.educationLink}</a>
           <a href="/privacy/">{copy.guide.privacyLink}</a>
+          <a href="/activity-map/">{hubCopy.activityMap.title}</a>
         </nav>
       </section>
     </main>

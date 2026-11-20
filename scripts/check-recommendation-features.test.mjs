@@ -6,6 +6,8 @@ import { join, sep } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 import * as features from '../apps/rehabtrainerhub/recommendation/features.js';
 
@@ -387,6 +389,92 @@ function LoadRuntimeCatalog() {
   });
   return exports;
 }
+
+function LoadActivityMapModule(path, imports = {}) {
+  const url = new URL(`../apps/rehabtrainerhub/app/${path}`, import.meta.url);
+  const require = createRequire(url);
+  const { outputText } = ts.transpileModule(readFileSync(url, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+  });
+  const exports = {};
+  new Function('exports', 'require', outputText)(exports, name => imports[name] ?? require(name));
+  return exports;
+}
+
+test('activity map keyboard moves to the nearest point in the chosen direction with catalog-order ties', () => {
+  const { GetDirectionalActivityId, GetNearestActivityId, ReadActivityMapPoints } = LoadActivityMapModule('activity-map/activityMapModel.ts');
+  const points = [
+    { id: 'start', point: [0.5, 0.5] }, { id: 'right', point: [0.75, 0.5] },
+    { id: 'right-tie', point: [0.75, 0.5] }, { id: 'left', point: [0.25, 0.5] },
+    { id: 'up', point: [0.5, 0.375] }, { id: 'down', point: [0.5, 0.75] },
+    { id: 'diagonal', point: [0.625, 0.875] },
+  ];
+  for (const [key, id] of Object.entries({ ArrowUp: 'up', ArrowDown: 'down', ArrowRight: 'right', ArrowLeft: 'left', Home: 'start', End: 'diagonal' })) {
+    assert.equal(GetDirectionalActivityId(points, 'start', key), id);
+  }
+  assert.equal(GetDirectionalActivityId(points, 'up', 'ArrowUp'), 'up');
+  assert.equal(GetDirectionalActivityId(points, 'start', 'Enter'), null);
+  assert.equal(GetNearestActivityId(points, [0.71, 0.5], 0.3), 'right');
+  assert.equal(GetNearestActivityId(points, [0.71, 0.5], 0.03), null);
+  assert.equal(ReadActivityMapPoints({ a: [0.2, 0.3], b: [0.2, 0.3] }, ['a', 'b']), null);
+  assert.equal(ReadActivityMapPoints({ a: [1.1, 0.3] }, ['a']), null);
+  assert.equal(ReadActivityMapPoints({ a: [0.00001, 0.3] }, ['a']), null);
+});
+
+test('public activity map renders every catalog marker and list item once with matching launch paths and bilingual caption', () => {
+  const catalog = LoadRuntimeCatalog();
+  const model = LoadActivityMapModule('activity-map/activityMapModel.ts');
+  const { zhTW } = LoadActivityMapModule('i18n/zh-TW.ts');
+  const { en } = LoadActivityMapModule('i18n/en.ts');
+  for (const [language, dictionary] of [['zh', zhTW], ['en', en]]) {
+    const { ActivityMap } = LoadActivityMapModule('activity-map/ActivityMap.tsx', {
+      '../i18n': { GetHubUiCopy: () => dictionary.hubUi },
+      '../i18n/HubLanguage': { useHubLanguage: () => ({ language, locale: language === 'en' ? 'en' : 'zh-TW' }) },
+      './activityMapModel': model,
+      './ActivityMap.module.css': {},
+    });
+    const page = LoadActivityMapModule('activity-map/page.tsx', {
+      '@rehab-trainer/hub-modules/catalog': catalog,
+      '../i18n': { zhTW },
+      '../seo': { CreateSeoMetadata: ({ path, title, noIndex = false }) => ({ path, title, noIndex }) },
+      '../trainingThemeStyle': LoadActivityMapModule('trainingThemeStyle.ts'),
+      './ActivityMap': { ActivityMap },
+      './activityMapModel': model,
+    });
+    const view = page.default();
+    const html = renderToStaticMarkup(view);
+    const ids = Array.from(catalog.trainingCatalog, module => module.runtimeId).sort();
+    for (const attribute of ['marker', 'list-item']) {
+      assert.deepEqual([...html.matchAll(new RegExp(`data-map-${attribute}="([^"]+)"`, 'g'))].map(match => match[1]).sort(), ids);
+    }
+    assert.equal([...html.matchAll(/data-map-marker="[^"]+"[^>]*tabindex="0"/g)].length, 1);
+    assert.ok(html.includes(dictionary.hubUi.activityMap.selectActivity));
+    assert.doesNotMatch(html, /data-map-details=|aria-pressed="true"/);
+    for (const entry of view.props.activities) {
+      const module = catalog.trainingCatalog.find(game => game.runtimeId === entry.id);
+      assert.equal(entry.href, catalog.BuildHubTrainingHref(module));
+      assert.equal(entry.neighborIds.length, 3);
+      assert.ok(entry.primaryTags.length > 0);
+    }
+    assert.match(html, language === 'en'
+      ? /Closer points represent activities with more similar content\. Positions are calculated from activity tags and do not represent your abilities or practice advice\./
+      : /距離越近，活動內容越相近。位置由活動標籤計算，不代表個人能力或練習建議。/);
+    assert.doesNotMatch(JSON.stringify(dictionary.hubUi.activityMap), /治療|診斷|療效|改善|提升|處方|評估你的|\b(?:treat(?:ment)?|diagnos\w*|prescri\w*|improv\w*|efficacy|assess your)\b/i);
+    assert.deepEqual(page.metadata, { path: '/activity-map/', title: '活動地圖', noIndex: false });
+    const error = renderToStaticMarkup(React.createElement(ActivityMap, { activities: null, categories: view.props.categories }));
+    assert.match(error, /role="alert"/);
+    assert.doesNotMatch(error, /data-map-marker/);
+  }
+});
+
+test('activity map is included in the public sitemap and built SEO checks', () => {
+  const sitemap = LoadActivityMapModule('sitemap.ts', {
+    './seo': { siteContentLastModified: '2026-09-02' }, './siteUrls': { siteUrls: { hub: 'https://trainerhub.cc' } },
+  });
+  assert.equal(sitemap.publicSitemapPaths.filter(path => path === '/activity-map/').length, 1);
+  assert.ok(sitemap.default().some(({ url }) => url === 'https://trainerhub.cc/activity-map/'));
+  assert.match(readFileSync(new URL('check-seo-output.mjs', import.meta.url), 'utf8'), /['"]activity-map\/['"]/);
+});
 
 test('the real admin picker groups every runtime game once and displays its known function tags', async () => {
   const { ReadCatalog } = await import('./recommendation-pipeline.mjs');
