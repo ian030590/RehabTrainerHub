@@ -63,7 +63,7 @@ const games = {
   'keep-track': { version: '2.1.0', file: 'KeepTrackRecall.tsx', settings: 'settings.ts' },
   'letter-memory': { version: '2.1.0', file: 'LetterMemoryRecall.tsx', settings: 'settings.ts' },
   'plus-minus': { version: '2.1.0', file: 'PlusMinusSwitch.tsx', settings: 'settings.ts' },
-  ufov: { version: '2.1.0', file: 'UfovGame.tsx', settings: 'settings.ts' },
+  ufov: { version: '2.2.0', file: 'UfovGame.tsx', settings: 'settings.ts' },
   'every-ball-response': { version: '2.1.0', file: 'EveryBallGame.tsx', settings: 'settings.ts' },
   'tongue-catch': { version: '2.1.0', file: 'TongueCatchGame.tsx', settings: 'settings.ts' },
 };

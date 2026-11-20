@@ -1,33 +1,34 @@
-export function GetUfovTutorialSteps(lang: string, activity: number) {
+import type { PeripheralAttentionCanvasPhase } from '../runtime/peripheralAttentionCanvas';
+import type { TourStep } from '../runtime/tour';
+
+export type UfovTutorialScene = PeripheralAttentionCanvasPhase | 'vehicle' | 'direction';
+
+export function GetUfovTutorialSteps(lang: string, activity: number): (TourStep & { scene: UfovTutorialScene })[] {
   const en = lang === 'en';
-  const hud = en
-    ? { target: '.ufov-hud', title: 'Progress and stop', text: 'The top left shows the trial number. Stop or Escape ends the session without saving.', place: 'bottom' }
-    : { target: '.ufov-hud', title: '進度與停止', text: '左上角顯示第幾題。按「停止」或 Esc 會結束，這次紀錄不保存。', place: 'bottom' };
-  if (activity === 1) return en ? [
-    { target: '.ufov-preview-center', title: 'Keep your eyes on the box', text: 'Each trial starts with a box in the center. A vehicle flashes inside it, then a noise pattern covers the screen.', place: 'bottom' },
-    { target: '.ufov-preview-choices', title: 'Car or truck', text: 'When the noise clears, choose whether the vehicle in the box was a car or a truck.', place: 'top' },
-    hud,
+  const steps: ReturnType<typeof GetUfovTutorialSteps> = en ? [
+    { scene: 'fixation', target: '.ufov-tutorial-center', title: 'Look at the center box', text: 'Each trial starts with an empty box. Keep your eyes on it.', place: 'bottom' },
+    { scene: 'stimulus', target: '.ufov-tutorial-center', title: 'A vehicle flashes in the box', text: 'A car or truck appears briefly inside the box. Remember which one you saw.', place: 'bottom' },
   ] : [
-    { target: '.ufov-preview-center', title: '看著中央方框', text: '每一題先出現中央方框。車輛在方框裡閃一下，接著整個畫面被雜訊蓋住。', place: 'bottom' },
-    { target: '.ufov-preview-choices', title: '汽車還是卡車', text: '雜訊消失後，點選方框裡出現的是汽車還是卡車。', place: 'top' },
-    hud,
+    { scene: 'fixation', target: '.ufov-tutorial-center', title: '看著中央方框', text: '每題一開始會出現空的方框，請把視線留在中央。', place: 'bottom' },
+    { scene: 'stimulus', target: '.ufov-tutorial-center', title: '中央車輛閃一下', text: '汽車或卡車會短暫出現在方框裡，記住你看到的是哪一種。', place: 'bottom' },
   ];
-  const outer = activity === 3
-    ? en ? { title: 'The car among triangles', text: 'The outer car now hides among many triangles. Ignore the triangles and remember only where the car was.' }
-      : { title: '三角形裡的汽車', text: '外圈汽車混在許多三角形之間。三角形不用理會，只記住汽車在哪個方向。' }
-    : en ? { title: 'The outer car', text: 'At the same moment, a car flashes on the outer ring in one of eight directions. Keep looking at the center and notice it from the corner of your eye.' }
-      : { title: '外圈的汽車', text: '同一瞬間，外圈的 8 個方向之一會閃過一輛汽車。眼睛繼續看中央，用眼角餘光留意它。' };
-  return en ? [
-    { target: '.ufov-preview-center', title: 'Keep your eyes on the box', text: 'Each trial starts with a box in the center. A vehicle flashes inside it, then a noise pattern covers the screen.', place: 'bottom' },
-    { target: '.ufov-preview-outer', ...outer, place: 'bottom' },
-    { target: '.ufov-preview-choices', title: 'First, the center vehicle', text: 'When the noise clears, choose whether the vehicle in the box was a car or a truck.', place: 'top' },
-    { target: '.ufov-preview-directions', title: 'Then, the direction', text: 'Next, choose the direction where the outer car appeared. A trial counts as correct only when both answers are right.', place: 'top' },
-    hud,
-  ] : [
-    { target: '.ufov-preview-center', title: '看著中央方框', text: '每一題先出現中央方框。車輛在方框裡閃一下，接著整個畫面被雜訊蓋住。', place: 'bottom' },
-    { target: '.ufov-preview-outer', ...outer, place: 'bottom' },
-    { target: '.ufov-preview-choices', title: '先選中央車輛', text: '雜訊消失後，先點選方框裡出現的是汽車還是卡車。', place: 'top' },
-    { target: '.ufov-preview-directions', title: '再選方向', text: '接著點選外圈汽車出現的方向。兩個答案都對，這一題才算答對。', place: 'top' },
-    hud,
-  ];
+  if (activity === 2) steps.push(en
+    ? { scene: 'stimulus', target: '.ufov-tutorial-outer', title: 'The outer car', text: 'A car flashes outside the box at the same time. Keep looking at the center and remember its direction.', place: 'bottom' }
+    : { scene: 'stimulus', target: '.ufov-tutorial-outer', title: '外圈的汽車', text: '外圈同時會閃過一輛汽車。視線留在中央，用餘光記住它的方向。', place: 'bottom' });
+  if (activity === 3) steps.push(en
+    ? { scene: 'stimulus', target: '.ufov-tutorial-outer', title: 'The car among triangles', text: 'The outer car flashes among triangles. Keep looking at the center and remember where the car was.', place: 'bottom' }
+    : { scene: 'stimulus', target: '.ufov-tutorial-outer', title: '三角形間的汽車', text: '外圈汽車會在三角形之間閃一下。視線留在中央，只記住汽車的方向。', place: 'bottom' });
+  steps.push(en
+    ? { scene: 'mask', target: '.ufov-tutorial-mask', title: 'Wait for the noise to clear', text: 'A noise pattern covers the screen after the flash. The answer buttons appear when it clears.', place: 'bottom' }
+    : { scene: 'mask', target: '.ufov-tutorial-mask', title: '雜訊蓋住畫面後才作答', text: '車輛閃過後，雜訊會蓋住畫面。等雜訊消失，作答按鈕就會出現。', place: 'bottom' });
+  steps.push(en
+    ? { scene: 'vehicle', target: '.ufov-answer-choices', title: activity === 1 ? 'Car or truck' : 'Choose the center vehicle first', text: 'Two vehicle icons appear. Choose the one you saw inside the box.', place: 'top' }
+    : { scene: 'vehicle', target: '.ufov-answer-choices', title: activity === 1 ? '汽車還是卡車' : '先選中央車輛', text: '畫面出現兩個車輛圖案，請選出剛才在方框裡看到的那一種。', place: 'top' });
+  if (activity !== 1) steps.push(en
+    ? { scene: 'direction', target: '.ufov-axis-button[data-tutorial-target]', title: 'Choose the outer car’s direction', text: 'The numbers appear around the center box. Choose the one in the direction where the car flashed. Both answers must be right to score a correct trial.', place: 'bottom' }
+    : { scene: 'direction', target: '.ufov-axis-button[data-tutorial-target]', title: '選外圈汽車的方向', text: '中央方框周圍出現數字。請選擇汽車閃過的方向，兩個答案都正確才算答對。', place: 'bottom' });
+  steps.push(en
+    ? { scene: 'fixation', target: '.ufov-tutorial .ufov-stop', title: 'Pause the activity', text: 'Stop stays in the top right throughout the activity. Press it or Escape to pause, then choose whether to continue or end the session.', place: 'bottom' }
+    : { scene: 'fixation', target: '.ufov-tutorial .ufov-stop', title: '暫停活動', text: '活動期間右上角會保留「停止」按鈕。按下它或 Esc 可暫停，再選擇繼續或結束活動。', place: 'bottom' });
+  return steps;
 }

@@ -4,6 +4,8 @@ import { access, readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
+import * as jsxRuntime from 'react/jsx-runtime';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { AcceptGameMessage, IsGameResult, IsGameSettings } from '../packages/ui/src/selfContainedGame.js';
 import { IsUfovResultFile, ufovTrialColumns } from '../packages/ui/src/resultFiles.js';
 
@@ -43,15 +45,15 @@ test('stopping while UFOV is paused releases the pending trial without restartin
   assert.equal(starts, 0);
 });
 
-async function Load(path, dependencies = {}) {
+async function Load(path, dependencies = {}, globals = {}) {
   const module = { exports: {} };
   const output = ts.transpileModule(await readFile(resolve(gameRoot, path), 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
-  new Function('require', 'module', 'exports', output)(name => {
+  new Function('require', 'module', 'exports', ...Object.keys(globals), output)(name => {
     assert.ok(name in dependencies, `Unexpected dependency: ${name}`);
     return dependencies[name];
-  }, module, module.exports);
+  }, module, module.exports, ...Object.values(globals));
   return module.exports;
 }
 
@@ -251,7 +253,7 @@ test('UFOV hands its result files to the container before the result and asks fo
 test('UFOV owns its runtime, catalogue entry and results without Hub dependencies', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-ufov');
-  assert.equal(pkg.version, '2.1.0');
+  assert.equal(pkg.version, '2.2.0');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   for (const capability of ['result-files', 'settings-storage', 'pointer', 'fullscreen']) assert.ok(pkg.rehabTrainer.capabilities.includes(capability), capability);
@@ -283,16 +285,155 @@ test('UFOV owns its runtime, catalogue entry and results without Hub dependencie
   assert.doesNotMatch(source, /良好|中等|偏弱|Needs attention|Good|Moderate/, 'Direction results describe counts, not grades.');
 });
 
-test('spotlights cover the center, the vehicle answer, the outer target and the stop button for each activity', async () => {
+test('the canvas uses device pixels for its backing store and mask, and CSS pixels for drawing', async () => {
+  const sizes = [];
+  const transforms = [];
+  const masks = [];
+  const context = {
+    setTransform: (...args) => transforms.push(args), clearRect() {}, fillRect() {}, strokeRect() {},
+    createImageData(width, height) { sizes.push([width, height]); return { width, height, data: new Uint8ClampedArray(width * height * 4) }; },
+    putImageData: (...args) => masks.push(args),
+  };
+  const canvas = { width: 0, height: 0, getContext: () => context };
+  const stage = { querySelector: () => canvas, setAttribute() {}, getBoundingClientRect: () => ({ width: 321, height: 181 }) };
+  const window = { devicePixelRatio: 1.25 };
+  const { DrawPeripheralAttentionCanvasStage, PreparePeripheralAttentionNoiseMask } = await Load('runtime/peripheralAttentionCanvas.ts', {}, {
+    window, getComputedStyle: () => ({ getPropertyValue: () => 'rgb(0, 0, 0)' }),
+  });
+  DrawPeripheralAttentionCanvasStage(stage, { phase: 'fixation' });
+  assert.deepEqual([canvas.width, canvas.height], [401, 226]);
+  assert.deepEqual(transforms.at(-1), [1.25, 0, 0, 1.25, 0, 0]);
+  const maskImageData = PreparePeripheralAttentionNoiseMask(stage);
+  DrawPeripheralAttentionCanvasStage(stage, { phase: 'mask', maskImageData });
+  assert.deepEqual(sizes, [[401, 226]]);
+  assert.deepEqual(masks, [[maskImageData, 0, 0]]);
+  assert.deepEqual(transforms.at(-1), [1, 0, 0, 1, 0, 0]);
+  window.devicePixelRatio = 0;
+  DrawPeripheralAttentionCanvasStage(stage, { phase: 'fixation' });
+  assert.deepEqual([canvas.width, canvas.height], [321, 181]);
+});
+
+test('tutorial markers follow the canvas box and the scaled car in the selected ring slot', async () => {
+  const { GetPeripheralAttentionTargetRects, CreatePeripheralAttentionCanvasSlots } = await Load('runtime/peripheralAttentionCanvas.ts');
+  const stage = { width: 640, height: 480 };
+  const geometry = { radiusPx: 120, vehicleScale: .75 };
+  const slot = CreatePeripheralAttentionCanvasSlots().find(item => item.isTargetCandidate && item.axis === 2);
+  const { center, outer } = GetPeripheralAttentionTargetRects(stage, geometry, slot);
+  assert.deepEqual(center, { left: 279.5, top: 199.5, width: 81, height: 81 });
+  assert.deepEqual(outer, { left: 413, top: 219, width: 54, height: 42 });
+  assert.equal(GetPeripheralAttentionTargetRects(stage, geometry).outer, undefined);
+});
+
+test('answer screens show icon-only vehicles, eight numbered directions and announced feedback', async () => {
+  const { VehicleQuestion, DirectionQuestion, StimulusFeedback } = await Load('AnswerPad.tsx', { 'react/jsx-runtime': jsxRuntime });
+  const vehicle = renderToStaticMarkup(VehicleQuestion({ lang: 'zh', onChoose() {} }));
+  assert.match(vehicle, /<button[^>]*aria-label="汽車"><svg[^>]*aria-hidden="true"/);
+  assert.match(vehicle, /<button[^>]*aria-label="卡車"><svg[^>]*aria-hidden="true"/);
+  assert.doesNotMatch(vehicle, /<h2|>汽車<|>卡車</);
+  assert.match(renderToStaticMarkup(VehicleQuestion({ lang: 'en' })), /\binert=""/);
+  const direction = renderToStaticMarkup(DirectionQuestion({ lang: 'en', onChoose() {} }));
+  assert.equal((direction.match(/<button/g) ?? []).length, 8);
+  assert.match(direction, /aria-label="1. Up"[^>]*>1<\/button>/);
+  assert.match(direction, /aria-label="8. Up left"[^>]*>8<\/button>/);
+  assert.equal((direction.match(/ufov-axis-guide/g) ?? []).length, 8);
+  assert.match(renderToStaticMarkup(StimulusFeedback({ lang: 'zh', correct: false })), /role="status".*aria-hidden="true">×<\/span><span class="ufov-visually-hidden">答錯/);
+});
+
+test('settings keep a native form with option cards, an eight-way compass and readouts', async () => {
+  const source = await readFile(resolve(gameRoot, 'UfovGame.tsx'), 'utf8');
+  assert.match(source, /<dialog[\s\S]*?<form[\s\S]*?onSubmit=.*confirmSettings\(\).*?[\s\S]*?onKeyDown=.*Enter.*confirmSettings\(\)/);
+  assert.match(source, /type="radio" name=\{key\}/);
+  assert.match(source, /handheld && option\.value !== 1/);
+  assert.match(source, /type="checkbox" name=\{key\}/);
+  assert.match(source, /ufov-compass-toggle[^\n]*aria-pressed/);
+  assert.match(source, /geometry\.pixelsPerCm[\s\S]*?geometry\.maxVisualAngleDeg[\s\S]*?geometry\.vehicleWidthPx[\s\S]*?geometry\.isOverLimit/);
+  assert.match(source, /fixed && rangeInput\('trialCount'[^\n]*!formal/);
+});
+
+function FindElements(node, matches) {
+  if (Array.isArray(node)) return node.flatMap(child => FindElements(child, matches));
+  if (!node?.props) return [];
+  return [...(matches(node) ? [node] : []), ...FindElements(node.props.children, matches)];
+}
+
+test('settings keep a direction selected, retain the formal ending in practice, and limit handheld activities', async () => {
+  const settingsModule = await Load('settings.ts');
+  let settings = { ...settingsModule.defaultSettings, subtestId: 2, stopCondition: 'fixed_trials', trialCount: 15 };
+  let device = 'desktop';
+  const game = await Load('UfovGame.tsx', {
+    jspsych: {}, './score': {}, './resultFiles': {}, './ScoreAnalysis': {}, './logic/ufovSummary': {}, './logic/ufovRun': {},
+    './runtime/jsPsychLifecycle': {}, './runtime/soundManager': {}, './music': {}, './runtime/settingsMemory': {},
+    './runtime/hubBridge': { IsHubGame: () => true }, './rules/UfovTutorial': {},
+    './runtime/displayTiming': { DetectDisplayDeviceKind: () => device },
+    './runtime/peripheralAttentionCanvas': await Load('runtime/peripheralAttentionCanvas.ts'),
+    './logic/staircase': await Load('logic/staircase.ts'), './settings': settingsModule,
+    './AnswerPad': await Load('AnswerPad.tsx', { 'react/jsx-runtime': jsxRuntime }),
+    './i18n/useT': { useT: () => ({ lang: 'en', t: () => 'Peripheral Visual Field Training' }) },
+    'react/jsx-runtime': jsxRuntime,
+    react: {
+      useCallback: callback => callback, useEffect() {}, useRef: current => ({ current }),
+      useState: initial => initial && typeof initial === 'object' && 'subtestId' in initial
+        ? [settings, next => { settings = typeof next === 'function' ? next(settings) : next; }]
+        : [typeof initial === 'function' ? initial() : initial, () => {}],
+    },
+  });
+  const inputs = name => FindElements(game.UfovGame(), node => node.type === 'input' && node.props.name === name).map(node => node.props);
+  const toggle = () => FindElements(game.UfovGame(), node => node.props.className === 'ufov-compass-toggle')[0].props.onClick();
+  toggle();
+  assert.deepEqual(settingsModule.EnabledAxes(settings), [0, 2, 4, 6]);
+  toggle();
+  assert.equal(settingsModule.EnabledAxes(settings).length, 8);
+  for (const axis of [0, 1, 3, 4, 5, 6, 7]) inputs(settingsModule.axisKeys[axis])[0].onChange({ target: { checked: false } });
+  assert.deepEqual(settingsModule.EnabledAxes(settings), [2]);
+  assert.equal(inputs('axis2Enabled')[0].disabled, true);
+  assert.ok(settingsModule.ValidateSettings(settings));
+
+  inputs('mode').find(input => input.value === 'practice').onChange();
+  assert.ok(inputs('stopCondition').every(input => input.disabled));
+  assert.equal(inputs('trialCount')[0].disabled, true);
+  inputs('mode').find(input => input.value === 'formal').onChange();
+  assert.equal(inputs('trialCount')[0].value, 15);
+  assert.equal(inputs('trialCount')[0].disabled, false);
+  assert.equal(inputs('stopCondition').find(input => input.checked).value, 'fixed_trials');
+  assert.equal(inputs('subtestId').find(input => input.checked).value, 2);
+  for (const handheld of ['phone', 'tablet']) {
+    device = handheld;
+    assert.deepEqual(inputs('subtestId').map(input => [input.checked, input.disabled]), [[true, false], [false, true], [false, true]]);
+  }
+  assert.equal(settings.subtestId, 2, 'A handheld view preserves the saved desktop activity.');
+  assert.equal(FindElements(game.UfovGame(), node => node.props.className === 'ufov-geometry-note').length, 0);
+  inputs('viewingDistanceCm')[0].onChange({ target: { value: '120' } });
+  const [warning] = FindElements(game.UfovGame(), node => node.props.className === 'ufov-geometry-note');
+  assert.match(warning.props.children, /Move closer than \d+\.\d cm or choose a smaller angle/);
+});
+
+test('short and narrow viewports compact the UFOV tour with full-size navigation controls', async () => {
+  const css = await readFile(resolve(gameRoot, 'game.css'), 'utf8');
+  const compact = css.match(/@media \(max-height: 600px\), \(max-width: 480px\) \{([\s\S]*?)\n\}/)?.[1];
+  assert.ok(compact, 'Both the short desktop and narrow phone use the compact tour layout.');
+  assert.match(compact, /\.game-tour\s*\{[^}]*flex-wrap:\s*wrap;[^}]*padding:\s*12px 16px;[^}]*line-height:\s*1\.35;/);
+  assert.match(compact, /\.game-tour h2, \.game-tour p\s*\{[^}]*margin:\s*0;/);
+  assert.match(compact, /\.game-tour button\s*\{[^}]*margin:\s*0;/);
+  assert.doesNotMatch(compact, /min-height:/, 'The compact rules inherit the 44 px button minimum.');
+  assert.match(css, /button, span\.btn\s*\{[^}]*min-height:\s*44px;/);
+  assert.match(css, /\.game-tour\s*\{[^}]*font-weight:\s*700;/);
+});
+
+test('spotlights follow the phases for each activity, with distinct outer-car instructions', async () => {
   const { GetUfovTutorialSteps } = await Load('rules/tutorialSteps.ts');
   for (const language of ['zh', 'en']) {
-    assert.deepEqual(GetUfovTutorialSteps(language, 1).map(step => step.target), ['.ufov-preview-center', '.ufov-preview-choices', '.ufov-hud']);
-    for (const activity of [2, 3]) {
+    for (const activity of [1, 2, 3]) {
       const steps = GetUfovTutorialSteps(language, activity);
-      assert.deepEqual(steps.map(step => step.target), ['.ufov-preview-center', '.ufov-preview-outer', '.ufov-preview-choices', '.ufov-preview-directions', '.ufov-hud']);
+      assert.deepEqual(steps.map(({ scene, target }) => [scene, target]), [
+        ['fixation', '.ufov-tutorial-center'], ['stimulus', '.ufov-tutorial-center'],
+        ...(activity === 1 ? [] : [['stimulus', '.ufov-tutorial-outer']]),
+        ['mask', '.ufov-tutorial-mask'], ['vehicle', '.ufov-answer-choices'],
+        ...(activity === 1 ? [] : [['direction', '.ufov-axis-button[data-tutorial-target]']]),
+        ['fixation', '.ufov-tutorial .ufov-stop'],
+      ]);
       assert.equal(new Set(steps.map(step => step.text)).size, steps.length);
-      assert.ok(steps.every(step => step.title && step.text && step.place));
+      assert.ok(steps.every(step => step.title && step.text && step.place && step.scene));
     }
-    assert.notEqual(GetUfovTutorialSteps(language, 2)[1].text, GetUfovTutorialSteps(language, 3)[1].text, 'Activity 3 explains the distracting shapes.');
+    assert.notEqual(GetUfovTutorialSteps(language, 2)[2].text, GetUfovTutorialSteps(language, 3)[2].text);
   }
 });

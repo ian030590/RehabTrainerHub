@@ -1,8 +1,8 @@
 export interface TourStep { target: string; title: string; text: string; place: string }
 
 // The game owns this spotlight implementation; it never imports another game.
-export function StartTour(steps: TourStep[], options: {
-  lang: string; onEvent: (name: string) => void; onBack: () => void;
+export function StartTour<Step extends TourStep>(steps: Step[], options: {
+  lang: string; onEvent: (name: string) => void; onBack: () => void; onStep?: (step: Step, index: number) => void;
 }) {
   let index = 0;
   let disposed = false;
@@ -64,7 +64,6 @@ export function StartTour(steps: TourStep[], options: {
         return true;
       };
       if (vertical !== undefined) top = vertical;
-      // Wide screens put the answers beside the field, so the side often holds the whole explanation without scrolling.
       else if (besideSpace >= Math.min(panel.width, 320) && placeBeside(true)) { /* placed beside the target */ }
       else if (Math.max(spaceAbove, spaceBelow) >= 160) {
         // A long explanation scrolls inside the larger free area so the target stays visible.
@@ -77,6 +76,7 @@ export function StartTour(steps: TourStep[], options: {
     overlay.style.top = `${Math.max(8, Math.min(window.innerHeight - panel.height - 8, top))}px`;
   };
   const render = () => {
+    options.onStep?.(steps[index], index);
     title.textContent = steps[index].title;
     text.textContent = steps[index].text;
     next.textContent = index === steps.length - 1 ? (options.lang === 'en' ? 'Done' : '完成') : (options.lang === 'en' ? 'Next' : '下一步');

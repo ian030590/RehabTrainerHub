@@ -6,7 +6,7 @@ import { BuildGameScore } from './score';
 import { BuildResultFiles, type ResultFile } from './resultFiles';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { UfovTutorial } from './rules/UfovTutorial';
-import { DirectionName, DirectionPad, VehicleChoices } from './AnswerPad';
+import { directionArrows, DirectionName, DirectionQuestion, StimulusFeedback, VehicleQuestion } from './AnswerPad';
 import { SummarizeUfovSession, type UfovSession, type Vehicle } from './logic/ufovSummary';
 import { UfovRun, type UfovPrompt } from './logic/ufovRun';
 import { ufovTiming } from './logic/staircase';
@@ -22,6 +22,9 @@ import { RestoreSettings } from './runtime/settingsMemory';
 
 type Phase = 'menu' | 'rules' | 'running' | 'results';
 type Activity = 1 | 2 | 3;
+type ListKey = typeof listSettings[number]['key'];
+
+const compassCells = [7, 0, 1, 6, null, 2, 5, 4, 3];
 
 const fileLabels = {
   'trials.csv': { zh: '逐題紀錄（CSV）', en: 'Trial log (CSV)' },
@@ -230,24 +233,35 @@ export function UfovGame() {
     pending.answer(value);
   };
 
-  const listField = (key: 'subtestId' | 'mode' | 'stopCondition') => listSettings.find(field => field.key === key)!;
-  const optionOf = (key: 'subtestId' | 'mode' | 'stopCondition', value: number | string) =>
-    (listField(key).options as readonly { value: number | string; zh: string; en: string; hintZh: string; hintEn: string }[]).find(option => option.value === value);
-  const optionLabel = (key: 'subtestId' | 'mode' | 'stopCondition', value: number | string) => { const option = optionOf(key, value); return option ? (en ? option.en : option.zh) : ''; };
+  const listField = (key: ListKey) => listSettings.find(field => field.key === key)!;
+  const optionLabel = (key: ListKey, value: number | string) => {
+    const option = listField(key).options.find(item => item.value === value);
+    return option ? option[lang] : '';
+  };
   const range = (key: RangeKey) => rangeSettings.find(field => field.key === key)!;
   const unit = (key: RangeKey) => {
     const text: string = en ? range(key).unitEn : range(key).unitZh;
     return !text ? '' : text === '°' || text === '%' ? text : ` ${text}`;
   };
-  const measure = (key: RangeKey) => `${settings[key]}${unit(key)}`;
+  const measure = (key: RangeKey) => `${unit(key) === '°' ? settings[key].toFixed(1) : settings[key]}${unit(key)}`;
   const formal = settings.mode === 'formal';
   const fixed = settings.stopCondition === 'fixed_trials';
   const enabledAxes = EnabledAxes(settings);
+  const allDirections = enabledAxes.length === axisKeys.length;
+  const directionCount = `${enabledAxes.length}/${axisKeys.length}`;
+  const modeLabel = optionLabel('mode', settings.mode);
+  const activityLabel = optionLabel('subtestId', activity);
+  const endLabel = !formal ? (en ? `${ufovTiming.practiceTrials} practice trials` : `${ufovTiming.practiceTrials} 題練習`)
+    : fixed ? (en ? `${settings.trialCount} trials` : `${settings.trialCount} 題`) : (en ? 'When display time settles' : '呈現時間穩定後');
+  const toggleDirections = () => setSettings(current => {
+    const useCardinals = EnabledAxes(current).length === axisKeys.length;
+    return { ...current, ...Object.fromEntries(axisKeys.map((key, axis) => [key, !useCardinals || axis % 2 === 0])) };
+  });
   const geometry = CalculatePeripheralAttentionScreenGeometry(settings.screenWidthCm, settings.screenHeightCm, settings.viewingDistanceCm,
     settings.targetVisualAngleDeg, settings.vehicleVisualAngleDeg);
   const summaryItems = [
-    { label: en ? 'Activity' : '活動項目', value: optionLabel('subtestId', activity) + (handheld && settings.subtestId !== 1 ? (en ? ' (phones and tablets run activity 1)' : '（手機與平板只提供活動 1）') : '') },
-    { label: en ? 'Mode' : '活動模式', value: optionLabel('mode', settings.mode) },
+    { label: en ? 'Activity' : '活動項目', value: activityLabel + (handheld && settings.subtestId !== 1 ? (en ? ' (phones and tablets run processing speed)' : '（手機與平板只提供處理速度）') : '') },
+    { label: en ? 'Mode' : '活動模式', value: modeLabel },
     ...(formal ? [{ label: en ? 'When the session ends' : '結束方式', value: fixed ? (en ? `After ${settings.trialCount} trials` : `完成 ${settings.trialCount} 題後`) : optionLabel('stopCondition', settings.stopCondition) }]
       : [{ label: en ? 'Trials' : '題數', value: en ? `${ufovTiming.practiceTrials} at ${ufovTiming.practiceDurationMs} ms` : `${ufovTiming.practiceTrials} 題，每題 ${ufovTiming.practiceDurationMs} 毫秒` }]),
     { label: en ? 'Contrast' : '刺激對比度', value: measure('contrastPercent') },
@@ -255,39 +269,50 @@ export function UfovGame() {
     { label: en ? 'Vehicle size' : '車輛大小', value: measure('vehicleVisualAngleDeg') },
     { label: en ? 'Display and distance' : '螢幕與距離', value: en ? `${settings.screenWidthCm} × ${settings.screenHeightCm} cm, ${settings.viewingDistanceCm} cm away`
       : `${settings.screenWidthCm} × ${settings.screenHeightCm} cm，距離 ${settings.viewingDistanceCm} cm` },
-    ...(activity === 1 ? [] : [{ label: en ? 'Outer directions' : '外圈方向', value: enabledAxes.length === 8 ? (en ? 'All 8' : '全部 8 個')
+    ...(activity === 1 ? [] : [{ label: en ? 'Outer directions' : '外圈方向', value: allDirections ? (en ? 'All 8' : '全部 8 個')
       : enabledAxes.map(axis => DirectionName(lang, axis)).join(en ? ', ' : '、') }]),
   ];
-  const rangeInput = (key: RangeKey) => {
+  const rangeInput = (key: RangeKey, scale: readonly string[], disabled = false) => {
     const field = range(key);
-    return <label key={key}>{en ? field.en : field.zh}：<output>{measure(key)}</output>
-      <input name={key} type="range" min={field.min} max={field.max} step={field.step} value={settings[key]}
+    return <label className="ufov-slider-card" htmlFor={`ufov-${key}`}>
+      <span className="ufov-slider-heading"><span id={`ufov-${key}-label`}>{field[lang]}</span>
+        {key === 'contrastPercent' && <span className="ufov-contrast-swatch" aria-hidden="true"
+          style={{ backgroundColor: `color-mix(in srgb, var(--ufov-field) ${settings.contrastPercent}%, var(--ufov-stimulus))` }} />}
+        <span className="ufov-value" aria-hidden="true">{measure(key)}</span></span>
+      <input id={`ufov-${key}`} aria-labelledby={`ufov-${key}-label`} aria-valuetext={measure(key)}
+        name={key} type="range" min={field.min} max={field.max} step={field.step} value={settings[key]} disabled={disabled}
         onChange={event => setSettings({ ...settings, [key]: Number(event.target.value) })} />
-      <small className="training-setting-description">{en ? field.hintEn : field.hintZh}</small></label>;
+      <span className="ufov-slider-scale" aria-hidden="true">{scale.map(value => <span key={value}>{value}</span>)}</span>
+    </label>;
   };
   const numberInput = (key: RangeKey) => {
     const field = range(key);
-    return <label key={key}>{en ? field.en : field.zh}（{en ? field.unitEn : field.unitZh}）
+    return <label className="ufov-number-field">{field[lang]} ({field.unitEn})
       <input name={key} type="number" required inputMode="decimal" min={field.min} max={field.max} step={field.step}
         value={Number.isNaN(settings[key]) ? '' : settings[key]}
         onChange={event => setSettings({ ...settings, [key]: event.target.value === '' ? Number.NaN : Number(event.target.value) })} />
-      <small className="training-setting-description">{en ? field.hintEn : field.hintZh}</small></label>;
+    </label>;
   };
-  const listInput = (key: 'subtestId' | 'mode' | 'stopCondition') => {
-    const field = listField(key);
-    const options = field.options as readonly { value: number | string; zh: string; en: string; hintZh: string; hintEn: string }[];
-    const selected = optionOf(key, settings[key]);
-    return <label key={key}>{en ? field.en : field.zh}
-      <select name={key} value={settings[key]}
-        onChange={event => setSettings({ ...settings, [key]: key === 'subtestId' ? Number(event.target.value) : event.target.value })}>
-        {options.map(option => <option key={option.value} value={option.value}>{en ? option.en : option.zh}</option>)}
-      </select>
-      {selected && <small className="training-setting-description">{en ? selected.hintEn : selected.hintZh}</small>}</label>;
+  const listInput = (key: ListKey) => {
+    const value = key === 'subtestId' ? activity : settings[key];
+    return <fieldset className={`ufov-option-grid ufov-options-${key}`} aria-labelledby={`ufov-${key}-heading`}>
+      {listField(key).options.map(option => {
+        const disabled = key === 'subtestId' ? handheld && option.value !== 1 : key === 'stopCondition' && !formal;
+        return <label key={option.value} className="ufov-option">
+          <input type="radio" name={key} value={option.value} checked={option.value === value} disabled={disabled}
+            aria-labelledby={`ufov-${option.value}-label`} aria-describedby={`ufov-${option.value}-description`}
+            onChange={() => setSettings(current => ({ ...current, [key]: option.value }))} />
+          <span id={`ufov-${option.value}-label`}>{option[lang]}</span>
+          <span className="ufov-option-meta" id={`ufov-${option.value}-description`}>{en ? option.hintEn : option.hintZh}</span>
+        </label>;
+      })}
+    </fieldset>;
   };
 
   const score = session ? BuildGameScore(session) : null;
   const totals = session ? SummarizeUfovSession(session) : null;
   const missing = en ? 'N/A' : '無';
+  const geometryReadout = (value: number, digits: number, suffix: string) => Number.isFinite(value) ? `${value.toFixed(digits)}${suffix}` : missing;
   // One frame lasts about 17 ms, so whole milliseconds are as precise as the display; saved rows keep the exact values.
   const ms = (value: number | null) => value === null ? missing : `${Math.round(value)} ms`;
   const percent = (value: number | null) => value === null ? missing : `${value}%`;
@@ -299,37 +324,88 @@ export function UfovGame() {
       onCancel={event => { event.preventDefault(); exit(); }}>
       <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
         onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
-        <header className="training-config-header"><h2 id="ufov-settings-title">{title}</h2></header>
+        <header className="training-config-header"><h2 id="ufov-settings-title">{en ? 'Peripheral Visual Field Training Settings' : '周邊視野訓練設定'}</h2>
+          <div className="config-summary">
+            <span>{en ? 'Activity' : '活動'} · {activityLabel}</span>
+            <span>{en ? 'Contrast' : '對比度'} {measure('contrastPercent')}</span>
+            <span>{en ? 'Outer ring' : '外圈'} {measure('targetVisualAngleDeg')}</span>
+            <span>{en ? 'Vehicle' : '車輛'} {measure('vehicleVisualAngleDeg')}</span>
+            <span>{directionCount} {en ? 'directions' : '方向'}</span>
+            <span>{en ? 'End' : '結束方式'} · {endLabel}</span>
+          </div>
+        </header>
         <div className="training-config-body">
-          <section className="training-setting"><h3>{en ? 'Activity settings' : '活動設定'}</h3>
+          <section className="training-setting" data-wide>
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3 id="ufov-subtestId-heading">{listField('subtestId')[lang]}</h3>
+              <p>{en ? 'Choose what to look for during the flash.' : '選擇車輛閃過時要留意的內容。'}</p>
+            </div><span>{activityLabel}</span></header>
             {listInput('subtestId')}
             {handheld && <p className="ufov-handheld-note">{en ? 'Phones and tablets run activity 1 only. Use a computer for activities 2 and 3.' : '手機與平板只提供活動 1，活動 2、3 請改用電腦。'}</p>}
-            {listInput('mode')}
-            {formal && listInput('stopCondition')}
-            {formal && fixed && rangeInput('trialCount')}
           </section>
-          <section className="training-setting"><h3>{en ? 'What you see' : '刺激外觀'}</h3>
-            {rangeInput('contrastPercent')}
-            {rangeInput('targetVisualAngleDeg')}
-            {rangeInput('vehicleVisualAngleDeg')}
+          <section className="training-setting" data-wide>
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3>{en ? 'Display size and viewing distance' : '螢幕尺寸與觀看距離'}</h3>
+              <p>{en ? 'Measure the visible area and the distance from your eyes to the screen.' : '請量出螢幕可顯示的寬高，以及眼睛到螢幕的距離。'}</p>
+            </div><span>{geometryReadout(settings.viewingDistanceCm, 0, ' cm')}</span></header>
+            <div className="ufov-number-row">
+              {numberInput('screenWidthCm')}
+              {numberInput('screenHeightCm')}
+              {numberInput('viewingDistanceCm')}
+            </div>
+            <dl className="ufov-geometry-info">
+              <div className="ufov-geometry-stat"><dt>{en ? 'Pixel density' : '像素密度'}</dt><dd>{geometryReadout(geometry.pixelsPerCm, 0, ' PPCM')}</dd></div>
+              <div className="ufov-geometry-stat"><dt>{en ? 'Largest on-screen angle' : '螢幕可呈現的最大視角'}</dt><dd>{geometryReadout(geometry.maxVisualAngleDeg, 1, '°')}</dd></div>
+              <div className="ufov-geometry-stat"><dt>{en ? 'Vehicle width' : '車輛寬度'}</dt><dd>{geometryReadout(geometry.vehicleWidthPx, 0, ' px')}</dd></div>
+            </dl>
+            {geometry.isOverLimit && geometry.suggestedDistanceCm !== undefined && <p className="ufov-geometry-note" role="status">{en
+              ? `The outer ring angle exceeds the screen. Move closer than ${geometry.suggestedDistanceCm.toFixed(1)} cm or choose a smaller angle.`
+              : `外圈視角超出螢幕。請將觀看距離縮短至 ${geometry.suggestedDistanceCm.toFixed(1)} cm 以下，或調小外圈視角。`}</p>}
           </section>
-          <section className="training-setting"><h3>{en ? 'Display and distance' : '螢幕與距離'}</h3>
-            <p className="training-setting-description">{en ? 'Visual angles are converted to screen size from these three numbers.' : '視角會依這三個數字換算成畫面上的大小。'}</p>
-            {numberInput('screenWidthCm')}
-            {numberInput('screenHeightCm')}
-            {numberInput('viewingDistanceCm')}
-            {geometry.isOverLimit && <p className="ufov-geometry-note" role="status">{en
-              ? `With this display and distance the outer ring reaches about ${geometry.maxVisualAngleDeg.toFixed(1)}°, so it is drawn just inside the screen edge.`
-              : `以這個螢幕與距離，外圈最遠約 ${geometry.maxVisualAngleDeg.toFixed(1)}°，會畫在畫面邊緣內。`}</p>}
+          <section className="training-setting">
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3>{en ? 'Outer ring distance and vehicle size' : '外圈距離與車輛大小'}</h3>
+              <p>{en ? 'Set both in degrees of visual angle.' : '以視角設定外圈距離與車輛大小。'}</p>
+            </div><span>{measure('targetVisualAngleDeg')} / {measure('vehicleVisualAngleDeg')}</span></header>
+            {rangeInput('targetVisualAngleDeg', ['5.0°', '20.0°', '35.0°'])}
+            {rangeInput('vehicleVisualAngleDeg', ['0.8°', '2.5°', '5.0°'])}
           </section>
-          <section className="training-setting"><h3>{en ? 'Outer car directions' : '外圈汽車方向'}</h3>
-            <fieldset className="ufov-axis-options">
-              <legend>{en ? 'The outer car appears only in the checked directions. Activity 1 has no outer car.' : '外圈汽車只會出現在勾選的方向。活動 1 沒有外圈汽車。'}</legend>
-              {axisKeys.map((key, axis) => <label key={key} className="ufov-axis-option">
-                <input type="checkbox" name={key} checked={settings[key]} onChange={event => setSettings({ ...settings, [key]: event.target.checked })} />
-                {DirectionName(lang, axis)}</label>)}
+          <section className="training-setting">
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3>{en ? 'Contrast' : '對比度'}</h3>
+              <p>{en ? range('contrastPercent').hintEn : range('contrastPercent').hintZh}</p>
+            </div><span>{measure('contrastPercent')}</span></header>
+            {rangeInput('contrastPercent', ['5%', '50%', '100%'])}
+          </section>
+          <section className="training-setting" data-wide>
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3 id="ufov-compass-heading">{en ? 'Outer car directions' : '外圈汽車方向'}</h3>
+              <p id="ufov-compass-hint">{en ? 'The outer car appears only in the selected directions. Processing speed has no outer car.' : '外圈汽車只會出現在勾選的方向。處理速度活動沒有外圈汽車。'}</p>
+            </div><span>{directionCount}</span></header>
+            <fieldset className="ufov-compass" aria-labelledby="ufov-compass-heading" aria-describedby="ufov-compass-hint">
+              {compassCells.map(axis => {
+                if (axis === null) return <button key="all" type="button" className="ufov-compass-toggle" aria-pressed={allDirections}
+                  onClick={toggleDirections}>{en ? 'Select all' : '全選'}</button>;
+                const key = axisKeys[axis];
+                return <label key={key} className="ufov-option ufov-compass-direction">
+                  <input type="checkbox" name={key} checked={settings[key]} disabled={settings[key] && enabledAxes.length === 1}
+                    onChange={event => setSettings({ ...settings, [key]: event.target.checked })} />
+                  <span className="ufov-compass-arrow" aria-hidden="true">{directionArrows[axis]}</span>{DirectionName(lang, axis)}
+                </label>;
+              })}
             </fieldset>
-            {enabledAxes.length === 0 && <p className="ufov-axis-warning" role="alert">{en ? 'Check at least one direction.' : '請至少勾選一個方向。'}</p>}
+          </section>
+          <section className="training-setting" data-wide>
+            <header className="training-setting-header"><div className="ufov-setting-title">
+              <h3>{en ? 'Session mode and ending' : '訓練流程與結束方式'}</h3>
+              <p>{en ? 'Practice lasts five trials. In a recorded session, choose when to finish.' : '練習固定五題。正式紀錄可選擇結束方式。'}</p>
+            </div><span>{modeLabel}</span></header>
+            <div className="ufov-flow-columns">
+              <div className="ufov-flow-group"><h4 id="ufov-mode-heading">{listField('mode')[lang]}</h4>{listInput('mode')}</div>
+              <div className="ufov-flow-group"><h4 id="ufov-stopCondition-heading">{listField('stopCondition')[lang]}</h4>{listInput('stopCondition')}
+                {fixed && rangeInput('trialCount', ['10', '125', '240'], !formal)}
+              </div>
+            </div>
           </section>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
@@ -340,17 +416,14 @@ export function UfovGame() {
     </dialog>}
     {phase === 'running' && <><main className="ufov-stage ufov-running" aria-label={title} inert={paused}>
       <header className="ufov-hud">
-        <p ref={progressRef} className="ufov-progress" aria-live="off">{en ? 'Get ready' : '準備開始'}</p>
+        <p ref={progressRef} className="ufov-progress ufov-visually-hidden" aria-live="off">{en ? 'Get ready' : '準備開始'}</p>
         <button ref={stopRef} type="button" className="btn btn-ghost ufov-stop" onClick={pause}>{en ? 'Stop' : '停止'}</button>
       </header>
       <div ref={hostRef} className="ufov-canvas-host" style={{ visibility: paused ? 'hidden' : 'visible' }} />
       {prompt.kind !== 'watch' && prompt.kind !== 'pause' && <section className="ufov-answer" aria-label={en ? 'Your answer' : '作答'}>
-        {prompt.kind === 'vehicle' && <><h2>{en ? 'Which vehicle was in the center?' : '中央是哪一種車？'}</h2>
-          <VehicleChoices lang={lang} className="ufov-answer-choices" onChoose={answerFor('vehicle')} /></>}
-        {prompt.kind === 'direction' && <><h2>{en ? 'Where was the outer car?' : '外圈汽車在哪個方向？'}</h2>
-          <DirectionPad lang={lang} className="ufov-answer-directions" onChoose={answerFor('direction')} /></>}
-        {prompt.kind === 'feedback' && <p className={`ufov-feedback ufov-feedback-${prompt.correct ? 'correct' : 'wrong'}`} role="status">
-          <span aria-hidden="true">{prompt.correct ? '✓' : '×'}</span>{prompt.correct ? (en ? 'Correct' : '答對') : (en ? 'Not this time' : '答錯')}</p>}
+        {prompt.kind === 'vehicle' && <VehicleQuestion lang={lang} onChoose={answerFor('vehicle')} />}
+        {prompt.kind === 'direction' && <DirectionQuestion lang={lang} onChoose={answerFor('direction')} />}
+        {prompt.kind === 'feedback' && <StimulusFeedback lang={lang} correct={prompt.correct} />}
         {prompt.kind === 'retry' && <p className="ufov-sync-note" role="status">{en ? 'The display skipped a frame, so this trial is not counted. Showing it again.' : '畫面更新不穩定，這一題不計分，馬上重新出題。'}</p>}
       </section>}
     </main>{paused && <div className="game-interrupt-overlay"><div className="game-interrupt-panel" role="dialog" aria-modal="true" aria-labelledby="ufov-pause-title"

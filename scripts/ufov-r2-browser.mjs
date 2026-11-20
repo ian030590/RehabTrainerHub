@@ -9,7 +9,7 @@ const trialColumns = ['trial', 'practice', 'activity', 'planned_ms', 'exposure_m
   'contrast_percent', 'vehicle_angle_deg', 'target_angle_deg', 'central_target', 'central_response', 'central_correct', 'peripheral_axis',
   'peripheral_response', 'peripheral_correct', 'trial_correct', 'response_ms', 'trajectory_samples'];
 const settings = {
-  subtestId: 2, mode: 'formal', stopCondition: 'fixed_trials', trialCount: 10,
+  subtestId: activity, mode: 'formal', stopCondition: 'fixed_trials', trialCount: 10,
   contrastPercent: 80, targetVisualAngleDeg: 12, vehicleVisualAngleDeg: 2,
   screenWidthCm: 34.5, screenHeightCm: 19.4, viewingDistanceCm: 60,
   axis0Enabled: false, axis1Enabled: false, axis2Enabled: true, axis3Enabled: true,
@@ -27,12 +27,14 @@ function ParseCsv(text) {
 export const ufovBrowserSpec = {
   interruptPanel: true,
   title: { zh: '周邊視野訓練', en: 'Peripheral Visual Field Training' },
+  settingsTitle: { zh: '周邊視野訓練設定', en: 'Peripheral Visual Field Training Settings' },
   purpose: 'attention',
   settings,
   config: { ...settings, subtestUsed: activity },
-  tutorialTargets: handheld ? ['.ufov-preview-center', '.ufov-preview-choices', '.ufov-hud']
-    : ['.ufov-preview-center', '.ufov-preview-outer', '.ufov-preview-choices', '.ufov-preview-directions', '.ufov-hud'],
-  // The answers sit beside the field on wide screens, so a panel squeezed above them would hide its own buttons.
+  tutorialTargets: [
+    '.ufov-tutorial-center', '.ufov-tutorial-center', ...(handheld ? [] : ['.ufov-tutorial-outer']),
+    '.ufov-tutorial-mask', '.ufov-answer-choices', ...(handheld ? [] : ['.ufov-axis-button[data-tutorial-target]']), '.ufov-tutorial .ufov-stop',
+  ],
   tourFitsWithoutScroll: true,
   runningSelector: '.ufov-running',
   stopSelector: '.ufov-stop',
@@ -42,8 +44,26 @@ export const ufovBrowserSpec = {
     await game(`document.querySelector('.training-confirmation .btn-ghost').click()`);
     await until(() => game(`Boolean(document.querySelector('form'))`), 'confirmation returns to settings');
     for (const [name, value] of Object.entries(settings)) {
-      assert.equal(await game(`(input => input.type === 'checkbox' ? String(input.checked) : input.value)(document.querySelector('[name=${name}]'))`), String(value), `${name} kept`);
+      assert.equal(await game(`(() => {
+        const input = document.querySelector('[name=${name}]');
+        if (input.type === 'radio') return document.querySelector('[name=${name}]:checked').value;
+        return input.type === 'checkbox' ? String(input.checked) : input.value;
+      })()`), String(value), `${name} kept`);
     }
+    const checkDirectionKeys = () => game(`Array.from(document.querySelectorAll('.ufov-compass input:checked')).map(input => input.name).sort()`);
+    const toggleCompass = () => game(`document.querySelector('.ufov-compass-toggle').click()`);
+    assert.equal(await game(`document.querySelectorAll('[name=subtestId]:disabled').length`), handheld ? 2 : 0);
+    await toggleCompass();
+    assert.equal((await checkDirectionKeys()).length, 8);
+    await toggleCompass();
+    assert.deepEqual(await checkDirectionKeys(), ['axis0Enabled', 'axis2Enabled', 'axis4Enabled', 'axis6Enabled']);
+    for (const axis of [0, 4, 6]) await game(`document.querySelector('[name=axis${axis}Enabled]').click()`);
+    assert.deepEqual(await checkDirectionKeys(), ['axis2Enabled']);
+    assert.equal(await game(`document.querySelector('[name=axis2Enabled]').disabled`), true);
+    for (const axis of [3, 5]) await game(`document.querySelector('[name=axis${axis}Enabled]').click()`);
+    await game(`document.querySelector('[name=mode][value=practice]').click()`);
+    assert.equal(await game(`document.querySelector('[name=trialCount]').disabled && document.querySelectorAll('[name=stopCondition]:disabled').length === 2`), true);
+    await game(`document.querySelector('[name=mode][value=formal]').click()`);
     await game(`document.querySelector('form .btn-primary').click()`);
     await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'tutorial after confirming again');
     await game(`Array.from(document.querySelectorAll('.game-tour button')).find(button => /略過教學|Skip tutorial/.test(button.textContent)).click()`);

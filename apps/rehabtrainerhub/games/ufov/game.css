@@ -5,7 +5,8 @@
   --text-muted: #606970; --border: #d4d9de; --border-strong: #7d868e; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --error: #ba1a1a;
   --game-background: #fff;
-  --ufov-stimulus: #fff; --ufov-field: #000; --ufov-control: #1d2329; --ufov-control-border: #8a949c; --ufov-hud-text: #b9c1c8;
+  --ufov-stimulus: #fff; --ufov-field: #000; --ufov-control: #1d2329; --ufov-control-border: #8a949c;
+  --ufov-success: #79d997; --ufov-error: #ff8585; --ufov-hover: #dbe0e4;
   color: var(--text); background: var(--game-background);
 }
 * { box-sizing: border-box; }
@@ -18,10 +19,9 @@ button:disabled { opacity: .6; cursor: wait; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .ufov-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--ufov-field); }
 .ufov-jspsych-host { display: none; }
-.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 68rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
 .game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
-.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
-.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+.game-settings-dialog .training-config { max-width: none; max-height: calc(100dvh - 32px); }
 .training-config input[type=range], .training-config input[type=checkbox], .training-config input[type=radio] { accent-color: var(--primary); }
 .btn-primary { min-height: 48px; border-color: var(--primary); background: var(--primary); color: var(--text-on-accent); font-weight: 800; }
 .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
@@ -31,67 +31,48 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .game-interrupt-panel h2 { margin: 0; color: var(--heading); }
 .game-interrupt-panel button { margin: 8px 8px 0 0; }
 @media (max-width: 639px) { .game-interrupt-panel button { display: block; width: 100%; margin: 12px 0 0; } }
-.ufov-handheld-note, .ufov-geometry-note { margin: 8px 0 16px; color: var(--text); font-weight: 700; }
-.ufov-axis-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 4px 12px; margin: 0; padding: 0; border: 0; }
-.ufov-axis-options legend { margin-bottom: 8px; padding: 0; color: var(--text-muted); font-size: 1rem; }
-.ufov-axis-option { display: flex; align-items: center; gap: 8px; min-height: 44px; }
-.ufov-axis-option input { width: 22px; height: 22px; margin: 0; }
-.ufov-axis-warning { margin: 8px 0 0; color: var(--error); font-weight: 700; }
-
-/* Stage shared by the tutorial scene and the run, so tour spotlights land on the real controls. */
 .ufov-stage { position: absolute; inset: 0; overflow: hidden; background: var(--ufov-field); color: var(--ufov-stimulus); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-.ufov-hud { position: absolute; z-index: 2; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); pointer-events: none; }
-.ufov-hud > * { pointer-events: auto; }
-.ufov-progress { margin: 0; color: var(--ufov-hud-text); font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ufov-hud { position: absolute; z-index: 2; top: max(12px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); }
+.ufov-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ufov-stage .btn.ufov-stop { border-color: var(--ufov-control-border); background: var(--ufov-control); color: var(--ufov-stimulus); }
 .ufov-canvas-host, .ufov-canvas-stage { position: absolute; inset: 0; }
 .ufov-stage-canvas { display: block; width: 100%; height: 100%; }
-/* Answers cover the mask once it has shown for its full time; the canvas stays underneath. */
-.ufov-answer { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-  padding: 72px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: var(--ufov-field); text-align: center; }
-.ufov-answer h2 { margin: 0; font-size: 1.5rem; }
-.ufov-vehicle { display: block; width: 100%; height: auto; }
+.ufov-answer { position: absolute; z-index: 1; inset: 0; display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--ufov-field); text-align: center; }
+.ufov-vehicle { display: block; width: min(96px, 100%); height: auto; }
 .ufov-vehicle-body { fill: currentColor; }
-.ufov-vehicle-window { fill: var(--ufov-window, var(--ufov-field)); }
-.ufov-vehicle-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: min(100%, 30rem); }
-.ufov-stage .btn.ufov-vehicle-choice, .ufov-stage .btn.ufov-direction { --ufov-window: var(--ufov-control); border-color: var(--ufov-control-border); background: var(--ufov-control); color: var(--ufov-stimulus); }
-.ufov-vehicle-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 128px; font-size: 1.25rem; }
-.ufov-vehicle-choice .ufov-vehicle { width: min(96px, 60%); }
-.ufov-direction-pad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(100%, 24rem); }
-.ufov-direction-pad::before { content: ''; grid-area: 2 / 2; place-self: center; width: 36%; aspect-ratio: 1; border: 2px solid var(--ufov-control-border); }
-.ufov-direction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 76px; padding: 6px; font-size: 1rem; }
-.ufov-direction-arrow { font-size: 1.75rem; line-height: 1; }
-.ufov-stage .btn:active { border-color: var(--ufov-stimulus); }
-.ufov-feedback { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 2rem; font-weight: 700; }
-.ufov-feedback span { font-size: 3rem; line-height: 1; }
+.ufov-vehicle-window { fill: var(--ufov-field); }
+.ufov-answer-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: min(100%, 520px); }
+.ufov-vehicle-choice { display: grid; place-items: center; min-height: 76px; border: 2px solid var(--ufov-stimulus);
+  border-radius: 10px; background: var(--ufov-field); color: var(--ufov-stimulus); }
+.ufov-vehicle-choice:hover { background: var(--ufov-control); }
+.ufov-answer-directions {
+  --ufov-axis-size: min(10.18vw, 10.18vh);
+  --ufov-axis-radius: min(44.64vw, 44.64vh);
+  position: absolute; inset: 0;
+}
+.ufov-axis-center, .ufov-axis-button {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  width: var(--ufov-axis-size); height: var(--ufov-axis-size);
+}
+.ufov-axis-center { border: max(2px, .28vmin) solid var(--ufov-stimulus); }
+.ufov-axis-guide { position: absolute; left: 50%; top: 50%; width: var(--ufov-axis-radius); height: 1px;
+  transform-origin: left center; background: var(--ufov-stimulus); opacity: .45; }
+.ufov-axis-button { min-width: 46px; min-height: 46px; padding: 0; border: 0; border-radius: 0;
+  background: var(--ufov-stimulus); color: var(--ufov-field); font-size: clamp(1rem, 2.4vmin, 1.5rem); }
+.ufov-axis-button:hover { background: var(--ufov-hover); }
+.ufov-vehicle-choice:active, .ufov-axis-button:active { box-shadow: inset 0 0 0 3px var(--ufov-control-border); }
+.ufov-vehicle-choice:focus-visible, .ufov-axis-button:focus-visible { outline-color: var(--ufov-stimulus); }
+@media (max-width: 430px), (max-height: 430px) {
+  .ufov-answer-directions { --ufov-axis-radius: min(44.64vw, 44.64vh, calc(50vw - 27px), calc(50vh - 27px)); }
+}
+.ufov-feedback { margin: 0; font-size: 36px; font-weight: 900; line-height: 1; }
+.ufov-feedback-correct { color: var(--ufov-success); }
+.ufov-feedback-wrong { color: var(--ufov-error); }
 .ufov-sync-note { max-width: 32rem; margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
-
-/* Tutorial scene: the stimulus field and both answer steps stay inside the stage, so each can take a spotlight.
-   Wide windows put the answers beside the field; tall ones put them below. */
-.ufov-preview-scene { position: absolute; inset: 64px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  container-type: size; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
-.ufov-preview-field { --ufov-window: var(--ufov-field); position: relative; flex: 0 0 auto; width: min(100cqw, 46cqh); aspect-ratio: 1; }
-.ufov-preview-outer { position: absolute; inset: 0; }
-.ufov-preview-slot { position: absolute; width: 9%; transform: translate(-50%, -50%); }
-.ufov-triangle { display: block; width: 100%; height: auto; fill: var(--ufov-field); stroke: var(--ufov-stimulus); stroke-width: 6; }
-.ufov-preview-center { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 17%; aspect-ratio: 1; border: 3px solid var(--ufov-stimulus); transform: translate(-50%, -50%); }
-.ufov-preview-center .ufov-vehicle { width: 68%; }
-.ufov-preview-answers { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 24px; width: 100%; }
-.ufov-preview-answers .ufov-vehicle-choices { width: min(100%, 24rem); }
-.ufov-preview-answers .ufov-vehicle-choice { min-height: 96px; }
-.ufov-preview-answers .ufov-direction-pad { width: min(100%, 20rem); }
-.ufov-preview-answers .ufov-direction { min-height: 56px; }
-@media (min-aspect-ratio: 5/4) {
-  .ufov-preview-scene { flex-direction: row; gap: 24px; }
-  .ufov-preview-field { width: min(52cqw, 100cqh); }
-  .ufov-preview-answers { flex-direction: column; flex-wrap: nowrap; width: min(24rem, 44cqw); }
-}
-@media (max-height: 560px) {
-  .ufov-vehicle-choice, .ufov-preview-answers .ufov-vehicle-choice { min-height: 72px; }
-  .ufov-direction, .ufov-preview-answers .ufov-direction { min-height: 48px; }
-  .ufov-answer { gap: 12px; padding-top: 60px; }
-}
+.ufov-tutorial-center, .ufov-tutorial-outer, .ufov-tutorial-mask { position: absolute; pointer-events: none; }
+.ufov-tutorial-mask { left: 50%; top: 50%; translate: -50% -50%; width: min(224px, 50%); height: min(84px, 16%); }
 
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
 .game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
@@ -99,6 +80,13 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .game-tour h2 { margin: 0; }
 .game-tour p { line-height: 1.6; }
 .game-tour button { margin: 8px 8px 0 0; }
+@media (max-height: 600px), (max-width: 480px) {
+  .game-tour { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; line-height: 1.35; }
+  .game-tour h2, .game-tour p { flex: 0 0 100%; margin: 0; }
+  .game-tour h2 { font-size: 1.25rem; line-height: 1.25; }
+  .game-tour p { line-height: inherit; }
+  .game-tour button { margin: 0; padding: 6px 12px; }
+}
 .experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; user-select: text; }
 .results-table { width: 100%; min-width: 40rem; border-collapse: collapse; }
 .results-table th, .results-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }

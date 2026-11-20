@@ -1429,7 +1429,8 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   assert.ok(spec, `No browser driver for ${gameId}`);
   const mobile = process.argv.includes('--mobile');
   const pointerSession = gameContext.session || session;
-  await until(() => game(`document.querySelector('form h2')?.textContent === ${JSON.stringify(english ? spec.title.en : spec.title.zh)}`), 'private init language');
+  const settingsTitle = (spec.settingsTitle ?? spec.title)[english ? 'en' : 'zh'];
+  await until(() => game(`document.querySelector('form h2')?.textContent === ${JSON.stringify(settingsTitle)}`), 'private init language');
   assert.equal(await game(`Boolean(document.querySelector('.game-tour'))`), false, 'The tutorial waits for confirmed settings.');
   assert.equal(await game(`Boolean(document.querySelector('.${gameId}-tutorial'))`), true, 'The tutorial scene renders behind the settings.');
   assert.equal(await game(`document.querySelector('dialog').matches(':modal')`), true);
@@ -1438,11 +1439,16 @@ export async function CheckBrainGame(gameId, { game, evaluate, send, until, stan
   const setInput = async (name, value) => game(`(() => {
     const input = document.querySelector('[name=${name}]');
     if (input.type === 'checkbox') { if (input.checked !== ${value === true}) input.click(); return; }
+    if (input.type === 'radio') { document.querySelector('[name=${name}][value=' + CSS.escape(${JSON.stringify(String(value))}) + ']').click(); return; }
     const prototype = input.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
     Object.getOwnPropertyDescriptor(prototype, 'value').set.call(input, ${JSON.stringify(String(value))});
     input.dispatchEvent(new Event('input', {bubbles:true})); input.dispatchEvent(new Event('change', {bubbles:true}));
   })()`);
-  const readInput = name => game(`(() => { const input = document.querySelector('[name=${name}]'); return input.type === 'checkbox' ? String(input.checked) : input.value; })()`);
+  const readInput = name => game(`(() => {
+    const input = document.querySelector('[name=${name}]');
+    if (input.type === 'radio') return document.querySelector('[name=${name}]:checked')?.value;
+    return input.type === 'checkbox' ? String(input.checked) : input.value;
+  })()`);
   for (const [name, value] of Object.entries(spec.settings)) await setInput(name, value);
   for (const [name, value] of Object.entries(spec.settings)) assert.equal(await readInput(name), String(value), name);
   const lastInput = Object.keys(spec.settings).at(-1);

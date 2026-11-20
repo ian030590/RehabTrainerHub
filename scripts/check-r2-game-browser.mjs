@@ -464,9 +464,9 @@ try {
   if (settingsMemory) {
     // The container (Hub page or standalone launcher) keeps confirmed settings in its own localStorage.
     const storageKey = `trainerhub.game-settings/v1:${gameId}`;
-    // Tongue Catch has only sliders, so its activity time stands in for the first list.
-    const firstSelect = tongueGame ? `document.querySelector(".${phasePrefix}-phase-menu form [name=durationSec]")`
-      : `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    const ufovRadio = gameId === 'ufov';
+    const settingSelector = tongueGame ? '[name=durationSec]' : ufovRadio ? '[name=mode]:checked' : 'select';
+    const setting = `document.querySelector(".${phasePrefix}-phase-menu form ${settingSelector}")`;
     if (gameId === 'driving-rehab') {
       await until(async () => {
         if (await evaluate(`!document.querySelector('[name=controlMode] option[value=arrow]').disabled`, gameContext)) return true;
@@ -476,19 +476,23 @@ try {
         return false;
       }, 'keyboard ready before remembering settings');
     }
-    const chosen = await evaluate(tongueGame ? `(() => {
-      const input = ${firstSelect};
+    const chosen = await evaluate(ufovRadio ? `(() => {
+      const radio = document.querySelector('[name=mode]:not(:checked)');
+      radio.click();
+      return radio.value;
+    })()` : tongueGame ? `(() => {
+      const input = ${setting};
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, input.max);
       input.dispatchEvent(new Event('input', { bubbles: true }));
       return input.max;
     })()` : `(() => {
-      const select = ${firstSelect};
+      const select = ${setting};
       const option = [...select.options].reverse().find(item => item.value !== select.value && !item.disabled);
       Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, option.value);
       select.dispatchEvent(new Event('change', { bubbles: true }));
       return option.value;
     })()`, gameContext);
-    await until(() => evaluate(`${firstSelect}.value === ${JSON.stringify(chosen)}`, gameContext), 'setting changed');
+    await until(() => evaluate(`${setting}.value === ${JSON.stringify(chosen)}`, gameContext), 'setting changed');
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(storageKey)})`), null, 'Nothing is stored before confirming.');
     const confirmButton = `document.querySelector(".${phasePrefix}-phase-menu .config-actions .btn-primary, .${phasePrefix}-phase-menu form .btn-primary")`;
     // Some games enable confirm only after their resources load.
@@ -509,7 +513,7 @@ try {
       await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     }
     await findGameSettings();
-    await until(() => evaluate(`${firstSelect}.value === ${JSON.stringify(chosen)}`, gameContext), 'saved setting restored after reload', 10000);
+    await until(() => evaluate(`${setting}.value === ${JSON.stringify(chosen)}`, gameContext), 'saved setting restored after reload', 10000);
     console.log(`Settings memory passed (${standalone ? 'standalone launcher' : 'Hub'}): ${JSON.stringify(stored)}`);
   }
   if (!standalone && !settingsMemory) {

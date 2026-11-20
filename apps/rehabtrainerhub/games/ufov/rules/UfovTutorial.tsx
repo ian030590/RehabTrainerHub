@@ -1,50 +1,72 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useT } from '../i18n/useT';
+import { EnabledAxes, type UfovSettings } from '../settings';
 import { StartTour } from '../runtime/tour';
-import { GetUfovTutorialSteps } from './tutorialSteps';
-import { DirectionPad, TriangleIcon, VehicleChoices, VehicleIcon } from '../AnswerPad';
+import { CalculatePeripheralAttentionScreenGeometry, CreatePeripheralAttentionCanvasSlots, DrawPeripheralAttentionCanvasStage,
+  GetPeripheralAttentionTargetRects } from '../runtime/peripheralAttentionCanvas';
+import { GetUfovTutorialSteps, type UfovTutorialScene } from './tutorialSteps';
+import { DirectionQuestion, VehicleQuestion } from '../AnswerPad';
 
-// Ring slots as the canvas lays them out: 8, 16 and 24 places at one, two and three thirds of the outer radius.
-const ringSlots = [8, 16, 24].flatMap((count, ring) => Array.from({ length: count }, (_, index) => {
-  const angle = (-90 + index * 360 / count) * Math.PI / 180;
-  const radius = 40 * (ring + 1) / 3;
-  return { key: `${ring}-${index}`, target: ring === 2 && index === 3, left: 50 + Math.cos(angle) * radius, top: 50 + Math.sin(angle) * radius };
-}));
+const slots = CreatePeripheralAttentionCanvasSlots();
 
-// The scene matches the training stage so each spotlight lands on the real control positions.
+function PositionMarker(marker: HTMLSpanElement | null, rect: { left: number; top: number; width: number; height: number }) {
+  if (!marker) return;
+  const { left, top, width, height } = rect;
+  Object.assign(marker.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` });
+}
+
 export function UfovTutorial({ active, ready, title, settings, summaryItems, onStart, onBack }: {
-  active: boolean; ready: boolean; title: string; settings: { subtestId?: unknown };
+  active: boolean; ready: boolean; title: string; settings: UfovSettings;
   summaryItems: { label: string; value: string }[]; onStart: () => void; onBack: () => void;
 }) {
   const { lang } = useT();
   const en = lang === 'en';
   const activity = settings.subtestId === 2 || settings.subtestId === 3 ? settings.subtestId : 1;
   const [finished, setFinished] = useState(false);
+  const [currentScene, setScene] = useState<UfovTutorialScene>('fixation');
+  const scene = active ? currentScene : 'fixation';
   const confirmationRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const centerRef = useRef<HTMLSpanElement>(null);
+  const outerRef = useRef<HTMLSpanElement>(null);
+  const enabledAxes = EnabledAxes(settings);
+  const exampleAxis = enabledAxes.includes(2) ? 2 : enabledAxes[0];
+  const outerSlot = activity === 1 ? undefined : slots.find(slot => slot.isTargetCandidate && slot.axis === exampleAxis);
+  const { screenWidthCm, screenHeightCm, viewingDistanceCm, targetVisualAngleDeg, vehicleVisualAngleDeg, contrastPercent } = settings;
   useEffect(() => {
     setFinished(false);
-    if (!active) return;
-    return StartTour(GetUfovTutorialSteps(lang, activity), { lang, onEvent: () => setFinished(true), onBack });
+    if (!active) { setScene('fixation'); return; }
+    return StartTour(GetUfovTutorialSteps(lang, activity), { lang, onEvent: () => setFinished(true), onBack, onStep: step => setScene(step.scene) });
   }, [active, activity, lang, onBack]);
+  useLayoutEffect(() => {
+    const refreshScene = () => {
+      const stage = stageRef.current;
+      if (stage && scene !== 'vehicle' && scene !== 'direction') {
+        const geometry = CalculatePeripheralAttentionScreenGeometry(screenWidthCm, screenHeightCm, viewingDistanceCm, targetVisualAngleDeg, vehicleVisualAngleDeg);
+        DrawPeripheralAttentionCanvasStage(stage, { ariaLabel: title, phase: scene, centralTarget: 'truck',
+          hasPeripheral: activity !== 1, hasDistractors: activity === 3, peripheralSlot: outerSlot, slots, geometry, contrastPercent });
+        const { center, outer } = GetPeripheralAttentionTargetRects(stage.getBoundingClientRect(), geometry, outerSlot);
+        PositionMarker(centerRef.current, center);
+        if (outer) PositionMarker(outerRef.current, outer);
+      }
+      window.dispatchEvent(new Event('game:tutorial-layout'));
+    };
+    refreshScene();
+    window.addEventListener('resize', refreshScene);
+    return () => window.removeEventListener('resize', refreshScene);
+  }, [activity, scene, title, outerSlot, screenWidthCm, screenHeightCm, viewingDistanceCm, targetVisualAngleDeg, vehicleVisualAngleDeg, contrastPercent]);
   useEffect(() => { if (finished) confirmationRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, [finished]);
-  return <section className="ufov-stage ufov-tutorial" aria-label={en ? 'Game tutorial scene' : '遊戲說明場景'}>
+  return <section className="ufov-stage ufov-tutorial" aria-label={en ? 'Game tutorial' : '遊戲教學'} data-scene={scene}>
     <header className="ufov-hud" aria-hidden="true">
-      <p className="ufov-progress">{en ? 'Trial 1' : '第 1 題'}</p>
       <span className="btn btn-ghost ufov-stop">{en ? 'Stop' : '停止'}</span>
     </header>
-    <div className="ufov-preview-scene" aria-hidden="true">
-      <div className="ufov-preview-field">
-        {activity !== 1 && <div className="ufov-preview-outer">
-          {ringSlots.filter(slot => slot.target || activity === 3).map(slot => <span key={slot.key} className="ufov-preview-slot"
-            style={{ left: `${slot.left}%`, top: `${slot.top}%` }}>{slot.target ? <VehicleIcon vehicle="car" /> : <TriangleIcon />}</span>)}
-        </div>}
-        <div className="ufov-preview-center"><VehicleIcon vehicle="truck" /></div>
-      </div>
-      <div className="ufov-preview-answers">
-        <VehicleChoices lang={lang} className="ufov-preview-choices" />
-        {activity !== 1 && <DirectionPad lang={lang} className="ufov-preview-directions" />}
-      </div>
-    </div>
+    {scene === 'vehicle' || scene === 'direction' ? <div className="ufov-answer" aria-hidden="true">
+      {scene === 'vehicle' ? <VehicleQuestion lang={lang} /> : <DirectionQuestion lang={lang} tutorialAxis={outerSlot?.axis ?? undefined} />}
+    </div> : <div ref={stageRef} className="ufov-canvas-stage" aria-hidden="true">
+      <canvas className="ufov-stage-canvas" />
+      {scene === 'mask' ? <span className="ufov-tutorial-mask" /> : <span ref={centerRef} className="ufov-tutorial-center" />}
+      {scene === 'stimulus' && outerSlot && <span ref={outerRef} className="ufov-tutorial-outer" />}
+    </div>}
     {active && finished && <section className="training-panel ufov-tutorial-ready" role="dialog" aria-modal="true" aria-label={title}
       onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); onBack(); }

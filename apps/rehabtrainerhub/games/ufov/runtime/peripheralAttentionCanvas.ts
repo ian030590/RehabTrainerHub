@@ -187,7 +187,7 @@ function ResizeCanvasToStage(canvas: HTMLCanvasElement, stage: HTMLElement): Can
   const fallbackHeight = typeof window === 'undefined' ? 533 : Math.max(1, window.innerHeight || 533);
   const cssWidth = Math.max(1, rect.width || fallbackWidth);
   const cssHeight = Math.max(1, rect.height || fallbackHeight);
-  const dpr = 1;
+  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   const pixelWidth = Math.max(1, Math.round(cssWidth * dpr));
   const pixelHeight = Math.max(1, Math.round(cssHeight * dpr));
 
@@ -218,6 +218,27 @@ function GetStageMetrics(cssWidth: number, cssHeight: number, geometry?: Periphe
     distractorHeight: 90 * standardScale * (scale / 0.88),
     distractorStroke: Math.max(2, 3.5 * standardScale),
   };
+}
+
+function GetSlotPoint(width: number, height: number, metrics: ReturnType<typeof GetStageMetrics>, slot: PeripheralAttentionCanvasSlot) {
+  const angle = slot.angleDeg * Math.PI / 180;
+  const radius = metrics.radii[slot.ring] ?? metrics.radii[metrics.radii.length - 1];
+  return { x: width / 2 + Math.cos(angle) * radius, y: height / 2 + Math.sin(angle) * radius };
+}
+
+export function GetPeripheralAttentionTargetRects(
+  { width, height }: Pick<DOMRect, 'width' | 'height'>,
+  geometry?: PeripheralAttentionScreenGeometry,
+  slot?: PeripheralAttentionCanvasSlot,
+) {
+  const metrics = GetStageMetrics(width, height, geometry);
+  const size = metrics.centerBoxSize;
+  const center = { left: (width - size) / 2, top: (height - size) / 2, width: size, height: size };
+  if (!slot) return { center };
+  const { x, y } = GetSlotPoint(width, height, metrics, slot);
+  const outerWidth = baseVehicleWidth * metrics.vehicleScale;
+  const outerHeight = baseVehicleHeight * metrics.vehicleScale;
+  return { center, outer: { left: x - outerWidth / 2, top: y - outerHeight / 2, width: outerWidth, height: outerHeight } };
 }
 
 function DrawCenterBox(context: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, border: number, colors: StageColors) {
@@ -262,14 +283,11 @@ function DrawPeripheralStimuli(
       && slot.ring === targetSlot.ring;
     if (!isTarget && !options.hasDistractors) return;
 
-    const angle = slot.angleDeg * Math.PI / 180;
-    const radius = metrics.radii[slot.ring] ?? metrics.radii[metrics.radii.length - 1];
-    const pointX = width / 2 + Math.cos(angle) * radius;
-    const pointY = height / 2 + Math.sin(angle) * radius;
+    const { x, y } = GetSlotPoint(width, height, metrics, slot);
     if (isTarget) {
-      DrawVehicle(context, pointX, pointY, 'car', metrics.vehicleScale, colors);
+      DrawVehicle(context, x, y, 'car', metrics.vehicleScale, colors);
     } else {
-      DrawTriangleDistractor(context, pointX, pointY, metrics.distractorWidth, metrics.distractorHeight, metrics.distractorStroke, colors);
+      DrawTriangleDistractor(context, x, y, metrics.distractorWidth, metrics.distractorHeight, metrics.distractorStroke, colors);
     }
   });
 }

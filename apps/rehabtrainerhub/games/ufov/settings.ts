@@ -29,16 +29,16 @@ export const defaultSettings: UfovSettings = {
 };
 
 export const listSettings = [
-  { key: 'subtestId', zh: '活動項目', en: 'Activity', options: [
-    { value: 1, zh: '活動 1：處理速度', en: 'Activity 1: Processing speed',
+  { key: 'subtestId', zh: '訓練項目', en: 'Activity', options: [
+    { value: 1, zh: '處理速度', en: 'Processing speed',
       hintZh: '只看中央，選出是汽車還是卡車。', hintEn: 'Watch the center and choose car or truck.' },
-    { value: 2, zh: '活動 2：分散注意力', en: 'Activity 2: Divided attention',
+    { value: 2, zh: '分散注意力', en: 'Divided attention',
       hintZh: '選出中央車輛，再選外圈汽車出現的方向。', hintEn: 'Choose the center vehicle, then the direction of the outer car.' },
-    { value: 3, zh: '活動 3：選擇性注意力', en: 'Activity 3: Selective attention',
-      hintZh: '和活動 2 相同，但外圈汽車混在三角形之間。', hintEn: 'Same as activity 2, with the outer car hidden among triangles.' },
+    { value: 3, zh: '選擇性注意力', en: 'Selective attention',
+      hintZh: '辨認中央車輛，找出三角形間的汽車。', hintEn: 'Identify the center vehicle and find the car among triangles.' },
   ] },
   { key: 'mode', zh: '活動模式', en: 'Mode', options: [
-    { value: 'formal', zh: '正式模式', en: 'Recorded session',
+    { value: 'formal', zh: '正式紀錄', en: 'Recorded session',
       hintZh: '答對會縮短呈現時間，答錯會拉長，並保存當次紀錄。', hintEn: 'Correct answers shorten the display time and misses lengthen it. The session is saved.' },
     { value: 'practice', zh: '練習模式', en: 'Practice',
       hintZh: '5 題，每題呈現 250 毫秒，作答後立即顯示對錯。', hintEn: 'Five trials at 250 ms each, with right or wrong shown after every answer.' },
