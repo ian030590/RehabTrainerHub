@@ -174,9 +174,9 @@ test('the CI matrix covers exactly the local eight gates, including every shard 
   for (const trigger of ['pull_request', 'workflow_dispatch', 'workflow_call']) assert.match(workflow, new RegExp(`^  ${trigger}:`, 'm'));
   assert.doesNotMatch(workflow, /^  push:/m);
   assert.deepEqual(
-    [...workflow.matchAll(/^      - "([^"]+)"/gm)].map(match => match[1]),
+    [...workflow.matchAll(/^      - "([^"]+)"/gm)].map(match => match[1]).filter(path => !['AGENTS.md', 'CLAUDE.md'].includes(path)),
     [...deploy.matchAll(/^      - "([^"]+)"/gm)].map(match => match[1]),
-    'PR checks and main deployment must use the same paths filter',
+    'PR checks and main deployment must use the same code paths filter',
   );
   assert.match(workflow, /permissions:\s+contents: read/);
   assert.match(workflow, /concurrency:\s+group: "ci-\$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}"\s+cancel-in-progress: true/);
@@ -251,9 +251,8 @@ test('CI test discovery follows npm gates and shards and ignores comments, strin
 test('every test file runs in the CI matrix and local aggregate except the documented optional suites', async () => {
   const { FindCiTestFiles } = await import('./ci-test-files.mjs');
   const rootPackage = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
-  // These need a local Brave or the SEO build and remain opt-in (AGENTS.md, CI/CD).
+  // This suite requires Brave and remains opt-in (AGENTS.md, AG-CI-06).
   const localOnly = {
-    'scripts/check-article-prerender.test.mjs': 'test:seo',
     'scripts/check-game-architecture-browser.test.mjs': 'test:game-architecture:browser',
   };
   const testFiles = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '*.test.mjs'],

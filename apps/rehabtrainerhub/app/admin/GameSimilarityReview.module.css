@@ -1,9 +1,13 @@
-.adminTabs {
+div.adminTabs {
   flex-wrap: wrap;
+  overflow: visible;
 }
 
-.adminTabs button {
+.adminTabs button[role='tab'] {
+  min-width: 0;
+  flex: 1 1 max-content;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .adminTabs button:hover,
@@ -11,6 +15,10 @@
 .adminTabs button[aria-selected='true'] {
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.adminTabs button:hover {
+  text-decoration-thickness: 0.15em;
 }
 
 .review,
@@ -25,12 +33,19 @@
 .picker select {
   cursor: pointer;
   min-width: 0;
+  max-width: 100%;
+  font-size: var(--type-body);
 }
 
 .picker select:hover,
 .picker select:active {
   border-color: var(--primary);
   text-decoration: underline;
+}
+
+.picker select:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 .status {
@@ -123,8 +138,14 @@
   min-height: 44px;
   cursor: pointer;
   gap: 6px 12px;
+  font-size: var(--type-body);
   text-align: start;
   transition: none;
+}
+
+.matchTitle {
+  flex: 1 1 9rem;
+  min-width: 0;
 }
 
 .match:hover .matchTitle,
@@ -164,5 +185,16 @@
   .columns {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminTabs button[role='tab'] {
+    flex-basis: 8rem;
+    padding-inline: 8px;
+  }
+
+  .tags > div {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

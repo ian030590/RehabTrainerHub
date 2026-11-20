@@ -310,7 +310,7 @@ fi
 # keeps reporting `Concept` to the status line, to /studio-help, and to every gate
 # checklist that branches on stage.
 #
-# This is an OBSERVATION, never a write. CLAUDE.md is explicit that the stage
+# This is an observation (AGENTS.md, AG-TDD-04). The stage
 # advances on a /gate-check PASS (or a CONCERNS whose risks you accepted) with
 # the user confirming, so a hook that advanced it silently would be the worse
 # bug. Say what is inconsistent and name

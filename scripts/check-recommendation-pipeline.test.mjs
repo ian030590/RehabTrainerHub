@@ -40,7 +40,10 @@ test('pipeline writes identical LF bytes and --check detects a missing or stale 
   const build = RunPipeline(root);
   assert.equal(build.status, 0, build.stderr);
   assert.equal(build.stdout.trim().split(/\r?\n/).length, 6);
-  assert.match(build.stdout, /56 games.*56 draft.*0 confirmed/);
+  const { games: sourceGames } = JSON.parse(readFileSync(join(root, recommendation, 'gameFeatures.json'), 'utf8'));
+  const gameCount = Object.keys(sourceGames).length;
+  const draftCount = Object.values(sourceGames).filter(game => game.reviewStatus === 'draft').length;
+  assert.ok(build.stdout.includes(`Summary: ${gameCount} games, ${draftCount} draft, ${gameCount - draftCount} confirmed.`));
   const bytes = readFileSync(indexPath);
   assert.doesNotMatch(bytes.toString(), /\r/);
   assert.match(bytes.toString(), /\n$/);
@@ -50,6 +53,7 @@ test('pipeline writes identical LF bytes and --check detects a missing or stale 
   assert.match(index.inputSha256, /^[a-f0-9]{64}$/);
   assert.deepEqual(Object.keys(index.games), Object.keys(index.games).sort());
   for (const [id, game] of Object.entries(index.games)) {
+    assert.equal(game.reviewStatus, sourceGames[id].reviewStatus);
     assert.equal(game.neighbors.length, 5);
     assert.deepEqual(Object.keys(game.derivedFunctionTags), Object.keys(game.derivedFunctionTags).sort());
     for (const neighbor of game.neighbors) {

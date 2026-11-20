@@ -1,7 +1,7 @@
 # Coding Standards
 
-Repository precedence: **AGENTS.md wins, then root CLAUDE.md**, before any
-framework rule below. Use TypeScript, React function components and 2 spaces.
+[`AGENTS.md`](../../AGENTS.md) takes precedence over the framework rules below.
+Use TypeScript, React function components and 2 spaces.
 Components/classes/types and named `function` declarations use PascalCase;
 `use*`, `onRequest*` and Next.js framework functions follow the naming-gate
 exceptions. Variables/parameters use camelCase. Use CSS variables/theme tokens,

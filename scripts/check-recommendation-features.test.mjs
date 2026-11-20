@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join, sep } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as features from '../apps/rehabtrainerhub/recommendation/features.js';
 
 const { DeriveTagLevels, featureSpaceVersion, GameSimilarity, SimilarGames, similarityWeights, ValidateRecommendationData } = features;
+const gamesRoot = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
 const labels = { 'zh-TW': '測試', en: 'Test' };
 const taxonomy = {
   taxonomyVersion: '2.0.0',
@@ -112,7 +117,6 @@ test('foot function and response tags use the 2001 lower-extremity push code', (
 
 test('every official catalog seed has a valid recommendation profile', async () => {
   const { ReadCatalog } = await import('./recommendation-pipeline.mjs');
-  const gamesRoot = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
   const catalog = await ReadCatalog(gamesRoot);
   const source = ts.createSourceFile('catalog.ts', readFileSync(new URL('catalog.ts', gamesRoot), 'utf8'), ts.ScriptTarget.Latest, true);
   const seeds = source.statements.filter(ts.isVariableStatement)
@@ -129,6 +133,30 @@ test('every official catalog seed has a valid recommendation profile', async () 
   assert.deepEqual(catalog.map(game => game.id), ids);
   assert.equal(catalog.find(game => game.id === 'every-ball-response')?.mediaPermission, 'camera-or-microphone');
   assert.deepEqual(ValidateRecommendationData(ReadData('taxonomy'), ReadData('gameFeatures'), catalog), { ok: true, errors: [] });
+});
+
+test('a new catalog seed with a flow manifest and no feature entry fails R10', async t => {
+  const { ReadCatalog } = await import('./recommendation-pipeline.mjs');
+  const directory = mkdtempSync(join(tmpdir(), 'recommendation-catalog-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const fixtureRoot = pathToFileURL(directory + sep);
+  const catalogSource = readFileSync(new URL('catalog.ts', gamesRoot), 'utf8');
+  const manifestSource = readFileSync(new URL('moduleFlowManifest.ts', gamesRoot), 'utf8');
+  writeFileSync(new URL('catalog.ts', fixtureRoot), catalogSource.replace(
+    'const seeds: readonly TrainingCatalogSeed[] = [',
+    "const seeds: readonly TrainingCatalogSeed[] = [\n  {\n    id: 'untagged-fixture',\n    trainer: 'brain',\n  },",
+  ));
+  writeFileSync(new URL('moduleFlowManifest.ts', fixtureRoot), manifestSource.replace(
+    ']> = [',
+    "]> = [\n  ['brain:untagged-fixture', 'untagged-fixture/Game.tsx', 'none'],",
+  ));
+
+  const catalog = await ReadCatalog(fixtureRoot);
+  assert.ok(catalog.some(({ id }) => id === 'untagged-fixture'));
+  const result = ValidateRecommendationData(ReadData('taxonomy'), ReadData('gameFeatures'), catalog);
+  assert.equal(result.ok, false);
+  assert.equal(result.errors.length, 1);
+  assert.match(result.errors[0], /^\[R10\] gameFeatures\.games\.untagged-fixture /);
 });
 
 const invalidCases = [
@@ -306,11 +334,15 @@ function LoadAdminComponent(file, dependencies, window = {}) {
   return exports[file];
 }
 
-function RenderReview(sourceData, neighbors = SimilarGames) {
-  const trainingCatalog = [
+const fixtureCatalog = {
+  trainingCatalog: [
     { runtimeId: 'first', trainer: 'brain', mediaPermission: 'none', copy: { 'zh-TW': { title: '第一項' } } },
     { runtimeId: 'second', trainer: 'vision', mediaPermission: 'none', copy: { 'zh-TW': { title: '第二項' } } },
-  ];
+  ],
+  GetTrainingModuleCategoryLabel: module => module.trainer,
+};
+
+function RenderReview(sourceData, neighbors = SimilarGames, reviewCatalog = fixtureCatalog, reviewTaxonomy = taxonomy) {
   let selected;
   let pickerFocused = false;
   const render = LoadAdminComponent('GameSimilarityReview', {
@@ -318,8 +350,8 @@ function RenderReview(sourceData, neighbors = SimilarGames) {
       useState: initial => [selected ?? initial, value => { selected = value; }],
       useRef: () => ({ current: { focus() { pickerFocused = true; } } }),
     },
-    '../../games/catalog': { trainingCatalog, GetTrainingModuleCategoryLabel: module => module.trainer },
-    '../../recommendation/taxonomy.json': taxonomy,
+    '../../games/catalog': reviewCatalog,
+    '../../recommendation/taxonomy.json': reviewTaxonomy,
     '../../recommendation/gameFeatures.json': sourceData,
     '../../recommendation/features.js': { ...features, SimilarGames: neighbors },
   }, { requestAnimationFrame: callback => callback() });
@@ -337,11 +369,65 @@ function VisibleText(tree) {
   return tree?.props ? VisibleText(tree.props.children) : '';
 }
 
+function LoadRuntimeCatalog() {
+  const catalogPath = new URL('catalog.ts', gamesRoot);
+  const requireCatalog = createRequire(catalogPath);
+  const resolveImports = {
+    '@rehab-trainer/ui/siteUrls': new URL('../packages/ui/src/siteUrls.ts', import.meta.url),
+    '@rehab-trainer/ui/officialGameReleases.json': new URL('../packages/ui/src/officialGameReleases.json', import.meta.url),
+    './moduleFlowManifest': new URL('moduleFlowManifest.ts', gamesRoot),
+  };
+  const { outputText } = ts.transpileModule(readFileSync(catalogPath, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  });
+  const exports = {};
+  runInNewContext(outputText, {
+    exports,
+    require: name => requireCatalog(resolveImports[name] ? fileURLToPath(resolveImports[name]) : name),
+  });
+  return exports;
+}
+
+test('the real admin picker groups every runtime game once and displays its known function tags', async () => {
+  const { ReadCatalog } = await import('./recommendation-pipeline.mjs');
+  const pipelineCatalog = await ReadCatalog(gamesRoot);
+  const runtimeCatalog = LoadRuntimeCatalog();
+  const realTaxonomy = ReadData('taxonomy');
+  const gameFeatures = ReadData('gameFeatures');
+  const { render } = RenderReview(gameFeatures, SimilarGames, runtimeCatalog, realTaxonomy);
+  const initial = Elements(render());
+  assert.equal(initial.some(element => element.props.role === 'alert'), false);
+  const select = initial.find(element => element.type === 'select');
+  assert.ok(select);
+  const groups = Elements(select).filter(element => element.type === 'optgroup');
+  const options = Elements(select).filter(element => element.type === 'option');
+  const groupedIds = groups.flatMap(group => {
+    assert.ok(group.props.label, 'Every optgroup has a category label');
+    return Elements(group).filter(element => element.type === 'option').map(element => element.props.value);
+  }).sort();
+  assert.deepEqual(groupedIds, options.map(element => element.props.value).sort());
+  assert.deepEqual(groupedIds, Array.from(runtimeCatalog.trainingCatalog, game => game.runtimeId).sort());
+  assert.deepEqual(groupedIds, pipelineCatalog.map(game => game.id).sort());
+  assert.deepEqual(groupedIds, Object.keys(gameFeatures.games).sort());
+
+  const functionDimensions = new Set(realTaxonomy.dimensions.filter(({ group }) => group === 'function').map(({ id }) => id));
+  const activeFunctionTags = realTaxonomy.tags.filter(tag => tag.status === 'active' && functionDimensions.has(tag.dimension));
+  for (const id of groupedIds) {
+    const game = gameFeatures.games[id];
+    const primary = activeFunctionTags.find(tag => game.functionTags[tag.id] === 2);
+    assert.ok(primary, `${id} needs a known primary function tag`);
+    select.props.onChange({ target: { value: id } });
+    const selected = VisibleText(render());
+    assert.ok(selected.includes(game.evidence[primary.id]), `${id} must display its primary tag evidence`);
+    assert.doesNotMatch(selected, /尚無已標註項目/, id);
+  }
+});
+
 test('admin review picker selects the first game and selecting a neighbor updates the picker and returns focus', () => {
   const review = RenderReview({
     schemaVersion: 2, taxonomyVersion: '2.0.0',
     games: {
-      first: Game({ 'focus.control.a': 2, 'focus.control.b': 0 }),
+      first: { ...Game({ 'focus.control.a': 2, 'focus.control.b': 0 }), reviewStatus: 'confirmed' },
       second: Game({ 'focus.control.a': 2 }),
     },
   });
@@ -349,7 +435,8 @@ test('admin review picker selects the first game and selecting a neighbor update
   const elements = Elements(initial);
   assert.equal(elements.find(element => element.type === 'select').props.value, 'first');
   assert.equal(elements.filter(element => element.type === 'optgroup').length, 2);
-  assert.match(VisibleText(initial), /草稿/);
+  assert.equal(VisibleText(elements.find(element => element.type === 'p')), '標籤描述活動內容，草稿待確認。');
+  assert.match(VisibleText(initial), /審閱狀態 已確認/);
   const functionProfile = elements.find(element => element.type === 'section' && VisibleText(element).includes('功能標籤'));
   const functionText = VisibleText(functionProfile);
   assert.match(functionText, /注意力.*ICF/);
@@ -367,7 +454,9 @@ test('admin review picker selects the first game and selecting a neighbor update
   assert.match(VisibleText(initial), /共同標籤.*注意控制.*目標選取/);
   choice.props.onClick();
   assert.equal(review.focused(), true);
-  assert.equal(Elements(review.render()).find(element => element.type === 'select').props.value, 'second');
+  const next = review.render();
+  assert.equal(Elements(next).find(element => element.type === 'select').props.value, 'second');
+  assert.match(VisibleText(next), /審閱狀態 草稿/);
 });
 
 test('admin review shows validation errors and the no-neighbors state', () => {
@@ -375,9 +464,11 @@ test('admin review shows validation errors and the no-neighbors state', () => {
   const alert = Elements(error).find(element => element.props.role === 'alert');
   assert.match(VisibleText(alert), /first.*second/);
   assert.equal(Elements(error).some(element => element.type === 'select'), false);
+  const confirmed = { ...Game(), reviewStatus: 'confirmed' };
   const empty = RenderReview({
-    schemaVersion: 2, taxonomyVersion: '2.0.0', games: { first: Game(), second: Game() },
+    schemaVersion: 2, taxonomyVersion: '2.0.0', games: { first: confirmed, second: confirmed },
   }, () => []).render();
+  assert.equal(VisibleText(Elements(empty).find(element => element.type === 'p')), '標籤描述活動內容，依理論框架標註並已確認。');
   assert.match(VisibleText(empty), /沒有可比較的活動/);
   assert.equal(Elements(empty).some(element => element.type === 'button'), false);
 });

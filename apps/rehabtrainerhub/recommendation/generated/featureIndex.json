@@ -48,7 +48,7 @@
           "score": 0.6615
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "asteroid-shield": {
       "derivedFunctionTags": {
@@ -98,7 +98,7 @@
           "score": 0.4903
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "attention-network-task": {
       "derivedFunctionTags": {
@@ -147,7 +147,7 @@
           "score": 0.8385
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "attentional-blink": {
       "derivedFunctionTags": {
@@ -196,7 +196,7 @@
           "score": 0.5539
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "brake-reaction": {
       "derivedFunctionTags": {
@@ -245,7 +245,7 @@
           "score": 0.7555
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "card-sorting": {
       "derivedFunctionTags": {
@@ -294,7 +294,7 @@
           "score": 0.6006
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "complex-search": {
       "derivedFunctionTags": {
@@ -343,7 +343,7 @@
           "score": 0.8385
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "conjunction-search": {
       "derivedFunctionTags": {
@@ -392,7 +392,7 @@
           "score": 0.8385
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "connect4": {
       "derivedFunctionTags": {
@@ -440,7 +440,7 @@
           "score": 0.6445
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "continuous-performance": {
       "derivedFunctionTags": {
@@ -489,7 +489,7 @@
           "score": 0.7572
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "digit-span": {
       "derivedFunctionTags": {
@@ -538,7 +538,7 @@
           "score": 0.4664
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "divided-attention": {
       "derivedFunctionTags": {
@@ -586,7 +586,7 @@
           "score": 0.4284
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "dots-and-boxes": {
       "derivedFunctionTags": {
@@ -634,7 +634,7 @@
           "score": 0.7238
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "drawing-defense": {
       "derivedFunctionTags": {
@@ -684,7 +684,7 @@
           "score": 0.4531
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "driving-rehab": {
       "derivedFunctionTags": {
@@ -734,7 +734,7 @@
           "score": 0.5809
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "every-ball-response": {
       "derivedFunctionTags": {
@@ -783,7 +783,7 @@
           "score": 0.687
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "exploratory-saccade": {
       "derivedFunctionTags": {
@@ -833,7 +833,7 @@
           "score": 0.6588
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "flanker": {
       "derivedFunctionTags": {
@@ -882,7 +882,7 @@
           "score": 0.8525
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "gabor-patching": {
       "derivedFunctionTags": {
@@ -930,7 +930,7 @@
           "score": 0.6176
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "gesture-battler": {
       "derivedFunctionTags": {
@@ -979,7 +979,7 @@
           "score": 0.3796
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "go-nogo": {
       "derivedFunctionTags": {
@@ -1028,7 +1028,7 @@
           "score": 0.7572
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "hart-chart": {
       "derivedFunctionTags": {
@@ -1075,7 +1075,7 @@
           "score": 0.5422
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "hex": {
       "derivedFunctionTags": {
@@ -1123,7 +1123,7 @@
           "score": 0.7238
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "hex-schulte": {
       "derivedFunctionTags": {
@@ -1171,7 +1171,7 @@
           "score": 0.6419
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "keep-track": {
       "derivedFunctionTags": {
@@ -1218,7 +1218,7 @@
           "score": 0.5506
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "letter-memory": {
       "derivedFunctionTags": {
@@ -1265,7 +1265,7 @@
           "score": 0.4497
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "lights-out": {
       "derivedFunctionTags": {
@@ -1314,7 +1314,7 @@
           "score": 0.8262
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "maze": {
       "derivedFunctionTags": {
@@ -1363,7 +1363,7 @@
           "score": 0.7799
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "memory-match": {
       "derivedFunctionTags": {
@@ -1410,7 +1410,7 @@
           "score": 0.5283
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "minesweeper": {
       "derivedFunctionTags": {
@@ -1457,7 +1457,7 @@
           "score": 0.8153
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "motor-cortex-rehab": {
       "derivedFunctionTags": {
@@ -1505,7 +1505,7 @@
           "score": 0.3756
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "moving-card": {
       "derivedFunctionTags": {
@@ -1554,7 +1554,7 @@
           "score": 0.7352
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "n-back": {
       "derivedFunctionTags": {
@@ -1602,7 +1602,7 @@
           "score": 0.5375
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "number-letter": {
       "derivedFunctionTags": {
@@ -1652,7 +1652,7 @@
           "score": 0.6494
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "oculomotor-training": {
       "derivedFunctionTags": {
@@ -1701,7 +1701,7 @@
           "score": 0.3758
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "pattern-memory": {
       "derivedFunctionTags": {
@@ -1749,7 +1749,7 @@
           "score": 0.5698
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "plus-minus": {
       "derivedFunctionTags": {
@@ -1799,7 +1799,7 @@
           "score": 0.4427
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "popout-search": {
       "derivedFunctionTags": {
@@ -1848,7 +1848,7 @@
           "score": 0.79
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "reaction-time": {
       "derivedFunctionTags": {
@@ -1897,7 +1897,7 @@
           "score": 0.7855
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "reading-training": {
       "derivedFunctionTags": {
@@ -1945,7 +1945,7 @@
           "score": 0.4191
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "sart": {
       "derivedFunctionTags": {
@@ -1994,7 +1994,7 @@
           "score": 0.7572
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "schulte-grid": {
       "derivedFunctionTags": {
@@ -2042,7 +2042,7 @@
           "score": 0.6687
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "seagull-flight": {
       "derivedFunctionTags": {
@@ -2089,7 +2089,7 @@
           "score": 0.3392
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "simon-says": {
       "derivedFunctionTags": {
@@ -2136,7 +2136,7 @@
           "score": 0.3939
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "simon-task": {
       "derivedFunctionTags": {
@@ -2185,7 +2185,7 @@
           "score": 0.7572
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "sliding-puzzle": {
       "derivedFunctionTags": {
@@ -2233,7 +2233,7 @@
           "score": 0.8728
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "spatial-span": {
       "derivedFunctionTags": {
@@ -2281,7 +2281,7 @@
           "score": 0.4043
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "stop-signal": {
       "derivedFunctionTags": {
@@ -2330,7 +2330,7 @@
           "score": 0.8406
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "stroop": {
       "derivedFunctionTags": {
@@ -2379,7 +2379,7 @@
           "score": 0.7298
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "sudoku": {
       "derivedFunctionTags": {
@@ -2427,7 +2427,7 @@
           "score": 0.7756
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "tic-tac-toe": {
       "derivedFunctionTags": {
@@ -2475,7 +2475,7 @@
           "score": 0.6445
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "time-perception": {
       "derivedFunctionTags": {
@@ -2523,7 +2523,7 @@
           "score": 0.3805
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "tongue-catch": {
       "derivedFunctionTags": {
@@ -2571,7 +2571,7 @@
           "score": 0.4393
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "tower-of-london": {
       "derivedFunctionTags": {
@@ -2620,7 +2620,7 @@
           "score": 0.7756
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "ufov": {
       "derivedFunctionTags": {
@@ -2671,7 +2671,7 @@
           "score": 0.6135
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     },
     "whack-a-mole": {
       "derivedFunctionTags": {
@@ -2719,9 +2719,9 @@
           "score": 0.6924
         }
       ],
-      "reviewStatus": "draft"
+      "reviewStatus": "confirmed"
     }
   },
-  "inputSha256": "ab16790e0a0df7b22bfa724c7b296efb143de10f1f4c569eb052561d901c77ac",
+  "inputSha256": "0ea12354d29edd31c87c63d5a8616f0016e04f97cc02d4fb90e044354176eead",
   "taxonomyVersion": "2.0.0"
 }

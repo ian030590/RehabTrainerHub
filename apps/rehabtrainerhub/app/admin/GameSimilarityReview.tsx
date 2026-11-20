@@ -50,6 +50,7 @@ export function GameSimilarityReview() {
   const game = gameFeatures.games[gameId];
   if (!game) return <p className="admin-state">目前沒有可審閱的活動。</p>;
 
+  const draftCount = Object.values(gameFeatures.games).filter(item => item.reviewStatus === 'draft').length;
   const functionLevels = DeriveTagLevels(taxonomy, game.functionTags);
   const activeTags = taxonomy.tags.filter(tag => tag.status === 'active');
   const parentIds = new Set(taxonomy.tags.map(tag => tag.parent));
@@ -68,7 +69,9 @@ export function GameSimilarityReview() {
       <div className="admin-section-toolbar">
         <div>
           <h2>相近活動</h2>
-          <p>標籤描述活動內容，草稿供審閱。</p>
+          <p>{draftCount === 0
+            ? '標籤描述活動內容，依理論框架標註並已確認。'
+            : '標籤描述活動內容，草稿待確認。'}</p>
         </div>
       </div>
 

@@ -8,8 +8,7 @@ paths:
 Codex workers do not apply Claude Code `memory:` frontmatter. Any worker write
 still needs a path authorized in its brief; see `.claude/docs/codex-workers.md`.
 
-**Agent memory is one of three writes that need no "May I write?"** The other two
-are named in `CLAUDE.md`:
+**Agent memory is one of three writes that need no "May I write?"** The other two are:
 
 - **Appends to `production/session-state/active.md`** — the session checkpoint
   the hooks and the next session rely on. An append, never a rewrite of what is

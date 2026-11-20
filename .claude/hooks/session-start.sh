@@ -223,10 +223,8 @@ if [ -n "$CODE_ROOT" ] && [ -d "$CODE_ROOT" ]; then
 fi
 
 # --- engine reference vs configured engine -----------------------------------
-# /setup-engine is the only thing that rewrites CLAUDE.md's ENGINE-REFERENCE-IMPORT
-# line. Edit engine.name in project.yaml by hand and the import keeps loading the
-# previous engine's reference as project instructions -- every session, silently.
-# An OBSERVATION, never an action (CLAUDE.md): it reports, the user decides.
+# Detect stale engine imports from the upstream setup-engine template.
+# This project keeps the root CLAUDE.md as a single @AGENTS.md import.
 # Printed BEFORE the session state: hook output past 10,000 characters is cut
 # to a preview, so a warning below a long checkpoint could be lost.
 if [ -f project.yaml ] && [ -f CLAUDE.md ]; then
@@ -245,7 +243,7 @@ if [ -f project.yaml ] && [ -f CLAUDE.md ]; then
         echo "   project.yaml engine.name : $CFG"
         echo "   CLAUDE.md imports        : docs/engine-reference/$ERI/VERSION.md"
         echo "   Every session is loading the $ERI reference on a $CFG project."
-        echo "   Fix: re-run /setup-engine, or edit the ENGINE-REFERENCE-IMPORT line."
+        echo "   Fix: restore the one-line @AGENTS.md import and use the reference under docs/engine-reference/."
     fi
 fi
 

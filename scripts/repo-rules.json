@@ -1,0 +1,872 @@
+[
+  {
+    "id": "AG-RULES-01",
+    "summary": "新增規則時，在同一筆變更新增有 ID 的條目、`scripts/repo-rules.json` 登記與可執行的 CI 測試。需本機或人工執行時，登記命令或原因。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-rules.test.mjs","name":"AGENTS.md is short and every rule has exactly one matching registry entry"},
+      {"file":"scripts/check-repo-rules.test.mjs","name":"every repository rule points to live CI evidence or documents local and process enforcement"}
+    ]
+  },
+  {
+    "id": "AG-RULES-02",
+    "summary": "以 `AGENTS.md` 為唯一權威。根目錄 `CLAUDE.md` 只匯入本檔。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-rules.test.mjs","name":"CLAUDE.md only imports the authoritative AGENTS.md"}
+    ]
+  },
+  {
+    "id": "AG-CI-01",
+    "summary": "同步 `test:ci` 與 `ci.yml` 的八項 gate、十項工作。遊戲架構分 types／tests／games，每個原命令執行一次。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"the CI matrix covers exactly the local eight gates, including every shard command"}
+    ]
+  },
+  {
+    "id": "AG-CI-02",
+    "summary": "自動測試須由本機 aggregate 與 CI matrix 同步涵蓋。新增測試未被探索時，同時補上入口。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"every test file runs in the CI matrix and local aggregate except the documented optional suites"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"every R2 game has its own test suite in the CI matrix"}
+    ]
+  },
+  {
+    "id": "AG-CI-03",
+    "summary": "CI 使用 Node 24 與 root 加 workspace 的乾淨安裝，支援 PR、手動、重用。Workflow 與指引變更須觸發 PR 驗證。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"CI installs root and workspace dependencies without audit or funding requests"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"the CI matrix covers exactly the local eight gates, including every shard command"},
+      {"file":"scripts/check-repo-policies.test.mjs","name":"PR verification includes the two root instruction files"}
+    ]
+  },
+  {
+    "id": "AG-CI-04",
+    "summary": "安裝套件不得設定 Git hook。Brave 與需要建置成品的檢查保留本機命令。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"CI replaces the pre-push hook and leaves Brave verification as a manual local command"}
+    ]
+  },
+  {
+    "id": "AG-CI-05",
+    "summary": "依變更範圍補驗。Hub UI／auth／routing／共用套件須建置 Hub。Asteroid Shield、全螢幕或 Pixi 尺寸變更也須建置 Hub。",
+    "enforcement": "local",
+    "command": "npm run build:hub && npm run test:entrypoints && npm run test:game-architecture",
+    "reason": "需建置 Hub，並回歸 entrypoint 與所有遊戲型別。"
+  },
+  {
+    "id": "AG-CI-06",
+    "summary": "平台流程或共用設定 UI 有變更時，準備建置成品後以本機 Brave 驗收遊戲架構。",
+    "enforcement": "local",
+    "command": "npm run test:game-architecture:browser",
+    "reason": "需要 Brave 和本機測試伺服器。"
+  },
+  {
+    "id": "AG-CI-07",
+    "summary": "Hub UI 變更以 Brave 驗收桌機、手機、平板、鍵盤與導覽，執行前準備對應 build。",
+    "enforcement": "local",
+    "command": "npm run test:uiux-browser",
+    "reason": "需要 Brave 和 Hub 建置產物。"
+  },
+  {
+    "id": "AG-CI-08",
+    "summary": "遊戲互動變更以本機 Brave 驗收大廳與獨立 PWA。模擬媒體、觸控或方向盤結果須如實標註。",
+    "enforcement": "local",
+    "command": "node scripts/check-r2-game-browser.mjs --game <gameId> --lobby && node scripts/check-r2-game-browser.mjs --game <gameId> --standalone",
+    "reason": "需要 Brave、建置成品及適用的實體裝置。"
+  },
+  {
+    "id": "AG-CI-09",
+    "summary": "相機／眼動及駕駛變更依範圍執行各自的 Brave 測試。",
+    "enforcement": "local",
+    "command": "npm run test:webgazer-browser && npm run test:driving-rehab-browser",
+    "reason": "需要 Brave、建置成品及對應裝置或測試資料。"
+  },
+  {
+    "id": "AG-CI-10",
+    "summary": "R2 Hub 輸出隔離及 Worker HTTP 相容性須驗證建置成品。並行建置時固定 HUB_OUTPUT_ROOT／RUNNER_OUTPUT_ROOT。",
+    "enforcement": "local",
+    "command": "npm run test:game-architecture:built && npm run test:workers-local",
+    "reason": "需要完整建置及本機 workerd。"
+  },
+  {
+    "id": "AG-CI-11",
+    "summary": "修改 Cloudflare Functions 時，對修改檔執行 `node --check` 並驗證對應的 `test:hub-functions` 或 `test:gamerunner`。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub and runner Cloudflare Functions pass the Node module syntax check"}
+    ]
+  },
+  {
+    "id": "AG-CI-12",
+    "summary": "本機測試只用隔離的資料與服務，不部署正式環境、不發布遊戲、不寫入正式資料。",
+    "enforcement": "process",
+    "reason": "啟動測試的操作者須確認目標環境及憑證。"
+  },
+  {
+    "id": "AG-TDD-01",
+    "summary": "功能與重構先跑可執行的行為測試，確認因需求缺少而失敗，只做通過所需的實作，再在測試保護下整理。",
+    "enforcement": "process",
+    "reason": "結果可重跑，工作先後及變更是否最小仍須看實作過程。"
+  },
+  {
+    "id": "AG-TDD-02",
+    "summary": "UI 變更先鎖定既有導航、設定、訓練開始與完成流程，新增手機或平板互動先補測試。保留既有功能與安全檢查。",
+    "enforcement": "process",
+    "reason": "需依每筆工作意圖判定相容行為及裝置範圍。"
+  },
+  {
+    "id": "AG-TDD-03",
+    "summary": "提交附失敗原因、修正結果與回歸命令。無法自動化時先記錄可重現人工步驟及限制。",
+    "enforcement": "process",
+    "reason": "測試證據及測試前後順序須由實作者記錄。"
+  },
+  {
+    "id": "AG-TDD-04",
+    "summary": "Claude／Codex 工具與腳本只回報觀察，審查結論由角色或擁有者依證據決定。",
+    "enforcement": "process",
+    "reason": "判斷與授權來自審查者；操作參照 `.claude/docs/rehab-game-team.md`。"
+  },
+  {
+    "id": "AG-TEAM-01",
+    "summary": "新增遊戲目錄或 catalog 項目前，依 `.claude/docs/rehab-game-team.md` 走遊戲團隊流程。",
+    "enforcement": "process",
+    "reason": "協作過程不由 Git 內容證明，GDD 與教學另由 CI 驗證。"
+  },
+  {
+    "id": "AG-TEAM-02",
+    "summary": "新遊戲附 `design/gdd/<gameId>.md`，含 Summary、Overview、Detailed Design、Edge Cases、Dependencies、Acceptance Criteria 六個二級標題。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-team-design.test.mjs","name":"existing repository games pass the frozen game-team exemption check"},
+      {"file":"scripts/check-game-team-design.test.mjs","name":"a catalog-only new game also needs a complete GDD"},
+      {"file":"scripts/check-game-team-design.test.mjs","name":"a new game GDD must contain every required level-two heading"}
+    ]
+  },
+  {
+    "id": "AG-TEAM-03",
+    "summary": "`scripts/game-team-legacy-games.json` 只能移除已刪除的豁免遊戲。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"the frozen GDD exemption list cannot add new games or remove active exemptions"},
+      {"file":"scripts/check-game-team-design.test.mjs","name":"a removed game must also be removed from the legacy list"}
+    ]
+  },
+  {
+    "id": "AG-TEAM-04",
+    "summary": "每款遊戲須有中英文聚光燈教學。提交前依 hook 提示核對受影響的步驟。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-spotlight-tour.test.mjs","name":"every game workspace ships a bilingual spotlight tutorial"},
+      {"file":"scripts/check-game-spotlight-tour.test.mjs","name":"the hook advises on player-facing changes and stays silent for tests or tutorial edits"}
+    ]
+  },
+  {
+    "id": "AG-TEAM-05",
+    "summary": "玩法或控制改動時更新受影響的聚光燈步驟，使說明對應實際遊戲行為。",
+    "enforcement": "process",
+    "reason": "教學文案與新行為的語意一致性須由遊戲審查確認。"
+  },
+  {
+    "id": "AG-TEAM-06",
+    "summary": "Claude 依 `.claude/docs/codex-workers.md` 用 `.claude/scripts/codex-agent.sh` 協調 Codex workers。Codex 依轉接器逐一承擔角色。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-codex-agent-wrapper.test.mjs","name":"dry run composes a complete role brief and defaults to read-only"},
+      {"file":"scripts/check-codex-agent-wrapper.test.mjs","name":"workers cannot start another worker"}
+    ]
+  },
+  {
+    "id": "AG-TEAM-07",
+    "summary": "只編輯 `.claude/skills/` 的團隊技能來源。修改後用 `npm run sync:team-skills` 產生 `.agents/skills/` 轉接器。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-codex-team-skills.test.mjs","name":"all repository team skills have current Codex adapters with valid metadata"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-01",
+    "summary": "Hub 使用 Next.js App Router 與 `packages/ui/src` 共用 UI、樣式、auth、storage、設定及導覽。Hub Functions 掌管登入、授權與資料寫入。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-hub-navigation.test.mjs","name":"Hub has one four-route navigation map with an accessible current page"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"unified config UI remains Tailwind with native accessible controls"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"production entry points match the owner-approved C02 origins"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-02",
+    "summary": "遊戲各自擁有 Vite entry、設定、教學、runtime、規則、i18n、樣式與結果。R2 與新遊戲禁止依賴平台套件或其他遊戲程式。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"transitive game imports keep engines and dictionaries within their game"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"official games have no Toutour dependency and own their rules styles"},
+      {"file":"scripts/check-self-contained-game.test.mjs","name":"drawing defense owns its configuration and results without Hub dependencies"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-03",
+    "summary": "Hub 只組合容器、私有通訊、身份、保存與離開流程。遊戲專屬 defaults、validation、引擎與 lifecycle 留在各自 workspace。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"transitive game imports keep engines and dictionaries within their game"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"Hub builds per-game outputs and cannot restore a public trainer runtime"},
+      {"file":"scripts/check-practice-plans.test.mjs","name":"normal overlay keeps private channel validation, sensor proxies, CSV and result files"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-04",
+    "summary": "遊戲目錄、catalog 與 registry 要同步。改 catalog 或 workspace 後執行 `npm run sync:games`，依賴異動同步 lockfile。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"catalog and game roots retain one exact settings definition per official game"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"CI installs root and workspace dependencies without audit or funding requests"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-05",
+    "summary": "`officialGameReleases.json` 只存名稱與可信 origin。開啟前從核准 R2 manifest 與 current 固定版本、雜湊、recordId 及 token。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"the official registry has no current version or release hash"},
+      {"file":"apps/rehabtrainerhub/functions/api/account-subjects.migration.test.mjs","name":"two devices get the same official signed subject and save under that account ID"},
+      {"file":"apps/usergamerunner/tests/officialCatalog.test.mjs","name":"official catalog permits approved history independently of current and rejects untrusted or revoked releases"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-06",
+    "summary": "R2 不建立 `settings.json`／`score.json`。Hub 建置只留 R2 PWA 連結，已遷移舊資產回 410。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"the settings scaffold cannot put a settings.json back into an R2 game"},
+      {"file":"scripts/pages-deployment-scope.test.mjs","name":"Cloudflare build excludes migrated R2 bundles and workflow gates deployment by scope"},
+      {"file":"apps/rehabtrainerhub/functions/_middleware.test.mjs","name":"migrated games reject legacy assets before Pages can serve retained cache"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-07",
+    "summary": "保留舊官方遊戲的同源 JSON／`OfficialGameShell` 契約與既有依賴。舊流程 `reason` 使用固定代碼及 Hub 自有提示。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"Hub accepts messages only from the expected same-origin runtime frame"},
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"a failed camera or microphone check sends the reason it went back to settings"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"legacy game pages define every token the settings form uses"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-08",
+    "summary": "R2 目錄文案、分類、預覽圖由遊戲 `public/game.json` 宣告並隨版本 SHA-256 驗證。舊版回退以遊戲自有資料為準。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-catalog-metadata.test.mjs","name":"game catalog metadata rejects incompatible tags and previews outside the release"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-catalog.test.mjs","name":"public catalog reads preview and tags from the approved game bytes instead of the old publication"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-catalog.test.mjs","name":"an older approved self-contained version keeps game-owned fallback tags without using the old shell"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-09",
+    "summary": "Hub 維持統一目錄、分類、搜尋、卡片與啟動入口。投稿的同名 slug 不得覆蓋官方遊戲的啟動契約。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/app/hubGames.test.mjs","name":"one catalog includes existing games and reviewed releases without replacing their launch contracts"},
+      {"file":"apps/rehabtrainerhub/app/hubGames.test.mjs","name":"a published slug collision cannot replace a retained legacy game during the Hub-only stage"},
+      {"file":"apps/rehabtrainerhub/app/hubGames.test.mjs","name":"an old drawing-defense publication cannot replace the R2 current session entry"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-10",
+    "summary": "訓練載入 overlay 或單遊戲 PWA，設定階段保留背景；保留 deep link。結果依來源只顯示一個返回按鈕。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"both official and developer overlays configure before mounting their iframe"},
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"training results expose exactly one source-aware navigation button"},
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"standalone games reopen their own configuration without browser history"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-11",
+    "summary": "大廳 SSO 與資料留在 Hub。R2 穩定 PWA 入口以不可快取的 302 選 current，版本化 PWA 固定原版。退役 trainer 網域及 `/runtimes/*` 不復用。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/usergamerunner/tests/officialCatalog.test.mjs","name":"stable official entry resolves current without caching and fails closed when approval is removed"},
+      {"file":"scripts/check-game-directory-architecture.test.mjs","name":"Hub builds per-game outputs and cannot restore a public trainer runtime"},
+      {"file":"scripts/check-repo-policies.test.mjs","name":"retired trainer hostnames cannot return to shipped source, assets or deployment configuration"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-12",
+    "summary": "R2 設定由容器在每台裝置按遊戲保存，須有 capability 且由遊戲驗證。第三方由容器驗證 `settings.json` 並保存最後提交值。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-r2-settings-memory.test.mjs","name":"settings messages are accepted only for games that declare settings storage, with bounded primitive values"},
+      {"file":"scripts/check-r2-settings-memory.test.mjs","name":"Hub hands saved settings to games that declare storage and keeps what the game confirms"},
+      {"file":"scripts/check-package-settings-memory.test.mjs","name":"only the third-party overlay remembers settings; unmigrated official games are unchanged"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-13",
+    "summary": "只允許可信 UFOV 用 `result-files` 暫存三個固定格式、最多 4 MiB 的檔案。成果後由容器下載，關閉即清除。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/usergamerunner/tests/resultFiles.test.mjs","name":"UFOV result files validate their exact name, columns and cell values"},
+      {"file":"apps/usergamerunner/tests/resultFiles.test.mjs","name":"only the official UFOV game with result-files can stage files before its result and request downloads after it"},
+      {"file":"apps/usergamerunner/tests/resultFiles.test.mjs","name":"the production-bundled standalone launcher downloads only staged files, after the result, and forgets them on exit"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-14",
+    "summary": "R2 版本化 PWA 的 Manifest／Service Worker 只能快取該版本及平台 runtime。偵測撤回須關閉並清除該版快取。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"manifest and service worker are unique and scoped to one release"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"launcher health check retires an online revoked release"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"service worker deletes only its release caches after an online revocation"}
+    ]
+  },
+  {
+    "id": "AG-ARCH-15",
+    "summary": "R2 遷移先記錄原功能、分類、預覽圖摘要。依 `docs/r2-game-migration-plan.md` 第 7、11 節驗收並留正式收據。",
+    "enforcement": "process",
+    "reason": "遷移完成須核對實際發布、正式 API 與瀏覽器證據。"
+  },
+  {
+    "id": "AG-SANDBOX-01",
+    "summary": "Hub 與 runner 位於不同 origin。Runner 的部署及相容設定只綁 `rehab-game-releases`，禁止 D1、KV、認證及私人資料。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"the isolated runner never receives private bindings, variables or secrets"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"Workers use the owner-confirmed names and reuse every Pages binding unchanged"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"production entry points match the owner-approved C02 origins"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-02",
+    "summary": "Runner Functions 只接受 GET／HEAD，release bucket 只可查讀。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"runner requests outside GET and HEAD are rejected before accessing assets"},
+      {"file":"scripts/check-repo-policies.test.mjs","name":"runner Functions only read the release bucket"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-03",
+    "summary": "官方 R2／第三方及 runner 的 package iframe 只用 `sandbox=\"allow-scripts\"`，禁止 `allow-same-origin`、任何 `allow-top-navigation` 與 `allow-downloads`。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub package iframes use the exact allow-scripts sandbox"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"launcher is a noindex PWA shell with an opaque-origin iframe and strict relay"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"self-contained standalone games receive fullscreen only when declared"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"trusted sensor launchers get exactly the devices they declare; game packages stay closed"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-04",
+    "summary": "Package CSP 以 runner `functions/[[path]].js` 的 `packageContentSecurityPolicy` 為準。封鎖外連、Worker、WebRTC 和 eval，launcher 權限不得轉交。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"the package CSP has one restrictive policy used by package responses"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"package route only serves manifest files with restrictive immutable headers"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"launcher is a noindex PWA shell with an opaque-origin iframe and strict relay"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-05",
+    "summary": "R2 與第三方以私有 MessageChannel 驗指定窗口、origin、nonce、單調 sequence 及成果 schema。僅核准 capability 可使用全螢幕或 gamepad。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-self-contained-game.test.mjs","name":"private game channel rejects invalid identity, replay, and unsafe result fields"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"launcher transfers one private port and fails closed after a frame navigation"},
+      {"file":"apps/usergamerunner/tests/gamehost.test.mjs","name":"self-contained standalone games receive fullscreen only when declared"},
+      {"file":"scripts/check-game-platform.test.mjs","name":"rejects forged opaque-sandbox messages and replayed sequences"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-06",
+    "summary": "第三方使用 runner 的版本化 bridge。一次性 token 存雜湊並經 `/api/game-runs` 入庫，拒絕未宣告與識別資料欄位。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-game-platform.test.mjs","name":"pins uploaded games to runner-owned, versioned runtime URLs"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-platform.security.test.mjs","name":"game results reject identifying metric keys before persistence"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-run-sessions.test.mjs","name":"a player can save a pinned approved release after a new version becomes current"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-07",
+    "summary": "官方成果使用 24 小時 HMAC token 綁版本、recordId、帳號、Subject ID，經 `/api/records` 冪等保存。撤回或雜湊不符一律拒絕。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/account-subjects.migration.test.mjs","name":"two devices get the same official signed subject and save under that account ID"},
+      {"file":"apps/usergamerunner/tests/officialCatalog.test.mjs","name":"official catalog permits approved history independently of current and rejects untrusted or revoked releases"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-08",
+    "summary": "投稿掃描危險 API、HTML／CSS、路徑、體積、單行、跳脫密度及 ZIP 膨脹率。掃描規則數以 `blockedSourcePatterns` 為準。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/_lib/gamePackages.test.mjs","name":"blocks outbound APIs and credential access"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/gamePackages.test.mjs","name":"rejects ZIP traversal before extraction"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/gamePackages.test.mjs","name":"rejects directory payloads that expand beyond the package budget"},
+      {"file":"scripts/check-antislop.test.mjs","name":"Hub copy states the scanner and credential facts that the code and AGENTS.md support"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-09",
+    "summary": "新投稿保存私有 R2，D1 同時記錄版本雜湊與 Issue 工作。Issue 不含原始碼、掃描細節或帳號資料，標籤與關閉不得核准發布。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/_lib/gameReviewIssues.test.mjs","name":"a submission creates a durable version ticket while the code remains private"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/gameReviewIssues.test.mjs","name":"editing or closing the linked Issue does not authorize a release"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/gameReview.test.mjs","name":"the Issue is a review ticket with a protected link and no private files, identities, or scanner excerpts"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-10",
+    "summary": "第三方核准限指定的 admin 擁有者，驗 Issue、檔案雜湊及三項審查紀錄，用 Lease 發布。官方 slug 禁止借第三方流程發布或撤回。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/game-platform.security.test.mjs","name":"approval requires source, public metadata, and isolated play-test evidence"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-platform.security.test.mjs","name":"third-party reviews cannot publish or revoke a reserved official slug submitted before migration"},
+      {"file":"apps/rehabtrainerhub/functions/api/game-platform.security.test.mjs","name":"an expired publication lease cannot claim another reviewer's database approval"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/gameReviewIssues.test.mjs","name":"the review endpoint refuses another administrator, missing owner configuration, stale content, and an unbound Issue"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-11",
+    "summary": "審查者在無敏感憑證的隔離環境核對來源、試玩及公開描述。成果是用戶端回報，文案不宣稱防作弊或伺服器重算。",
+    "enforcement": "process",
+    "reason": "實際審核內容、試玩環境及文案語意須由人工判斷。"
+  },
+  {
+    "id": "AG-SANDBOX-12",
+    "summary": "手部、眼動、姿勢、音量、舌頭與頭部只用可信官方 capability 及固定版本代理。容器取得同意，遊戲只收契約數值，不收影音或身份。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"sensor capabilities validate only for their official games"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"sensor broker asks consent per input, passes only the chosen input and discards late controllers"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"camera input proxy throttles detection, stops camera, model and timers, and never sends video"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"trusted sensor launchers get exactly the devices they declare; game packages stay closed"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-13",
+    "summary": "容器顯示相機預覽並管全螢幕，完成、退出、取消、撤回及斷線清理裝置、模型與排程。僅舌頭代理接受固定校正標籤。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"only camera sensor games place the container preview, inside the game frame"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"tongue calibration captures only fixed labels and only for the tongue game"},
+      {"file":"apps/usergamerunner/tests/sensorInput.test.mjs","name":"camera input proxy throttles detection, stops camera, model and timers, and never sends video"},
+      {"file":"scripts/check-r2-sensor-host.test.mjs","name":"the Hub places its own camera image where the game asks and enters fullscreen on its frame"}
+    ]
+  },
+  {
+    "id": "AG-SANDBOX-14",
+    "summary": "前端不得放 secret。OAuth、登入與 session 憑證留在後端執行期，runner 不收 Hub secrets。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"frontend files do not expose private keys, credential values or server-only variables"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"Hub Worker secrets are an explicit runtime allowlist that keeps runner origins out of auth"}
+    ]
+  },
+  {
+    "id": "AG-UI-01",
+    "summary": "`training-panel` 主標題用 `h2`、分段用 `h3`、標籤與說明用 `p`、順序用 `ol`／`li`。文字字重至少 700。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"training panels retain native headings and a minimum explicit text weight of 700"}
+    ]
+  },
+  {
+    "id": "AG-UI-02",
+    "summary": "設定、最終確認與結算採一致語意與布局，各遊戲自行實作。確認欄位、開始、返回與保存期間保留設定。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-r2-game-ui.test.mjs","name":"the shared settings and results layout suite covers every registered R2 game"},
+      {"file":"scripts/check-r2-settings-controls.test.mjs","name":"driving-rehab: settings use the same section cards and dropdowns as the other R2 games"},
+      {"file":"scripts/check-practice-plans.test.mjs","name":"normal launches retain memory, result saving and retry acknowledgements without plan fields"}
+    ]
+  },
+  {
+    "id": "AG-UI-03",
+    "summary": "維持訓練文字基準 1.15 倍、可讀行高及一致 computed style；Brave 另驗手機和平板減少溢出。",
+    "enforcement": "local",
+    "command": "node scripts/check-r2-game-browser.mjs --game <gameId> --lobby --tablet && node scripts/check-r2-game-browser.mjs --game <gameId> --lobby --mobile",
+    "reason": "字級、佈局與鍵盤操作需瀏覽器實際計算。"
+  },
+  {
+    "id": "AG-UI-04",
+    "summary": "以 token 供 Hub 與共用 CSS 的色值。表單控制邊框 ≥3:1，聚光燈按鈕與哈特圖控制保留可見鍵盤焦點。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub and shared package CSS use theme tokens for colors"},
+      {"file":"scripts/check-antislop.test.mjs","name":"form control borders reach 3:1 against their surfaces in the Hub and every R2 game"},
+      {"file":"scripts/check-antislop.test.mjs","name":"training-panel navigation buttons keep a visible keyboard focus ring in every game"},
+      {"file":"scripts/check-antislop.test.mjs","name":"hart chart decoder handle and code inputs show a focus ring, not only a tinted border"}
+    ]
+  },
+  {
+    "id": "AG-UI-05",
+    "summary": "R2 結算包含主要統計、可讀圖表與逐回合明細，保留雙語、缺值及保存重試。圖表與明細共用分頁。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-r2-game-results.test.mjs","name":"the shared results suite covers every registered R2 game"},
+      {"file":"scripts/check-r2-game-results.test.mjs","name":"drawing results use the same numeric rows as the private saved result"},
+      {"file":"scripts/check-r2-leave-guard.test.mjs","name":"a failed save keeps the leave guard until retry succeeds"}
+    ]
+  },
+  {
+    "id": "AG-UI-06",
+    "summary": "訓練設定與教學保持視窗模式。手部先完成相機同意，從最後開始鈕進全螢幕；手勢以相機就緒後首次校正點擊進入。返回時清理全螢幕。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-r2-game-fullscreen.test.mjs","name":"motor camera consent and initialization finish in windowed mode before the final Start click"},
+      {"file":"scripts/check-r2-game-fullscreen.test.mjs","name":"gesture calibration requests fullscreen after camera readiness on desktop and mobile before capturing"},
+      {"file":"scripts/check-r2-game-fullscreen.test.mjs","name":"Hub closes every R2 game only after fullscreen and camera cleanup"}
+    ]
+  },
+  {
+    "id": "AG-UI-07",
+    "summary": "使用本機遊戲自有音訊模組及 Tone 樂譜。背景音樂於遊玩期間播放，結束或取消清理。不將瀏覽器模擬視為實體音訊驗收。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-r2-game-audio.test.mjs","name":"MIDI converter produces unmodified Tonejs/Midi JSON that every migrated game can play"},
+      {"file":"scripts/check-r2-game-audio.test.mjs","name":"asteroid-shield: returning to settings clears warning effects but results can finish the ending cue"}
+    ]
+  },
+  {
+    "id": "AG-UI-08",
+    "summary": "功能元件採 React／TypeScript，沿用兩格縮排與既有模式。PascalCase 用於具名函式、型別、元件；變數、參數 camelCase，框架入口按命名檢查例外。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-identifier-names.test.mjs","name":"naming check still rejects authored source violations"}
+    ]
+  },
+  {
+    "id": "AG-UI-09",
+    "summary": "原始碼避免 em dash。缺值用「無」或 `N/A`，網站導覽與分類教學須對應實際介面。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-antislop.test.mjs","name":"source text has no em dash outside vendored third-party files"},
+      {"file":"scripts/check-antislop.test.mjs","name":"the site tour names the navigation and category labels the lobby actually shows"},
+      {"file":"scripts/check-r2-game-results.test.mjs","name":"the shared results suite covers every registered R2 game"}
+    ]
+  },
+  {
+    "id": "AG-UI-10",
+    "summary": "UI、文案、人因、行動版或註解工作讀 `antislop` 核心，再選用 `antislop-ui`、`antislop-copywriting`、`antislop-human`、`antislop-layoutmobile` 或 `antislop-code`。",
+    "enforcement": "process",
+    "reason": "技能使用及稿件審查過程不在 Git 內容中。"
+  },
+  {
+    "id": "AG-UI-11",
+    "summary": "antislop 模式依明示的當次選擇、全域偏好、詢問順序解析。依技能規定時機公告模式與來源。未解析時先詢問再做 UI 工作。",
+    "enforcement": "process",
+    "reason": "當次指令、已存偏好及模式公告來自會話。"
+  },
+  {
+    "id": "AG-COPY-01",
+    "summary": "品牌為「居家訓練網」，定位為「居家訓練工具與衛教資訊」。公開文案用練習、活動、當次紀錄、刺激參數、換算參考值。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"public Hub strings use practice wording and keep private resumes out of copy"},
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub metadata draws from its canonical origin and brand and keeps the FAQ out of ProfilePage schema"}
+    ]
+  },
+  {
+    "id": "AG-COPY-02",
+    "summary": "公開文案禁止聲稱診斷、醫囑、處方、個別評估、治療、預防疾病、改善人體功能、保證療效、臨床級／醫療級。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"public Hub strings use practice wording and keep private resumes out of copy"}
+    ]
+  },
+  {
+    "id": "AG-COPY-03",
+    "summary": "疾病、復健及治療詞限中立衛教、正式題名、客觀經歷或非服務聲明。禁用見證、前後對照、免責聲明或資格背書來宣稱效果。",
+    "enforcement": "process",
+    "reason": "語意、搭配、疾病族群適用證據與保證效果需人工判斷，固定用語另有 CI。"
+  },
+  {
+    "id": "AG-COPY-04",
+    "summary": "專業資格限已查核事實，寫在作者／責任區。未確認有效執業登記禁用「執業職能治療師」，未逐篇審閱不填 `reviewedBy`。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"public Hub strings use practice wording and keep private resumes out of copy"},
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub metadata draws from its canonical origin and brand and keeps the FAQ out of ProfilePage schema"},
+      {"file":"scripts/check-antislop.test.mjs","name":"Hub copy states the scanner and credential facts that the code and AGENTS.md support"}
+    ]
+  },
+  {
+    "id": "AG-COPY-05",
+    "summary": "署名、學歷、在學與經歷應可查核且附確認日期。未驗證資格以「居家訓練網編輯」署名。不要公開履歷分享碼、證號、地址、電話或年齡。",
+    "enforcement": "process",
+    "reason": "需核對真實身份與日期，且依內容及用途判定哪些資料可公開。"
+  },
+  {
+    "id": "AG-COPY-06",
+    "summary": "公開 copy 或 JSON-LD 不得加入 104 履歷連結。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"public Hub strings use practice wording and keep private resumes out of copy"}
+    ]
+  },
+  {
+    "id": "AG-COPY-07",
+    "summary": "FrACT 只說明公開方法、實際版本、來源及校正需求；logMAR／Snellen／logCS 標明換算參考值並說明限制，不聲稱等效、認證或臨床用途。",
+    "enforcement": "process",
+    "reason": "採用版本、效度與來源關聯須由專業審查核對。"
+  },
+  {
+    "id": "AG-COPY-08",
+    "summary": "新增疾病判定、個別建議、臨床量測、諮詢、遠距服務或改 intended use，先停發並取得台灣醫療／醫材法規專業意見。",
+    "enforcement": "process",
+    "reason": "必須核對現行職能治療師法、施行細則、醫療法、醫療器材管理法及食藥署醫用軟體指引。"
+  },
+  {
+    "id": "AG-SEO-01",
+    "summary": "Hub 名稱及首頁標題來自 `app/hubBrand.ts`，metadata／JSON-LD 由 `app/seo.ts` 管理，canonical origin 取自 `siteUrls`。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub metadata draws from its canonical origin and brand and keeps the FAQ out of ProfilePage schema"}
+    ]
+  },
+  {
+    "id": "AG-SEO-02",
+    "summary": "Hub 正式 HTML 預渲染繁中首頁，title、H1、首段、description、canonical、robots、OG／Twitter、manifest 與 JSON-LD 用途一致。",
+    "enforcement": "local",
+    "command": "npm run build:hub && npm run test:seo",
+    "reason": "HTML、連結預渲染及 manifest 需建置輸出。"
+  },
+  {
+    "id": "AG-SEO-03",
+    "summary": "可索引頁有正確 canonical／index、獨特標題與可見內容。路由異動同步 sitemap、robots 與 SEO 檢查；維持管理、帳號、進度與訓練 noindex。",
+    "enforcement": "local",
+    "command": "npm run build:hub && npm run test:seo",
+    "reason": "需驗證建置後的路由、SEO metadata、sitemap 與 robots。"
+  },
+  {
+    "id": "AG-SEO-04",
+    "summary": "sitemap 只列該 origin 的可索引 canonical。主要內容實際更新才改 lastmod。部署後驗 sitemap／robots、Rich Results Test 與對應 Search Console。",
+    "enforcement": "process",
+    "reason": "日期是否反映實質修改與正式站、索引工具的結果須由發布者確認。"
+  },
+  {
+    "id": "AG-SEO-05",
+    "summary": "衛教 FAQ 只連結外部部落格並保留作者個人網站。不載文章 feed、不刊摘要、不自建文章。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-article-prerender.test.mjs","name":"the FAQ renders the blog and separate author website links without loading an article feed"},
+      {"file":"scripts/check-article-prerender.test.mjs","name":"education shows one blog link without article previews or loading states in either language before JavaScript"},
+      {"file":"scripts/check-article-prerender.test.mjs","name":"the Hub no longer hosts its own article authoring"}
+    ]
+  },
+  {
+    "id": "AG-SEO-06",
+    "summary": "相容 `/api/education-feed` 只讀固定 Blogger 來源、鍵只放 header，限制頁數、逾時、資料量、標籤、摘要、連結及 600 秒快取。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/education-feed.test.mjs","name":"Origin-less build requests read the fixed Blogger blog with a header-only key and bounded JSON requests"},
+      {"file":"apps/rehabtrainerhub/functions/api/education-feed.test.mjs","name":"query parameters cannot change the blog, pagination, fields or API key"},
+      {"file":"apps/rehabtrainerhub/functions/api/education-feed.test.mjs","name":"the Cache API stores normalised JSON for 600 seconds under a fixed secret-free key and serves hits"},
+      {"file":"apps/rehabtrainerhub/functions/api/education-feed.test.mjs","name":"pagination reads at most four pages even with fresh continuation tokens"}
+    ]
+  },
+  {
+    "id": "AG-SEO-07",
+    "summary": "作者、日期、來源、責任及 schema 以可見且可查核事實為準。`ProfilePage` 只用於單一作者專頁。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"Hub metadata draws from its canonical origin and brand and keeps the FAQ out of ProfilePage schema"}
+    ]
+  },
+  {
+    "id": "AG-SEO-08",
+    "summary": "依 Google Search Central 最新指南；以讀者問題為先，避免堆疊關鍵字、隱藏內容、重複或薄頁。健康、科學及效度引用可信原始來源，AI 輔助保留人工查核。",
+    "enforcement": "process",
+    "reason": "內容品質、證據、可見內容與 schema 是否一致須人工判定。"
+  },
+  {
+    "id": "AG-DATA-01",
+    "summary": "裝置訪客與後端帳號 Subject ID 分離。帳號跨裝置一致，首次指派原子更新帳號歷史，登出只清除帳號快取。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"packages/ui/src/storage/subjectId.test.mjs","name":"keeps the guest ID across reloads and server account assignment on two devices"},
+      {"file":"packages/ui/src/storage/subjectId.test.mjs","name":"auth responses cache the server account subject and logout keeps only the guest identity"},
+      {"file":"apps/rehabtrainerhub/functions/api/account-subjects.migration.test.mjs","name":"first assignment atomically relabels only the account history and concurrent devices get one ID"}
+    ]
+  },
+  {
+    "id": "AG-DATA-02",
+    "summary": "Hub 寫入成績並隔離訪客、登入帳號及跨帳號切換。Hub iframe 不自行另寫一道紀錄。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/account-subjects.migration.test.mjs","name":"an authenticated result rejects a signed token carrying another account subject"},
+      {"file":"scripts/check-account-identity.test.mjs","name":"identity guard discards switched, logged-out, guest and unmounted private actions"},
+      {"file":"scripts/check-practice-plans.test.mjs","name":"normal launches retain memory, result saving and retry acknowledgements without plan fields"}
+    ]
+  },
+  {
+    "id": "AG-DATA-03",
+    "summary": "D1 只存摘要。核准逐回合及感測 CSV 先存私人 `rehab-raw-data`／`oculomotor-data`，依 session 時間與 capability，使用匿名鍵且不可覆寫。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/raw-data.test.mjs","name":"rejects wrong kind, origin, token, account, CSV text, header, shape, oversize and missing capability"},
+      {"file":"apps/rehabtrainerhub/functions/api/raw-data.test.mjs","name":"account uploads resolve the account subject, reject other accounts and never use account IDs in keys"},
+      {"file":"apps/rehabtrainerhub/functions/api/records.raw-data.test.mjs","name":"rounds go to immutable private CSV before both summary-only D1 columns; identical retry succeeds"},
+      {"file":"apps/rehabtrainerhub/functions/api/records.raw-data.test.mjs","name":"a failed gaze CSV write reserves the checksum but cannot authorize a result without a CSV"}
+    ]
+  },
+  {
+    "id": "AG-DATA-04",
+    "summary": "pCloud Cron 每小時用 EU API、Bearer 與 `checksumfile` 核對 SHA-256／大小及身份。不覆寫、不跟轉址，僅在複核來源與目的物件後刪除 R2。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/_lib/rawDataSync.test.mjs","name":"uploads exact CSV bytes, verifies EU SHA-256 before head and delete, and logs only the summary"},
+      {"file":"apps/rehabtrainerhub/functions/_lib/rawDataSync.test.mjs","name":"EU checksum verification uses only fixed API endpoints and no downloadable links"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"raw CSV sync is a separate hourly cron with only its two private R2 buckets"}
+    ]
+  },
+  {
+    "id": "AG-DATA-05",
+    "summary": "練習清單僅 `TRAINING_PLANS_ENABLED=1` 啟用，限授權員工指派最多 12 款官方遊戲。週一至週日計達成，連續六週給「六週全勤」。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"apps/rehabtrainerhub/functions/api/training-plans.test.mjs","name":"disabled session hook ignores plan fields without changing official launch behavior"},
+      {"file":"apps/rehabtrainerhub/functions/api/training-plans.test.mjs","name":"accepts 12 distinct games and target limits, archives previous list and writes audit atomically"},
+      {"file":"apps/rehabtrainerhub/functions/api/training-plans.test.mjs","name":"every item must reach its target and progress GET exposes only the caller list and display name"},
+      {"file":"scripts/check-practice-plans.test.mjs","name":"staff dashboard omits the tab when disabled and exposes it to admin and therapist when enabled"}
+    ]
+  },
+  {
+    "id": "AG-DATA-06",
+    "summary": "練習清單文案用「練習清單／指派／本週進度」。個別化使用另依 上節的法規審查規則。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"public Hub strings use practice wording and keep private resumes out of copy"},
+      {"file":"scripts/check-practice-plans.test.mjs","name":"new copy has both languages, parameter placeholders match and narrow layouts have accessible controls"}
+    ]
+  },
+  {
+    "id": "AG-DATA-07",
+    "summary": "D1 migration 由 `0001` 起連續編號，部署先套用 migrations，再部署 runner 與 Hub。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"D1 migration numbers are unique and contiguous from 0001"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"deploy dry-run migrates D1, deploys the runner before the Hub, and hands secrets over only by file"}
+    ]
+  },
+  {
+    "id": "AG-GIT-01",
+    "summary": "提交用簡短 Conventional Commit。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-repo-policies.test.mjs","name":"a directly checked out commit uses a Conventional Commit subject"}
+    ]
+  },
+  {
+    "id": "AG-GIT-02",
+    "summary": "僅在 `main` 工作。Commit、push、部署與發布須明確授權。核准後直接推 main，Dependabot 等自動 PR 由擁有者另決。",
+    "enforcement": "process",
+    "reason": "工作分支例外與操作授權依擁有者決定；Git 不能證明已授權。"
+  },
+  {
+    "id": "AG-GIT-03",
+    "summary": "若使用 PR，附摘要、受影響範圍、驗證命令、適用的截圖及 migration／環境變數。",
+    "enforcement": "process",
+    "reason": "是否需要截圖或部署註記取決於各次變更。"
+  },
+  {
+    "id": "AG-DEPLOY-01",
+    "summary": "`main` push 只部署 Workers。Build、verify、deployment_scope 並行，deploy 須等三者成功且需部署，從 artifact 部署。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"the deploy workflow supports only Workers and retains the Hub runtime environment"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"build runs beside verification without secrets and deploy consumes only its artifact"}
+    ]
+  },
+  {
+    "id": "AG-DEPLOY-02",
+    "summary": "純文件及僅有已遷移遊戲內容／版號的變更跳過平台部署。手動執行、無法確認差異或平台、依賴與舊遊戲變更依部署範圍執行。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/pages-deployment-scope.test.mjs","name":"R2 content and version metadata skip Pages while platform and legacy games deploy"},
+      {"file":"scripts/pages-deployment-scope.test.mjs","name":"Cloudflare build excludes migrated R2 bundles and workflow gates deployment by scope"}
+    ]
+  },
+  {
+    "id": "AG-DEPLOY-03",
+    "summary": "CI 只快取 Hub `.next/cache`。部署 artifact 帶隱藏檔，缺 Worker entry／`.assetsignore`、Hub routes 或 runner origin 不符時拒絕。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"deployment caches build intermediates with dependency, source and public configuration keys"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"build runs beside verification without secrets and deploy consumes only its artifact"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"precompiled deploy validates each selected app entry before migrations or deployment"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"a deploy without Hub routes is refused before wrangler runs"}
+    ]
+  },
+  {
+    "id": "AG-DEPLOY-04",
+    "summary": "部署 Hub 前確認私人原始資料 bucket。Issue 與 pCloud Cron Worker 另行部署，執行期 secrets 只給需要的 Worker。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"raw CSV sync is a separate hourly cron with only its two private R2 buckets"},
+      {"file":"scripts/check-cloudflare-workers.test.mjs","name":"Hub Worker secrets are an explicit runtime allowlist that keeps runner origins out of auth"},
+      {"file":"scripts/ensure-oculomotor-bucket.test.mjs","name":"the CI command ensures both private CSV buckets without changing public access"}
+    ]
+  },
+  {
+    "id": "AG-PUBLISH-01",
+    "summary": "官方發布前須驗證並取得精確 version／contentSha256 核准。未核准只跑 dry run。同一遊戲發布與回退不得並行；自動模式由擁有者執行正式發布。",
+    "enforcement": "process",
+    "reason": "擁有者批准及遠端發布互斥由操作者確認。"
+  },
+  {
+    "id": "AG-PUBLISH-02",
+    "summary": "先部署相容 runner，再發布。首次登記 R2 遊戲時，須發布並切 current 後才推 registry。發布後核對正式 bytes、API、session 及 Hub／PWA，留收據。",
+    "enforcement": "process",
+    "reason": "順序、正式遠端狀態與收據依實際環境確認。"
+  },
+  {
+    "id": "AG-PUBLISH-03",
+    "summary": "Publisher 讀各遊戲 dist，版本取 package.json，逐檔回讀雜湊再切 current。同版不可覆寫。回退核對核准歷史，首次來源限已追蹤收據。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/publish-official-game.test.mjs","name":"publisher verifies assets then manifest before activating current, and retains old approved versions for rollback"},
+      {"file":"scripts/publish-official-game.test.mjs","name":"upload failure, corrupted readback and immutable conflicts never change current"},
+      {"file":"scripts/publish-official-game.test.mjs","name":"bootstrap accepts receipt digests only after verifying the stored manifest and files"},
+      {"file":"scripts/check-self-contained-game.test.mjs","name":"obsolete local release staging is removed and ignored without ignoring publication receipts"}
+    ]
+  },
+  {
+    "id": "AG-REC-01",
+    "summary": "官方遊戲須在 `recommendation/gameFeatures.json` 以可觀察的任務需求與功能佐證分類，重新產出 index 並通過 gate。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"every official catalog seed has a valid recommendation profile"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"draft and confirmed are accepted and unannotated function leaves remain optional"},
+      {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"pipeline writes identical LF bytes and --check detects a missing or stale index"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"a new catalog seed with a flow manifest and no feature entry fails R10"}
+    ]
+  },
+  {
+    "id": "AG-REC-02",
+    "summary": "推薦標籤對齊倉庫註冊的架構與雙語詞彙。保留未知值遮罩、固定群組權重與可重現排序；相似度審閱限管理員。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"the ICF registry pins the code and bilingual titles to the owner-supplied 2001 edition"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"masked cosine distinguishes unknown from known zero and keeps fixed weights with absent groups"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"neighbors omit self and nulls, sort score ties by id, and share only function tags"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"the similarity tab and its panel are available only to administrators"}
+    ]
+  },
+  {
+    "id": "AG-REC-03",
+    "summary": "新官方遊戲先將推薦項目登記為 `draft`，審閱後再改為 `confirmed`。",
+    "enforcement": "process",
+    "reason": "淺層 checkout 的最終狀態可驗證資料格式，初始狀態及人工審閱順序須依變更紀錄。"
+  }
+]
