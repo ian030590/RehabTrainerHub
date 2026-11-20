@@ -1,0 +1,168 @@
+.adminTabs {
+  flex-wrap: wrap;
+}
+
+.adminTabs button {
+  cursor: pointer;
+}
+
+.adminTabs button:hover,
+.adminTabs button:active,
+.adminTabs button[aria-selected='true'] {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.review,
+.validation {
+  overflow-wrap: anywhere;
+}
+
+.picker {
+  max-width: 32rem;
+}
+
+.picker select {
+  cursor: pointer;
+  min-width: 0;
+}
+
+.picker select:hover,
+.picker select:active {
+  border-color: var(--primary);
+  text-decoration: underline;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 24px;
+}
+
+.status dt {
+  font-weight: 700;
+}
+
+.status dd,
+.tags dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+}
+
+.details {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.neighbors {
+  min-width: 0;
+}
+
+.review h3 {
+  margin-bottom: 8px;
+}
+
+.dimensions {
+  display: grid;
+  gap: 16px;
+}
+
+.dimensions h4 {
+  margin: 0;
+  color: var(--heading);
+}
+
+.framework {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: var(--type-label);
+}
+
+.tags {
+  margin: 0;
+}
+
+.tags > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.evidence {
+  margin: 4px 0 0;
+  color: var(--text);
+}
+
+.setups {
+  padding-inline-start: 1.5rem;
+}
+
+.matches {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.review .match {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+  gap: 6px 12px;
+  text-align: start;
+  transition: none;
+}
+
+.match:hover .matchTitle,
+.match:active .matchTitle {
+  text-decoration: underline;
+}
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  width: 3rem;
+  max-width: 20vw;
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-blue);
+}
+
+.sharedTags {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: var(--type-label);
+}
+
+@media (max-width: 700px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}

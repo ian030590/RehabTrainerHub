@@ -31,7 +31,7 @@ npm run sync:games              # 修改 games/catalog.ts 或遊戲 workspace �
 npm run sync:team-skills        # 修改 .claude/skills 後同步 Codex 團隊技能轉接器
 ```
 
-七項 CI gate 由 `ci.yml` 的共用 matrix 執行；`deploy-cloudflare-pages.yml` 透過 `verify` job 以 `workflow_call` 重用，全部通過才部署。本機完整執行用 `npm run test:ci`；新增 gate 須同步 root `test:ci`、`ci.yml` matrix 與 `AGENTS.md` CI 節。遊戲架構拆成 types／tests／games 三個 job，55 個遊戲測試明列為 Node 測試入口，合計九個並行 job，涵蓋原七項 gate：
+八項 CI gate 由 `ci.yml` 的共用 matrix 執行；`deploy-cloudflare-pages.yml` 透過 `verify` job 以 `workflow_call` 重用，全部通過才部署。本機完整執行用 `npm run test:ci`；新增 gate 須同步 root `test:ci`、`ci.yml` matrix 與 `AGENTS.md` CI 節。遊戲架構拆成 types／tests／games 三個 job，合計十個並行 job。
 
 ```bash
 npm run test:naming
@@ -40,6 +40,7 @@ npm run test:game-architecture   # 全部遊戲 tsc + R2 自包含／遷移／�
 npm run test:hub-functions       # apps/rehabtrainerhub/functions/**/*.test.mjs
 npm run test:gamerunner          # apps/usergamerunner/tests/*.test.mjs
 npm run test:entrypoints         # entrypoint、導覽、i18n、training flow、webgazer、game-platform…
+npm run test:recommendation      # 活動標籤、目錄、相似度產物及管理審閱
 npm run test:cloudflare-deploy
 ```
 

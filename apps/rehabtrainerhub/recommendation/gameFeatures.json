@@ -1,0 +1,4272 @@
+{
+  "schemaVersion": 2,
+  "taxonomyVersion": "2.0.0",
+  "games": {
+    "drawing-defense": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 2,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "motor.eye_hand_coordination": 2,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 1,
+        "response_modality.arm_movement": 2,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "motor.reaching": "玩家移動手臂和手部，讓游標沿提示圖形的路徑描畫。",
+        "motor.eye_hand_coordination": "玩家一邊看圖形邊界與游標位置，一邊調整手部描畫方向。"
+      }
+    },
+    "asteroid-shield": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 2,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "motor.eye_hand_coordination": 2,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 1,
+        "response_modality.arm_movement": 2,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "motor.reaching": "玩家將手控制的護盾移向落下隕石所在的水平位置。",
+        "motor.eye_hand_coordination": "玩家看著隕石的落點移動護盾，在隕石碰到飛船前攔截。"
+      }
+    },
+    "gesture-battler": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 1,
+        "motor.fine_hand_use": 2,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 0,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 2,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "camera",
+          "allCapabilities": [
+            "camera"
+          ]
+        }
+      ],
+      "evidence": {
+        "motor.fine_hand_use": "玩家做出指定數字的手勢，讓相機辨識指位並維持到進度完成。"
+      }
+    },
+    "motor-cortex-rehab": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 2,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "motor.eye_hand_coordination": 2,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 0,
+        "response_modality.arm_movement": 2,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "camera",
+          "allCapabilities": [
+            "camera"
+          ]
+        }
+      ],
+      "evidence": {
+        "motor.reaching": "玩家抬手對準畫面上的敵人，讓手移進指定瞄準區域。",
+        "motor.eye_hand_coordination": "玩家依手部游標與敵人的相對位置調整瞄準，並穩住手使雷射持續命中。"
+      }
+    },
+    "moving-card": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家在多張圖卡之間掃視，找出與提示相符的圖卡。",
+        "visual_perception.pattern_recognition": "玩家辨別圖卡上的字母組合，選出與提示組合相同的圖卡。",
+        "attention.selective": "玩家在多張不相符的圖卡中持續搜尋指定字母組合。"
+      }
+    },
+    "oculomotor-training": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.saccade": 2,
+        "visual_perception.oculomotor.smooth_pursuit": 2,
+        "visual_perception.oculomotor.fixation": 2,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 1,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 2,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 1,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "camera-pointer",
+          "allCapabilities": [
+            "camera",
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "camera-touch",
+          "allCapabilities": [
+            "camera",
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.oculomotor.saccade": "玩家在掃視模式中把視線從原位置迅速移到九宮格內跳換位置的目標。",
+        "visual_perception.oculomotor.smooth_pursuit": "玩家在追視模式中讓視線跟隨平滑移動的目標。",
+        "visual_perception.oculomotor.fixation": "玩家在凝視模式中把視線維持在依指示停留的目標上。"
+      }
+    },
+    "gabor-patching": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 2,
+        "visual_perception.scanning": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.acuity_contrast": "玩家辨認背景中逐漸可見的低對比條紋斑塊。",
+        "visual_perception.scanning": "玩家巡查畫面多個位置並點選出現的條紋斑塊。"
+      }
+    },
+    "reading-training": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 1,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 2,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 1,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "language.reading": "玩家閱讀中央依序出現的短文片段，再依文章內容回答理解題。"
+      }
+    },
+    "driving-rehab": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.selective": 1,
+        "attention.divided": 2,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "visual_perception.pattern_recognition": 1,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 1,
+        "motor.eye_hand_coordination": 1,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 1,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 1,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "wheel",
+          "allCapabilities": [
+            "input.steering_wheel"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.divided": "玩家維持行車方向與速度，同時監看車流及需要反應的道路事件。"
+      }
+    },
+    "hart-chart": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.alternating": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.saccade": 2,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 1,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 1,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.oculomotor.saccade": "玩家從解碼器的座標提示迅速移開視線，再看向哈特圖上指定的格子。",
+        "visual_perception.scanning": "玩家逐欄逐列定位座標指向的符號，並把對應符號輸入解碼欄。"
+      }
+    },
+    "ufov": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 2,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 2,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.smooth_pursuit": 0,
+        "visual_perception.oculomotor.fixation": 1,
+        "visual_perception.visual_field": 2,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "processing_speed.gs_processing_speed": "玩家在短暫呈現的畫面中辨識中央車種，依關卡要求同時記住周邊目標方向。",
+        "visual_perception.visual_field": "玩家注視中央時記下閃現在周邊環上的車輛方向。",
+        "attention.divided": "玩家在同一次短暫呈現中辨識中央車種並定位周邊車輛。",
+        "attention.selective": "玩家在有干擾圖形的關卡中找出周邊車輛並忽略其他圖形。",
+        "visual_perception.pattern_recognition": "玩家在畫面消失後從選項中指出中央閃現的車輛圖樣。"
+      }
+    },
+    "every-ball-response": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 1,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.hand_arm_use": 2,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 0,
+        "response_modality.arm_movement": 2,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 1,
+        "reaction_type.choice_reaction": 1,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "camera",
+          "allCapabilities": [
+            "camera"
+          ]
+        },
+        {
+          "id": "microphone",
+          "allCapabilities": [
+            "microphone"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.inhibition": "玩家看到指定為不動作的球時保持不動，避免做出平常的拍擊反應。",
+        "motor.hand_arm_use": "玩家依球種移動雙臂拍手或用手拍大腿。"
+      }
+    },
+    "stroop": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.selective": "玩家按字的墨色作答，即使文字本身指的是另一種顏色。",
+        "executive.inhibition": "玩家抑制按字義作答的反應，改按實際出現的墨色。"
+      }
+    },
+    "flanker": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 1,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.selective": "玩家忽略兩側箭頭，依中間箭頭所指方向作答。",
+        "visual_perception.pattern_recognition": "玩家辨別中央箭頭朝左或朝右，再按對應方向鍵或按鈕。"
+      }
+    },
+    "go-nogo": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.inhibition": "玩家只對指定顏色按鍵，看到另一種顏色時抑制按鍵。",
+        "attention.sustained": "玩家持續監看逐一出現的色塊，在整段作業中辨別要按與不按的刺激。"
+      }
+    },
+    "stop-signal": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.inhibition": "玩家原先準備依形狀按左或右，看到延遲出現的星形訊號就停止作答。",
+        "processing_speed.gt_reaction_decision_speed": "玩家在沒有停止訊號時依形狀迅速作答，遊戲記錄形狀出現到按鍵的時間。"
+      }
+    },
+    "sart": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.sustained": "玩家持續監看接連出現的數字並在各試次維持相同的作答規則。",
+        "executive.inhibition": "玩家通常每看到數字就作答，只在指定數字出現時忍住不按。"
+      }
+    },
+    "schulte-grid": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家在打散的數字方格中巡查各格，依數字順序一一點選。"
+      }
+    },
+    "hex-schulte": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 2,
+        "visual_perception.visual_field": 2,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家在六角盤面巡查各位置，依數字順序找出下一個目標。",
+        "visual_perception.visual_field": "玩家依指示一面看向中央，一面從周邊六角格找出下一個數字。",
+        "visual_perception.oculomotor.fixation": "玩家依中央標記維持注視，同時在周邊辨認應作答的數字。"
+      }
+    },
+    "continuous-performance": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.sustained": "玩家在長串逐一閃現的字母中持續等待少見的指定目標。",
+        "executive.inhibition": "玩家只在指定目標出現時作答，連續遇到其他字母也不按。"
+      }
+    },
+    "simon-task": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.inhibition": "玩家看到形狀出現在與正確鍵相反的一側時，抑制按出現位置作答的反應。",
+        "visual_perception.pattern_recognition": "玩家辨認畫面上的形狀，依形狀與按鍵的對應規則作答。"
+      }
+    },
+    "card-sorting": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.alternating": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 2,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 1,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.shifting": "玩家根據正誤回饋推知配對規則改變，改按顏色、形狀或數量分類。",
+        "visual_perception.pattern_recognition": "玩家比較待分類卡與範例牌的顏色、形狀及圖案數量。"
+      }
+    },
+    "attentional-blink": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 1,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 1,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.selective": "玩家在快速閃現的一串字母中找出兩個應回報的數字。",
+        "processing_speed.gs_processing_speed": "玩家辨認短暫且相隔很近的兩個數字，待字串結束後依序回報。"
+      }
+    },
+    "time-perception": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 2,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "time.time_experience": "玩家觀看圓點亮起的間隔，再按住按鈕重現、比較或估計該段時間。"
+      }
+    },
+    "divided-attention": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 2,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 2,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 1,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.divided": "玩家一面跟隨移動圓點，一面回答同時出現的算式。",
+        "quantitative.calculation": "玩家計算螢幕下方的算式，從顯示的答案中選出結果。"
+      }
+    },
+    "pattern-memory": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.visuospatial_sketchpad": "玩家短暫記住九宮格內圖形的顏色與位置，在空白後比較新舊排列。"
+      }
+    },
+    "attention-network-task": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 1,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.selective": "玩家看見提示後判斷中央箭頭，忽略旁邊方向可能不同的箭頭。",
+        "visual_perception.pattern_recognition": "玩家辨認中央箭頭指向左邊或右邊，按對應的選項。",
+        "processing_speed.gt_reaction_decision_speed": "玩家在箭頭列出現後盡快選出中央箭頭的方向，遊戲記錄作答延遲。"
+      }
+    },
+    "antisaccade": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 2,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.saccade": 2,
+        "visual_perception.oculomotor.fixation": 1,
+        "visual_perception.visual_field": 1,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.oculomotor.saccade": "玩家看見一側方塊閃現後迅速移開視線，轉向另一側出現的箭頭。",
+        "executive.inhibition": "玩家抑制往突然閃現的方塊看去的反應，改向相反側找箭頭。",
+        "processing_speed.gt_reaction_decision_speed": "玩家在目標箭頭被遮蔽前辨別方向，並盡快按下對應方向。"
+      }
+    },
+    "reaction-time": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 1,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 2,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "processing_speed.gt_reaction_decision_speed": "玩家在綠色訊號畫出後立即作答，遊戲計算訊號出現到按下的時間。",
+        "attention.sustained": "玩家在多個長度不同的等待區間持續注意畫面，以免錯過綠色訊號。"
+      }
+    },
+    "whack-a-mole": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "processing_speed.gt_reaction_decision_speed": "玩家在地鼠縮回洞前點中牠，遊戲記錄從目標出現到點中的時間。",
+        "visual_perception.scanning": "玩家監看多個洞口，在每次地鼠出現時找出所在洞口。"
+      }
+    },
+    "memory-match": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.visuospatial_sketchpad": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "visual_perception.pattern_recognition": 1,
+        "visual_perception.visual_memory": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.visual_memory": "玩家記住先前翻開的字母牌各在何處，再翻出相同字母的一對。"
+      }
+    },
+    "simon-says": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 2,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.visuospatial_sketchpad": "玩家記住四個位置中哪些按鈕依序亮起，再按相同的位置順序重現。"
+      }
+    },
+    "n-back": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 2,
+        "working_memory.phonological_loop": 2,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.phonological_loop": "玩家暫時記住逐一出現的字母，以便判斷當前字母是否與前第 N 個相同。",
+        "executive.updating": "每當新字母出現，玩家更新最近的字母順序，重複用當前字母比對前第 N 個。"
+      }
+    },
+    "digit-span": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 2,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.visual_memory": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.phonological_loop": "玩家短暫記住逐個出現的數字，再按原順序或倒序輸入。"
+      }
+    },
+    "spatial-span": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 2,
+        "processing_speed.gt_reaction_decision_speed": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.visuospatial_sketchpad": "玩家記住亮起格子的空間順序，再依原順序或倒序點選。"
+      }
+    },
+    "letter-memory": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 2,
+        "working_memory.phonological_loop": 2,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.phonological_loop": "玩家記住逐一出現的字母，待序列結束後依序輸入最近四個。",
+        "executive.updating": "玩家在每個新字母出現時保留最新四個，並捨去不再需要的字母。"
+      }
+    },
+    "keep-track": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 2,
+        "working_memory.phonological_loop": 2,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 1,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 1,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 2,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "working_memory.phonological_loop": "玩家暫時記住各指定類別最近出現的詞，在作答時選出這些詞。",
+        "executive.updating": "玩家遇到屬於目標類別的新詞時，用它替換該類別先前記住的詞。"
+      }
+    },
+    "minesweeper": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 1,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.problem_solving": "玩家依已翻開格子的數字線索，推斷相鄰哪一格有地雷或可以安全翻開。"
+      }
+    },
+    "tower-of-london": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 1
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家先安排彩球在不同容量柱子間的搬移順序，以較少步驟排成目標圖。",
+        "higher_cognition.problem_solving": "玩家在不能超過柱子容量的限制下找出能完成目標配置的搬球方法。"
+      }
+    },
+    "number-letter": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.alternating": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 2,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.shifting": "玩家依字母數字組合所在的上半部或下半部，切換奇偶判斷與母音子音判斷。"
+      }
+    },
+    "plus-minus": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.alternating": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 2,
+        "executive.updating": 0,
+        "higher_cognition.planning": 0,
+        "higher_cognition.problem_solving": 0,
+        "working_memory.phonological_loop": 1,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 1,
+        "quantitative.calculation": 2,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "executive.shifting": "玩家在輪替段依題目順序交替改用加三與減三的規則。",
+        "quantitative.calculation": "玩家逐題將兩位數加三或減三，再輸入計算結果。"
+      }
+    },
+    "lights-out": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家預想點選一格後相鄰燈格會如何變化，再安排接下來的點選順序。",
+        "higher_cognition.problem_solving": "玩家依燈格連動規則找出能讓所有燈熄滅的點選組合。"
+      }
+    },
+    "sliding-puzzle": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家安排數字板塊移入空格的多步順序，逐步把數字排回指定位置。",
+        "higher_cognition.problem_solving": "玩家在只能滑動空格相鄰板塊的限制下逐步還原盤面。"
+      }
+    },
+    "sudoku": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 1,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 1,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.problem_solving": "玩家根據所在列、欄及關卡規則排除候選數字，再填入空格。"
+      }
+    },
+    "tic-tac-toe": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家在落子前預想自己可能連線的位置與電腦下一步可落的位置。"
+      }
+    },
+    "connect4": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家預想棋子落下會停在哪一格，並安排自己連線或阻擋對手的後續步驟。"
+      }
+    },
+    "dots-and-boxes": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家選擇要畫的邊線時，預想對手下一回合是否能用第四條邊封住方格。"
+      }
+    },
+    "hex": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.planning": "玩家安排連接己方兩側的落子路徑，並思考要在哪裡阻斷對手的連線。"
+      }
+    },
+    "maze": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "higher_cognition.planning": 1,
+        "higher_cognition.problem_solving": 2,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 1,
+        "visual_perception.visuocognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 2,
+        "pacing.externally_paced": 0,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 2
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "higher_cognition.problem_solving": "玩家在迷宮的岔路與死路之間找出一條從起點到出口的路徑。"
+      }
+    },
+    "tongue-catch": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 2
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 0,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 2,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "camera",
+          "allCapabilities": [
+            "camera"
+          ]
+        }
+      ],
+      "evidence": {
+        "oral_swallowing.tongue_movement": "玩家依畫面目標向左或向右伸舌，讓相機辨識方向以接住目標。"
+      }
+    },
+    "seagull-flight": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 2,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 2,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 1,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 2,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 2,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "camera",
+          "allCapabilities": [
+            "camera"
+          ]
+        },
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "motor.head_neck_control": "玩家在相機模式點頭使海鷗振翅，並左右轉頭引導牠穿過圓環。"
+      }
+    },
+    "popout-search": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家查看圓框周圍散布的字母，判斷有沒有與中央字母相同的目標。",
+        "visual_perception.pattern_recognition": "玩家依字形辨認由明顯不同的干擾字母包圍的目標。"
+      }
+    },
+    "complex-search": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家在散布的相似字形中逐區搜尋中央提示的字母。",
+        "visual_perception.pattern_recognition": "玩家比較目標字母與相近干擾字母的細部字形。",
+        "attention.selective": "玩家排除字形很相像的干擾項，只依中央提示的字母作答。"
+      }
+    },
+    "conjunction-search": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 2,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家巡查視野中散布的字母，找出與中央提示相符的綠色字母。",
+        "visual_perception.pattern_recognition": "玩家同時比對顏色與字形，選出兩項特徵都符合的目標。",
+        "attention.selective": "玩家忽略只同色或只同形的字母，判斷指定目標是否存在。"
+      }
+    },
+    "exploratory-saccade": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.selective": 1,
+        "attention.divided": 0,
+        "executive.inhibition": 0,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gs_processing_speed": 1,
+        "quantitative.calculation": 0,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.saccade": 2,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 2,
+        "visual_perception.pattern_recognition": 1,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 2,
+        "environment.in_motion": 0,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 0,
+        "movement_continuity.serial": 2,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 0,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 0,
+        "reaction_type.choice_reaction": 2,
+        "reaction_type.go_no_go": 0,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        }
+      ],
+      "evidence": {
+        "visual_perception.scanning": "玩家巡查散布在畫面上的數字與字母，找出每一個指定數字。",
+        "visual_perception.oculomotor.saccade": "玩家反覆把視線從一個位置移到另一個位置，尋找尚未標記的指定數字。"
+      }
+    },
+    "brake-reaction": {
+      "reviewStatus": "draft",
+      "functionTags": {
+        "attention.sustained": 2,
+        "attention.selective": 2,
+        "attention.divided": 1,
+        "executive.inhibition": 1,
+        "executive.shifting": 0,
+        "executive.updating": 0,
+        "working_memory.phonological_loop": 0,
+        "working_memory.visuospatial_sketchpad": 0,
+        "processing_speed.gt_reaction_decision_speed": 2,
+        "time.time_experience": 0,
+        "visual_perception.oculomotor.fixation": 0,
+        "visual_perception.visual_field": 0,
+        "visual_perception.acuity_contrast": 0,
+        "visual_perception.scanning": 0,
+        "visual_perception.pattern_recognition": 2,
+        "motor.reaching": 0,
+        "motor.fine_hand_use": 0,
+        "motor.head_neck_control": 0,
+        "motor.foot_use": 0,
+        "language.reading": 0,
+        "oral_swallowing.tongue_movement": 0
+      },
+      "taskDemandTags": {
+        "environment.stationary": 0,
+        "environment.in_motion": 2,
+        "intertrial_variability.absent": 0,
+        "intertrial_variability.present": 2,
+        "pacing.self_paced": 0,
+        "pacing.externally_paced": 2,
+        "movement_continuity.discrete": 2,
+        "movement_continuity.serial": 0,
+        "movement_continuity.continuous": 0,
+        "stimulus_modality.visual": 2,
+        "stimulus_modality.auditory": 1,
+        "stimulus_modality.tactile": 0,
+        "response_modality.manual_selection": 2,
+        "response_modality.arm_movement": 0,
+        "response_modality.hand_gesture": 0,
+        "response_modality.head_movement": 0,
+        "response_modality.eye_movement": 0,
+        "response_modality.orofacial_movement": 0,
+        "response_modality.foot": 0,
+        "response_modality.voice": 0,
+        "reaction_type.simple_reaction": 1,
+        "reaction_type.choice_reaction": 0,
+        "reaction_type.go_no_go": 2,
+        "reaction_type.continuous_tracking": 0,
+        "reaction_type.recall_reproduction": 0,
+        "reaction_type.self_paced_problem_solving": 0
+      },
+      "supportedSetups": [
+        {
+          "id": "pointer",
+          "allCapabilities": [
+            "input.pointer"
+          ]
+        },
+        {
+          "id": "touch",
+          "allCapabilities": [
+            "input.touch"
+          ]
+        },
+        {
+          "id": "keyboard",
+          "allCapabilities": [
+            "input.keyboard"
+          ]
+        }
+      ],
+      "evidence": {
+        "attention.selective": "玩家只對同車道目標車的煞車燈作答，同時忽略方向燈與其他車道車燈。",
+        "processing_speed.gt_reaction_decision_speed": "玩家看見同車道煞車燈點亮後立即按煞車，遊戲記錄燈亮到作答的時間。",
+        "attention.sustained": "玩家在每一關長度不一的巡航期間持續留意前車，等待有效煞車訊號。",
+        "visual_perception.pattern_recognition": "玩家辨識紅色煞車燈與琥珀色方向燈的差異，以判斷何時作答。"
+      }
+    }
+  }
+}

@@ -149,12 +149,13 @@ test('CI installs root and workspace dependencies without audit or funding reque
   }
 });
 
-test('the CI matrix covers exactly the local seven gates, including every shard command', async () => {
+test('the CI matrix covers exactly the local eight gates, including every shard command', async () => {
   const { scripts } = JSON.parse(await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'));
   const gates = scripts['test:ci'].split('&&').map(command => ReadNpmScriptName(command.trim()));
-  assert.equal(gates.length, 7);
+  assert.equal(gates.length, 8);
+  assert.ok(gates.includes('test:recommendation'));
   const matrixScripts = await ReadCiScriptNames();
-  assert.equal(matrixScripts.length, 9);
+  assert.equal(matrixScripts.length, 10);
   assert.deepEqual(matrixScripts.slice(2, 5), ['test:game-architecture:types', 'test:game-architecture:tests', 'test:game-architecture:games']);
   assert.equal(new Set(matrixScripts).size, matrixScripts.length, 'matrix commands must not run twice');
   for (const script of matrixScripts) {

@@ -2,7 +2,7 @@
 
 ## 測試與 CI 規則
 
-- 七項 gate 由 GitHub Actions 的 `.github/workflows/ci.yml` 以九個 matrix job 並行執行，遊戲架構分為 types／tests／games；支援 PR、手動執行及 `workflow_call`。`main` 推送由部署 workflow 的 `verify` job 呼叫同一份 CI，與 `build`、`deployment_scope` 並行；`deploy` 等待三者成功且需部署時，才從 artifact 部署 Workers。本機完整驗證使用 `npm run test:ci`，七項 gate 的入口以 root `package.json` 為準。
+- 八項 gate 由 GitHub Actions 的 `.github/workflows/ci.yml` 以十個 matrix job 並行執行，遊戲架構分為 types／tests／games；支援 PR、手動執行及 `workflow_call`。`main` 推送由部署 workflow 的 `verify` job 呼叫同一份 CI，與 `build`、`deployment_scope` 並行；`deploy` 等待三者成功且需部署時，才從 artifact 部署 Workers。本機完整驗證使用 `npm run test:ci`，八項 gate 的入口以 root `package.json` 為準。
 - 新增或修改自動化測試時，必須確認它會由 `test:ci` 與 `ci.yml` matrix 直接或間接執行；未被既有探索規則納入時，同一筆變更必須更新測試入口。分片後的聯集須恰好執行原 gate 全部命令一次，並涵蓋全部測試。需要瀏覽器或硬體而無法納入一般 gate 的測試，須明列本機手動執行方式與限制。
 - CI 任一 gate 失敗都必須阻止部署，不得略過失敗測試。`npm run test:uiux-browser` 需要本機 Brave，依變更範圍手動執行；安裝套件不設定 Git hook。本機測試不得執行正式環境部署、發布遊戲或寫入正式資料。
 
@@ -16,6 +16,7 @@
 ## 遊戲團隊流程（2026-11-09 擁有者決策）
 
 - 所有新遊戲都必須經過遊戲團隊流程，入口見 `.claude/docs/rehab-game-team.md`。新增 `apps/rehabtrainerhub/games/` 下的遊戲目錄，或在 `apps/rehabtrainerhub/games/catalog.ts` 新增遊戲項目，都適用此規則。
+- 新官方遊戲須在 `apps/rehabtrainerhub/recommendation/gameFeatures.json` 新增 `draft` 項目，補齊任務需求及主要功能的行為依據，執行 `npm run recommendation:build` 並通過 CI 的 `npm run test:recommendation`。
 - 所有遊戲都須有明確的中英文聚光燈教學。改動遊戲內容時，步驟須明確說明受影響的內容，必要時同步更新。Claude Code 提交 hook 檢查受影響的遊戲並提醒核對步驟，`scripts/check-game-spotlight-tour.test.mjs` 檢查所有遊戲的教學結構。
 - 每款新遊戲必須有 `design/gdd/<gameId>.md`，包含六個二級標題：`## Summary`、`## Overview`、`## Detailed Design`、`## Edge Cases`、`## Dependencies`、`## Acceptance Criteria`。`scripts/check-game-team-design.test.mjs` 經 `test:game-architecture` 納入 CI；`scripts/game-team-legacy-games.json` 凍結 2026-11-09 現有遊戲的豁免清單，不得加入新遊戲，移除遊戲時才刪除對應項目。
 - Claude 負責協調，透過 `.claude/scripts/codex-agent.sh` 執行團隊成員作為 Codex workers，不使用 Claude 子代理；機制以 `.claude/docs/codex-workers.md` 為準。Codex 使用團隊技能時，依轉接器說明逐一承擔角色，不從 Codex 呼叫 wrapper。
@@ -145,7 +146,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `test:cloudflare-deploy` 另含 `scripts/check-cloudflare-workers.test.mjs`：Workers 設定的 D1／KV／R2 必須與 Pages `wrangler.toml` 相同、runner 只綁 release bucket 且沒有 vars／secrets、資產順序對應 Pages（Hub `run_worker_first: true`，runner 對應 `_routes.json`）、Hub secrets 為執行期 allowlist、部署順序為 migrations → runner → Hub，以及缺少 Hub routes 時拒絕部署。部署 workflow 只在 `main` 執行 `scripts/deploy-cloudflare-workers.mjs --skip-functions-build`，缺少任一選定 app 的 `.worker/functions/index.js` 或資產目錄的 `.assetsignore` 時拒絕部署並提示編譯命令。本機不帶旗標時仍先編譯。Pages 備援已移除，`CLOUDFLARE_DEPLOY_TARGET` 已無作用，可刪除；回退使用 Worker 版本。
 - 部署 job 先以 Cloudflare API 確認或建立私人 `oculomotor-data` R2 bucket，再部署含 `OCULOMOTOR_DATA` binding 的 Hub；bucket 不設定公開網域，也不綁定 usergamerunner。
 - 2026-10-29 新增測試都併入既有 gate，matrix 不變：`test:entrypoints` 加入 `check-lobby-filters-pagination`、`check-raw-data-ui`、`check-raw-data-overlay`、`check-practice-plans` 與 `packages/ui/src` 的 `rawCoordinateRecorder`、`saveRawCoordinateCsv` 測試；`test:hub-functions` 以既有 glob 納入 `education-feed`、`raw-data`、`records.raw-data`、`rawData`、`rawDataSync`、`account-subjects.migration` 與 `training-plans` 測試；`test:cloudflare-deploy` 驗證 `workers/raw-data-sync` 只綁兩個私人 CSV bucket、不綁 D1／KV，以及 CI 會確認 `rehab-raw-data` bucket；`test:cloudflare-deploy` 另含 `cleanup-d1-raw-records` 與 `cleanup-oculomotor-csv` 測試。
-- 七項 gate 為 `naming`、`pwa`、`game-architecture`、`hub-functions`、`gamerunner`、`entrypoints`、`cloudflare-deploy`。`test:game-architecture` 組合 `test:game-architecture:types`（tsc）、`test:game-architecture:tests`（保留原入口）與 `test:game-architecture:games`（55 個明列遊戲測試檔）；`check-self-contained-game.test.mjs` 不再靜態引入其他測試，交由 Node 分程序並行執行。CI 將三者並行，共九個 matrix job；本機 `test:ci` 仍串接七項完整 gate。其餘 gate 不再分片，`test:entrypoints` 的內含 gate 以 root `package.json` 為準。
+- 八項 gate 為 `naming`、`pwa`、`game-architecture`、`hub-functions`、`gamerunner`、`entrypoints`、`recommendation`、`cloudflare-deploy`。`test:game-architecture` 組合 `test:game-architecture:types`（tsc）、`test:game-architecture:tests`（保留原入口）與 `test:game-architecture:games`（55 個明列遊戲測試檔）；`check-self-contained-game.test.mjs` 不再靜態引入其他測試，交由 Node 分程序並行執行。CI 將三者並行，共十個 matrix job；本機 `test:ci` 串接八項完整 gate。其餘 gate 不再分片，`test:entrypoints` 的內含 gate 以 root `package.json` 為準。
 - `npm run test:seo` 同時驗證衛教文章連結的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 - 手部目標追蹤遷移將 `check-motor-cortex-migration.test.mjs`、`check-motor-cortex-tutorial.test.mjs` 與 `check-motor-cortex-bridge.test.mjs` 納入既有 `test:game-architecture`；保留原引擎／參數邊界、五目標聚光燈、私有輸入、數值成果與原預覽圖驗證。`ci.yml` 維持上述七項 gate、同一 root 命令及 workflow 自身觸發範圍；不新增 Brave CI 項目。`test:gamerunner` 驗證相容的空 input-start 與可選 `{hand: any|left|right}`、明確同意、只輸出 21 點 xyz 及取消／斷線清理。

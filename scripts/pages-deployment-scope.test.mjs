@@ -15,6 +15,8 @@ test('R2 content and version metadata skip Pages while platform and legacy games
   const check = paths => NeedsPagesDeployment(paths, { migratedIds, readJson });
   assert.equal(check([`${gamePath}/runtime/tour.ts`, `${gamePath}/package.json`, 'package-lock.json', 'docs/releases/new.json']), false);
   for (const path of ['apps/rehabtrainerhub/games/stroop/StroopGame.tsx', 'apps/rehabtrainerhub/app/page.tsx',
+    'apps/rehabtrainerhub/recommendation/taxonomy.json', 'apps/rehabtrainerhub/recommendation/gameFeatures.json',
+    'apps/rehabtrainerhub/recommendation/generated/featureIndex.json',
     'apps/usergamerunner/functions/_lib/release.js', 'packages/ui/src/officialGameReleases.json', 'scripts/publish-official-game.mjs',
     '.github/workflows/deploy-cloudflare-pages.yml', 'package.json']) assert.equal(check([path]), true, path);
   after.packages[gamePath].dependencies['pixi.js'] = '9';

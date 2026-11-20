@@ -1,0 +1,1610 @@
+{
+  "taxonomyVersion": "2.0.0",
+  "frameworks": [
+    {
+      "id": "icf",
+      "name": "WHO International Classification of Functioning, Disability and Health",
+      "citation": "WHO (2001) International Classification of Functioning, Disability and Health. 王顏和譯《國際機能、失能和健康分類》（WHO ICF 2001 雙語版），衛生署委託「國際健康功能與身心障礙分類系統-兒童與青少年版推動計畫」99M4073。",
+      "url": "https://www.pmr.org.tw/files/papers/ICF.pdf",
+      "edition": "2001"
+    },
+    {
+      "id": "sohlberg-mateer",
+      "name": "Sohlberg–Mateer Clinical Model of Attention",
+      "citation": "Sohlberg MM, Mateer CA (1987/2001) clinical model of attention (focused, sustained, selective, alternating, divided). J Clin Exp Neuropsychol 9(2):117-130."
+    },
+    {
+      "id": "miyake-ef",
+      "name": "Miyake Unity and Diversity of Executive Functions",
+      "citation": "Miyake A, et al. (2000) unity and diversity of executive functions. Cognitive Psychology 41:49-100."
+    },
+    {
+      "id": "baddeley-wm",
+      "name": "Baddeley Model of Working Memory",
+      "citation": "Baddeley A (2000) the episodic buffer: a new component of working memory? Trends Cogn Sci 4(11):417-423."
+    },
+    {
+      "id": "chc",
+      "name": "Cattell–Horn–Carroll Theory of Cognitive Abilities",
+      "citation": "Schneider WJ, McGrew KS (2018) The Cattell-Horn-Carroll theory of cognitive abilities. In Contemporary Intellectual Assessment (4th ed.)."
+    },
+    {
+      "id": "warren-vph",
+      "name": "Warren Visual Perceptual Hierarchy",
+      "citation": "Warren M (1993) A hierarchical model for evaluation and treatment of visual perceptual dysfunction in adult acquired brain injury. Am J Occup Ther 47(1):42-54."
+    },
+    {
+      "id": "leigh-zee",
+      "name": "Leigh and Zee Ocular Motor Subsystems",
+      "citation": "Leigh RJ, Zee DS (2015) The Neurology of Eye Movements (5th ed.) (saccade / smooth pursuit / fixation subsystems)."
+    },
+    {
+      "id": "gentile",
+      "name": "Gentile Taxonomy of Motor Skills",
+      "citation": "Gentile AM (2000) Skill acquisition: action, movement, and neuromotor processes. In Movement Science: Foundations for Physical Therapy in Rehabilitation (2nd ed.)."
+    },
+    {
+      "id": "schmidt-lee",
+      "name": "Schmidt and Lee Motor Control and Learning",
+      "citation": "Schmidt RA, Lee TD (2019) Motor Control and Learning (6th ed.) (self-paced vs externally paced; discrete/serial/continuous)."
+    },
+    {
+      "id": "donders",
+      "name": "Donders Reaction Types",
+      "citation": "Donders FC (1868/1969) On the speed of mental processes. Acta Psychologica 30:412-431 (a-, b-, c-reactions)."
+    },
+    {
+      "id": "wab-r",
+      "name": "Western Aphasia Battery-Revised (WAB-R)",
+      "citation": "Kertesz A (2006) Western Aphasia Battery-Revised (language modalities)."
+    },
+    {
+      "id": "logemann",
+      "name": "Logemann Swallowing Phases",
+      "citation": "Logemann JA (1998) Evaluation and Treatment of Swallowing Disorders (2nd ed.) (oral preparatory, oral, pharyngeal, esophageal phases)."
+    }
+  ],
+  "icfCodes": [
+    {
+      "code": "b140",
+      "title": {
+        "en": "Attention functions",
+        "zh-TW": "注意力功能"
+      }
+    },
+    {
+      "code": "b1400",
+      "title": {
+        "en": "Sustaining attention",
+        "zh-TW": "持續注意力"
+      }
+    },
+    {
+      "code": "b1401",
+      "title": {
+        "en": "Shifting attention",
+        "zh-TW": "轉移注意力"
+      }
+    },
+    {
+      "code": "b1402",
+      "title": {
+        "en": "Dividing attention",
+        "zh-TW": "分配注意力"
+      }
+    },
+    {
+      "code": "b144",
+      "title": {
+        "en": "Memory functions",
+        "zh-TW": "記憶功能"
+      }
+    },
+    {
+      "code": "b1440",
+      "title": {
+        "en": "Short-term memory",
+        "zh-TW": "短期記憶"
+      }
+    },
+    {
+      "code": "b147",
+      "title": {
+        "en": "Psychomotor functions",
+        "zh-TW": "心理動作功能"
+      }
+    },
+    {
+      "code": "b1470",
+      "title": {
+        "en": "Psychomotor control",
+        "zh-TW": "心理動作控制"
+      }
+    },
+    {
+      "code": "b1560",
+      "title": {
+        "en": "Auditory perception",
+        "zh-TW": "聽覺"
+      }
+    },
+    {
+      "code": "b1561",
+      "title": {
+        "en": "Visual perception",
+        "zh-TW": "視覺"
+      }
+    },
+    {
+      "code": "b1565",
+      "title": {
+        "en": "Visuospatial perception",
+        "zh-TW": "視覺空間感"
+      }
+    },
+    {
+      "code": "b164",
+      "title": {
+        "en": "Higher-level cognitive functions",
+        "zh-TW": "高階認知功能"
+      }
+    },
+    {
+      "code": "b1641",
+      "title": {
+        "en": "Organization and planning",
+        "zh-TW": "組織和規劃"
+      }
+    },
+    {
+      "code": "b1643",
+      "title": {
+        "en": "Cognitive flexibility",
+        "zh-TW": "認知彈性"
+      }
+    },
+    {
+      "code": "b1646",
+      "title": {
+        "en": "Problem-solving",
+        "zh-TW": "解決問題"
+      }
+    },
+    {
+      "code": "b16700",
+      "title": {
+        "en": "Reception of spoken language",
+        "zh-TW": "口語語言接受"
+      }
+    },
+    {
+      "code": "b16701",
+      "title": {
+        "en": "Reception of written language",
+        "zh-TW": "書寫語言接受"
+      }
+    },
+    {
+      "code": "b16710",
+      "title": {
+        "en": "Expression of spoken language",
+        "zh-TW": "口語語言表達"
+      }
+    },
+    {
+      "code": "b16711",
+      "title": {
+        "en": "Expression of written language",
+        "zh-TW": "書面語言表達"
+      }
+    },
+    {
+      "code": "b172",
+      "title": {
+        "en": "Calculation functions",
+        "zh-TW": "計算功能"
+      }
+    },
+    {
+      "code": "b1802",
+      "title": {
+        "en": "Experience of time",
+        "zh-TW": "時間經驗"
+      }
+    },
+    {
+      "code": "b2101",
+      "title": {
+        "en": "Visual field functions",
+        "zh-TW": "視野功能"
+      }
+    },
+    {
+      "code": "b21022",
+      "title": {
+        "en": "Contrast sensitivity",
+        "zh-TW": "對比敏感度"
+      }
+    },
+    {
+      "code": "b215",
+      "title": {
+        "en": "Functions of structures adjoining the eye",
+        "zh-TW": "眼睛鄰近結構的功能"
+      }
+    },
+    {
+      "code": "b2152",
+      "title": {
+        "en": "Functions of external muscles of the eye",
+        "zh-TW": "眼外肌功能"
+      }
+    },
+    {
+      "code": "b310",
+      "title": {
+        "en": "Voice functions",
+        "zh-TW": "嗓音功能"
+      }
+    },
+    {
+      "code": "b320",
+      "title": {
+        "en": "Articulation functions",
+        "zh-TW": "構音功能"
+      }
+    },
+    {
+      "code": "b5102",
+      "title": {
+        "en": "Chewing",
+        "zh-TW": "咀嚼"
+      }
+    },
+    {
+      "code": "b5103",
+      "title": {
+        "en": "Manipulation of food in the mouth",
+        "zh-TW": "口中處理食物"
+      }
+    },
+    {
+      "code": "b51050",
+      "title": {
+        "en": "Oral swallowing",
+        "zh-TW": "口腔吞嚥"
+      }
+    },
+    {
+      "code": "b51051",
+      "title": {
+        "en": "Pharyngeal swallowing",
+        "zh-TW": "咽部吞嚥"
+      }
+    },
+    {
+      "code": "b760",
+      "title": {
+        "en": "Control of voluntary movement functions",
+        "zh-TW": "隨意動作控制功能"
+      }
+    },
+    {
+      "code": "b7602",
+      "title": {
+        "en": "Coordination of voluntary movements",
+        "zh-TW": "隨意動作協調"
+      }
+    },
+    {
+      "code": "d440",
+      "title": {
+        "en": "Fine hand use",
+        "zh-TW": "精細手部使用"
+      }
+    },
+    {
+      "code": "d445",
+      "title": {
+        "en": "Hand and arm use",
+        "zh-TW": "手和臂使用"
+      }
+    },
+    {
+      "code": "d4452",
+      "title": {
+        "en": "Reaching",
+        "zh-TW": "伸"
+      }
+    },
+    {
+      "code": "d4350",
+      "title": {
+        "en": "Pushing with lower extremities",
+        "zh-TW": "用下肢推動"
+      }
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "attention",
+      "group": "function",
+      "frameworkId": "sohlberg-mateer",
+      "labels": {
+        "zh-TW": "注意力",
+        "en": "Attention"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "executive",
+      "group": "function",
+      "frameworkId": "miyake-ef",
+      "labels": {
+        "zh-TW": "執行功能",
+        "en": "Executive functions"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "higher_cognition",
+      "group": "function",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "高階認知",
+        "en": "Higher-level cognition"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "working_memory",
+      "group": "function",
+      "frameworkId": "baddeley-wm",
+      "labels": {
+        "zh-TW": "工作記憶",
+        "en": "Working memory"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "processing_speed",
+      "group": "function",
+      "frameworkId": "chc",
+      "labels": {
+        "zh-TW": "處理與反應速度",
+        "en": "Processing and reaction speed"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "quantitative",
+      "group": "function",
+      "frameworkId": "chc",
+      "labels": {
+        "zh-TW": "量化能力（Gq）",
+        "en": "Quantitative knowledge (Gq)"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "time",
+      "group": "function",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "時間知覺",
+        "en": "Time perception"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "visual_perception",
+      "group": "function",
+      "frameworkId": "warren-vph",
+      "labels": {
+        "zh-TW": "視覺知覺",
+        "en": "Visual perception"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "motor",
+      "group": "function",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "動作",
+        "en": "Motor function"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "language",
+      "group": "function",
+      "frameworkId": "wab-r",
+      "labels": {
+        "zh-TW": "語言",
+        "en": "Language"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "speech_motor",
+      "group": "function",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "言語動作與嗓音",
+        "en": "Speech motor and voice functions"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "oral_swallowing",
+      "group": "function",
+      "frameworkId": "logemann",
+      "labels": {
+        "zh-TW": "口顏動作與吞嚥",
+        "en": "Orofacial movement and swallowing"
+      },
+      "selection": "multiple",
+      "required": false
+    },
+    {
+      "id": "environment",
+      "group": "taskDemand",
+      "frameworkId": "gentile",
+      "labels": {
+        "zh-TW": "環境動態",
+        "en": "Regulatory conditions"
+      },
+      "selection": "single",
+      "required": true
+    },
+    {
+      "id": "intertrial_variability",
+      "group": "taskDemand",
+      "frameworkId": "gentile",
+      "labels": {
+        "zh-TW": "試次間變化",
+        "en": "Intertrial variability"
+      },
+      "selection": "single",
+      "required": true
+    },
+    {
+      "id": "pacing",
+      "group": "taskDemand",
+      "frameworkId": "schmidt-lee",
+      "labels": {
+        "zh-TW": "作答節奏",
+        "en": "Pacing"
+      },
+      "selection": "single",
+      "required": true
+    },
+    {
+      "id": "movement_continuity",
+      "group": "taskDemand",
+      "frameworkId": "schmidt-lee",
+      "labels": {
+        "zh-TW": "動作連續性",
+        "en": "Movement continuity"
+      },
+      "selection": "single",
+      "required": true
+    },
+    {
+      "id": "stimulus_modality",
+      "group": "taskDemand",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "刺激方式",
+        "en": "Stimulus modality"
+      },
+      "selection": "multiple",
+      "required": true
+    },
+    {
+      "id": "response_modality",
+      "group": "taskDemand",
+      "frameworkId": "icf",
+      "labels": {
+        "zh-TW": "反應方式",
+        "en": "Response modality"
+      },
+      "selection": "multiple",
+      "required": true
+    },
+    {
+      "id": "reaction_type",
+      "group": "taskDemand",
+      "frameworkId": "donders",
+      "labels": {
+        "zh-TW": "反應作業類型",
+        "en": "Response task type"
+      },
+      "selection": "multiple",
+      "required": true
+    }
+  ],
+  "tags": [
+    {
+      "id": "attention.focused",
+      "dimension": "attention",
+      "icfCode": "b140",
+      "labels": {
+        "zh-TW": "集中性注意力",
+        "en": "Focused attention"
+      },
+      "definition": {
+        "zh-TW": "將注意導向一個明確出現的刺激。",
+        "en": "Direct attention to a distinct stimulus when it appears."
+      },
+      "status": "active"
+    },
+    {
+      "id": "attention.sustained",
+      "dimension": "attention",
+      "icfCode": "b1400",
+      "labels": {
+        "zh-TW": "持續性注意力",
+        "en": "Sustained attention"
+      },
+      "definition": {
+        "zh-TW": "在一連串刺激或等待期間持續監看，以免錯過目標。",
+        "en": "Monitor a stream or a waiting period without missing the target."
+      },
+      "status": "active"
+    },
+    {
+      "id": "attention.selective",
+      "dimension": "attention",
+      "icfCode": "b140",
+      "labels": {
+        "zh-TW": "選擇性注意力",
+        "en": "Selective attention"
+      },
+      "definition": {
+        "zh-TW": "在干擾刺激同時出現時，依指定特徵選出目標。",
+        "en": "Select targets by a specified feature in the presence of distractors."
+      },
+      "status": "active"
+    },
+    {
+      "id": "attention.alternating",
+      "dimension": "attention",
+      "icfCode": "b1401",
+      "labels": {
+        "zh-TW": "轉換性注意力",
+        "en": "Alternating attention"
+      },
+      "definition": {
+        "zh-TW": "輪流把注意移到兩項任務或兩種刺激來源。",
+        "en": "Alternate attention between two tasks or sources of information."
+      },
+      "status": "active"
+    },
+    {
+      "id": "attention.divided",
+      "dimension": "attention",
+      "icfCode": "b1402",
+      "labels": {
+        "zh-TW": "分配性注意力",
+        "en": "Divided attention"
+      },
+      "definition": {
+        "zh-TW": "同時監看兩項並行任務，並依各自要求作答。",
+        "en": "Monitor two simultaneous tasks and respond to each as required."
+      },
+      "status": "active"
+    },
+    {
+      "id": "executive.inhibition",
+      "dimension": "executive",
+      "icfCode": "b164",
+      "labels": {
+        "zh-TW": "反應抑制",
+        "en": "Response inhibition"
+      },
+      "definition": {
+        "zh-TW": "依停止或衝突線索，抑制已準備好或習慣性的反應。",
+        "en": "Withhold a prepared or habitual response when a stop or conflict cue calls for it."
+      },
+      "status": "active"
+    },
+    {
+      "id": "executive.shifting",
+      "dimension": "executive",
+      "icfCode": "b1643",
+      "labels": {
+        "zh-TW": "認知轉換",
+        "en": "Shifting"
+      },
+      "definition": {
+        "zh-TW": "根據提示或回饋，改用另一套判斷規則。",
+        "en": "Switch to another decision rule in response to a cue or feedback."
+      },
+      "status": "active"
+    },
+    {
+      "id": "executive.updating",
+      "dimension": "executive",
+      "icfCode": "b1440",
+      "labels": {
+        "zh-TW": "工作記憶更新",
+        "en": "Working memory updating"
+      },
+      "definition": {
+        "zh-TW": "新資訊出現時，依規則保留、替換或移除先前記住的項目。",
+        "en": "Retain, replace, or drop remembered items as new information arrives."
+      },
+      "status": "active"
+    },
+    {
+      "id": "higher_cognition.planning",
+      "dimension": "higher_cognition",
+      "icfCode": "b1641",
+      "labels": {
+        "zh-TW": "組織與計畫",
+        "en": "Organization and planning"
+      },
+      "definition": {
+        "zh-TW": "在行動前安排多個步驟或預想下一步的結果。",
+        "en": "Organize several steps or anticipate the consequences of a move before acting."
+      },
+      "status": "active"
+    },
+    {
+      "id": "higher_cognition.problem_solving",
+      "dimension": "higher_cognition",
+      "icfCode": "b1646",
+      "labels": {
+        "zh-TW": "問題解決",
+        "en": "Problem solving"
+      },
+      "definition": {
+        "zh-TW": "運用線索與限制條件推導能達成目標的解法。",
+        "en": "Use clues and constraints to work out a solution that meets a goal."
+      },
+      "status": "active"
+    },
+    {
+      "id": "working_memory.phonological_loop",
+      "dimension": "working_memory",
+      "icfCode": "b1440",
+      "labels": {
+        "zh-TW": "語音迴路",
+        "en": "Phonological loop"
+      },
+      "definition": {
+        "zh-TW": "暫時保留可念出的字母、數字或詞語，以供比較或回想。",
+        "en": "Briefly hold pronounceable letters, digits, or words for comparison or recall."
+      },
+      "status": "active"
+    },
+    {
+      "id": "working_memory.visuospatial_sketchpad",
+      "dimension": "working_memory",
+      "icfCode": "b1440",
+      "labels": {
+        "zh-TW": "視空間模板",
+        "en": "Visuospatial sketchpad"
+      },
+      "definition": {
+        "zh-TW": "短暫保留位置、順序或圖形排列，以供比對或重現。",
+        "en": "Briefly hold positions, spatial order, or a layout for comparison or reproduction."
+      },
+      "status": "active"
+    },
+    {
+      "id": "processing_speed.gs_processing_speed",
+      "dimension": "processing_speed",
+      "icfCode": "b147",
+      "labels": {
+        "zh-TW": "認知處理速度（Gs）",
+        "en": "Processing speed (Gs)"
+      },
+      "definition": {
+        "zh-TW": "在有限時間內連續完成多個熟悉而簡單的判斷。",
+        "en": "Complete a series of familiar, straightforward decisions within a time limit."
+      },
+      "status": "active"
+    },
+    {
+      "id": "processing_speed.gt_reaction_decision_speed",
+      "dimension": "processing_speed",
+      "icfCode": "b1470",
+      "labels": {
+        "zh-TW": "反應與決策速度（Gt）",
+        "en": "Reaction and decision speed (Gt)"
+      },
+      "definition": {
+        "zh-TW": "依離散訊號迅速作答，並以訊號出現至反應的時間計分。",
+        "en": "Respond promptly to a discrete cue and score the time from cue onset to response."
+      },
+      "status": "active"
+    },
+    {
+      "id": "quantitative.calculation",
+      "dimension": "quantitative",
+      "icfCode": "b172",
+      "labels": {
+        "zh-TW": "計算",
+        "en": "Calculation"
+      },
+      "definition": {
+        "zh-TW": "依題目要求執行加減等算術運算。",
+        "en": "Carry out arithmetic such as addition or subtraction as the task requires."
+      },
+      "status": "active"
+    },
+    {
+      "id": "time.time_experience",
+      "dimension": "time",
+      "icfCode": "b1802",
+      "labels": {
+        "zh-TW": "時間經驗",
+        "en": "Experience of time"
+      },
+      "definition": {
+        "zh-TW": "比較、估計或重現刺激持續的時間。",
+        "en": "Compare, estimate, or reproduce how long a stimulus lasts."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.oculomotor",
+      "dimension": "visual_perception",
+      "icfCode": "b215",
+      "labels": {
+        "zh-TW": "眼球動作控制",
+        "en": "Oculomotor control"
+      },
+      "definition": {
+        "zh-TW": "依 Leigh 與 Zee 的眼球動作子系統區分掃視、平穩追視與凝視。",
+        "en": "Groups saccades, smooth pursuit, and fixation using the ocular motor subsystems described by Leigh and Zee (2015)."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.oculomotor.saccade",
+      "dimension": "visual_perception",
+      "icfCode": "b2152",
+      "labels": {
+        "zh-TW": "掃視",
+        "en": "Saccade"
+      },
+      "definition": {
+        "zh-TW": "視線快速從一個位置移到另一個位置以取得目標資訊。",
+        "en": "Move gaze rapidly between locations to acquire target information."
+      },
+      "status": "active",
+      "parent": "visual_perception.oculomotor"
+    },
+    {
+      "id": "visual_perception.oculomotor.smooth_pursuit",
+      "dimension": "visual_perception",
+      "icfCode": "b2152",
+      "labels": {
+        "zh-TW": "平穩追視",
+        "en": "Smooth pursuit"
+      },
+      "definition": {
+        "zh-TW": "持續用視線跟隨平滑移動的單一目標。",
+        "en": "Keep gaze on a single target as it moves smoothly."
+      },
+      "status": "active",
+      "parent": "visual_perception.oculomotor"
+    },
+    {
+      "id": "visual_perception.oculomotor.fixation",
+      "dimension": "visual_perception",
+      "icfCode": "b2152",
+      "labels": {
+        "zh-TW": "凝視",
+        "en": "Fixation"
+      },
+      "definition": {
+        "zh-TW": "在等待或判斷其他刺激時，按指示維持視線於固定位置。",
+        "en": "Keep gaze at an instructed location while waiting or judging another stimulus."
+      },
+      "status": "active",
+      "parent": "visual_perception.oculomotor"
+    },
+    {
+      "id": "visual_perception.visual_field",
+      "dimension": "visual_perception",
+      "icfCode": "b2101",
+      "labels": {
+        "zh-TW": "視野",
+        "en": "Visual field"
+      },
+      "definition": {
+        "zh-TW": "注視指定位置時，察覺或定位中央以外的刺激。",
+        "en": "Detect or locate a peripheral stimulus while looking at a specified point."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.acuity_contrast",
+      "dimension": "visual_perception",
+      "icfCode": "b21022",
+      "labels": {
+        "zh-TW": "視覺細節與對比敏感度",
+        "en": "Visual detail and contrast sensitivity"
+      },
+      "definition": {
+        "zh-TW": "分辨低對比的圖樣或細小視覺細節。",
+        "en": "Distinguish low-contrast patterns or fine visual detail."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.scanning",
+      "dimension": "visual_perception",
+      "icfCode": "b1561",
+      "labels": {
+        "zh-TW": "視覺掃描",
+        "en": "Visual scanning"
+      },
+      "definition": {
+        "zh-TW": "巡查多個位置或物件以定位指定目標。",
+        "en": "Search across several locations or objects to locate a target."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.pattern_recognition",
+      "dimension": "visual_perception",
+      "icfCode": "b1561",
+      "labels": {
+        "zh-TW": "圖形辨識",
+        "en": "Pattern recognition"
+      },
+      "definition": {
+        "zh-TW": "依形狀、顏色、方向或組合特徵辨別圖樣。",
+        "en": "Distinguish patterns by shape, color, orientation, or a combination of features."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.visual_memory",
+      "dimension": "visual_perception",
+      "icfCode": "b144",
+      "labels": {
+        "zh-TW": "視覺記憶",
+        "en": "Visual memory"
+      },
+      "definition": {
+        "zh-TW": "辨認曾看過的圖樣或物件，或記住多次呈現過的物件位置。",
+        "en": "Recognize previously seen patterns or objects, or remember their locations across repeated views."
+      },
+      "status": "active"
+    },
+    {
+      "id": "visual_perception.visuocognition",
+      "dimension": "visual_perception",
+      "icfCode": "b1565",
+      "labels": {
+        "zh-TW": "視覺認知",
+        "en": "Visuocognition"
+      },
+      "definition": {
+        "zh-TW": "整合物件的相對位置與空間關係以推導配置或路徑。",
+        "en": "Integrate relative positions and spatial relationships to work out a layout or route."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.reaching",
+      "dimension": "motor",
+      "icfCode": "d4452",
+      "labels": {
+        "zh-TW": "伸手觸及",
+        "en": "Reaching"
+      },
+      "definition": {
+        "zh-TW": "將手或手臂移向指定位置或物件。",
+        "en": "Move the hand or arm toward a specified location or object."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.hand_arm_use",
+      "dimension": "motor",
+      "icfCode": "d445",
+      "labels": {
+        "zh-TW": "手與手臂使用",
+        "en": "Hand and arm use"
+      },
+      "definition": {
+        "zh-TW": "以手與手臂移動、推拉或帶動物件。",
+        "en": "Use the hand and arm to move, push, pull, or guide an object."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.fine_hand_use",
+      "dimension": "motor",
+      "icfCode": "d440",
+      "labels": {
+        "zh-TW": "手部精細操作",
+        "en": "Fine hand use"
+      },
+      "definition": {
+        "zh-TW": "以手指或手掌完成精確的姿勢、選取或操作。",
+        "en": "Use precise finger or hand positions, selections, or manipulations."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.head_neck_control",
+      "dimension": "motor",
+      "icfCode": "b760",
+      "labels": {
+        "zh-TW": "頭頸動作控制",
+        "en": "Head and neck control"
+      },
+      "definition": {
+        "zh-TW": "按任務需求主動點頭、轉頭或維持特定頭部位置。",
+        "en": "Nod, turn, or hold the head in a specified position as the task requires."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.foot_use",
+      "dimension": "motor",
+      "icfCode": "d4350",
+      "labels": {
+        "zh-TW": "足部操作",
+        "en": "Fine foot use"
+      },
+      "definition": {
+        "zh-TW": "以腳掌或腳趾主動操作踏板等控制器。",
+        "en": "Operate a control such as a pedal with the foot or toes."
+      },
+      "status": "active"
+    },
+    {
+      "id": "motor.eye_hand_coordination",
+      "dimension": "motor",
+      "icfCode": "b7602",
+      "labels": {
+        "zh-TW": "手眼協調",
+        "en": "Eye-hand coordination"
+      },
+      "definition": {
+        "zh-TW": "依畫面中的位置或軌跡同步調整手部動作。",
+        "en": "Adjust hand movements in response to onscreen position or trajectory."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.auditory_comprehension",
+      "dimension": "language",
+      "icfCode": "b16700",
+      "labels": {
+        "zh-TW": "聽語理解",
+        "en": "Auditory comprehension"
+      },
+      "definition": {
+        "zh-TW": "聽取詞句或指令後，依其語意選擇或行動。",
+        "en": "Select or act based on the meaning of spoken words, sentences, or commands."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.spontaneous_speech",
+      "dimension": "language",
+      "icfCode": "b16710",
+      "labels": {
+        "zh-TW": "自發性口語",
+        "en": "Spontaneous speech"
+      },
+      "definition": {
+        "zh-TW": "自行組織並說出句子以傳達內容。",
+        "en": "Form and speak sentences to communicate content."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.repetition",
+      "dimension": "language",
+      "icfCode": "b16710",
+      "labels": {
+        "zh-TW": "口語複誦",
+        "en": "Speech repetition"
+      },
+      "definition": {
+        "zh-TW": "聽到語音、詞語或句子後，照原樣說出。",
+        "en": "Repeat a heard sound, word, or sentence."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.naming",
+      "dimension": "language",
+      "icfCode": "b16710",
+      "labels": {
+        "zh-TW": "命名",
+        "en": "Naming"
+      },
+      "definition": {
+        "zh-TW": "看到物件、圖片或動作後說出其名稱。",
+        "en": "Say the name of a pictured or presented object or action."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.reading",
+      "dimension": "language",
+      "icfCode": "b16701",
+      "labels": {
+        "zh-TW": "閱讀",
+        "en": "Reading"
+      },
+      "definition": {
+        "zh-TW": "從書寫的字詞或句子取得語意並依文字作答。",
+        "en": "Extract meaning from written words or sentences and respond to their content."
+      },
+      "status": "active"
+    },
+    {
+      "id": "language.writing",
+      "dimension": "language",
+      "icfCode": "b16711",
+      "labels": {
+        "zh-TW": "書寫",
+        "en": "Writing"
+      },
+      "definition": {
+        "zh-TW": "用書寫或打字組成詞或句以表達內容。",
+        "en": "Write or type words or sentences to express a message."
+      },
+      "status": "active"
+    },
+    {
+      "id": "speech_motor.articulation",
+      "dimension": "speech_motor",
+      "icfCode": "b320",
+      "labels": {
+        "zh-TW": "構音",
+        "en": "Articulation"
+      },
+      "definition": {
+        "zh-TW": "依提示用口腔構音器官發出特定語音。",
+        "en": "Produce a specified speech sound with the articulators."
+      },
+      "status": "active"
+    },
+    {
+      "id": "speech_motor.voice",
+      "dimension": "speech_motor",
+      "icfCode": "b310",
+      "labels": {
+        "zh-TW": "發聲",
+        "en": "Voice"
+      },
+      "definition": {
+        "zh-TW": "主動發出聲音，或依提示改變音高、音量或持續時間。",
+        "en": "Produce a vocal sound or vary its pitch, volume, or duration on cue."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.oral_preparatory",
+      "dimension": "oral_swallowing",
+      "icfCode": "b5102",
+      "labels": {
+        "zh-TW": "口腔準備期",
+        "en": "Oral preparatory phase"
+      },
+      "definition": {
+        "zh-TW": "咀嚼或在口內處理食物以形成食團。",
+        "en": "Chew or manipulate food in the mouth to form a bolus."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.oral_transit",
+      "dimension": "oral_swallowing",
+      "icfCode": "b51050",
+      "labels": {
+        "zh-TW": "口腔期",
+        "en": "Oral transit phase"
+      },
+      "definition": {
+        "zh-TW": "用舌部將食團向口腔後方移送。",
+        "en": "Use the tongue to move a bolus toward the back of the mouth."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.pharyngeal",
+      "dimension": "oral_swallowing",
+      "icfCode": "b51051",
+      "labels": {
+        "zh-TW": "咽部期",
+        "en": "Pharyngeal phase"
+      },
+      "definition": {
+        "zh-TW": "吞嚥過程中使食團經過咽部。",
+        "en": "Move the bolus through the pharynx during a swallow."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.lip_movement",
+      "dimension": "oral_swallowing",
+      "icfCode": "b5103",
+      "labels": {
+        "zh-TW": "唇部動作",
+        "en": "Lip movement"
+      },
+      "definition": {
+        "zh-TW": "按提示閉唇、噘唇或移動嘴唇。",
+        "en": "Close, purse, or move the lips on cue."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.tongue_movement",
+      "dimension": "oral_swallowing",
+      "icfCode": "b5103",
+      "labels": {
+        "zh-TW": "舌部動作",
+        "en": "Tongue movement"
+      },
+      "definition": {
+        "zh-TW": "按提示伸舌或把舌尖移到指定方向。",
+        "en": "Extend the tongue or move its tip in a specified direction."
+      },
+      "status": "active"
+    },
+    {
+      "id": "oral_swallowing.jaw_movement",
+      "dimension": "oral_swallowing",
+      "icfCode": "b5103",
+      "labels": {
+        "zh-TW": "下顎動作",
+        "en": "Jaw movement"
+      },
+      "definition": {
+        "zh-TW": "按提示張口、閉口或移動下顎。",
+        "en": "Open, close, or move the jaw on cue."
+      },
+      "status": "active"
+    },
+    {
+      "id": "environment.stationary",
+      "dimension": "environment",
+      "labels": {
+        "zh-TW": "靜止",
+        "en": "Stationary"
+      },
+      "definition": {
+        "zh-TW": "作答時，決定反應的目標或環境位置保持固定。",
+        "en": "Targets and surroundings that guide the response stay in place while the player acts."
+      },
+      "status": "active"
+    },
+    {
+      "id": "environment.in_motion",
+      "dimension": "environment",
+      "labels": {
+        "zh-TW": "移動中",
+        "en": "In motion"
+      },
+      "definition": {
+        "zh-TW": "作答時，決定反應的目標或環境會移動，玩家須考量其移動。",
+        "en": "A target or surrounding condition that guides the response moves while the player acts."
+      },
+      "status": "active"
+    },
+    {
+      "id": "intertrial_variability.absent",
+      "dimension": "intertrial_variability",
+      "labels": {
+        "zh-TW": "固定",
+        "en": "Absent"
+      },
+      "definition": {
+        "zh-TW": "同一設定下，各試次的作答相關位置、線索或時間條件維持固定。",
+        "en": "Under the same settings, response-relevant positions, cues, and timing stay the same across trials."
+      },
+      "status": "active"
+    },
+    {
+      "id": "intertrial_variability.present",
+      "dimension": "intertrial_variability",
+      "labels": {
+        "zh-TW": "有變化",
+        "en": "Present"
+      },
+      "definition": {
+        "zh-TW": "同一設定下，作答相關的位置、線索或時間條件會隨試次改變。",
+        "en": "Under the same settings, response-relevant positions, cues, or timing change across trials."
+      },
+      "status": "active"
+    },
+    {
+      "id": "pacing.self_paced",
+      "dimension": "pacing",
+      "labels": {
+        "zh-TW": "自行掌握",
+        "en": "Self-paced"
+      },
+      "definition": {
+        "zh-TW": "核心作答可由玩家決定何時進行，計時紀錄可持續。",
+        "en": "The player controls when to make the main response, even when elapsed time is recorded."
+      },
+      "status": "active"
+    },
+    {
+      "id": "pacing.externally_paced",
+      "dimension": "pacing",
+      "labels": {
+        "zh-TW": "外部節奏",
+        "en": "Externally paced"
+      },
+      "definition": {
+        "zh-TW": "核心作答由遊戲安排的訊號、作答時限或移動目標決定時機。",
+        "en": "Game-controlled cues, response windows, or moving targets determine when the main response is needed."
+      },
+      "status": "active"
+    },
+    {
+      "id": "movement_continuity.discrete",
+      "dimension": "movement_continuity",
+      "labels": {
+        "zh-TW": "單次動作",
+        "en": "Discrete"
+      },
+      "definition": {
+        "zh-TW": "每次作答主要由一個起訖明確的動作組成。",
+        "en": "Each response mainly consists of one action with a clear start and finish."
+      },
+      "status": "active"
+    },
+    {
+      "id": "movement_continuity.serial",
+      "dimension": "movement_continuity",
+      "labels": {
+        "zh-TW": "序列動作",
+        "en": "Serial"
+      },
+      "definition": {
+        "zh-TW": "多個起訖明確的動作依序組成一次完整作答。",
+        "en": "Several actions with distinct starts and finishes form one complete response."
+      },
+      "status": "active"
+    },
+    {
+      "id": "movement_continuity.continuous",
+      "dimension": "movement_continuity",
+      "labels": {
+        "zh-TW": "連續動作",
+        "en": "Continuous"
+      },
+      "definition": {
+        "zh-TW": "玩家持續維持或調整動作，直到該段任務結束。",
+        "en": "The player sustains or adjusts an action throughout a task interval."
+      },
+      "status": "active"
+    },
+    {
+      "id": "stimulus_modality.visual",
+      "dimension": "stimulus_modality",
+      "icfCode": "b1561",
+      "labels": {
+        "zh-TW": "視覺",
+        "en": "Visual"
+      },
+      "definition": {
+        "zh-TW": "作答所用的線索透過文字、圖形、顏色或位置呈現。",
+        "en": "A cue that informs the response is shown through text, shape, color, or position."
+      },
+      "status": "active"
+    },
+    {
+      "id": "stimulus_modality.auditory",
+      "dimension": "stimulus_modality",
+      "icfCode": "b1560",
+      "labels": {
+        "zh-TW": "聽覺",
+        "en": "Auditory"
+      },
+      "definition": {
+        "zh-TW": "聲音提示作答時機、選項或順序。",
+        "en": "A sound cues response timing, choice, or sequence."
+      },
+      "status": "active"
+    },
+    {
+      "id": "stimulus_modality.tactile",
+      "dimension": "stimulus_modality",
+      "labels": {
+        "zh-TW": "觸覺",
+        "en": "Tactile"
+      },
+      "definition": {
+        "zh-TW": "觸感或震動提供作答線索。",
+        "en": "A tactile sensation or vibration provides a cue for responding."
+      },
+      "status": "active"
+    },
+    {
+      "id": "response_modality.manual_selection",
+      "dimension": "response_modality",
+      "icfCode": "d440",
+      "labels": {
+        "zh-TW": "手動選取與控制",
+        "en": "Manual selection and control"
+      },
+      "definition": {
+        "zh-TW": "用滑鼠、觸控或按鍵選擇目標或控制畫面。",
+        "en": "Use a pointer, touch, or keys to select a target or control the display."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "input.pointer",
+        "input.touch",
+        "input.keyboard"
+      ]
+    },
+    {
+      "id": "response_modality.arm_movement",
+      "dimension": "response_modality",
+      "icfCode": "d445",
+      "labels": {
+        "zh-TW": "手臂動作",
+        "en": "Arm movement"
+      },
+      "definition": {
+        "zh-TW": "以伸手、揮動手臂或拍擊作答，可經相機、滑鼠、觸控或拍擊聲偵測。",
+        "en": "Reach, move the arm, or make a percussive movement detected by camera, pointer, touch, or sound."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "camera",
+        "input.pointer",
+        "input.touch",
+        "microphone"
+      ]
+    },
+    {
+      "id": "response_modality.hand_gesture",
+      "dimension": "response_modality",
+      "icfCode": "d440",
+      "labels": {
+        "zh-TW": "手勢",
+        "en": "Hand gesture"
+      },
+      "definition": {
+        "zh-TW": "以相機辨識的手指或手掌動作作答。",
+        "en": "Answer with a finger or hand gesture detected by a camera."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "camera"
+      ]
+    },
+    {
+      "id": "response_modality.head_movement",
+      "dimension": "response_modality",
+      "icfCode": "b760",
+      "labels": {
+        "zh-TW": "頭部動作",
+        "en": "Head movement"
+      },
+      "definition": {
+        "zh-TW": "以相機辨識的點頭、轉頭或頭部位置作答。",
+        "en": "Respond with a nod, turn, or head position detected by a camera."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "camera"
+      ]
+    },
+    {
+      "id": "response_modality.eye_movement",
+      "dimension": "response_modality",
+      "icfCode": "b215",
+      "labels": {
+        "zh-TW": "眼球動作",
+        "en": "Eye movement"
+      },
+      "definition": {
+        "zh-TW": "透過相機追蹤注視位置，並以視線作答。",
+        "en": "Respond with gaze position tracked by a camera."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "camera"
+      ]
+    },
+    {
+      "id": "response_modality.orofacial_movement",
+      "dimension": "response_modality",
+      "icfCode": "b5103",
+      "labels": {
+        "zh-TW": "口顏動作",
+        "en": "Orofacial movement"
+      },
+      "definition": {
+        "zh-TW": "透過相機辨識嘴唇、舌頭或下顎動作。",
+        "en": "Respond with a lip, tongue, or jaw movement detected by a camera."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "camera"
+      ]
+    },
+    {
+      "id": "response_modality.foot",
+      "dimension": "response_modality",
+      "icfCode": "d4350",
+      "labels": {
+        "zh-TW": "足部操作",
+        "en": "Foot control"
+      },
+      "definition": {
+        "zh-TW": "以踏板作答，或使用同一控制映射的鍵盤替代方式。",
+        "en": "Respond with a pedal, with a keyboard alternative for the same control mapping."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "input.keyboard",
+        "input.steering_wheel"
+      ]
+    },
+    {
+      "id": "response_modality.voice",
+      "dimension": "response_modality",
+      "icfCode": "b310",
+      "labels": {
+        "zh-TW": "語音或發聲",
+        "en": "Voice"
+      },
+      "definition": {
+        "zh-TW": "對著麥克風以語音或發聲作答。",
+        "en": "Answer with speech or a vocal sound captured by a microphone."
+      },
+      "status": "active",
+      "requiresAnyCapability": [
+        "microphone"
+      ]
+    },
+    {
+      "id": "reaction_type.simple_reaction",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "簡單反應（a）",
+        "en": "Simple reaction (a)"
+      },
+      "definition": {
+        "zh-TW": "在單一目標訊號出現時做同一個預先指定的反應。",
+        "en": "Make one predetermined response when the sole target cue appears."
+      },
+      "status": "active"
+    },
+    {
+      "id": "reaction_type.choice_reaction",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "選擇反應（b）",
+        "en": "Choice reaction (b)"
+      },
+      "definition": {
+        "zh-TW": "依刺激特徵，從兩種以上預先指定的反應中擇一。",
+        "en": "Select one of two or more predetermined responses based on a stimulus feature."
+      },
+      "status": "active"
+    },
+    {
+      "id": "reaction_type.go_no_go",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "作答／不作答（c）",
+        "en": "Go/no-go (c)"
+      },
+      "definition": {
+        "zh-TW": "看到目標訊號時作答，遇到其他指定訊號時不作答。",
+        "en": "Respond to designated go cues and withhold the response to designated no-go cues."
+      },
+      "status": "active"
+    },
+    {
+      "id": "reaction_type.continuous_tracking",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "連續追蹤",
+        "en": "Continuous tracking"
+      },
+      "definition": {
+        "zh-TW": "依 Schmidt 與 Lee 的連續動作概念，持續調整輸入以跟上移動目標或維持路徑。",
+        "en": "Following Schmidt and Lee’s continuous action category, adjust the input over time to follow a moving target or stay on a path."
+      },
+      "status": "active"
+    },
+    {
+      "id": "reaction_type.recall_reproduction",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "回憶重現",
+        "en": "Recall and reproduction"
+      },
+      "definition": {
+        "zh-TW": "依 Schmidt 與 Lee 的離散或序列作答概念，重現已消失的刺激、順序或持續時間。",
+        "en": "Following Schmidt and Lee’s discrete or serial action categories, reproduce previously presented content, order, or duration."
+      },
+      "status": "active"
+    },
+    {
+      "id": "reaction_type.self_paced_problem_solving",
+      "dimension": "reaction_type",
+      "labels": {
+        "zh-TW": "自訂節奏的問題解決",
+        "en": "Self-paced problem solving"
+      },
+      "definition": {
+        "zh-TW": "依 Schmidt 與 Lee 的自訂節奏概念，自行決定何時推理、規劃及輸入解法。",
+        "en": "Following Schmidt and Lee’s self-paced category, decide when to reason, plan, and enter a solution."
+      },
+      "status": "active"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "input.pointer",
+      "labels": {
+        "zh-TW": "滑鼠或觸控板",
+        "en": "Mouse or trackpad"
+      }
+    },
+    {
+      "id": "input.touch",
+      "labels": {
+        "zh-TW": "觸控螢幕",
+        "en": "Touchscreen"
+      }
+    },
+    {
+      "id": "input.keyboard",
+      "labels": {
+        "zh-TW": "鍵盤（含螢幕鍵盤）",
+        "en": "Keyboard (including on-screen keyboards)"
+      }
+    },
+    {
+      "id": "input.steering_wheel",
+      "labels": {
+        "zh-TW": "方向盤與踏板",
+        "en": "Steering wheel and pedals"
+      }
+    },
+    {
+      "id": "camera",
+      "labels": {
+        "zh-TW": "相機",
+        "en": "Camera"
+      }
+    },
+    {
+      "id": "microphone",
+      "labels": {
+        "zh-TW": "麥克風",
+        "en": "Microphone"
+      }
+    }
+  ]
+}

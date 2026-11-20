@@ -46,6 +46,8 @@ jobs:
             command: npm run test:gamerunner
           - name: trainer-entrypoints
             command: npm run test:entrypoints
+          - name: recommendation
+            command: npm run test:recommendation
           - name: cloudflare-deploy
             command: npm run test:cloudflare-deploy
     steps:

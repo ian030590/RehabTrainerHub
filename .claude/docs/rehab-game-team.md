@@ -46,6 +46,7 @@ worker 修改 `.claude/skills/**`（含 frontmatter `name`／`description` 或�
 3. 依內容選 `/team-combat`、`/team-ui`、`/team-audio`、`/team-level` 等技能，
    用 `/dev-story` 實作適合的最小切片。每次先寫可執行行為測試、看到需求缺少造成的
    失敗，再修改產品碼；不得用縮小需求、刪功能或放寬安全檢查換取通過。
+   新官方遊戲須在 `apps/rehabtrainerhub/recommendation/gameFeatures.json` 新增 `draft` 項目，補齊任務需求及主要功能的行為依據，執行 `npm run recommendation:build` 並通過 CI 的 `npm run test:recommendation`。
 4. 用 `/studio-code-review`、`/team-qa` 與適用的 QA 技能檢查 GDD、程式、可操作流程、
    雙語與桌機／手機／平板。執行倉庫既有 gate、逐遊戲 build 及本機 Brave fixture；
    測試新增／修改須接入 root `test:ci`。需瀏覽器／硬體的項目記錄本機方式與限制。

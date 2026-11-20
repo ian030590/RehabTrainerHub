@@ -3,8 +3,8 @@
 ## GitHub
 
 - Default branch: `main`
-- CI: `.github/workflows/ci.yml` 並行執行七項 gate；遊戲架構拆成 types／tests／games，合計九個 matrix job。PR 使用與部署相同的 paths filter，另支援手動執行與 `workflow_call`
-- Local validation: `npm run test:ci` 執行完整七項 gate；安裝套件不設定 Git hook。`npm run test:uiux-browser` 需要 Brave 與相應 build，只在本機手動執行
+- CI 使用 `.github/workflows/ci.yml` 並行執行八項 gate，含 `test:recommendation`。遊戲架構拆成 types／tests／games，合計十個 matrix job。PR 使用與部署相同的路徑篩選，另支援手動執行與 `workflow_call`。
+- 本機執行 `npm run test:ci` 驗證完整八項 gate。安裝套件不設定 Git hook。`npm run test:uiux-browser` 需要 Brave 與相應 build，只在本機手動執行。
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
 - Package manager: root `package.json` 指定的 npm
 - Validation: `npm run build`

@@ -13,6 +13,8 @@ import { CreateIdentityGuard } from '@rehab-trainer/ui/auth/identityGuard';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { useHubAuth } from '../HubNavigation';
 import { GameReleaseManager } from './GameReleaseManager';
+import { GameSimilarityReview } from './GameSimilarityReview';
+import similarityStyles from './GameSimilarityReview.module.css';
 import { PracticePlanManager } from './PracticePlanManager';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
@@ -26,15 +28,16 @@ import {
   type AdminRecordsResponse,
 } from './adminApi';
 
-type AdminTab = 'overview' | 'records' | 'games' | 'plans';
+type AdminTab = 'overview' | 'records' | 'games' | 'plans' | 'similarity';
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 type StaffRole = 'therapist' | 'admin';
 
-const tabItems: readonly { id: AdminTab; label: string; icon: string }[] = [
+const tabItems: readonly { id: AdminTab; label: string; icon: string; adminOnly?: boolean }[] = [
   { id: 'overview', label: '數據總覽', icon: 'monitoring' },
   { id: 'records', label: '訓練紀錄', icon: 'table_view' },
+  { id: 'games', label: '遊戲審核', icon: 'extension', adminOnly: true },
+  { id: 'similarity', label: '相近活動', icon: 'explore', adminOnly: true },
 ];
-const gameReviewTab = { id: 'games', label: '遊戲審核', icon: 'extension' } as const;
 
 const emptyFilters: AdminRecordFilters = {
   patientId: '',
@@ -142,10 +145,11 @@ export function AdminDashboard() {
   const [plansProbe, setPlansProbe] = useState<{ userId?: string; status: 'loading' | 'enabled' | 'disabled' | 'error' }>({ status: 'loading' });
   const [plansProbeKey, setPlansProbeKey] = useState(0);
   const plansAvailability = plansProbe.userId === user?.id ? plansProbe.status : 'loading';
-  const staffTabItems = plansAvailability === 'enabled'
-    ? [...tabItems, { id: 'plans' as const, label: copy.heading, icon: 'checklist' }] : tabItems;
-  const availableTabItems = role === 'admin' ? [...staffTabItems, gameReviewTab] : staffTabItems;
+  const availableTabItems = tabItems.filter(item => !item.adminOnly);
+  if (plansAvailability === 'enabled') availableTabItems.push({ id: 'plans', label: copy.heading, icon: 'checklist' });
+  if (role === 'admin') availableTabItems.push(...tabItems.filter(item => item.adminOnly));
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const visibleTab = availableTabItems.some(item => item.id === activeTab) ? activeTab : 'overview';
   const plansUnavailable = useCallback(() => {
     setPlansProbe({ userId: user?.id, status: 'disabled' });
     setActiveTab(tab => tab === 'plans' ? 'overview' : tab);
@@ -238,7 +242,7 @@ export function AdminDashboard() {
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    const currentIndex = availableTabItems.findIndex((item) => item.id === activeTab);
+    const currentIndex = availableTabItems.findIndex((item) => item.id === visibleTab);
     let nextIndex = currentIndex;
     if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % availableTabItems.length;
     if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + availableTabItems.length) % availableTabItems.length;
@@ -316,18 +320,18 @@ export function AdminDashboard() {
         </span>
       </header>
 
-      <div className="admin-tabs" aria-label="管理後台功能" role="tablist">
+      <div className={`admin-tabs ${similarityStyles.adminTabs}`} aria-label="管理後台功能" role="tablist">
         {availableTabItems.map((item) => (
           <button
             aria-controls={`admin-panel-${item.id}`}
-            aria-selected={activeTab === item.id}
-            className={activeTab === item.id ? 'is-active' : ''}
+            aria-selected={visibleTab === item.id}
+            className={visibleTab === item.id ? 'is-active' : ''}
             id={`admin-tab-${item.id}`}
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             onKeyDown={handleTabKeyDown}
             role="tab"
-            tabIndex={activeTab === item.id ? 0 : -1}
+            tabIndex={visibleTab === item.id ? 0 : -1}
             type="button"
           >
             <span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span>
@@ -340,7 +344,7 @@ export function AdminDashboard() {
       {plansAvailability === 'error' && <div role="alert"><p>{copy.loadError}</p>
         <button className="admin-button admin-button-secondary" type="button" onClick={() => setPlansProbeKey(value => value + 1)}>{copy.retry}</button></div>}
       {plansAvailability === 'enabled' && <section className="admin-tab-panel" role="tabpanel" tabIndex={0}
-        id="admin-panel-plans" aria-labelledby="admin-tab-plans" hidden={activeTab !== 'plans'}>
+        id="admin-panel-plans" aria-labelledby="admin-tab-plans" hidden={visibleTab !== 'plans'}>
         <PracticePlanManager key={user?.id} role={role} patients={patients} patientsStatus={overviewStatus}
           patientsTruncated={overview?.patientsTruncated} onRetryPatients={() => setOverviewKey(value => value + 1)} onUnavailable={plansUnavailable} />
       </section>}
@@ -348,7 +352,7 @@ export function AdminDashboard() {
       <section
         aria-labelledby="admin-tab-overview"
         className="admin-tab-panel"
-        hidden={activeTab !== 'overview'}
+        hidden={visibleTab !== 'overview'}
         id="admin-panel-overview"
         role="tabpanel"
         tabIndex={0}
@@ -486,7 +490,7 @@ export function AdminDashboard() {
       <section
         aria-labelledby="admin-tab-records"
         className="admin-tab-panel"
-        hidden={activeTab !== 'records'}
+        hidden={visibleTab !== 'records'}
         id="admin-panel-records"
         role="tabpanel"
         tabIndex={0}
@@ -697,12 +701,24 @@ export function AdminDashboard() {
         <section
           aria-labelledby="admin-tab-games"
           className="admin-tab-panel"
-          hidden={activeTab !== 'games'}
+          hidden={visibleTab !== 'games'}
           id="admin-panel-games"
           role="tabpanel"
           tabIndex={0}
         >
           <GameReleaseManager />
+        </section>
+      )}
+      {role === 'admin' && (
+        <section
+          aria-labelledby="admin-tab-similarity"
+          className="admin-tab-panel"
+          hidden={visibleTab !== 'similarity'}
+          id="admin-panel-similarity"
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <GameSimilarityReview />
         </section>
       )}
     </main>
