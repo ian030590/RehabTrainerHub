@@ -1,5 +1,6 @@
 export const featureSpaceVersion = '2.0.0';
 export const similarityWeights = Object.freeze({ function: 0.7, taskDemand: 0.3 });
+export const lobbySimilarityThreshold = 0.5;
 
 const tagFields = { function: 'functionTags', taskDemand: 'taskDemandTags' };
 const versionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
@@ -353,8 +354,8 @@ function SharedTags(taxonomy, a, b) {
     .map(tag => tag.id);
 }
 
-export function SimilarGames(taxonomy, gameFeatures, gameId, { limit = 5 } = {}) {
-  if (!Object.hasOwn(gameFeatures.games, gameId) || limit <= 0) return [];
+export function RankSimilarGames(taxonomy, gameFeatures, gameId) {
+  if (!Object.hasOwn(gameFeatures.games, gameId)) return [];
   const target = gameFeatures.games[gameId];
   const matches = [];
   for (const [id, game] of Object.entries(gameFeatures.games)) {
@@ -362,8 +363,13 @@ export function SimilarGames(taxonomy, gameFeatures, gameId, { limit = 5 } = {})
     const { score } = GameSimilarity(taxonomy, target, game);
     if (score !== null) matches.push({ gameId: id, score });
   }
-  return matches
-    .sort((a, b) => b.score - a.score || CompareIds(a.gameId, b.gameId))
+  return matches.sort((a, b) => b.score - a.score || CompareIds(a.gameId, b.gameId));
+}
+
+export function SimilarGames(taxonomy, gameFeatures, gameId, { limit = 5 } = {}) {
+  if (limit <= 0) return [];
+  const target = gameFeatures.games[gameId];
+  return RankSimilarGames(taxonomy, gameFeatures, gameId)
     .slice(0, limit)
     .map(match => ({ ...match, sharedTags: SharedTags(taxonomy, target, gameFeatures.games[match.gameId]) }));
 }

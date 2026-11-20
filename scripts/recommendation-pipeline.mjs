@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import {
   DeriveTagLevels,
   featureSpaceVersion,
-  SimilarGames,
+  lobbySimilarityThreshold,
+  RankSimilarGames,
   ValidateRecommendationData,
   ValidateTaxonomy,
 } from '../apps/rehabtrainerhub/recommendation/features.js';
@@ -71,16 +72,21 @@ async function RunPipeline(check) {
   }]));
   console.log('3/5 Derived tag levels.');
 
+  const similarityScores = {};
   for (const [id, game] of Object.entries(games)) {
-    game.neighbors = SimilarGames(taxonomy, gameFeatures, id).map(({ gameId, score }) => ({
+    const ranked = RankSimilarGames(taxonomy, gameFeatures, id);
+    game.neighbors = ranked.slice(0, 5).map(({ gameId, score }) => ({
       gameId, score: Number(score.toFixed(4)),
     }));
+    // Keep one score per pair, including eligible matches beyond the admin top five.
+    const scores = ranked.filter(({ gameId, score }) => id < gameId && score >= lobbySimilarityThreshold);
+    if (scores.length) similarityScores[id] = Object.fromEntries(scores.map(({ gameId, score }) => [gameId, Number(score.toFixed(4))]));
   }
   console.log('4/5 Computed pairwise similarity and top-5 neighbors.');
 
-  const inputs = { taxonomy, gameFeatures, catalog: catalog.toSorted((a, b) => a.id < b.id ? -1 : 1), featureSpaceVersion };
+  const inputs = { taxonomy, gameFeatures, catalog: catalog.toSorted((a, b) => a.id < b.id ? -1 : 1), featureSpaceVersion, lobbySimilarityThreshold };
   const inputSha256 = createHash('sha256').update(JSON.stringify(SortKeys(inputs))).digest('hex');
-  const index = SortKeys({ taxonomyVersion: taxonomy.taxonomyVersion, featureSpaceVersion, inputSha256, games });
+  const index = SortKeys({ taxonomyVersion: taxonomy.taxonomyVersion, featureSpaceVersion, inputSha256, games, similarityScores });
   const bytes = Buffer.from(`${JSON.stringify(index, null, 2)}\n`);
   if (check) {
     let existing;

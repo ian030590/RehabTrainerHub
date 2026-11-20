@@ -290,17 +290,26 @@ test('Hub navigation guide button in globals.css contains NO gradients or neon e
 test('tour colors and corners resolve through Hub tokens with independent fallbacks', () => {
   const css = readFileSync(resolve(repoRoot, 'packages/ui/src/tour/toutour.css'), 'utf8');
   const root = css.match(/:root\s*\{([^}]+)\}/)[1];
+  const legacyTokens = readFileSync(resolve(repoRoot, 'packages/ui/src/legacy-color-tokens.css'), 'utf8');
+  const defaults = legacyTokens.match(/:where\(:root\)\s*\{([^}]+)\}/)[1];
+  assert.match(css, /^\s*@import\s+(['"])\.\.\/legacy-color-tokens\.css\1;/m);
   const expected = {
-    surface: 'var(--surface, #ffffff)', text: 'var(--text, #262626)', muted: 'var(--text-muted, #525252)',
-    accent: 'var(--primary, #262626)', 'accent-hover': 'var(--primary-hover, #0a0a0a)',
-    'accent-bg': 'var(--primary-soft, #eaeaea)', border: 'var(--border-strong, #7d868e)',
-    radius: 'var(--radius-lg, 12px)', mask: 'var(--bg-overlay, rgba(20, 24, 28, 0.54))',
+    surface: ['--surface', '--tour-surface', '#ffffff'],
+    text: ['--text', '--tour-text', '#262626'],
+    muted: ['--text-muted', '--tour-text-muted', '#525252'],
+    accent: ['--primary', '--tour-accent', '#262626'],
+    'accent-hover': ['--primary-hover', '--tour-accent-hover', '#0a0a0a'],
+    'accent-bg': ['--primary-soft', '--tour-accent-soft', '#eaeaea'],
+    border: ['--border-strong', '--tour-border', '#7d868e'],
+    mask: ['--bg-overlay', '--tour-scrim', 'rgba(20, 24, 28, 0.54)'],
   };
-  for (const [key, value] of Object.entries(expected)) {
-    assert.equal(root.match(new RegExp(`--tt-${key}:\\s*([^;]+);`))?.[1], value, key);
+  for (const [key, [hubToken, fallbackToken, literal]] of Object.entries(expected)) {
+    assert.equal(root.match(new RegExp(`--tt-${key}:\\s*([^;]+);`))?.[1], `var(${hubToken}, var(${fallbackToken}))`, key);
+    assert.equal(defaults.match(new RegExp(`${fallbackToken}:\\s*([^;]+);`))?.[1], literal, fallbackToken);
   }
-  assert.doesNotMatch(root.match(/--tt-accent:\s*([^;]+);/)[1], /#146c5b/);
-  assert.match(root, /--tt-halo:\s*rgba\(255, 255, 255, 0\.9\);/);
+  assert.equal(root.match(/--tt-radius:\s*([^;]+);/)?.[1], 'var(--radius-lg, 12px)');
+  assert.equal(root.match(/--tt-halo:\s*([^;]+);/)?.[1], 'var(--tour-spotlight-halo)');
+  assert.equal(defaults.match(/--tour-spotlight-halo:\s*([^;]+);/)?.[1], 'rgba(255, 255, 255, 0.9)');
   const luminance = hex => [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16) / 255)
     .map(value => value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4)
     .reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);

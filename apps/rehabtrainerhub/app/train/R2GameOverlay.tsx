@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import releases from '@rehab-trainer/ui/officialGameReleases.json';
 import { AcceptGameMessage, IsGameSettings, ReadSavedGameSettings, SensorAllowed, WriteSavedGameSettings } from '@rehab-trainer/ui/selfContainedGame.js';
 import { GetAuthToken, GetAuthUserIdFromToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
+import { PublishLobbyActivity } from '../lobbyActivityHistory.js';
 import { GetOrCreateSubjectIdForUser, IsSubjectId, SetAccountSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import type { TrainingCatalogModule } from '@rehab-trainer/hub-modules/catalog';
 import type { GameScore } from '@rehab-trainer/ui/gameScore';
@@ -126,13 +127,15 @@ export function R2GameOverlay({ module, onClose, planLaunch, captureSettings, on
           csvSaved.current = true;
         }
       }
-      await SaveRemoteTrainingRecord(window.location.origin, {
+      const playedAt = new Date().toISOString();
+      const persisted = await SaveRemoteTrainingRecord(window.location.origin, {
         appId: 'rehabtrainerhub', runtimeId: 'hub', officialGameVersion: selected.version, runSessionToken: selected.token, subjectId: selected.subjectId,
         ...(planLaunch ? { planFollowed } : {}),
-        record: { id: selected.recordId, savedAt: new Date().toISOString(), userName: '',
+        record: { id: selected.recordId, savedAt: playedAt, userName: '',
           moduleId: module.runtimeId, gameId: module.runtimeId, config: result.config, score: result.score,
           metadata: { release_version: selected.version.replaceAll('.', '_') } },
       });
+      if (persisted) PublishLobbyActivity(window, module.runtimeId, playedAt, !identity.token && !GetAuthToken());
       if (sessionRef.current !== selected || portRef.current !== port) return;
       saved.current = true;
       setLeaveGuard(false);

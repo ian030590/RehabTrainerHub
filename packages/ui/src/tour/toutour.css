@@ -4,17 +4,19 @@
  * Strictly ZERO gradients, ZERO neon effects, ZERO emojis.
  * Senior-friendly: large, high-contrast, legible typography for elderly users.
  */
+@import '../legacy-color-tokens.css';
+
 :root {
-  --tt-surface: var(--surface, #ffffff);
-  --tt-text: var(--text, #262626);
-  --tt-muted: var(--text-muted, #525252);
-  --tt-accent: var(--primary, #262626);
-  --tt-accent-hover: var(--primary-hover, #0a0a0a);
-  --tt-accent-bg: var(--primary-soft, #eaeaea);
-  --tt-border: var(--border-strong, #7d868e);
+  --tt-surface: var(--surface, var(--tour-surface));
+  --tt-text: var(--text, var(--tour-text));
+  --tt-muted: var(--text-muted, var(--tour-text-muted));
+  --tt-accent: var(--primary, var(--tour-accent));
+  --tt-accent-hover: var(--primary-hover, var(--tour-accent-hover));
+  --tt-accent-bg: var(--primary-soft, var(--tour-accent-soft));
+  --tt-border: var(--border-strong, var(--tour-border));
   --tt-radius: var(--radius-lg, 12px);
-  --tt-mask: var(--bg-overlay, rgba(20, 24, 28, 0.54));
-  --tt-halo: rgba(255, 255, 255, 0.9);
+  --tt-mask: var(--bg-overlay, var(--tour-scrim));
+  --tt-halo: var(--tour-spotlight-halo);
 }
 
 #ttBlock,
@@ -62,7 +64,7 @@
   color: var(--tt-text);
   border: 2px solid var(--tt-border);
   border-radius: var(--tt-radius);
-  box-shadow: 0 10px 32px rgba(20, 33, 43, 0.16);
+  box-shadow: var(--shadow-tooltip);
   padding: 1.4rem 1.6rem 1.25rem;
   width: max-content;
   max-width: min(480px, calc(100vw - 24px));
@@ -192,14 +194,14 @@
 .tt-btn-primary {
   background: var(--tt-accent);
   border-color: var(--tt-accent);
-  color: #ffffff;
+  color: var(--tour-on-accent);
 }
 
 .tt-btn-primary:hover,
 .tt-btn-primary:focus-visible {
   background: var(--tt-accent-hover);
   border-color: var(--tt-accent-hover);
-  color: #ffffff;
+  color: var(--tour-on-accent);
 }
 
 .tt-skip {

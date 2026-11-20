@@ -74,6 +74,7 @@ export interface SimilarGame {
 
 export const featureSpaceVersion: string;
 export const similarityWeights: Readonly<Record<TagGroup, number>>;
+export const lobbySimilarityThreshold: number;
 
 type Validation = { ok: true; errors: [] } | { ok: false; errors: string[] };
 
@@ -91,6 +92,8 @@ export function ValidateRecommendationData(
 export function DeriveTagLevels(taxonomy: Taxonomy, tags: TagLevels): TagLevels;
 
 export function GameSimilarity(taxonomy: Taxonomy, a: GameFeature, b: GameFeature): Similarity;
+
+export function RankSimilarGames(taxonomy: Taxonomy, gameFeatures: GameFeatures, gameId: string): Omit<SimilarGame, 'sharedTags'>[];
 
 export function SimilarGames(
   taxonomy: Taxonomy,

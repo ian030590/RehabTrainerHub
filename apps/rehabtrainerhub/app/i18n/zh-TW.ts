@@ -84,6 +84,11 @@ export const zhTW = {
       },
     },
     lobby: {
+      recommendations: {
+        title: '相近活動',
+        note: '依活動內容的相似程度排列，不是個人評估或練習建議。',
+        reason: '與「{activity}」內容相近',
+      },
       kicker: '居家訓練網',
       title: '訓練大廳',
       description: '選一個活動，開始今天的練習。',

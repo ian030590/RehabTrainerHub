@@ -7,6 +7,7 @@ import { CreateIdentityGuard } from '../packages/ui/src/auth/identityGuard.ts';
 import * as gameMessages from '../packages/ui/src/selfContainedGame.js';
 import { CreateSensorInputHost } from '../packages/ui/src/sensorInputHost.js';
 import { CreateRawCoordinateRecorder, rawCoordinateColumns } from '../packages/ui/src/rawCoordinateRecorder.js';
+import * as activityHistory from '../apps/rehabtrainerhub/app/lobbyActivityHistory.js';
 
 const subjectId = '12345678-1234-4234-8234-123456789abc';
 const jsxRuntime = { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }), Fragment: 'fragment' };
@@ -97,6 +98,7 @@ async function CreateOverlay(options = {}) {
     SaveRemoteTrainingRecord: async (origin, payload) => {
       actions.push({ type: 'record', origin, payload });
       if (control.failRecord) throw new Error('D1 temporarily unavailable');
+      return true;
     },
   };
   const fetch = async (url, init) => {
@@ -132,6 +134,7 @@ async function CreateOverlay(options = {}) {
     '@rehab-trainer/ui/fullscreen': { ExitFullscreenIfActive: async () => {} },
     '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en' }) },
     '../i18n': { GetHubUiCopy: () => ({ practicePlans: {} }) },
+    '../lobbyActivityHistory.js': activityHistory,
     '../practicePlans.css': {},
     '@rehab-trainer/ui/resultFiles.js': {}, '@rehab-trainer/ui/sensorInput': {},
     '@rehab-trainer/ui/sensorInputBroker.js': { CreateSensorInputBroker: config => ({ Stop() {}, Start() {}, Emit: config.send }) },
@@ -144,7 +147,7 @@ async function CreateOverlay(options = {}) {
   };
   const { R2GameOverlay } = LoadModule('../apps/rehabtrainerhub/app/train/R2GameOverlay.tsx', dependencies, {
     fetch, setTimeout: () => 1, clearTimeout() {}, setInterval: () => 1, clearInterval() {},
-    window: { location: { origin: 'https://hub.example' }, scrollX: 0, scrollY: 0, scrollTo() {}, addEventListener() {}, removeEventListener() {} },
+    window: { location: { origin: 'https://hub.example' }, scrollX: 0, scrollY: 0, scrollTo() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent() {} },
     document: { addEventListener() {}, removeEventListener() {}, activeElement: null }, navigator: { onLine: true },
     HTMLElement: class {},
     MessageChannel: class {

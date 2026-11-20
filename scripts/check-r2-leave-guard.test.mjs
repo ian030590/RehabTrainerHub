@@ -5,6 +5,7 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as gameMessages from '../packages/ui/src/selfContainedGame.js';
+import * as activityHistory from '../apps/rehabtrainerhub/app/lobbyActivityHistory.js';
 
 const subjectId = '12345678-1234-4234-8234-123456789abc';
 const gameId = 'drawing-defense';
@@ -67,8 +68,10 @@ async function CreateOverlay(context, options = {}) {
   const outbound = [], initialized = [], channels = [], records = [];
   const control = { saveGate: null, failSave: false };
   let sequence = 0, closed = 0;
+  const storage = new Map();
   const page = Object.assign(new EventTarget(), {
     location: { origin: 'https://hub.example' }, scrollX: 0, scrollY: 0, scrollTo() {},
+    localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
   });
   const frame = { contentWindow: { postMessage(message) { initialized.push(message); sequence = 0; } } };
   const dialog = { open: false, showModal() { this.open = true; }, close() { this.open = false; } };
@@ -86,6 +89,7 @@ async function CreateOverlay(context, options = {}) {
         records.push(payload);
         if (control.saveGate) await control.saveGate;
         if (control.failSave) throw new Error('Record save failed');
+        return true;
       },
     },
     '@rehab-trainer/ui/storage/subjectId': { GetOrCreateSubjectIdForUser: () => subjectId, IsSubjectId: value => value === subjectId },
@@ -93,6 +97,7 @@ async function CreateOverlay(context, options = {}) {
     '@rehab-trainer/ui/rawCoordinateRecorder.js': { CreateRawCoordinateRecorder: () => ({ Files: () => [], Reset() {} }) },
     '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en' }) },
     '../i18n': { GetHubUiCopy: () => ({ practicePlans: {} }) },
+    '../lobbyActivityHistory.js': activityHistory,
     '../practicePlans.css': {},
   };
   for (const name of ['handTrackingBroker.js', 'handTrackingInput', 'eyeTrackingBroker.js', 'eyeTrackingInput',
@@ -207,6 +212,8 @@ test('a successful save releases the leave guard', async context => {
   AssertProtected(overlay, true);
   await overlay.Result();
   assert.equal(overlay.outbound.at(-1).state, 'saved');
+  assert.deepEqual(activityHistory.ReadGuestLobbyHistory(overlay.page, new Set([gameId])),
+    [{ gameId, playedAt: overlay.records[0].record.savedAt }]);
   AssertProtected(overlay, false);
 });
 

@@ -23,6 +23,7 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import { GetOrCreateSubjectIdForUser, IsSubjectId, SetAccountSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import type { PublishedGame } from '../publishedGames';
+import { PublishLobbyActivity } from '../lobbyActivityHistory.js';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
 import { GetTrainerCategoryTheme } from '@rehab-trainer/hub-modules/catalog';
@@ -135,18 +136,22 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     setSaveState('saving');
     try {
       const runSession = await ensureRunSession();
-      setSaveState(await SaveGameResult(
+      const token = GetAuthToken();
+      const playedAt = new Date().toISOString();
+      const state = await SaveGameResult(
         game.release.id,
         sessionNonce,
         runSession,
         result,
-      ));
+      );
+      PublishLobbyActivity(window, game.slug, playedAt, !token && !GetAuthToken());
+      setSaveState(state);
     } catch {
       setSaveState('error');
     } finally {
       saveInFlightRef.current = false;
     }
-  }, [ensureRunSession, game.release.id, sessionNonce]);
+  }, [ensureRunSession, game.release.id, game.slug, sessionNonce]);
 
   useEffect(() => {
     dialogRef.current?.showModal();

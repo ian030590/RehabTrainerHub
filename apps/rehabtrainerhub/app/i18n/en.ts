@@ -84,6 +84,11 @@ export const en = {
       },
     },
     lobby: {
+      recommendations: {
+        title: 'Similar activities',
+        note: "Ordered by how similar the activities' content is; not a personal assessment or practice advice.",
+        reason: 'Similar to {activity}',
+      },
       kicker: 'Rehab Trainer Hub',
       title: 'Training Lobby',
       description: 'Choose an activity. Make time for practice.',

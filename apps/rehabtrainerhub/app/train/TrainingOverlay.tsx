@@ -30,11 +30,12 @@ import {
   type GameScoreDefinition,
   type HubTrainingConfigureReason,
 } from '@rehab-trainer/ui/embeddedTraining';
-import { SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
+import { GetAuthToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import dynamic from 'next/dynamic';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
 import { GetHubUiCopy } from '../i18n';
+import { PublishLobbyActivity } from '../lobbyActivityHistory.js';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from '@rehab-trainer/ui/components/GameSettingsForm';
@@ -81,15 +82,18 @@ function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     savingRef.current = true;
     setSaveState('saving');
     try {
+      const token = GetAuthToken();
+      const playedAt = new Date().toISOString();
       const saved = await SaveRemoteTrainingRecord(window.location.origin, {
         appId: 'rehabtrainerhub', runtimeId: 'hub', record: {
-          id: scoreRecordId.current, savedAt: new Date().toISOString(), userName: '',
+          id: scoreRecordId.current, savedAt: playedAt, userName: '',
           moduleId: module.runtimeId, gameId: module.runtimeId,
           config: configuredSettings ?? undefined,
           score: result,
           ...(metadata === undefined ? {} : { metadata }),
         },
       });
+      if (saved) PublishLobbyActivity(window, module.runtimeId, playedAt, !token && !GetAuthToken());
       setSaveState(saved ? 'saved' : 'error');
     } catch { setSaveState('error'); }
     finally { savingRef.current = false; }

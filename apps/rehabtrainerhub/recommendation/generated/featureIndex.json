@@ -2722,6 +2722,410 @@
       "reviewStatus": "confirmed"
     }
   },
-  "inputSha256": "0ea12354d29edd31c87c63d5a8616f0016e04f97cc02d4fb90e044354176eead",
+  "inputSha256": "a899fb2180433299cb2ae3b278195ba0143bb112bc2b51ee9ac4c1a02e8c4d98",
+  "similarityScores": {
+    "antisaccade": {
+      "attention-network-task": 0.6615,
+      "brake-reaction": 0.516,
+      "continuous-performance": 0.6312,
+      "every-ball-response": 0.687,
+      "exploratory-saccade": 0.6287,
+      "flanker": 0.6206,
+      "go-nogo": 0.6312,
+      "hart-chart": 0.5749,
+      "hex-schulte": 0.5254,
+      "oculomotor-training": 0.5945,
+      "reaction-time": 0.6312,
+      "sart": 0.6312,
+      "simon-task": 0.6989,
+      "stop-signal": 0.7294,
+      "stroop": 0.674,
+      "ufov": 0.5571,
+      "whack-a-mole": 0.5079
+    },
+    "asteroid-shield": {
+      "divided-attention": 0.5224,
+      "drawing-defense": 0.8536,
+      "driving-rehab": 0.5877,
+      "motor-cortex-rehab": 0.8956
+    },
+    "attention-network-task": {
+      "attentional-blink": 0.508,
+      "brake-reaction": 0.7945,
+      "card-sorting": 0.5968,
+      "complex-search": 0.8385,
+      "conjunction-search": 0.8385,
+      "continuous-performance": 0.6299,
+      "driving-rehab": 0.5215,
+      "every-ball-response": 0.5514,
+      "flanker": 0.9753,
+      "go-nogo": 0.6299,
+      "moving-card": 0.7352,
+      "number-letter": 0.7193,
+      "pattern-memory": 0.558,
+      "popout-search": 0.7912,
+      "reaction-time": 0.692,
+      "sart": 0.6299,
+      "simon-task": 0.9139,
+      "stop-signal": 0.7676,
+      "stroop": 0.9139,
+      "ufov": 0.6531,
+      "whack-a-mole": 0.5616
+    },
+    "attentional-blink": {
+      "complex-search": 0.5144,
+      "conjunction-search": 0.5144,
+      "exploratory-saccade": 0.5776,
+      "flanker": 0.5539,
+      "hex-schulte": 0.6419,
+      "keep-track": 0.5534,
+      "moving-card": 0.5144,
+      "schulte-grid": 0.5827,
+      "ufov": 0.7165
+    },
+    "brake-reaction": {
+      "complex-search": 0.6589,
+      "conjunction-search": 0.6589,
+      "continuous-performance": 0.7555,
+      "driving-rehab": 0.7238,
+      "every-ball-response": 0.5801,
+      "flanker": 0.7648,
+      "go-nogo": 0.7555,
+      "moving-card": 0.6589,
+      "number-letter": 0.5497,
+      "popout-search": 0.6127,
+      "reaction-time": 0.7855,
+      "sart": 0.7555,
+      "simon-task": 0.7141,
+      "stop-signal": 0.7395,
+      "stroop": 0.7141,
+      "ufov": 0.5802,
+      "whack-a-mole": 0.5186
+    },
+    "card-sorting": {
+      "complex-search": 0.6006,
+      "conjunction-search": 0.6006,
+      "dots-and-boxes": 0.5135,
+      "flanker": 0.6516,
+      "hex": 0.5135,
+      "moving-card": 0.6006,
+      "number-letter": 0.8638,
+      "pattern-memory": 0.5416,
+      "plus-minus": 0.6062,
+      "popout-search": 0.5816,
+      "simon-task": 0.5816,
+      "stroop": 0.5116
+    },
+    "complex-search": {
+      "conjunction-search": 1,
+      "connect4": 0.5827,
+      "dots-and-boxes": 0.5827,
+      "driving-rehab": 0.5809,
+      "exploratory-saccade": 0.6588,
+      "flanker": 0.8525,
+      "gabor-patching": 0.6176,
+      "hart-chart": 0.506,
+      "hex": 0.5827,
+      "hex-schulte": 0.5047,
+      "moving-card": 0.9462,
+      "number-letter": 0.6494,
+      "pattern-memory": 0.5698,
+      "popout-search": 0.9753,
+      "reaction-time": 0.5056,
+      "schulte-grid": 0.6687,
+      "simon-task": 0.7298,
+      "stop-signal": 0.5241,
+      "stroop": 0.7298,
+      "tic-tac-toe": 0.5827,
+      "ufov": 0.6135,
+      "whack-a-mole": 0.6924
+    },
+    "conjunction-search": {
+      "connect4": 0.5827,
+      "dots-and-boxes": 0.5827,
+      "driving-rehab": 0.5809,
+      "exploratory-saccade": 0.6588,
+      "flanker": 0.8525,
+      "gabor-patching": 0.6176,
+      "hart-chart": 0.506,
+      "hex": 0.5827,
+      "hex-schulte": 0.5047,
+      "moving-card": 0.9462,
+      "number-letter": 0.6494,
+      "pattern-memory": 0.5698,
+      "popout-search": 0.9753,
+      "reaction-time": 0.5056,
+      "schulte-grid": 0.6687,
+      "simon-task": 0.7298,
+      "stop-signal": 0.5241,
+      "stroop": 0.7298,
+      "tic-tac-toe": 0.5827,
+      "ufov": 0.6135,
+      "whack-a-mole": 0.6924
+    },
+    "connect4": {
+      "dots-and-boxes": 0.8833,
+      "hex": 0.8833,
+      "lights-out": 0.6328,
+      "maze": 0.6147,
+      "minesweeper": 0.6445,
+      "moving-card": 0.5827,
+      "popout-search": 0.5048,
+      "schulte-grid": 0.6017,
+      "sliding-puzzle": 0.7238,
+      "sudoku": 0.5908,
+      "tic-tac-toe": 1,
+      "tower-of-london": 0.5798
+    },
+    "continuous-performance": {
+      "every-ball-response": 0.7361,
+      "flanker": 0.6071,
+      "go-nogo": 1,
+      "moving-card": 0.5006,
+      "reaction-time": 0.8871,
+      "sart": 1,
+      "simon-task": 0.7572,
+      "stop-signal": 0.9106,
+      "stroop": 0.6771,
+      "whack-a-mole": 0.5519
+    },
+    "digit-span": {
+      "keep-track": 0.6992,
+      "letter-memory": 0.8217,
+      "n-back": 0.6664,
+      "reading-training": 0.541
+    },
+    "divided-attention": {
+      "driving-rehab": 0.6553
+    },
+    "dots-and-boxes": {
+      "hex": 1,
+      "lights-out": 0.7257,
+      "maze": 0.6147,
+      "minesweeper": 0.6445,
+      "moving-card": 0.5827,
+      "popout-search": 0.6518,
+      "schulte-grid": 0.506,
+      "sliding-puzzle": 0.7238,
+      "sudoku": 0.5908,
+      "tic-tac-toe": 0.8833,
+      "tower-of-london": 0.6727
+    },
+    "drawing-defense": {
+      "driving-rehab": 0.5063,
+      "gesture-battler": 0.5226,
+      "motor-cortex-rehab": 0.8114
+    },
+    "driving-rehab": {
+      "motor-cortex-rehab": 0.5179,
+      "moving-card": 0.5809,
+      "popout-search": 0.5662,
+      "ufov": 0.5624,
+      "whack-a-mole": 0.5162
+    },
+    "every-ball-response": {
+      "flanker": 0.5352,
+      "go-nogo": 0.7361,
+      "reaction-time": 0.6544,
+      "sart": 0.7361,
+      "simon-task": 0.6545,
+      "stop-signal": 0.7394,
+      "stroop": 0.5967
+    },
+    "exploratory-saccade": {
+      "hart-chart": 0.8565,
+      "hex-schulte": 0.6998,
+      "moving-card": 0.6588,
+      "oculomotor-training": 0.5594,
+      "popout-search": 0.6497,
+      "schulte-grid": 0.6703,
+      "ufov": 0.6126,
+      "whack-a-mole": 0.5046
+    },
+    "flanker": {
+      "go-nogo": 0.6071,
+      "moving-card": 0.792,
+      "number-letter": 0.6951,
+      "pattern-memory": 0.6144,
+      "popout-search": 0.79,
+      "reaction-time": 0.6071,
+      "sart": 0.6071,
+      "simon-task": 0.93,
+      "stop-signal": 0.7093,
+      "stroop": 0.93,
+      "ufov": 0.6588
+    },
+    "gabor-patching": {
+      "moving-card": 0.6176,
+      "popout-search": 0.6652,
+      "reaction-time": 0.5375,
+      "schulte-grid": 0.5855,
+      "whack-a-mole": 0.8165
+    },
+    "go-nogo": {
+      "moving-card": 0.5006,
+      "reaction-time": 0.8871,
+      "sart": 1,
+      "simon-task": 0.7572,
+      "stop-signal": 0.9106,
+      "stroop": 0.6771,
+      "whack-a-mole": 0.5519
+    },
+    "hart-chart": {
+      "hex-schulte": 0.6483,
+      "memory-match": 0.5283,
+      "moving-card": 0.506,
+      "oculomotor-training": 0.5145,
+      "popout-search": 0.5422,
+      "schulte-grid": 0.5837
+    },
+    "hex": {
+      "lights-out": 0.7257,
+      "maze": 0.6147,
+      "minesweeper": 0.6445,
+      "moving-card": 0.5827,
+      "popout-search": 0.6518,
+      "schulte-grid": 0.506,
+      "sliding-puzzle": 0.7238,
+      "sudoku": 0.5908,
+      "tic-tac-toe": 0.8833,
+      "tower-of-london": 0.6727
+    },
+    "hex-schulte": {
+      "minesweeper": 0.5051,
+      "moving-card": 0.5047,
+      "popout-search": 0.5126,
+      "schulte-grid": 0.7041,
+      "ufov": 0.6669
+    },
+    "keep-track": {
+      "letter-memory": 0.8853,
+      "n-back": 0.7505,
+      "reading-training": 0.5506
+    },
+    "letter-memory": {
+      "n-back": 0.8346
+    },
+    "lights-out": {
+      "maze": 0.8304,
+      "minesweeper": 0.8658,
+      "sliding-puzzle": 0.9233,
+      "sudoku": 0.8262,
+      "tic-tac-toe": 0.6328,
+      "tower-of-london": 0.9495
+    },
+    "maze": {
+      "minesweeper": 0.9462,
+      "schulte-grid": 0.5264,
+      "sliding-puzzle": 0.9251,
+      "sudoku": 0.9018,
+      "tic-tac-toe": 0.6147,
+      "tower-of-london": 0.7799
+    },
+    "memory-match": {
+      "pattern-memory": 0.548,
+      "popout-search": 0.5413,
+      "simon-says": 0.6615,
+      "spatial-span": 0.5475
+    },
+    "minesweeper": {
+      "schulte-grid": 0.5488,
+      "sliding-puzzle": 0.9668,
+      "sudoku": 0.9462,
+      "tic-tac-toe": 0.6445,
+      "tower-of-london": 0.8153
+    },
+    "moving-card": {
+      "number-letter": 0.5828,
+      "pattern-memory": 0.5698,
+      "popout-search": 0.915,
+      "reaction-time": 0.5056,
+      "sart": 0.5006,
+      "schulte-grid": 0.6687,
+      "simon-task": 0.669,
+      "stroop": 0.669,
+      "tic-tac-toe": 0.5827,
+      "ufov": 0.5747,
+      "whack-a-mole": 0.6182
+    },
+    "n-back": {
+      "reaction-time": 0.5375,
+      "reading-training": 0.5469,
+      "whack-a-mole": 0.5214
+    },
+    "number-letter": {
+      "plus-minus": 0.5622,
+      "popout-search": 0.6161,
+      "simon-task": 0.6161,
+      "stop-signal": 0.5188,
+      "stroop": 0.6161,
+      "ufov": 0.5117
+    },
+    "pattern-memory": {
+      "popout-search": 0.5251,
+      "simon-says": 0.8506,
+      "simon-task": 0.5251,
+      "spatial-span": 0.7234,
+      "stroop": 0.5251
+    },
+    "popout-search": {
+      "reaction-time": 0.5429,
+      "schulte-grid": 0.6518,
+      "simon-task": 0.72,
+      "stop-signal": 0.5606,
+      "stroop": 0.65,
+      "tic-tac-toe": 0.5048,
+      "ufov": 0.5695,
+      "whack-a-mole": 0.7544
+    },
+    "reaction-time": {
+      "sart": 0.8871,
+      "simon-task": 0.6858,
+      "stop-signal": 0.8705,
+      "stroop": 0.6071,
+      "tongue-catch": 0.5286,
+      "whack-a-mole": 0.6992
+    },
+    "sart": {
+      "simon-task": 0.7572,
+      "stop-signal": 0.9106,
+      "stroop": 0.6771,
+      "whack-a-mole": 0.5519
+    },
+    "schulte-grid": {
+      "tic-tac-toe": 0.6017,
+      "whack-a-mole": 0.5876
+    },
+    "simon-says": {
+      "spatial-span": 0.86
+    },
+    "simon-task": {
+      "stop-signal": 0.8406,
+      "stroop": 0.93,
+      "ufov": 0.5695
+    },
+    "sliding-puzzle": {
+      "sudoku": 0.9173,
+      "tic-tac-toe": 0.7238,
+      "tower-of-london": 0.8728
+    },
+    "stop-signal": {
+      "stroop": 0.7807,
+      "whack-a-mole": 0.649
+    },
+    "stroop": {
+      "ufov": 0.5695
+    },
+    "sudoku": {
+      "tic-tac-toe": 0.5908,
+      "tower-of-london": 0.7756
+    },
+    "tic-tac-toe": {
+      "tower-of-london": 0.5798
+    },
+    "tongue-catch": {
+      "whack-a-mole": 0.5001
+    }
+  },
   "taxonomyVersion": "2.0.0"
 }

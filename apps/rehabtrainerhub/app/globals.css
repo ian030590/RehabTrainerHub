@@ -36,6 +36,7 @@
   --error: #b3261e;
   --shadow-sm: 0 1px 2px rgba(20, 33, 43, 0.08);
   --shadow-md: 0 8px 24px rgba(20, 33, 43, 0.12);
+  --shadow-tooltip: 0 10px 32px rgba(20, 33, 43, 0.16);
   --page-max: 1440px;
   --radius: 8px;
   --radius-sm: 4px;
@@ -993,12 +994,16 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 
+.lobby-page {
+  --lobby-gutter: 32px;
+}
+
 .lobby-heading {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: center;
   gap: 12px 64px;
-  padding: 24px 32px 20px;
+  padding: 24px var(--lobby-gutter) 20px;
 }
 
 .lobby-welcome h1 {
@@ -1157,6 +1162,81 @@ html:has(dialog.package-game-overlay[open]) {
   display: none;
 }
 
+.lobby-recommendations {
+  margin-block: 24px;
+  padding-inline: var(--lobby-gutter);
+}
+
+.lobby-recommendations h2 {
+  margin: 0;
+  color: var(--heading);
+  font-size: var(--type-headline);
+}
+
+.lobby-recommendations p {
+  margin: 4px 0 12px;
+  color: var(--text-muted);
+}
+
+.lobby-recommendations ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lobby-recommendation {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 4px;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.lobby-recommendation strong {
+  color: var(--heading);
+  font-size: var(--type-body);
+}
+
+.lobby-recommendation .module-category-tag {
+  white-space: normal;
+}
+
+.lobby-recommendation:hover strong,
+.lobby-recommendation:active strong {
+  text-decoration: underline;
+}
+
+.lobby-recommendation:active {
+  background: var(--surface-muted);
+}
+
+@media (min-width: 768px) {
+  .lobby-recommendations ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lobby-recommendations ul {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .lobby-layout {
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
@@ -1287,7 +1367,7 @@ html:has(dialog.package-game-overlay[open]) {
   width: auto;
   min-width: 0;
   padding: 20px 16px;
-  margin: 0 0 30px 32px;
+  margin: 0 0 30px var(--lobby-gutter);
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1490,7 +1570,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .module-results {
   min-width: 0;
-  padding: 0 32px 40px 28px;
+  padding: 0 var(--lobby-gutter) 40px 28px;
 }
 
 .result-heading,
@@ -3048,7 +3128,6 @@ html:has(dialog.package-game-overlay[open]) {
     min-height: calc(100vh - 112px);
   }
 
-  .lobby-heading,
   .progress-page,
   .qa-page,
   .admin-page,
@@ -3078,7 +3157,7 @@ html:has(dialog.package-game-overlay[open]) {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: 0 32px 20px;
+    margin: 0 var(--lobby-gutter) 20px;
   }
 
   .filter-mobile-trigger {
@@ -3308,7 +3387,7 @@ html:has(dialog.package-game-overlay[open]) {
   }
 
   .module-results {
-    padding: 0 32px 40px;
+    padding: 0 var(--lobby-gutter) 40px;
     border-left: 0;
   }
 }
@@ -3368,6 +3447,10 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 @media (max-width: 767px) {
+  .lobby-page {
+    --lobby-gutter: 18px;
+  }
+
   .hub-shell:not(.hub-shell-training) {
     --hub-mobile-nav-height: calc(80px + env(safe-area-inset-bottom));
     padding-bottom: var(--hub-mobile-nav-height);
@@ -3426,7 +3509,7 @@ html:has(dialog.package-game-overlay[open]) {
   .lobby-heading {
     grid-template-columns: 1fr;
     gap: 16px;
-    padding: 24px 18px;
+    padding-block: 24px;
   }
 
   .lobby-description {
@@ -3455,16 +3538,6 @@ html:has(dialog.package-game-overlay[open]) {
 
   .module-search {
     flex: auto;
-  }
-
-  .mobile-filter-bar {
-    margin-right: 18px;
-    margin-left: 18px;
-  }
-
-  .module-results {
-    padding-right: 18px;
-    padding-left: 18px;
   }
 
   .hub-nav {

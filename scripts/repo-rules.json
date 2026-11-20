@@ -868,5 +868,20 @@
     "summary": "新官方遊戲先將推薦項目登記為 `draft`，審閱後再改為 `confirmed`。",
     "enforcement": "process",
     "reason": "淺層 checkout 的最終狀態可驗證資料格式，初始狀態及人工審閱順序須依變更紀錄。"
+  },
+  {
+    "id": "AG-REC-04",
+    "summary": "大廳只依活動內容相似度與近期活動 ID 推薦。訪客只在裝置保留活動 ID 與時間。文案說明並非個人評估。",
+    "enforcement": "ci",
+    "tests": [
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking requires history and excludes recent or unavailable games"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking weights the three distinct recencies and applies the minimum raw similarity"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking uses catalog order for score ties and returns at most four games"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"guest activity history stores only ids and times, newest first and capped at twenty distinct games"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"guest activity history drops malformed or unknown ids and tolerates unavailable storage"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"signed-in saves notify the lobby without reading or writing guest history"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendation dictionaries state the content-similarity limits without regulatory claims"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendations hide during search or purpose filtering and use the lobby card launch"}
+    ]
   }
 ]

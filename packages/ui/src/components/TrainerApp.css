@@ -240,7 +240,7 @@ body[data-training-embed="hub"] #root,
   min-height: 72px;
   padding: 10px max(28px, calc((100vw - 1540px) / 2));
   background: var(--bg-card);
-  box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.02));
+  box-shadow: var(--shadow-card, var(--shadow-trainer-header));
   transition: min-height 220ms ease, opacity 220ms ease, transform 220ms ease;
 }
 
@@ -2174,11 +2174,11 @@ input.training-slider {
   width: 48px;
   height: 48px;
   padding: 0;
-  border: 1px solid rgba(148, 163, 184, 0.56);
+  border: 1px solid var(--border-mobile-touch);
   border-radius: var(--radius-m);
-  background: rgba(15, 23, 42, 0.48);
-  color: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+  background: var(--scrim-mobile-touch);
+  color: var(--on-scrim);
+  box-shadow: var(--shadow-mobile-touch);
   cursor: pointer;
   font-size: 22px;
   font-weight: 900;
@@ -2189,8 +2189,8 @@ input.training-slider {
 }
 
 .mobile-touch-button:active {
-  border-color: rgba(255, 255, 255, 0.9);
-  background: rgba(37, 99, 235, 0.72);
+  border-color: var(--border-mobile-touch-active);
+  background: var(--bg-mobile-touch-active);
   transform: scale(0.96);
 }
 
@@ -2236,11 +2236,11 @@ input.training-slider {
   min-width: 108px;
   min-height: 54px;
   padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--border-mobile-action);
   border-radius: var(--radius-m);
-  background: rgba(15, 23, 42, 0.56);
-  color: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.2);
+  background: var(--scrim-mobile-action);
+  color: var(--on-scrim);
+  box-shadow: var(--shadow-mobile-action);
   cursor: pointer;
   font-size: 16px;
   font-weight: 900;
@@ -2250,7 +2250,7 @@ input.training-slider {
 }
 
 .mobile-action-button:active {
-  background: rgba(37, 99, 235, 0.74);
+  background: var(--bg-mobile-action-active);
   transform: scale(0.97);
 }
 

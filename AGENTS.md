@@ -139,6 +139,7 @@ Hub 的 Next.js App Router 位於 `app/`，後端 `functions/` 編譯進 Worker�
 - [AG-REC-01] 官方遊戲須在 `recommendation/gameFeatures.json` 以可觀察的任務需求與功能佐證分類，重新產出 index 並通過 gate。
 - [AG-REC-02] 推薦標籤對齊倉庫註冊的架構與雙語詞彙。保留未知值遮罩、固定群組權重與可重現排序；相似度審閱限管理員。
 - [AG-REC-03] 新官方遊戲先將推薦項目登記為 `draft`，審閱後再改為 `confirmed`。
+- [AG-REC-04] 大廳只依活動內容相似度與近期活動 ID 推薦。訪客只在裝置保留活動 ID 與時間。文案說明並非個人評估。
 
 ## 指令參考
 

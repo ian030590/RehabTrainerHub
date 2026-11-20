@@ -247,9 +247,11 @@ test('profile save discards an old response if the token changes while reading J
 });
 
 test('a late auth rejection cannot clear the next account token', async () => {
-  const state = { value: FakeToken('account-a') };
-  state.Fetch = async () => { state.value = FakeToken('account-b'); return { status: 401 }; };
-  const auth = LoadAuthClient(state);
-  await auth.FetchCurrentAuthUser();
-  assert.equal(state.value, FakeToken('account-b'), 'An old auth request must not log out the new account.');
+  for (const fetchAccountData of ['FetchCurrentAuthUser', 'FetchRehabProgress']) {
+    const state = { value: FakeToken('account-a') };
+    state.Fetch = async () => { state.value = FakeToken('account-b'); return { status: 401 }; };
+    const auth = LoadAuthClient(state);
+    assert.equal(await auth[fetchAccountData](), null);
+    assert.equal(state.value, FakeToken('account-b'), `${fetchAccountData} must preserve the new account token.`);
+  }
 });

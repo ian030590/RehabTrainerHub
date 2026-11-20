@@ -4,6 +4,7 @@ import test from 'node:test';
 import ts from 'typescript';
 import { CreateIdentityGuard } from '../packages/ui/src/auth/identityGuard.ts';
 import * as channelRules from '../packages/ui/src/selfContainedGame.js';
+import * as activityHistory from '../apps/rehabtrainerhub/app/lobbyActivityHistory.js';
 
 const appRoot = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
 const module = { runtimeId: 'reading-training', copy: { en: { title: 'Reading' }, 'zh-TW': { title: '閱讀' } } };
@@ -82,9 +83,10 @@ async function Overlay(options = {}) {
     '@rehab-trainer/ui/fullscreen': { ExitFullscreenIfActive: async () => {} },
     '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en' }) },
     '../i18n': { GetHubUiCopy: () => ({ practicePlans: { captureNotice: 'Adjust settings and press start.' } }) },
+    '../lobbyActivityHistory.js': activityHistory,
     '@rehab-trainer/ui/rawCoordinateRecorder.js': { CreateRawCoordinateRecorder: () => ({ Files: () => [], Reset() {} }) },
     '@rehab-trainer/ui/sensorInputHost.js': { CreateSensorInputHost: () => null },
-    window: { localStorage: storage, location: { origin: 'https://hub.example' }, addEventListener() {}, removeEventListener() {}, scrollTo() {} },
+    window: { localStorage: storage, location: { origin: 'https://hub.example' }, addEventListener() {}, removeEventListener() {}, dispatchEvent() {}, scrollTo() {} },
     document: { addEventListener() {}, removeEventListener() {}, activeElement: null },
     fetch: async (url, init) => { requests.push([url, init]); return { ok: true, json: async () => ({ ...session, ...options.session }) }; },
     MessageChannel: class {
@@ -198,7 +200,8 @@ test('normal overlay keeps private channel validation, sensor proxies, CSV and r
 
 test('player section is immediately after the heading; existing filters and pagination stay connected', async () => {
   const lobby = await readFile(new URL('TrainingLobby.tsx', appRoot), 'utf8');
-  assert.match(lobby, /<\/section>\s*<AssignedPracticePlan\s*\/>\s*<div className="lobby-layout"/);
+  assert.match(lobby, /<\/section>\s*<AssignedPracticePlan\s*\/>/);
+  assert.match(lobby, /<AssignedPracticePlan\s*\/>[\s\S]*?className="lobby-recommendations"[\s\S]*?<div className="lobby-layout"/);
   assert.match(lobby, /PaginateLobbyGames\(visibleGames, page\)/);
   const source = await readFile(new URL('AssignedPracticePlan.tsx', appRoot), 'utf8');
   assert.match(source, /user\?\.role === 'patient'/);

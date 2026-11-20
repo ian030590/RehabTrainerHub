@@ -737,6 +737,7 @@ export async function FetchRehabProgress(apiBase?: string): Promise<RehabProgres
     },
   });
 
+  if (GetAuthToken() !== token) return null;
   if (response.status === 401) {
     ClearAuthToken();
     return null;

@@ -1,3 +1,5 @@
+@import '../legacy-color-tokens.css';
+
 .trainer-auth-panel {
   max-width: 360px;
 }
@@ -114,7 +116,7 @@
 .auth-link-button:focus-visible,
 .auth-dialog input:focus-visible,
 .auth-dialog select:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 50%, white);
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, var(--focus-tint));
   outline-offset: 2px;
 }
 
@@ -126,7 +128,7 @@
   place-items: center;
   padding-block: clamp(20px, 4vh, 40px);
   padding-inline: clamp(24px, 5vw, 56px);
-  background: var(--bg-overlay, rgba(15, 23, 42, 0.58));
+  background: var(--bg-overlay, var(--scrim-auth));
 }
 
 .auth-dialog {
@@ -166,7 +168,7 @@ dialog.auth-dialog[open] {
 }
 
 dialog.auth-dialog::backdrop {
-  background: var(--bg-overlay, rgba(15, 23, 42, 0.58));
+  background: var(--bg-overlay, var(--scrim-auth));
 }
 
 .auth-dialog-header {

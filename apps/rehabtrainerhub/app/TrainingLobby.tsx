@@ -37,6 +37,9 @@ import { BuildTrainingThemeStyle } from './trainingThemeStyle';
 import { BuildLobbyFilterChips, BuildLobbyPageNumbers, FilterLobbyGames, PaginateLobbyGames, type LobbyFilterChip } from './lobbyResults.js';
 import { AnimateVisibleGameCards, CancelHubGameTransition, TransitionGameSurface } from './hubMotion';
 import { StartHubTour } from './tour/hubTour';
+import featureIndex from '../recommendation/generated/featureIndex.json';
+import { RankLobbyRecommendations } from './lobbyRecommendations.js';
+import { useLobbyActivityHistory } from './useLobbyActivityHistory';
 
 const prefetchedTrainingUrls = new Set<string>();
 
@@ -119,9 +122,19 @@ export function TrainingLobby() {
   const handleCloseOverlay = useCallback(() => {
     TransitionGameSurface(document.querySelector('.hub-game-transition-surface'), () => {
       flushSync(() => setActiveGame(null));
-      return launchCardRef.current;
+      if (launchCardRef.current?.isConnected) return launchCardRef.current;
+      resultTitleRef.current?.focus({ preventScroll: true });
+      return null;
     });
   }, []);
+  const LaunchGame = (game: HubGame, trigger: HTMLButtonElement) => {
+    const card = trigger.closest<HTMLElement>('[data-runtime-id]') ?? trigger;
+    launchCardRef.current = card;
+    TransitionGameSurface(card, () => {
+      flushSync(() => setActiveGame(game));
+      return document.querySelector('.hub-game-transition-surface');
+    });
+  };
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).lobby;
   const platformCopy = language === 'en'
@@ -138,6 +151,16 @@ export function TrainingLobby() {
         version: '版本',
       };
   const games = useMemo(() => BuildHubGameCatalog(trainingCatalog, publishedGames, locale), [publishedGames, locale]);
+  const gamesById = useMemo(() => new Map(games.map(game => [game.id, game])), [games]);
+  const launchableIds = useMemo(() => [...gamesById.keys()], [gamesById]);
+  const knownIds = useMemo(() => new Set(launchableIds), [launchableIds]);
+  const history = useLobbyActivityHistory(knownIds);
+  const recommendations = query.trim() || selectedPurposes.length ? []
+    : RankLobbyRecommendations(history, featureIndex, launchableIds).flatMap(({ gameId, reasonGameId }) => {
+        const game = gamesById.get(gameId);
+        const reason = gamesById.get(reasonGameId);
+        return game && reason ? [{ game, reason }] : [];
+      });
   const searchGames = useMemo(() => FilterLobbyGames(games, query, locale), [games, query, locale]);
 
   const purposeCounts = useMemo(() => new Map(
@@ -336,6 +359,28 @@ export function TrainingLobby() {
         </div>
       </section>
       <AssignedPracticePlan />
+      {recommendations.length > 0 && (
+        <section className="lobby-recommendations" aria-labelledby="lobby-recommendations-title">
+          <h2 id="lobby-recommendations-title">{copy.recommendations.title}</h2>
+          <p>{copy.recommendations.note}</p>
+          <ul role="list">
+            {recommendations.map(({ game, reason }) => (
+              <li key={game.id} style={BuildTrainingThemeStyle(game.theme)}>
+                <button
+                  className="lobby-recommendation"
+                  data-recommendation-id={game.id}
+                  onClick={event => LaunchGame(game, event.currentTarget)}
+                  type="button"
+                >
+                  <span className="module-category-tag">{game.categoryLabel || game.subcategoryLabel}</span>
+                  <strong>{game.title}</strong>
+                  <span>{t('lobby.recommendations.reason', { activity: reason.title })}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <div className="lobby-layout">
         <div className="mobile-filter-bar">
           <button
@@ -557,14 +602,7 @@ export function TrainingLobby() {
                     <div className="module-card-footer official-game-actions">
                       <button
                         aria-label={copy.start + ': ' + game.title}
-                        onClick={event => {
-                          const card = event.currentTarget.closest<HTMLElement>('[data-runtime-id]');
-                          launchCardRef.current = card;
-                          TransitionGameSurface(card, () => {
-                            flushSync(() => setActiveGame(game));
-                            return document.querySelector('.hub-game-transition-surface');
-                          });
-                        }}
+                        onClick={event => LaunchGame(game, event.currentTarget)}
                         onFocus={preload}
                         onPointerDown={preload}
                         type="button"

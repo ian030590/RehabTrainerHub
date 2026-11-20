@@ -3,6 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 import * as results from '../apps/rehabtrainerhub/app/lobbyResults.js';
+import * as recommendations from '../apps/rehabtrainerhub/app/lobbyRecommendations.js';
+import featureIndex from '../apps/rehabtrainerhub/recommendation/generated/featureIndex.json' with { type: 'json' };
 
 const appRoot = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
 const installStylesheet = new URL('../packages/ui/src/components/InstallAppPage.css', import.meta.url);
@@ -587,6 +589,9 @@ async function Lobby(language = 'en', catalog = games, { fetchCatalog = false } 
     'next/image': { default: props => ({ type: 'img', props }) },
     '@rehab-trainer/ui/components/CardImagePlaceholder': { CardImagePlaceholder: props => ({ type: 'img', props }) },
     './lobbyResults.js': results,
+    './lobbyRecommendations.js': recommendations,
+    './useLobbyActivityHistory': { useLobbyActivityHistory: () => [] },
+    '../recommendation/generated/featureIndex.json': { default: featureIndex },
     './trainingThemeStyle': { BuildTrainingThemeStyle: () => ({}) },
     '@rehab-trainer/ui/hooks/useBottomSheet': { useBottomSheet: () => ({ dialogRef: {}, isMobile: false }) },
     '@rehab-trainer/hub-modules/catalog': {
@@ -950,6 +955,16 @@ test('the first view compacts spacing while preserving readable text and 44px he
     assert.match(StyleRules(css, selector).join('\n'), /min-height:\s*44px;/);
     assert.match(StyleRules(css, `${selector}:focus-visible`).join('\n'), /outline:\s*3px solid var\(/);
   }
+});
+
+test('lobby recommendations share the responsive page gutter with the heading and grid', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  assert.match(StyleRules(css, '.lobby-recommendations').join('\n'), /padding-inline:\s*var\(--lobby-gutter\)/);
+  assert.match(StyleRules(css, '.lobby-heading').join('\n'), /padding:\s*24px var\(--lobby-gutter\)/);
+  assert.match(StyleRules(css, '.module-results').join('\n'), /padding:\s*0 var\(--lobby-gutter\)/);
+  assert.match(StyleRules(css, '.filter-panel').join('\n'), /margin:\s*0 0 30px var\(--lobby-gutter\)/);
+  assert.match(StyleRules(css, '.lobby-page').join('\n'), /--lobby-gutter:\s*32px/);
+  assert.match(css, /@media \(max-width: 767px\) \{\s*\.lobby-page\s*\{[^}]*--lobby-gutter:\s*18px/);
 });
 
 test('install is an underlined neutral link beside a wider primary start button', async () => {

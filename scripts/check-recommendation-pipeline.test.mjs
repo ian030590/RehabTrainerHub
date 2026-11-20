@@ -4,6 +4,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
+import { GameSimilarity, lobbySimilarityThreshold } from '../apps/rehabtrainerhub/recommendation/features.js';
 
 const script = 'scripts/recommendation-pipeline.mjs';
 const recommendation = 'apps/rehabtrainerhub/recommendation';
@@ -62,6 +63,16 @@ test('pipeline writes identical LF bytes and --check detects a missing or stale 
     }
   }
   assert.equal(index.games['oculomotor-training'].derivedFunctionTags['visual_perception.oculomotor'], 2);
+  const taxonomy = JSON.parse(readFileSync(join(root, recommendation, 'taxonomy.json'), 'utf8'));
+  const ids = Object.keys(index.games);
+  for (const [position, gameId] of ids.entries()) {
+    const expected = {};
+    for (const otherId of ids.slice(position + 1)) {
+      const { score } = GameSimilarity(taxonomy, sourceGames[gameId], sourceGames[otherId]);
+      if (score !== null && score >= lobbySimilarityThreshold) expected[otherId] = Number(score.toFixed(4));
+    }
+    assert.deepEqual(index.similarityScores[gameId] ?? {}, expected);
+  }
   const rebuilt = RunPipeline(root);
   assert.equal(rebuilt.status, 0, rebuilt.stderr);
   assert.deepEqual(readFileSync(indexPath), bytes);

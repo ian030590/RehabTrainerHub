@@ -226,16 +226,20 @@ test('public Hub strings use practice wording and keep private resumes out of co
   }
 });
 
-const tokenStyles = new Set([`${hub}/app/globals.css`]);
+const tokenStyles = new Map([
+  [`${hub}/app/globals.css`, ':root'],
+  ['packages/ui/src/legacy-color-tokens.css', ':where(:root)'],
+]);
 const cssColorNames = Object.keys(colorNames).join('|');
 const literalColor = new RegExp(`#[\\da-f]{3,8}\\b|(?<![\\w-])(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|device-cmyk)\\(|(?<![\\w-])(?:${cssColorNames})(?![\\w-])`, 'i');
 
 function HardcodedColors(path, source) {
   const literals = [];
+  const tokenSelector = tokenStyles.get(path);
   postcss.parse(source, { from: path }).walkDecls(declaration => {
     const unquoted = declaration.value.replace(/url\([^)]*\)|"[^"]*"|'[^']*'/gi, '').replace(/\bvar\(\s*--[\w-]+/gi, 'var(');
     const color = literalColor.exec(unquoted);
-    if (!color || (tokenStyles.has(path) && declaration.prop.startsWith('--'))) return;
+    if (!color || (tokenSelector && declaration.parent.selector === tokenSelector && declaration.prop.startsWith('--'))) return;
     const selector = declaration.parent.selector ?? `@${declaration.parent.name}`;
     literals.push(`${path} | ${selector.replace(/\s+/g, ' ')} | ${declaration.prop}: ${declaration.value}`);
   });
@@ -245,19 +249,23 @@ function HardcodedColors(path, source) {
 test('Hub and shared package CSS use theme tokens for colors', () => {
   const fixture = `${hub}/app/fixture.css`;
   assert.deepEqual(HardcodedColors(fixture, '#abc { color: var(--accent-blue); background: url(/icon.svg#aaa) }'), []);
-  assert.deepEqual(HardcodedColors(fixture, '.banner { color: #abc; background: rgb(3 4 5); border-color: tomato }'), [
+  assert.deepEqual(HardcodedColors(fixture, `
+    .banner {
+      color: #abc;
+      background: rgb(3 4 5);
+      border-color: tomato;
+      outline-color: color-mix(in srgb, var(--accent) 50%, white);
+      box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.02));
+    }
+  `), [
     `${fixture} | .banner | color: #abc`, `${fixture} | .banner | background: rgb(3 4 5)`, `${fixture} | .banner | border-color: tomato`,
+    `${fixture} | .banner | outline-color: color-mix(in srgb, var(--accent) 50%, white)`,
+    `${fixture} | .banner | box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.02))`,
   ]);
   const literals = TrackedSources([hub, 'packages'], /\.css$/)
     .filter(path => !path.startsWith(`${hub}/games/`)).flatMap(path => HardcodedColors(path, read(path)));
-  const allowed = JSON.parse(read('scripts/legacy-css-colors.json'));
-  const newLiterals = literals.filter(literal => {
-    const index = allowed.indexOf(literal);
-    if (index < 0) return true;
-    allowed.splice(index, 1);
-    return false;
-  });
-  assert.deepEqual(newLiterals.sort(), [], 'use theme tokens in these declarations');
+  assert.deepEqual(literals.sort(), [], 'use theme tokens in these declarations');
+  assert.deepEqual(JSON.parse(read('scripts/legacy-css-colors.json')), [], 'the legacy color allowlist must stay empty');
 });
 
 function CheckTrainingPanelCss(path, source) {

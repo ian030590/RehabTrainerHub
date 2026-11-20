@@ -21,6 +21,7 @@ if (!browserPath) {
     [npmCli, 'run', 'build:hub'],
     [resolve(root, 'scripts/check-hub-uiux-browser.mjs')],
     [resolve(root, 'scripts/check-admin-similarity-browser.mjs')],
+    [resolve(root, 'scripts/check-lobby-recommendations-browser.mjs')],
     [npmCli, '--prefix', 'apps/rehabtrainerhub/games/hart-chart', 'run', 'build'],
     [npmCli, 'run', 'build:gamerunner'],
     [resolve(root, 'scripts/check-r2-game-browser.mjs'), '--game', 'hart-chart', '--standalone', '--mobile'],
