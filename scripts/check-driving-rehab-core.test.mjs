@@ -42,7 +42,7 @@ const [rendering, cameraRig, timing, inputCapabilities, displayTiming] = await P
   ImportTypeScriptModule(
     '../apps/rehabtrainerhub/games/driving-rehab/input/driving-input.ts',
   ),
-  ImportTypeScriptModule('../packages/ui/src/displayTiming.ts'),
+  ImportTypeScriptModule('../apps/rehabtrainerhub/games/driving-rehab/runtime/displayTiming.ts'),
 ]);
 
 const {

@@ -1,6 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { authChangedEvent, authTokenKey, FetchRehabProgress, GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
-import { guestLobbyHistoryKey, lobbyActivitySavedEvent, NormalizeActivityHistory, ReadGuestLobbyHistory, type LobbyActivity } from './lobbyActivityHistory.js';
+import { authChangedEvent, authTokenKey, FetchRehabProgress, GetAuthToken, type RehabPlayCount } from '@rehab-trainer/ui/auth/authClient';
+import {
+  guestLobbyHistoryKey, lobbyActivitySavedEvent, NormalizeLobbyPlayCounts, ReadGuestLobbyHistory, SummarizeGuestLobbyHistory,
+} from './lobbyActivityHistory.js';
 import { useHubAuth } from './HubNavigation';
 
 function SubscribeToAuth(update: () => void) {
@@ -16,17 +18,18 @@ function SubscribeToAuth(update: () => void) {
 }
 
 const serverAuthToken = () => undefined;
+const emptyPlayCounts: readonly RehabPlayCount[] = [];
 
 export function useLobbyActivityHistory(knownIds: ReadonlySet<string>) {
   // Shared-session restoration can set the token silently before updating the Hub user.
   useHubAuth();
   const token = useSyncExternalStore<string | null | undefined>(SubscribeToAuth, GetAuthToken, serverAuthToken);
-  const [account, setAccount] = useState<{ token: string; history: LobbyActivity[] } | null>(null);
-  const [guestHistory, setGuestHistory] = useState<LobbyActivity[]>([]);
+  const [account, setAccount] = useState<{ token: string; playCounts: RehabPlayCount[] } | null>(null);
+  const [guestPlayCounts, setGuestPlayCounts] = useState<readonly RehabPlayCount[]>(emptyPlayCounts);
 
   useEffect(() => {
     if (token !== null) return;
-    const refresh = () => setGuestHistory(ReadGuestLobbyHistory(window, knownIds));
+    const refresh = () => setGuestPlayCounts(SummarizeGuestLobbyHistory(ReadGuestLobbyHistory(window, knownIds)));
     const onStorage = (event: StorageEvent) => {
       if (event.key === guestLobbyHistoryKey || event.key === null) refresh();
     };
@@ -48,11 +51,11 @@ export function useLobbyActivityHistory(knownIds: ReadonlySet<string>) {
     const refresh = () => {
       if (GetAuthToken() !== token) return;
       const request = ++generation;
-      const apply = (history: LobbyActivity[]) => {
-        if (request === generation && GetAuthToken() === token) setAccount({ token, history });
+      const apply = (playCounts: RehabPlayCount[]) => {
+        if (request === generation && GetAuthToken() === token) setAccount({ token, playCounts });
       };
       void FetchRehabProgress(window.location.origin)
-        .then((progress) => apply(NormalizeActivityHistory(progress?.recentModules, null, 3)))
+        .then((progress) => apply(NormalizeLobbyPlayCounts(progress?.playCounts)))
         .catch(() => apply([]));
     };
     refresh();
@@ -63,6 +66,6 @@ export function useLobbyActivityHistory(knownIds: ReadonlySet<string>) {
     };
   }, [token]);
 
-  if (token === null) return guestHistory;
-  return token && account?.token === token ? account.history : [];
+  if (token === null) return guestPlayCounts;
+  return token && account?.token === token ? account.playCounts : emptyPlayCounts;
 }

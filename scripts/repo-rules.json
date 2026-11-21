@@ -871,17 +871,21 @@
   },
   {
     "id": "AG-REC-04",
-    "summary": "大廳只依活動內容相似度與近期活動 ID 推薦。訪客只在裝置保留活動 ID 與時間。文案說明並非個人評估。",
+    "summary": "大廳先依遊玩次數與最近遊玩時間排列玩過的活動，再排內容相近的未玩活動，其餘沿用目錄順序。搜尋、篩選與分頁沿用此順序。訪客只在裝置保留最近 200 次活動的 ID 與時間。文案說明並非個人評估或練習建議。",
     "enforcement": "ci",
     "tests": [
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking requires history and excludes recent or unavailable games"},
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking weights the three distinct recencies and applies the minimum raw similarity"},
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ranking uses catalog order for score ties and returns at most four games"},
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"guest activity history stores only ids and times, newest first and capped at twenty distinct games"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"cold start preserves the merged catalog byte for byte and ignores unknown history ids"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"played games sort by count then recency then catalog order and unplayed games keep catalog order"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"similar games use the raw threshold and highest rank-weighted score with catalog order for ties"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby pagination slices the ordered list"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"guest activity history stores only ids and times, newest first and capped at 200 events"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"old deduped guest history reads as one event per activity and keeps repeats after a save"},
       {"file":"scripts/check-lobby-recommendations.test.mjs","name":"guest activity history drops malformed or unknown ids and tolerates unavailable storage"},
       {"file":"scripts/check-lobby-recommendations.test.mjs","name":"signed-in saves notify the lobby without reading or writing guest history"},
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendation dictionaries state the content-similarity limits without regulatory claims"},
-      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby recommendations hide during search or purpose filtering and use the lobby card launch"}
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"account play summaries require valid ids, counts and timestamps"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby ordering dictionaries explain both cues without regulatory claims"},
+      {"file":"scripts/check-lobby-recommendations.test.mjs","name":"lobby cards keep their personal order and launch action during search and purpose filtering"},
+      {"file":"apps/rehabtrainerhub/functions/api/progress.test.mjs","name":"progress counts all saved plays by activity and preserves recent modules"}
     ]
   },
   {

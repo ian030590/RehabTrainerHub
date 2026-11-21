@@ -114,7 +114,7 @@ async function LoadPlugin(width = 390, height = 844, initiallyPaused = false, de
   let initialize;
   const pool = { pixiRuntimeScopes: { movingCard: 'moving-card' }, CreatePixiTrialContainer: () => wrapper,
     RunPixiTrial: (_scope, _display, run) => { initialize = () => run(app); if (!deferred) initialize(); }, AttachPixiTrialCanvas() {}, CleanupPixiTrial() { app.stage.children = []; } };
-  const mathSource = await readFile(resolve(root, 'packages/ui/src/mathUtils.ts'), 'utf8');
+  const mathSource = await readFile(resolve(gameRoot, 'gameUtils.ts'), 'utf8');
   const mathModule = { exports: {} };
   new Function('module', 'exports', ts.transpileModule(mathSource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(mathModule, mathModule.exports);
   const layoutModule = { exports: {} };
@@ -122,11 +122,9 @@ async function LoadPlugin(width = 390, height = 844, initiallyPaused = false, de
     compilerOptions: { module: ts.ModuleKind.CommonJS },
   }).outputText)(() => mathModule.exports, layoutModule, layoutModule.exports);
   const dependencies = { jspsych: { ParameterType: {} }, 'pixi.js': { Container, Graphics, Text },
-    '@rehab-trainer/ui/trainerTheme': { pixiColors: {}, typography: { fontSizeM: 18 } },
     './runtime/theme': { pixiColors: {}, typography: { fontSizeM: 18 } },
-    '@rehab-trainer/ui/mathUtils': mathModule.exports, './gameUtils': mathModule.exports,
+    './gameUtils': mathModule.exports,
     './cardLayout': layoutModule.exports,
-    '@rehab-trainer/ui/spatialUtils': { PixelFromMillimeter: value => value * 700 / 149 },
     './settings': { PixelFromMillimeter: value => value * 700 / 149 },
     './runtime/soundManager': { soundManager: { playSuccess() {}, playFailure() {} } },
     './runtime/pauseState': { IsMovingCardPaused: () => initiallyPaused },

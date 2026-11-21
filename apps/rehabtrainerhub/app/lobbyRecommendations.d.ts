@@ -1,15 +1,10 @@
-interface LobbyFeatureIndex {
-  games: Readonly<Record<string, unknown>>;
-  similarityScores: Readonly<Record<string, Readonly<Record<string, number>>>>;
-}
+import type { RehabPlayCount } from '@rehab-trainer/ui/auth/authClient';
 
-interface LobbyRecommendation {
-  gameId: string;
-  reasonGameId: string;
-  score: number;
-}
+type LobbyOrderCue = { tier: 'played' } | { tier: 'similar'; reasonGameId: string; score: number };
 
 export const lobbySimilarityThreshold: number;
-export function RankLobbyRecommendations(
-  history: unknown, featureIndex: LobbyFeatureIndex, launchableIds: readonly string[],
-): LobbyRecommendation[];
+export function OrderLobbyGames<T extends { id: string }>(
+  games: readonly T[],
+  playCounts: readonly RehabPlayCount[],
+  similarityScores: Readonly<Record<string, Readonly<Record<string, number>>>>,
+): { games: readonly T[]; cues: ReadonlyMap<string, LobbyOrderCue> };

@@ -84,10 +84,10 @@ export const en = {
       },
     },
     lobby: {
-      recommendations: {
-        title: 'Similar activities',
-        note: "Ordered by how similar the activities' content is; not a personal assessment or practice advice.",
-        reason: 'Similar to {activity}',
+      personalOrder: {
+        note: 'Activities you played most appear first, followed by activities with similar content. This is not a personal assessment or practice advice.',
+        played: 'Played often',
+        similar: 'Similar to {activity}',
       },
       kicker: 'Rehab Trainer Hub',
       title: 'Training Lobby',

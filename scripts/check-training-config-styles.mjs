@@ -18,26 +18,6 @@ for (const relativeFile of configFiles) {
   }
 }
 
-const sliderSource = readFileSync(resolve(root, 'packages/ui/src/components/TrainingConfigRangeField.tsx'), 'utf8');
-for (const required of [
-  'className="training-slider"',
-  'className="training-slider-header"',
-  'className="training-slider-value"',
-  'className="training-slider-scale"',
-  'type="range"',
-]) {
-  if (!sliderSource.includes(required)) failures.push(`TrainingSlider is missing ${required}`);
-}
-
-const routeOutletSource = readFileSync(resolve(root, 'packages/ui/src/components/TrainerRouteOutlet.tsx'), 'utf8');
-for (const required of [
-  'className="trainer-route-transition"',
-  'key={location.pathname}',
-  '<Outlet />',
-]) {
-  if (!routeOutletSource.includes(required)) failures.push(`TrainerRouteOutlet is missing ${required}`);
-}
-
 const hubNavigationSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/HubNavigation.tsx'), 'utf8');
 const hubStyleSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');
 const gameSettingsFormSource = readFileSync(resolve(root, 'packages/ui/src/components/GameSettingsForm.tsx'), 'utf8');
@@ -78,7 +58,7 @@ for (const required of [
   }
 }
 for (const required of [
-  'training-score-priority',
+  'id="training-score-priority-title"',
   'training-score-quality',
   'CalculateStatistics',
   'sampleSd',

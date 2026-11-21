@@ -957,9 +957,10 @@ test('the first view compacts spacing while preserving readable text and 44px he
   }
 });
 
-test('lobby recommendations share the responsive page gutter with the heading and grid', async () => {
+test('the lobby heading and results share the responsive page gutter', async () => {
   const css = await readFile(new URL('globals.css', appRoot), 'utf8');
-  assert.match(StyleRules(css, '.lobby-recommendations').join('\n'), /padding-inline:\s*var\(--lobby-gutter\)/);
+  assert.doesNotMatch(css, /\.lobby-recommendations?\b/);
+  assert.match(StyleRules(css, '.module-card-content > .module-card-order-cue').join('\n'), /overflow-wrap:\s*anywhere/);
   assert.match(StyleRules(css, '.lobby-heading').join('\n'), /padding:\s*24px var\(--lobby-gutter\)/);
   assert.match(StyleRules(css, '.module-results').join('\n'), /padding:\s*0 var\(--lobby-gutter\)/);
   assert.match(StyleRules(css, '.filter-panel').join('\n'), /margin:\s*0 0 30px var\(--lobby-gutter\)/);

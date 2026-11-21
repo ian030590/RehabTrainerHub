@@ -201,7 +201,7 @@ test('normal overlay keeps private channel validation, sensor proxies, CSV and r
 test('player section is immediately after the heading; existing filters and pagination stay connected', async () => {
   const lobby = await readFile(new URL('TrainingLobby.tsx', appRoot), 'utf8');
   assert.match(lobby, /<\/section>\s*<AssignedPracticePlan\s*\/>/);
-  assert.match(lobby, /<AssignedPracticePlan\s*\/>[\s\S]*?className="lobby-recommendations"[\s\S]*?<div className="lobby-layout"/);
+  assert.match(lobby, /<AssignedPracticePlan\s*\/>\s*<div className="lobby-layout"/);
   assert.match(lobby, /PaginateLobbyGames\(visibleGames, page\)/);
   const source = await readFile(new URL('AssignedPracticePlan.tsx', appRoot), 'utf8');
   assert.match(source, /user\?\.role === 'patient'/);

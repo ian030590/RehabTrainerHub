@@ -1168,81 +1168,6 @@ html:has(dialog.package-game-overlay[open]) {
   display: none;
 }
 
-.lobby-recommendations {
-  margin-block: 24px;
-  padding-inline: var(--lobby-gutter);
-}
-
-.lobby-recommendations h2 {
-  margin: 0;
-  color: var(--heading);
-  font-size: var(--type-headline);
-}
-
-.lobby-recommendations p {
-  margin: 4px 0 12px;
-  color: var(--text-muted);
-}
-
-.lobby-recommendations ul {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.lobby-recommendation {
-  display: grid;
-  justify-items: start;
-  align-content: start;
-  gap: 4px;
-  width: 100%;
-  min-width: 44px;
-  min-height: 44px;
-  height: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text-muted);
-  font: inherit;
-  text-align: start;
-  overflow-wrap: anywhere;
-  cursor: pointer;
-}
-
-.lobby-recommendation strong {
-  color: var(--heading);
-  font-size: var(--type-body);
-}
-
-.lobby-recommendation .module-category-tag {
-  white-space: normal;
-}
-
-.lobby-recommendation:hover strong,
-.lobby-recommendation:active strong {
-  text-decoration: underline;
-}
-
-.lobby-recommendation:active {
-  background: var(--surface-muted);
-}
-
-@media (min-width: 768px) {
-  .lobby-recommendations ul {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .lobby-recommendations ul {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
 .lobby-layout {
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
@@ -1592,6 +1517,12 @@ html:has(dialog.package-game-overlay[open]) {
   margin-bottom: 0;
 }
 
+.lobby-order-note {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-size: var(--type-body);
+}
+
 .result-heading p {
   color: var(--text-muted);
   font-size: var(--type-label);
@@ -1876,6 +1807,14 @@ html:has(dialog.package-game-overlay[open]) {
   color: var(--text-muted);
   font-size: var(--type-body);
   line-height: 1.6;
+}
+
+.module-card-content > .module-card-order-cue {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+  font-size: var(--type-label);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .module-card-content > .module-card-requirement {

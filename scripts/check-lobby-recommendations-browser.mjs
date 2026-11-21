@@ -19,8 +19,18 @@ assert.ok(existsSync(join(output, 'index.html')), 'Build the Hub first with npm 
 const artifacts = await mkdtemp(join(tmpdir(), 'lobby-recommendations-'));
 const user = { id: 'lobby-browser-fixture', displayName: 'Local player fixture', role: 'patient', profileCompleted: true };
 const token = Buffer.from(JSON.stringify({ sub: user.id })).toString('base64url') + '.fixture';
-const activity = { gameId: 'hart-chart', playedAt: '2026-10-01T10:00:00.000Z' };
-const guestOnlyActivity = { ...activity, gameId: 'tongue-catch' };
+const guestHistory = [
+  { gameId: 'hex-schulte', playedAt: '2026-10-05T10:00:00.000Z' },
+  { gameId: 'hart-chart', playedAt: '2026-10-04T10:00:00.000Z' },
+  { gameId: 'hart-chart', playedAt: '2026-10-03T10:00:00.000Z' },
+  { gameId: 'hex-schulte', playedAt: '2026-10-02T10:00:00.000Z' },
+  { gameId: 'hart-chart', playedAt: '2026-10-01T10:00:00.000Z' },
+];
+const guestOnlyActivity = { gameId: 'tongue-catch', playedAt: guestHistory[0].playedAt };
+const playCounts = [
+  { gameId: 'hex-schulte', count: 2, lastPlayedAt: guestHistory[0].playedAt },
+  { gameId: 'hart-chart', count: 3, lastPlayedAt: guestHistory[1].playedAt },
+];
 const mimeTypes = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.txt': 'text/plain', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2',
@@ -37,8 +47,9 @@ const server = createServer(async (request, response) => {
   }
 });
 
-const heading = '#lobby-recommendations-title';
-const links = '.lobby-recommendations li > button';
+const grid = '.module-grid';
+const cards = `${grid} [data-runtime-id]`;
+const orderNote = '.lobby-order-note';
 const search = '#module-search-input';
 const iframe = '.hub-game-overlay-host dialog[open] iframe';
 const keyCodes = { Tab: 9, Enter: 13, Escape: 27 };
@@ -111,10 +122,13 @@ async function HandleRequest({ requestId, request, networkId }) {
     if (pathname === '/api/training-plans/current') return Fulfill(requestId, 200, { plan: null });
     if (pathname === '/api/progress') {
       const auth = Object.entries(request.headers).find(([name]) => name.toLowerCase() === 'authorization')?.[1];
-      assert.ok(signedIn, 'Guest recommendations use device storage.');
+      assert.ok(signedIn, 'Guest ordering uses device storage.');
       assert.equal(auth, `Bearer ${token}`);
       progressRequests++;
-      return Fulfill(requestId, 200, { recentModules: [activity] });
+      return Fulfill(requestId, 200, {
+        recentModules: guestHistory.slice(0, 2).map(play => ({ ...play, moduleId: play.gameId })),
+        playCounts,
+      });
     }
     return Fulfill(requestId, 404);
   }
@@ -184,7 +198,7 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
   await Send('Emulation.setTouchEmulationEnabled', { enabled: mobile, maxTouchPoints: 1 });
   const { identifier } = await Send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (location.origin === ${JSON.stringify(origin)}) {
-      localStorage.setItem(${JSON.stringify(guestLobbyHistoryKey)}, ${JSON.stringify(JSON.stringify([account ? guestOnlyActivity : activity]))});
+      localStorage.setItem(${JSON.stringify(guestLobbyHistoryKey)}, ${JSON.stringify(JSON.stringify(account ? [guestOnlyActivity] : guestHistory))});
       if (${account}) localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(token)});
       else localStorage.removeItem('rehabtrainerhub.auth.token');
       localStorage.setItem('rehab_hub_tour_seen', '1');
@@ -193,8 +207,7 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
   ` });
   try {
     await Send('Page.navigate', { url: `${origin}/?fixture=${width}-${Number(account)}` });
-    const expectedHeading = account ? 'Similar activities' : '相近活動';
-    await WaitFor(`document.querySelector('${heading}')?.textContent === ${JSON.stringify(expectedHeading)}`);
+    await WaitFor(`!!document.querySelector('${orderNote}')`);
     await Evaluate(`(async () => {
       await document.fonts.ready;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -202,66 +215,78 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
         .map(animation => animation.finished));
     })()`);
     const layout = await Evaluate(`(() => {
-      const list = document.querySelector('.lobby-recommendations ul');
-      const searchRow = document.querySelector('.lobby-search-row').getBoundingClientRect();
-      const recommendationHeading = document.querySelector('${heading}').getBoundingClientRect();
-      const recommendationGrid = list.getBoundingClientRect();
-      const gameGrid = document.querySelector('.module-grid').getBoundingClientRect();
-      const filterPanel = document.querySelector('.filter-panel').getBoundingClientRect();
+      const gameGrid = document.querySelector('${grid}');
+      const note = document.querySelector('${orderNote}');
       return { width: innerWidth, height: innerHeight, pageWidth: document.documentElement.scrollWidth,
-        leftEdges: [searchRow.left, recommendationHeading.left, recommendationGrid.left,
-          matchMedia('(min-width: 1024px)').matches ? filterPanel.left : gameGrid.left],
-        rightEdges: [searchRow.right, recommendationGrid.right, gameGrid.right],
-        columns: getComputedStyle(list).gridTemplateColumns.split(' ').length,
-        items: [...list.querySelectorAll('li > button')].map(button => {
-          const { width, height, left, right } = button.getBoundingClientRect();
-          return { id: button.dataset.recommendationId, width, height, left, right,
-            category: button.querySelector('.module-category-tag').textContent,
-            title: button.querySelector('strong').textContent, reason: button.lastElementChild.textContent };
+        hasSeparateSection: !!document.querySelector('.lobby-recommendations, #lobby-recommendations-title'),
+        noteAboveGrid: note.getBoundingClientRect().bottom <= gameGrid.getBoundingClientRect().top,
+        columns: getComputedStyle(gameGrid).gridTemplateColumns.split(' ').length,
+        items: [...document.querySelectorAll('${cards}')].map(card => {
+          const cue = card.querySelector('.module-card-order-cue');
+          return { id: card.dataset.runtimeId, title: card.querySelector('h3').textContent, cue: cue?.textContent,
+            cueOverflows: cue ? cue.scrollWidth > cue.clientWidth : false,
+            targets: [...card.querySelectorAll('.official-game-actions > :is(a, button)')].map(target => {
+              const { width, height, left, right } = target.getBoundingClientRect();
+              return { width, height, left, right, name: target.getAttribute('aria-label') };
+            }) };
         }) };
     })()`);
     assert.deepEqual([layout.width, layout.height], [width, height]);
     assert.ok(layout.pageWidth <= width, `Page scroll width ${layout.pageWidth} exceeds ${width}px.`);
-    for (const edges of [layout.leftEdges, layout.rightEdges]) {
-      assert.ok(Math.max(...edges) - Math.min(...edges) < 1, `Lobby content edges should align: ${edges.join(', ')}`);
-    }
+    assert.equal(layout.hasSeparateSection, false);
+    assert.ok(layout.noteAboveGrid);
     assert.equal(layout.columns, columns);
-    assert.ok(layout.items.length >= 1 && layout.items.length <= 4);
+    assert.deepEqual(layout.items.slice(0, 4).map(item => item.id), [
+      'hart-chart', 'hex-schulte', 'exploratory-saccade', 'schulte-grid',
+    ]);
+    const [hartChart, hexSchulte, exploratorySaccade, schulteGrid] = layout.items;
+    for (const item of [hartChart, hexSchulte]) assert.equal(item.cue, account ? 'Played often' : '常玩');
+    assert.equal(exploratorySaccade.cue, account ? `Similar to ${hartChart.title}` : `與「${hartChart.title}」內容相近`);
+    assert.equal(schulteGrid.cue, account ? `Similar to ${hexSchulte.title}` : `與「${hexSchulte.title}」內容相近`);
     for (const item of layout.items) {
-      assert.ok(item.width >= 44 && item.height >= 44 && item.left >= 0 && item.right <= width);
-      assert.ok(item.category && item.title);
-      assert.match(item.reason, account ? /^Similar to / : /^與「.+」內容相近$/);
+      assert.equal(item.cueOverflows, false, `${item.id} cue should wrap within the card.`);
+      assert.equal(item.targets.length, 2);
+      for (const target of item.targets) {
+        assert.ok(target.name?.includes(item.title));
+        assert.ok(target.width >= 44 && target.height >= 44 && target.left >= 0 && target.right <= width,
+          `${target.name} should fit the viewport and have a 44px target.`);
+      }
     }
     assert.equal(progressRequests, account ? 1 : 0);
-    assert.ok(layout.items.some(item => item.id === 'exploratory-saccade'), 'Recommendations use the Hart Chart history fixture.');
-
-    await Evaluate(`document.querySelector('${search}').focus()`);
-    for (const item of layout.items) {
+    const firstButton = `${cards}[data-runtime-id="${hartChart.id}"] .official-game-actions > button`;
+    await Evaluate(`document.querySelector(${JSON.stringify(firstButton)}).focus()`);
+    for (const [expectedId, expectedTag] of [[hartChart.id, 'A'], [hexSchulte.id, 'BUTTON'], [hexSchulte.id, 'A'], [exploratorySaccade.id, 'BUTTON']]) {
       await Key('Tab');
       const focus = await Evaluate(`(() => {
         const button = document.activeElement;
         const style = getComputedStyle(button);
-        return { id: button.dataset.recommendationId, visible: button.matches(':focus-visible'),
+        return { id: button.closest('[data-runtime-id]')?.dataset.runtimeId, tag: button.tagName, visible: button.matches(':focus-visible'),
           outline: style.outlineStyle, size: parseFloat(style.outlineWidth), color: style.outlineColor };
       })()`);
-      assert.equal(focus.id, item.id, 'Tab order follows the recommendation order.');
+      assert.deepEqual([focus.id, focus.tag], [expectedId, expectedTag], 'Tab order follows the card order.');
       assert.ok(focus.visible && focus.outline === 'solid' && focus.size >= 3
         && !['transparent', 'rgba(0, 0, 0, 0)'].includes(focus.color));
     }
 
-    const selected = layout.items.at(-1);
-    if (mobile) await Click(`${links}[data-recommendation-id="${selected.id}"]`, true);
-    else await Key('Enter');
-    await WaitFor(`!!document.querySelector('${iframe}')`, `${selected.id} overlay from the recommendation via ${mobile ? 'touch' : 'Enter'}`);
+    const selected = schulteGrid;
+    const cardButton = `${cards}[data-runtime-id="${selected.id}"] .official-game-actions > button`;
+    if (mobile) await Click(cardButton, true);
+    else {
+      await Evaluate(`document.querySelector(${JSON.stringify(cardButton)}).focus()`);
+      await Key('Enter');
+    }
+    await WaitFor(`!!document.querySelector('${iframe}')`, `${selected.id} overlay via ${mobile ? 'touch' : 'Enter'}`);
     const source = await Evaluate(`document.querySelector('${iframe}').src`);
     assert.match(new URL(source).pathname, new RegExp(`^/games/${selected.id}/`));
     await Key('Escape');
     await WaitFor(`!document.querySelector('.hub-game-overlay-host')`);
 
     await Evaluate(`document.querySelector('${search}').focus()`);
-    await Send('Input.insertText', { text: selected.title });
-    const cardButton = `.module-grid [data-runtime-id="${selected.id}"] .official-game-actions button`;
-    await WaitFor(`!document.querySelector('${heading}') && !!document.querySelector(${JSON.stringify(cardButton)})`);
+    await Send('Input.insertText', { text: account ? 'Schulte' : '舒爾特' });
+    const expectedMatches = [hexSchulte.id, schulteGrid.id];
+    await WaitFor(`JSON.stringify([...document.querySelectorAll('${cards}')].map(card => card.dataset.runtimeId))
+      === ${JSON.stringify(JSON.stringify(expectedMatches))}`, 'search results retain the relative order of the Schulte cards');
+    assert.ok(await Evaluate(`!!document.querySelector('${orderNote}')`));
     await Click(cardButton, mobile);
     await WaitFor(`!!document.querySelector('${iframe}')`, `${selected.id} overlay from the matching catalog card`);
     assert.equal(await Evaluate(`document.querySelector('${iframe}').src`), source);
@@ -301,12 +326,12 @@ try {
   await Send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await Send('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] });
 
-  for (const viewport of [
-    { width: 360, height: 740, mobile: true, columns: 1, account: false },
-    { width: 800, height: 900, mobile: true, columns: 2, account: false },
-    { width: 1280, height: 800, mobile: false, columns: 4, account: false },
-    { width: 1280, height: 800, mobile: false, columns: 4, account: true },
-  ]) {
+  const sizes = [
+    { width: 360, height: 740, mobile: true, columns: 1 },
+    { width: 800, height: 900, mobile: true, columns: 2 },
+    { width: 1280, height: 800, mobile: false, columns: 3 },
+  ];
+  for (const viewport of [false, true].flatMap(account => sizes.map(size => ({ ...size, account })))) {
     const name = `${viewport.account ? 'signed-in' : 'guest'}-${viewport.width}x${viewport.height}`;
     try {
       await CheckViewport(viewport);

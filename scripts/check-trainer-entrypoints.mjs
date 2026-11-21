@@ -41,9 +41,6 @@ const htmlEntrypoints = [
   join(appsRoot, 'usergamerunner', 'public', 'index.html'),
 ].filter(existsSync);
 
-const gameSourceFiles = gameDirectories
-  .flatMap((directory) => CollectSourceFiles(directory));
-
 const violations = [];
 
 for (const retiredPath of retiredDirectories) {
@@ -64,10 +61,6 @@ for (const entrypoint of protectedEntrypoints) {
 
 for (const htmlEntrypoint of htmlEntrypoints) {
   CheckHtmlEntrypoint(htmlEntrypoint);
-}
-
-for (const sourceFile of [...gameSourceFiles, ...hubAppSourceFiles]) {
-  CheckTrainingUiContract(sourceFile);
 }
 
 if (violations.length > 0) {
@@ -129,15 +122,6 @@ function CheckHtmlEntrypoint(htmlFile) {
   }
 }
 
-function CheckTrainingUiContract(filePath) {
-  const source = readFileSync(filePath, 'utf8');
-  if (/from\s+['"]@rehab-trainer\/ui\/components\/StartTrainingButton['"]/.test(source)) {
-    violations.push(
-      `${RelativeToRepo(filePath)}: imports StartTrainingButton directly; config flows must use TrainingConfigNavigationActions and rules flows must use TrainingRulesPanel`,
-    );
-  }
-}
-
 function CollectSourceFiles(directory) {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -150,10 +134,6 @@ function CollectSourceFiles(directory) {
 function ResolveProjectImport(importerPath, specifier) {
   if (specifier.startsWith('.')) {
     return ResolveModule(dirname(importerPath), specifier);
-  }
-
-  if (specifier === '@rehab-trainer/ui') {
-    return ResolveModule(resolve(repoRoot, 'packages/ui/src'), 'index');
   }
 
   if (specifier.startsWith('@rehab-trainer/ui/')) {

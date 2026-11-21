@@ -38,7 +38,7 @@ import { BuildLobbyFilterChips, BuildLobbyPageNumbers, FilterLobbyGames, Paginat
 import { AnimateVisibleGameCards, CancelHubGameTransition, TransitionGameSurface } from './hubMotion';
 import { StartHubTour } from './tour/hubTour';
 import featureIndex from '../recommendation/generated/featureIndex.json';
-import { RankLobbyRecommendations } from './lobbyRecommendations.js';
+import { OrderLobbyGames } from './lobbyRecommendations.js';
 import { useLobbyActivityHistory } from './useLobbyActivityHistory';
 
 const prefetchedTrainingUrls = new Set<string>();
@@ -153,16 +153,13 @@ export function TrainingLobby() {
       };
   const games = useMemo(() => BuildHubGameCatalog(trainingCatalog, publishedGames, locale), [publishedGames, locale]);
   const gamesById = useMemo(() => new Map(games.map(game => [game.id, game])), [games]);
-  const launchableIds = useMemo(() => [...gamesById.keys()], [gamesById]);
-  const knownIds = useMemo(() => new Set(launchableIds), [launchableIds]);
-  const history = useLobbyActivityHistory(knownIds);
-  const recommendations = query.trim() || selectedPurposes.length ? []
-    : RankLobbyRecommendations(history, featureIndex, launchableIds).flatMap(({ gameId, reasonGameId }) => {
-        const game = gamesById.get(gameId);
-        const reason = gamesById.get(reasonGameId);
-        return game && reason ? [{ game, reason }] : [];
-      });
-  const searchGames = useMemo(() => FilterLobbyGames(games, query, locale), [games, query, locale]);
+  const knownIds = useMemo(() => new Set(gamesById.keys()), [gamesById]);
+  const playCounts = useLobbyActivityHistory(knownIds);
+  const { games: orderedGames, cues } = useMemo(
+    () => OrderLobbyGames(games, playCounts, featureIndex.similarityScores),
+    [games, playCounts],
+  );
+  const searchGames = useMemo(() => FilterLobbyGames(orderedGames, query, locale), [orderedGames, query, locale]);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
@@ -363,28 +360,6 @@ export function TrainingLobby() {
         </div>
       </section>
       <AssignedPracticePlan />
-      {recommendations.length > 0 && (
-        <section className="lobby-recommendations" aria-labelledby="lobby-recommendations-title">
-          <h2 id="lobby-recommendations-title">{copy.recommendations.title}</h2>
-          <p>{copy.recommendations.note}</p>
-          <ul role="list">
-            {recommendations.map(({ game, reason }) => (
-              <li key={game.id} style={BuildTrainingThemeStyle(game.theme)}>
-                <button
-                  className="lobby-recommendation"
-                  data-recommendation-id={game.id}
-                  onClick={event => LaunchGame(game, event.currentTarget)}
-                  type="button"
-                >
-                  <span className="module-category-tag">{game.categoryLabel || game.subcategoryLabel}</span>
-                  <strong>{game.title}</strong>
-                  <span>{t('lobby.recommendations.reason', { activity: reason.title })}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
       <div className="lobby-layout">
         <div className="mobile-filter-bar">
           <button
@@ -556,8 +531,13 @@ export function TrainingLobby() {
             </div>
           )}
 
+          {cues.size > 0 && <p className="lobby-order-note">{copy.personalOrder.note}</p>}
           <div className="module-grid" ref={gridRef}>
             {pagination.items.map((game) => {
+              const cue = cues.get(game.id);
+              const similarTo = cue?.tier === 'similar' ? gamesById.get(cue.reasonGameId) : null;
+              const orderCue = cue?.tier === 'played' ? copy.personalOrder.played
+                : similarTo ? t('lobby.personalOrder.similar', { activity: similarTo.title }) : null;
               const preload = () => {
                 if (game.launch.contract === 'catalog-v1') PreloadTrainingModule(game.launch.module);
               };
@@ -594,6 +574,7 @@ export function TrainingLobby() {
                       </span>
                     </div>
                     <h3>{game.title}</h3>
+                    {orderCue && <p className="module-card-order-cue">{orderCue}</p>}
                     <p>{game.summary || platformCopy.summaryFallback}</p>
                     {game.launch.contract === 'package-v1' && <dl className="community-game-details">
                       <div><dt>{platformCopy.author}</dt><dd>{game.author}</dd></div>

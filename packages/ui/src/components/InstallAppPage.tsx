@@ -97,7 +97,7 @@ export function InstallAppPage({
           <SourceLink href={mdnSource} label={copy.mdnSource} prefix={copy.sourcePrefix} />
         </section>
 
-        <section className="install-guide-card install-guide-android">
+        <section className="install-guide-card">
           <h2>{copy.androidTitle}</h2>
           <p>{copy.androidBody}</p>
           <button className="install-app-button" disabled={installed} onClick={() => void handleInstall()} type="button">

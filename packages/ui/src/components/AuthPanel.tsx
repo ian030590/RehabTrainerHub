@@ -925,7 +925,7 @@ function HabitFields<Unit extends string>({
   onValueChange: (value: { interval: 'week' | 'month'; amount: string; unit: Unit }) => void;
 }) {
   return (
-    <fieldset className="auth-fieldset auth-habit-fieldset">
+    <fieldset className="auth-fieldset">
       <legend>{title}</legend>
       <div className="auth-radio-row" role="radiogroup" aria-label={title}>
         {([

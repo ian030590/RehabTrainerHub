@@ -227,7 +227,7 @@ function GameSettingControl({
         <input
           aria-label={label}
           checked={Boolean(value)}
-          className="peer mt-0.5 size-5 shrink-0 cursor-pointer accent-[var(--primary)]"
+          className="mt-0.5 size-5 shrink-0 cursor-pointer accent-[var(--primary)]"
           onChange={(event) => onChange(event.target.checked)}
           type="checkbox"
         />

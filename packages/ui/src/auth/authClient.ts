@@ -183,6 +183,12 @@ export interface RehabRecentModule {
   playedAt: string | null;
 }
 
+export interface RehabPlayCount {
+  gameId: string;
+  count: number;
+  lastPlayedAt: string;
+}
+
 export interface RehabProgress {
   serverDate: string;
   timeZone: string;
@@ -191,6 +197,7 @@ export interface RehabProgress {
   rehabilitationDays: number;
   totalRehabilitationDays: number;
   recentModules: RehabRecentModule[];
+  playCounts?: RehabPlayCount[];
   dailyTasks: RehabDailyTask[];
   achievements: RehabAchievement[];
 }

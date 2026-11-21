@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import test from 'node:test';
 import {
   BuildProgressSummary,
   GetServerDate,
@@ -54,6 +55,30 @@ const interruptedSummary = BuildProgressSummary([
 assert.equal(interruptedSummary.daysSinceStart, 24);
 assert.equal(interruptedSummary.rehabilitationDays, 0);
 assert.equal(interruptedSummary.achievements.some((achievement) => achievement.achieved), false);
+
+test('progress counts all saved plays by activity and preserves recent modules', () => {
+  const rows = [
+    { ...CreateRow('2026-07-24', 'vision-training', 'moving-card'), created_at: '2026-07-24T09:00:00.000Z' },
+    { ...CreateRow('2026-07-24', 'attention-training', 'reaction-time'), created_at: '2026-07-24T08:00:00.000Z' },
+    { ...CreateRow('2026-07-23', 'memory-training', 'memory-match'), created_at: '2026-07-23T09:00:00.000Z' },
+    { ...CreateRow('2026-07-23', 'moving-card', null), created_at: '2026-07-23 08:00:00' },
+    { ...CreateRow('2026-07-22', 'upper-limb-training', 'drawing-defense'), created_at: '2026-07-22T09:00:00.000Z' },
+    { ...CreateRow('2026-07-22', 'vision-training', 'moving-card'), created_at: '2026-07-22T08:00:00.000Z' },
+  ];
+  const summary = BuildProgressSummary(rows, '2026-07-24');
+  assert.deepEqual(summary.playCounts, [
+    { gameId: 'moving-card', count: 3, lastPlayedAt: rows[0].created_at },
+    { gameId: 'reaction-time', count: 1, lastPlayedAt: rows[1].created_at },
+    { gameId: 'memory-match', count: 1, lastPlayedAt: rows[2].created_at },
+    { gameId: 'drawing-defense', count: 1, lastPlayedAt: rows[4].created_at },
+  ]);
+  assert.deepEqual(summary.recentModules, rows.slice(0, 3).map(row => ({
+    moduleId: row.game_id, gameId: row.game_id, playedAt: row.created_at,
+  })));
+  assert.equal(summary.totalRehabilitationDays, 3);
+  assert.equal(summary.dailyTasks[1].current, 2);
+  assert.deepEqual(BuildProgressSummary([], '2026-07-24').playCounts, []);
+});
 
 console.log('progress calculations passed');
 

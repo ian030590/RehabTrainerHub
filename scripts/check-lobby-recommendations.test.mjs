@@ -4,13 +4,17 @@ import test from 'node:test';
 import * as jsx from 'react/jsx-runtime';
 import ts from 'typescript';
 import * as lobbyResults from '../apps/rehabtrainerhub/app/lobbyResults.js';
+import { MergeHubGames } from '../apps/rehabtrainerhub/app/hubGames.js';
+import { ReadCatalog } from './recommendation-pipeline.mjs';
 
 const app = new URL('../apps/rehabtrainerhub/app/', import.meta.url);
 const read = path => readFileSync(new URL(path, app), 'utf8');
 const ranking = () => import('../apps/rehabtrainerhub/app/lobbyRecommendations.js');
 const history = () => import('../apps/rehabtrainerhub/app/lobbyActivityHistory.js');
 const activity = (gameId, day = 1) => ({ gameId, playedAt: new Date(Date.UTC(2026, 0, day)).toISOString() });
-const index = (games, similarityScores) => ({ games: Object.fromEntries(games.map(id => [id, {}])), similarityScores });
+const summary = (gameId, count, day = 1) => ({ gameId, count, lastPlayedAt: activity(gameId, day).playedAt });
+const catalog = (...ids) => ids.map(id => ({ id }));
+const ids = games => games.map(({ id }) => id);
 
 function Device(initial) {
   const values = new Map(initial);
@@ -19,57 +23,79 @@ function Device(initial) {
   return device;
 }
 
-test('lobby ranking requires history and excludes recent or unavailable games', async () => {
-  const { RankLobbyRecommendations } = await ranking();
-  const features = index(['a', 'b', 'c', 'd', 'e', 'f'], { a: { b: 1, c: 0.9, d: 0.8, e: 0.7, f: 0.6 } });
-  assert.deepEqual(RankLobbyRecommendations([], features, ['a', 'd', 'e']), []);
-  assert.deepEqual(RankLobbyRecommendations([activity('unknown', 7), activity('b', 5), activity('b', 4),
-    activity('c', 3), activity('a', 6), activity('d', 2)], features, ['a', 'b', 'c', 'd', 'f'])
-    .map(({ gameId }) => gameId), ['d', 'f']);
-});
-
-test('lobby ranking weights the three distinct recencies and applies the minimum raw similarity', async () => {
-  const { lobbySimilarityThreshold, RankLobbyRecommendations } = await ranking();
-  const features = index(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'], {
-    a: { d: 0.62, e: 0.7, g: lobbySimilarityThreshold - 0.001, h: lobbySimilarityThreshold },
-    b: { d: 0.8, e: 0.81 }, c: { f: 0.89, i: 0.7 },
-  });
-  const results = RankLobbyRecommendations([activity('c', 1), activity('a', 3), activity('b', 2)], features,
-    ['d', 'e', 'f', 'g', 'h', 'i']);
-  assert.deepEqual(results.map(({ gameId, reasonGameId }) => [gameId, reasonGameId]),
-    [['e', 'a'], ['d', 'b'], ['f', 'c'], ['h', 'a']]);
-  assert.equal(results[1].score, 0.8 * 0.85);
-  assert.equal(results[2].score, 0.89 * 0.7);
-  assert.deepEqual(RankLobbyRecommendations([activity('c')], features, ['i'])
-    .map(({ gameId }) => gameId), ['i']);
-  assert.deepEqual(RankLobbyRecommendations([activity('a')], features, ['g']), []);
-});
-
-test('lobby ranking uses catalog order for score ties and returns at most four games', async () => {
-  const { RankLobbyRecommendations } = await ranking();
-  const features = index(['a', 'b', 'c', 'd', 'e', 'f', 'z'], { z: { a: 0.8, b: 0.8, c: 0.9, d: 0.8, e: 0.8, f: 0.8 } });
-  for (const iteration of [features, { ...features, similarityScores: { a: { z: 0.8 }, b: { z: 0.8 },
-    c: { z: 0.9 }, d: { z: 0.8 }, e: { z: 0.8 }, f: { z: 0.8 } } }]) {
-    assert.deepEqual(RankLobbyRecommendations([activity('z')], iteration, ['f', 'e', 'd', 'c', 'b', 'a'])
-      .map(({ gameId }) => gameId), ['c', 'f', 'e', 'd']);
+test('cold start preserves the merged catalog byte for byte and ignores unknown history ids', async () => {
+  const { OrderLobbyGames } = await ranking();
+  const official = await ReadCatalog(new URL('../apps/rehabtrainerhub/games/', import.meta.url));
+  const games = MergeHubGames(catalog(...ids(official)), catalog('community-z', 'community-a', official[0].id));
+  assert.ok(games.length > lobbyResults.lobbyPageSize);
+  for (const history of [[], [summary('unknown', 50)]]) {
+    const ordered = OrderLobbyGames(games, history, { unknown: { [games[0].id]: 1 } });
+    assert.equal(ordered.games, games);
+    assert.equal(JSON.stringify(ids(ordered.games)), JSON.stringify(ids(games)));
+    assert.equal(ordered.cues.size, 0);
   }
 });
 
-test('guest activity history stores only ids and times, newest first and capped at twenty distinct games', async () => {
-  const { PublishLobbyActivity, ReadGuestLobbyHistory, guestLobbyHistoryKey, lobbyActivitySavedEvent } = await history();
+test('played games sort by count then recency then catalog order and unplayed games keep catalog order', async () => {
+  const { OrderLobbyGames } = await ranking();
+  const games = catalog('rest-z', 'd', 'c', 'b', 'a', 'rest-a');
+  const ordered = OrderLobbyGames(games, [
+    summary('a', 5), summary('b', 2, 3), summary('c', 2, 3), summary('d', 2, 2), summary('unknown', 100),
+  ], {});
+  assert.deepEqual(ids(ordered.games), ['a', 'c', 'b', 'd', 'rest-z', 'rest-a']);
+  assert.deepEqual([...ordered.cues], ['a', 'c', 'b', 'd'].map(id => [id, { tier: 'played' }]));
+});
+
+test('similar games use the raw threshold and highest rank-weighted score with catalog order for ties', async () => {
+  const { lobbySimilarityThreshold, OrderLobbyGames } = await ranking();
+  const games = catalog('below', 'tie-z', 'fourth', 'threshold', 'tie-a', 'third', 'second', 'first', 'e', 'd', 'c', 'b', 'a', 'rest');
+  const ordered = OrderLobbyGames(games, ['a', 'b', 'c', 'd', 'e'].map((id, i) => summary(id, 5 - i)), {
+    a: { first: 0.9, second: 0.65, below: lobbySimilarityThreshold - 0.001, 'tie-a': 0.55, 'tie-z': 0.55 },
+    b: { second: 0.8 },
+    c: { third: 0.9 },
+    d: { fourth: 1 },
+    e: { threshold: lobbySimilarityThreshold },
+  });
+  assert.deepEqual(ids(ordered.games), ['a', 'b', 'c', 'd', 'e', 'first', 'second', 'third', 'fourth', 'tie-z', 'tie-a', 'threshold', 'below', 'rest']);
+  for (const [id, reasonGameId, score] of [
+    ['first', 'a', 0.9], ['second', 'b', 0.8 * 0.85], ['third', 'c', 0.9 * 0.7],
+    ['fourth', 'd', 0.6], ['threshold', 'e', 0.5 * 0.6],
+  ]) assert.deepEqual(ordered.cues.get(id), { tier: 'similar', reasonGameId, score });
+});
+
+test('lobby pagination slices the ordered list', async () => {
+  const { OrderLobbyGames } = await ranking();
+  const firstPageIds = Array.from({ length: lobbyResults.lobbyPageSize }, (_, i) => `game-${i}`);
+  const games = catalog(...firstPageIds, 'similar', 'played');
+  const ordered = OrderLobbyGames(games, [summary('played', 1)], { similar: { played: 0.6 } });
+  assert.deepEqual(ids(lobbyResults.PaginateLobbyGames(ordered.games, 1).items), ['played', 'similar', ...firstPageIds.slice(0, -2)]);
+  assert.deepEqual(ids(lobbyResults.PaginateLobbyGames(ordered.games, 2).items), firstPageIds.slice(-2));
+});
+
+test('guest activity history stores only ids and times, newest first and capped at 200 events', async () => {
+  const { PublishLobbyActivity, ReadGuestLobbyHistory, SummarizeGuestLobbyHistory, guestLobbyHistoryKey, lobbyActivitySavedEvent } = await history();
   const device = Device();
-  const ids = Array.from({ length: 23 }, (_, i) => `game-${i}`);
+  const plays = Array.from({ length: 203 }, (_, i) => activity(i % 2 ? 'a' : 'b', i + 1));
   let events = 0;
   device.addEventListener(lobbyActivitySavedEvent, () => events++);
-  device.localStorage.setItem(guestLobbyHistoryKey, JSON.stringify([{ ...activity(ids[0]), score: 99, subjectId: 'private' }]));
-  for (const [i, id] of ids.entries()) PublishLobbyActivity(device, id, activity(id, i + 1).playedAt, true);
-  const recent = activity(ids[5], 30);
-  PublishLobbyActivity(device, recent.gameId, recent.playedAt, true);
+  device.localStorage.setItem(guestLobbyHistoryKey, JSON.stringify(plays.slice(0, -1).map(play => ({ ...play, score: 99, subjectId: 'private' }))));
+  PublishLobbyActivity(device, 'b', plays.at(-1).playedAt, true);
   const stored = JSON.parse(device.localStorage.getItem(guestLobbyHistoryKey));
-  const expected = [recent, ...ids.slice(3).reverse().filter(id => id !== recent.gameId).map(id => activity(id, ids.indexOf(id) + 1))];
+  const expected = plays.slice(-200).reverse();
   assert.deepEqual(stored, expected);
-  assert.deepEqual(ReadGuestLobbyHistory(device, new Set(ids)), expected);
-  assert.equal(events, 24);
+  assert.deepEqual(ReadGuestLobbyHistory(device, new Set(['a', 'b'])), expected);
+  assert.deepEqual(SummarizeGuestLobbyHistory(expected), [summary('b', 100, 203), summary('a', 100, 202)]);
+  assert.equal(events, 1);
+});
+
+test('old deduped guest history reads as one event per activity and keeps repeats after a save', async () => {
+  const { PublishLobbyActivity, ReadGuestLobbyHistory, guestLobbyHistoryKey } = await history();
+  const oldHistory = [activity('a', 2), activity('b')];
+  const device = Device([[guestLobbyHistoryKey, JSON.stringify(oldHistory)]]);
+  const known = new Set(['a', 'b']);
+  assert.deepEqual(ReadGuestLobbyHistory(device, known), oldHistory);
+  PublishLobbyActivity(device, 'a', activity('a', 3).playedAt, true);
+  assert.deepEqual(ReadGuestLobbyHistory(device, known), [activity('a', 3), ...oldHistory]);
 });
 
 test('guest activity history drops malformed or unknown ids and tolerates unavailable storage', async () => {
@@ -83,7 +109,7 @@ test('guest activity history drops malformed or unknown ids and tolerates unavai
     { gameId: 'known', playedAt: '1' },
     { gameId: 'known', playedAt: '2026-02-30T01:00:00Z' },
   ])]]);
-  assert.deepEqual(ReadGuestLobbyHistory(device, known), [activity('known', 4), activity('other', 2)]);
+  assert.deepEqual(ReadGuestLobbyHistory(device, known), [activity('known', 4), activity('other', 2), activity('known')]);
   const denied = () => { throw new Error('Storage denied'); };
   for (const unavailable of [Object.defineProperty(Device(), 'localStorage', { get: denied }),
     Object.assign(Device(), { localStorage: { getItem: denied, setItem: denied } }),
@@ -104,33 +130,47 @@ test('signed-in saves notify the lobby without reading or writing guest history'
   assert.equal(events, 1);
 });
 
-test('lobby recommendation dictionaries state the content-similarity limits without regulatory claims', async () => {
+test('account play summaries require valid ids, counts and timestamps', async () => {
+  const { NormalizeLobbyPlayCounts } = await history();
+  assert.deepEqual(NormalizeLobbyPlayCounts(undefined), []);
+  assert.deepEqual(NormalizeLobbyPlayCounts([
+    null, summary('valid', 4), summary('valid', 12), summary('invalid id', 1), summary('zero', 0), summary('fraction', 1.5),
+    summary('string', '2'), summary('overflow', Number.MAX_SAFE_INTEGER + 1),
+    { gameId: 'bad-date', count: 1, lastPlayedAt: '2026-02-30T09:00:00Z' },
+    { gameId: 'sqlite', count: 2, lastPlayedAt: '2026-01-01 01:02:03', private: 'discard' },
+  ]), [summary('valid', 4), { gameId: 'sqlite', count: 2, lastPlayedAt: '2026-01-01T01:02:03.000Z' }]);
+});
+
+test('lobby ordering dictionaries explain both cues without regulatory claims', async () => {
   const source = read('../../../scripts/check-repo-policies.test.mjs');
   const [, pattern, flags] = source.match(/^const strongClaims = \/(.+)\/([a-z]+);$/m);
   const strongClaims = new RegExp(pattern, flags.replace('g', ''));
   const banned = /治療|診斷|療效|改善|提升|處方|建議你|\b(?:treatment|diagnos\w*|efficacy|improv\w*|prescri\w*)\b/i;
   const { en } = await import('../apps/rehabtrainerhub/app/i18n/en.ts');
   const { zhTW } = await import('../apps/rehabtrainerhub/app/i18n/zh-TW.ts');
-  assert.equal(en.hubUi.lobby.recommendations.note,
-    "Ordered by how similar the activities' content is; not a personal assessment or practice advice.");
-  assert.equal(zhTW.hubUi.lobby.recommendations.note, '依活動內容的相似程度排列，不是個人評估或練習建議。');
+  assert.equal(en.hubUi.lobby.personalOrder.note,
+    "Activities you played most appear first, followed by activities with similar content. This is not a personal assessment or practice advice.");
+  assert.equal(zhTW.hubUi.lobby.personalOrder.note, '依你玩過的次數排序，之後是內容相近的活動；不是個人評估或練習建議。');
+  assert.equal(en.hubUi.lobby.personalOrder.played, 'Played often');
+  assert.equal(zhTW.hubUi.lobby.personalOrder.played, '常玩');
   for (const dictionary of [en, zhTW]) {
-    const copy = dictionary.hubUi.lobby.recommendations;
-    assert.match(copy.reason, /\{activity\}/);
+    const copy = dictionary.hubUi.lobby.personalOrder;
+    assert.match(copy.similar, /\{activity\}/);
     for (const value of Object.values(copy)) {
       assert.doesNotMatch(value, strongClaims);
       assert.doesNotMatch(value, banned);
+      assert.doesNotMatch(value, /\u2014/);
     }
   }
 });
 
-test('lobby recommendations hide during search or purpose filtering and use the lobby card launch', async () => {
+test('lobby cards keep their personal order and launch action during search and purpose filtering', async () => {
   const { en } = await import('../apps/rehabtrainerhub/app/i18n/en.ts');
   const theme = { icon: { type: 'symbol', value: 'info' }, label: { en: 'Attention' } };
-  const games = ['a', 'b'].map((id, i) => ({ id, title: `Activity ${id}`, summary: '', imageSrc: '/preview.png', theme,
-    categoryLabel: 'Cognition', subcategoryLabel: 'Attention', purpose: 'attention', requirement: 'none',
+  const games = ['a', 'b', 'c', 'd'].map((id, i) => ({ id, title: `${id === 'b' ? 'Other' : 'Activity'} ${id}`, summary: '', imageSrc: '/preview.png', theme,
+    categoryLabel: 'Cognition', subcategoryLabel: 'Attention', purpose: id === 'b' ? null : 'attention', requirement: 'none',
     launch: { contract: 'catalog-v1', module: { runtimeId: id, href: `/train/?game=${i}` } } }));
-  let recent = [activity('a')];
+  let playCounts = [summary('a', 2), summary('d', 3)];
   let hook = 0;
   const state = [];
   const overlay = () => {};
@@ -149,13 +189,15 @@ test('lobby recommendations hide during search or purpose filtering and use the 
       categorySubcategories: { cognition: ['attention'] }, GetTrainerCategoryTheme: () => theme },
     '@rehab-trainer/ui/hooks/useBottomSheet': { useBottomSheet: () => ({}) },
     './i18n': { GetHubUiCopy: () => en.hubUi },
-    './i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: key => key }) },
+    './i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: (key, values) => (
+      key === 'lobby.personalOrder.similar' ? en.hubUi.lobby.personalOrder.similar.replace('{activity}', values.activity) : key
+    ) }) },
     './trainingThemeStyle': { BuildTrainingThemeStyle: () => ({}) },
     './lobbyResults.js': lobbyResults,
     './lobbyRecommendations.js': await ranking(),
-    './useLobbyActivityHistory': { useLobbyActivityHistory: () => recent },
+    './useLobbyActivityHistory': { useLobbyActivityHistory: () => playCounts },
     './hubMotion': { TransitionGameSurface: (_element, update) => update() },
-    '../recommendation/generated/featureIndex.json': index(['a', 'b'], { a: { b: 0.9 } }),
+    '../recommendation/generated/featureIndex.json': { similarityScores: { a: { b: 0.9, c: 0.8 } } },
   };
   const { outputText } = ts.transpileModule(read('TrainingLobby.tsx'), { compilerOptions: {
     jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
@@ -173,24 +215,29 @@ test('lobby recommendations hide during search or purpose filtering and use the 
     return visit(exports.TrainingLobby())?.props;
   }
 
-  const recommendation = () => Find(node => node.props['data-recommendation-id'] === 'b');
-  const section = () => Find(node => node.props.className === 'lobby-recommendations');
+  const cards = () => Find(node => node.props.className === 'module-grid').children;
+  const note = () => Find(node => node.props.className === 'lobby-order-note')?.children;
+  const cue = () => Find(node => node.props.className === 'module-card-order-cue')?.children;
+  const cardIds = () => cards().map(card => card.props['data-runtime-id']);
   const click = { currentTarget: { closest: () => null } };
-  recommendation().onClick(click);
-  assert.equal(Find(node => node.type === overlay).game, games[1]);
+  assert.deepEqual(cardIds(), ['d', 'a', 'b', 'c']);
+  assert.equal(note(), en.hubUi.lobby.personalOrder.note);
+  assert.equal(cue(), 'Played often');
+  assert.equal(Find(node => node.props.className === 'lobby-recommendations'), undefined);
 
   const search = () => Find(node => node.props.id === 'module-search-input');
-  search().onChange({ target: { value: games[1].title } });
-  assert.equal(section(), undefined);
-  Find(node => node.type === 'button' && node.props['aria-label'] === `${en.hubUi.lobby.start}: ${games[1].title}`).onClick(click);
-  assert.equal(Find(node => node.type === overlay).game, games[1]);
+  search().onChange({ target: { value: 'Activity' } });
+  assert.deepEqual(cardIds(), ['d', 'a', 'c']);
+  assert.ok(Find(node => node.props.className === 'module-card-order-cue' && node.props.children === 'Similar to Activity a'));
+  Find(node => node.type === 'button' && node.props['aria-label'] === `${en.hubUi.lobby.start}: ${games[2].title}`).onClick(click);
+  assert.equal(Find(node => node.type === overlay).game, games[2]);
 
   search().onChange({ target: { value: '' } });
-  assert.ok(section());
   Find(node => node.type === 'input' && node.props.type === 'checkbox').onChange();
-  assert.equal(section(), undefined);
+  assert.deepEqual(cardIds(), ['d', 'a', 'c']);
   Find(node => node.type === 'input' && node.props.type === 'checkbox').onChange();
-  assert.ok(section());
-  recent = [];
-  assert.equal(section(), undefined);
+  playCounts = [];
+  assert.equal(note(), undefined);
+  assert.equal(cue(), undefined);
+  assert.deepEqual(cardIds(), ids(games));
 });

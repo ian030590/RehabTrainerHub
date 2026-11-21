@@ -129,14 +129,6 @@ for (const retiredSelector of ['trainer-motor', 'trainer-vision', 'trainer-brain
   assert.ok(!lobbyCssSource.includes(retiredSelector), `Lobby CSS must not depend on .${retiredSelector}.`);
 }
 
-const configReadyHookSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/hooks/useTrainingConfigReady.ts'),
-  'utf8',
-);
-const loginReminderSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/components/TrainingLoginReminder.tsx'),
-  'utf8',
-);
 const authClientSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/auth/authClient.ts'),
   'utf8',
@@ -145,28 +137,6 @@ const authPanelSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/components/AuthPanel.tsx'),
   'utf8',
 );
-// training-runtimes retired
-for (const token of [
-  'trainingConfigReadyEvent',
-  'window.dispatchEvent(new CustomEvent(trainingConfigReadyEvent))',
-]) {
-  assert.ok(configReadyHookSource.includes(token), `Training config readiness must emit "${token}".`);
-}
-// vision login reminder checked via embedded training overlay
-for (const token of [
-  'window.addEventListener(trainingConfigReadyEvent',
-  'setIsReminderOpen(true)',
-  'setIsCheckingSession(Boolean(GetAuthToken()))',
-  'checkSession(true)',
-  'sessionCheckAbortRef.current?.abort()',
-  'sessionCheckTimeoutMs',
-  'FetchCurrentAuthUser(apiBase, controller.signal)',
-  'FetchSharedAuthSession(apiBase, controller.signal)',
-  '(isSignedIn && !isCheckingSession)',
-  'else if (openForGuest) setIsReminderOpen(true)',
-]) {
-  assert.ok(loginReminderSource.includes(token), `The per-training guest reminder is missing "${token}".`);
-}
 for (const token of ['signal?: AbortSignal', 'signal,']) {
   assert.ok(authClientSource.includes(token), `Auth session requests must be abortable: ${token}`);
 }
@@ -193,10 +163,6 @@ const mazePadSource = readFileSync(resolve(moduleRoot, 'maze/DirectionPad.tsx'),
 assert.ok(mazeSource.includes('<DirectionPad'), 'Maze must expose touch direction controls while playing.');
 assert.ok(mazePadSource.includes('<svg'), 'Maze direction controls must use SVG icons.');
 assert.ok(!/[↑↓←→⬆⬇⬅➡]/u.test(mazePadSource), 'Maze direction controls must not use arrow glyphs or emoji.');
-// Every Ball Response still uses the shared touch controls, so their arrows stay SVG as well.
-const mobileControlsSource = readFileSync(resolve(repoRoot, 'packages/ui/src/components/MobileTouchControls.tsx'), 'utf8');
-assert.ok(mobileControlsSource.includes('<svg'), 'Mobile direction controls must use SVG icons.');
-assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction controls must not use arrow glyphs or emoji.');
 
 for (const catalogId of catalogIds) {
   const manifest = trainingModuleFlowManifest[catalogId];

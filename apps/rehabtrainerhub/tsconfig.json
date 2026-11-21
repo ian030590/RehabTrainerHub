@@ -21,9 +21,6 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "@rehab-trainer/ui": [
-        "../../packages/ui/src/index.ts"
-      ],
       "@rehab-trainer/ui/*": [
         "../../packages/ui/src/*"
       ],

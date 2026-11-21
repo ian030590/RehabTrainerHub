@@ -18,11 +18,11 @@ const dictionaryPairs = [
     zh: 'apps/rehabtrainerhub/app/i18n/zh-TW.ts',
     en: 'apps/rehabtrainerhub/app/i18n/en.ts',
   },
-  ...['devicePerformanceNotice', 'installApp'].map((name) => ({
-    label: `shared ${name}`,
-    zh: `packages/ui/src/i18n/${name}/zh.ts`,
-    en: `packages/ui/src/i18n/${name}/en.ts`,
-  })),
+  {
+    label: 'shared installApp',
+    zh: 'packages/ui/src/i18n/installApp/zh.ts',
+    en: 'packages/ui/src/i18n/installApp/en.ts',
+  },
 ];
 
 for (const pair of dictionaryPairs) {

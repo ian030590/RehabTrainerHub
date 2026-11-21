@@ -84,10 +84,10 @@ export const zhTW = {
       },
     },
     lobby: {
-      recommendations: {
-        title: '相近活動',
-        note: '依活動內容的相似程度排列，不是個人評估或練習建議。',
-        reason: '與「{activity}」內容相近',
+      personalOrder: {
+        note: '依你玩過的次數排序，之後是內容相近的活動；不是個人評估或練習建議。',
+        played: '常玩',
+        similar: '與「{activity}」內容相近',
       },
       kicker: '居家訓練網',
       title: '訓練大廳',

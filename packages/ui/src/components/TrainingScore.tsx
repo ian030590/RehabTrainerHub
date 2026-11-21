@@ -162,7 +162,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
       <p role="status" aria-live="polite">{saveMessage}</p>
       <div>
         {saveState === 'error' && <Button onClick={onRetry} variant="outline">{copy.retry}</Button>}
-        <Button className="training-score-return" onClick={onClose}>{copy.back}</Button>
+        <Button onClick={onClose}>{copy.back}</Button>
       </div>
     </div>
     <header className="training-score-header">
@@ -176,7 +176,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
       </dl>
     </header>
 
-    <section className="training-score-section training-score-priority" aria-labelledby="training-score-priority-title">
+    <section className="training-score-section" aria-labelledby="training-score-priority-title">
       <header className="training-score-section-header">
         <div><h3 id="training-score-priority-title">{copy.keyTitle}</h3><p>{copy.keyDescription}</p></div>
       </header>
@@ -211,7 +211,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
       </section>
     </div>
 
-    <section className="training-score-section training-score-analysis" aria-labelledby="training-score-analysis-title">
+    <section className="training-score-section" aria-labelledby="training-score-analysis-title">
       <header className="training-score-section-header training-score-analysis-header">
         <div><h3 id="training-score-analysis-title">{copy.analysisTitle}</h3><p>{field.label[language]}{field.unit ? ` · ${field.unit}` : ''}</p></div>
         <label className="training-score-metric-select">{copy.chartMetric}

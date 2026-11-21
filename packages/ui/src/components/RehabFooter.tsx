@@ -51,11 +51,11 @@ export function GetTrainerSkipLinkLabel(language: 'zh' | 'en') {
 export function RehabFooter({
   aboutHref,
   appName = 'Rehab Trainer Hub',
-  className = 'rehab-footer',
+  className,
   developerHref,
   downloadHref,
   hubHref = '/',
-  innerClassName = 'rehab-footer-inner',
+  innerClassName,
   privacyHref,
   repoHref = 'https://github.com/ian030590/RehabTrainerHub',
   showRights = true,
@@ -66,7 +66,7 @@ export function RehabFooter({
       <div className={innerClassName}>
         <strong lang="en">{appName}</strong>
         <span>{labels?.disclaimer ?? 'General information and self-practice tools only. This site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.'}</span>
-        <div className="rehab-footer-meta">
+        <div>
           <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
             <a href={hubHref}>{labels?.hub ?? 'Hub'}</a>
             {aboutHref && <a href={aboutHref}>{labels?.about ?? 'About'}</a>}
@@ -76,7 +76,7 @@ export function RehabFooter({
             <a href={repoHref} target="_blank" rel="noopener noreferrer">{labels?.repo ?? 'GitHub'}</a>
           </nav>
           {showRights && (
-            <span className="rehab-footer-rights">&copy; 2026 {labels?.rights ?? 'All rights reserved.'}</span>
+            <span>&copy; 2026 {labels?.rights ?? 'All rights reserved.'}</span>
           )}
         </div>
       </div>
