@@ -42,12 +42,6 @@ export { TrainingSlider, TrainingConfigRangeField } from './components/TrainingC
 export type { TrainingSliderProps, TrainingConfigRangeFieldProps } from './components/TrainingConfigRangeField';
 export { MobileActionControls, MobileDirectionPad } from './components/MobileTouchControls';
 export type { MobileActionControl, MobileActionControlsProps, MobileDirection, MobileDirectionPadProps } from './components/MobileTouchControls';
-export { GetDefaultReferenceListPageLabels, ReferenceListPage } from './components/ReferenceListPage';
-export type {
-  ReferenceListItem,
-  ReferenceListPageLabels,
-  ReferenceListPageProps,
-} from './components/ReferenceListPage';
 export { GetTrainerFooterLabels, GetTrainerSkipLinkLabel, RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
 export { AccountAvatar } from './components/AccountAvatar';

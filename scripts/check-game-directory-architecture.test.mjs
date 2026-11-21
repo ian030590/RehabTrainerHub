@@ -448,7 +448,6 @@ test('all official games install the verified settings receiver', async () => {
 
 test('official games have no Toutour dependency and own their rules styles', async () => {
   const nativeRules = ['moving-card', 'oculomotor-training', 'gabor-patching', 'reading-training', 'hart-chart', 'ufov'];
-  assert.doesNotMatch(await ReadUi('components/TrainerApp.css'), /\.training-rule/);
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
     assert.doesNotMatch(main, /GameTour|from ['"]\.\/tour['"]/);

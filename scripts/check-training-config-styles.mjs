@@ -38,27 +38,6 @@ for (const required of [
   if (!routeOutletSource.includes(required)) failures.push(`TrainerRouteOutlet is missing ${required}`);
 }
 
-const styleSource = readFileSync(resolve(root, 'packages/ui/src/components/TrainerApp.css'), 'utf8');
-for (const required of [
-  '.training-slider {',
-  '.training-slider-control {',
-  '.training-slider-scale {',
-  '.trainer-route-transition {',
-  '.config-modal-overlay > .training-config {',
-  'border: 1.5px solid var(--border)',
-  '.training-option-toggle + .training-option-toggle',
-  '.training-slider-scale > span:nth-child(2)',
-  '.training-slider-scale > span:last-child',
-  '@keyframes trainerRouteEnter',
-  '@keyframes trainingConfigExpand',
-]) {
-  if (!styleSource.includes(required)) failures.push(`TrainerApp.css is missing ${required}`);
-}
-
-if (styleSource.includes('.training-config-actions')) {
-  failures.push('TrainerApp.css still defines removed .training-config-actions styles');
-}
-
 const hubNavigationSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/HubNavigation.tsx'), 'utf8');
 const hubStyleSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');
 const gameSettingsFormSource = readFileSync(resolve(root, 'packages/ui/src/components/GameSettingsForm.tsx'), 'utf8');

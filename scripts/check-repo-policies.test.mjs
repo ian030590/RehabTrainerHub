@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import colorNames from 'color-name';
@@ -16,7 +16,8 @@ const runnerRoute = `${runner}/functions/[[path]].js`;
 function TrackedSources(paths, extensions) {
   return execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ...paths],
     { cwd: root, encoding: 'utf8' }).split('\0').filter(path => extensions.test(path)
-      && !/\.test\.[cm]?[jt]sx?$|\/(?:vendor|vendors|fixtures)\//.test(path));
+      && !/\.test\.[cm]?[jt]sx?$|\/(?:vendor|vendors|fixtures)\//.test(path)
+      && existsSync(resolve(root, path)));
 }
 
 function VisitSource(path, source, visit) {
