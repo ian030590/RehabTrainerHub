@@ -499,8 +499,6 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .filter(({ status }) => status === 'utility-only-pending')
   .flatMap(({ ids }) => ids);
 
-// Tongue Catch was the last game to open the camera itself; every camera game now uses a reviewed proxy.
-const configPermissionImplementations = {};
 const proxyPermissionImplementations = {
   'motor:gesture-battler': { file: 'gesture-battler/GestureBattlerGame.tsx', denialToken: 'gesture.error.permission' },
   'motor:motor-cortex-rehab': { file: 'motor-cortex-rehab/MotorCortexRehabGame.tsx', denialToken: 'labels.permission' },
@@ -521,63 +519,25 @@ const nativeTimelinePermissionImplementations = {
     'apps/rehabtrainerhub/games/oculomotor-training/public/reference/experiment.js',
   ),
 };
-const mediaPermissionPreflightSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/hooks/useMediaPermissionPreflight.ts'),
-  'utf8',
-);
-assert.equal(
-  (mediaPermissionPreflightSource.match(/RequestHubTrainingConfiguration\(GetConfigureReason\(audio, video, /g) ?? []).length,
-  2,
-  'Media preflight failures must request the Hub-owned form, with the reason, even when a phase change cancels the consuming effect.',
-);
 const directMediaAccessFiles = [
   ...ListTypeScriptFiles(moduleRoot),
 ].filter((file) => {
   const source = readFileSync(file, 'utf8');
   return /mediaDevices\??\.getUserMedia|WebGazerInitCameraPlugin/.test(source);
 }).map((file) => relative(repoRoot, file).replaceAll('\\', '/')).sort();
-const expectedDirectMediaAccessFiles = [
-  ...Object.values(configPermissionImplementations)
-    .filter((file) => file !== 'oculomotor-training/OculomotorTrainingGame.tsx')
-    .map((file) => `apps/rehabtrainerhub/games/${file}`),
-].sort();
 assert.deepEqual(
   directMediaAccessFiles,
-  expectedDirectMediaAccessFiles,
-  'Every direct camera or microphone caller must belong to a declared media-permission module.',
+  [],
+  'Games must use reviewed proxies for camera or microphone access.',
 );
 const permissionModuleIds = catalogIds.filter((catalogId) => (
   trainingModuleFlowManifest[catalogId].mediaPermission !== 'none'
 ));
 assert.deepEqual(
   permissionModuleIds.sort(),
-  [...Object.keys(configPermissionImplementations), ...Object.keys(proxyPermissionImplementations), 'vision:oculomotor-training'].sort(),
+  [...Object.keys(proxyPermissionImplementations), ...Object.keys(nativeTimelinePermissionImplementations)].sort(),
   'The media-permission manifest must match the modules that request camera or microphone access.',
 );
-for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
-  const source = readFileSync(resolve(moduleRoot, file), 'utf8');
-  assert.ok(
-    source.includes('useMediaPermissionPreflight'),
-    `${catalogId} must preflight its camera or microphone permission before training.`,
-  );
-  assert.ok(
-    source.includes('RequestHubTrainingConfiguration'),
-    `${catalogId} must return denied media access to the Hub-owned settings form.`,
-  );
-}
-for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
-  if (catalogId === 'vision:oculomotor-training') continue;
-  const source = readFileSync(resolve(moduleRoot, file), 'utf8');
-  assert.ok(
-    !source.includes('<TrainingConfigPanel'),
-    `${catalogId} must use the shared settings.json form.`,
-  );
-  assert.equal(
-    (source.match(/setPhase\('menu'\)/g) ?? []).length,
-    0,
-    `${catalogId} must return configuration ownership to the shell.`,
-  );
-}
 for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplementations)) {
   const source = readFileSync(file, 'utf8');
   assert.ok(

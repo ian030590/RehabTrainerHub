@@ -40,13 +40,39 @@ test('Escape branch lookup includes multiline handlers with arbitrary names', ()
   assert.match(branches[0], /exit\(\)/);
 });
 
+test('R2 results offer one return button with a label for the launch source', () => {
+  for (const game of chromeContractGames) {
+    const source = ReadGameComponent(game);
+    const resultSource = game === 'oculomotor-training'
+      ? read(`apps/rehabtrainerhub/games/${game}/OculomotorResults.tsx`)
+      : source;
+    const actions = resultSource.match(/className="score-actions">([\s\S]*?)<\/div>/)?.[1];
+    assert.ok(actions, game);
+    const buttons = [...actions.matchAll(/<button\b[\s\S]*?<\/button>/g)].map(([button]) => button);
+    const returnButtons = buttons.filter(button => !button.includes('score-retry-button'));
+    assert.equal(returnButtons.length, 1, game);
+    const [returnButton] = returnButtons;
+    assert.match(returnButton, /\bscore-return-button\b/, game);
+    assert.match(returnButton, /onClick=\{(?:exit\w*|onExit)\}/i, game);
+    const label = returnButton.match(/>\{(.*?)\}<\/button>/s)?.[1];
+    const labelExpression = /^\w+$/.test(label)
+      ? source.match(new RegExp(`\\bconst ${label} = (.*?);`))?.[1]
+      : label;
+    assert.match(labelExpression ?? '', /^!?IsHubGame\(\) \? .+ : .+$/, game);
+  }
+});
+
+function ReadGameComponent(game) {
+  const componentName = componentOverrides[game] ?? `${game.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')}Game`;
+  return read(`apps/rehabtrainerhub/games/${game}/${componentName}.tsx`);
+}
+
 for (const game of chromeContractGames) {
   const root = `apps/rehabtrainerhub/games/${game}`;
   const manifest = JSON.parse(read(`${root}/public/game.json`));
   const theme = ThemeForCategory(manifest.category);
   const css = ['game.css', 'rules.css', 'results.css'].map(file => read(`${root}/${file}`));
-  const componentName = componentOverrides[game] ?? `${game.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')}Game`;
-  const component = read(`${root}/${componentName}.tsx`);
+  const component = ReadGameComponent(game);
   const resultSource = game === 'oculomotor-training' ? read(`${root}/OculomotorResults.tsx`) : component;
   const analysis = game === 'oculomotor-training' ? resultSource : read(`${root}/ScoreAnalysis.tsx`);
 

@@ -1,17 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import './check-game-research-contract.test.mjs';
 import ts from 'typescript';
+import * as gameSettings from '../packages/game-settings/src/index.js';
 import migratedGames from '../packages/ui/src/officialGameReleases.json' with { type: 'json' };
 import { IsGameResult } from '../packages/ui/src/selfContainedGame.js';
 
 const compilerOptions = { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 };
 const embeddedSource = await readFile(new URL('../packages/ui/src/embeddedTraining.ts', import.meta.url), 'utf8');
-const resultActionsSource = await readFile(
-  new URL('../packages/ui/src/components/TrainingResultActions.tsx', import.meta.url),
-  'utf8',
-);
 const scoreSource = await readFile(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8');
 const scoreUrl = `data:text/javascript;base64,${Buffer.from(ts.transpileModule(scoreSource, { compilerOptions }).outputText).toString('base64')}`;
 const gameScore = await import(scoreUrl);
@@ -218,44 +219,39 @@ test('embedded training reports active state to its verified Hub origin', (conte
   }), null);
 });
 
-test('a failed camera or microphone check sends the reason it went back to settings', async (context) => {
-  const hookSource = await readFile(new URL('../packages/ui/src/hooks/useMediaPermissionPreflight.ts', import.meta.url), 'utf8');
-  const ToModuleUrl = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`;
-  // Run the hook once without React: state setters are ignored and the effect runs right away.
-  const reactStub = `export const useState = value => [typeof value === 'function' ? value() : value, () => undefined];
-export const useCallback = callback => callback;
-export const useEffect = effect => { effect(); };`;
-  const trainingStub = 'export function RequestHubTrainingConfiguration(reason) { globalThis.configureReasons.push(reason ?? null); return true; }';
-  const hookCode = ts.transpileModule(hookSource, { compilerOptions }).outputText
-    .replace("'react'", JSON.stringify(ToModuleUrl(reactStub)))
-    .replace("'../embeddedTraining'", JSON.stringify(ToModuleUrl(trainingStub)));
-  const { useMediaPermissionPreflight } = await import(ToModuleUrl(hookCode));
-  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-  context.after(() => {
-    Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
-    delete globalThis.configureReasons;
-  });
-  const cases = [
-    [{ video: true }, new DOMException('Permission denied', 'NotAllowedError'), 'camera-denied'],
-    [{ video: true }, new DOMException('Requested device not found', 'NotFoundError'), 'camera-unavailable'],
-    [{ video: true }, new DOMException('Could not start video source', 'NotReadableError'), 'camera-unavailable'],
-    [{ audio: true }, new DOMException('Permission denied', 'NotAllowedError'), 'microphone-denied'],
-    [{ audio: true }, new DOMException('Requested device not found', 'NotFoundError'), 'microphone-unavailable'],
-    // With both devices requested the error does not say which one failed, so no reason is sent.
-    [{ audio: true, video: true }, new DOMException('Permission denied', 'NotAllowedError'), null],
-    [{ video: true }, null, 'camera-unsupported'],
-    [{ audio: true }, null, 'microphone-unsupported'],
-  ];
-  for (const [options, error, reason] of cases) {
-    globalThis.configureReasons = [];
-    Object.defineProperty(globalThis, 'navigator', {
-      configurable: true,
-      value: error ? { mediaDevices: { getUserMedia: () => Promise.reject(error) } } : {},
-    });
-    useMediaPermissionPreflight(options);
-    await new Promise(resolveTick => setTimeout(resolveTick, 0));
-    assert.deepEqual(globalThis.configureReasons, [reason], `${JSON.stringify(options)} ${error?.name ?? 'unsupported'}`);
+test('the settings form displays Hub-owned text for validated permission reasons', async () => {
+  const source = await readFile(new URL('../packages/ui/src/components/GameSettingsForm.tsx', import.meta.url), 'utf8');
+  const { outputText } = ts.transpileModule(source, { compilerOptions: {
+    ...compilerOptions, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX,
+  } });
+  const exports = {};
+  const require = createRequire(import.meta.url);
+  runInNewContext(outputText, { exports, require: name => {
+    if (name === '@rehab-trainer/game-settings') return gameSettings;
+    if (name === './ui/button') return { Button: () => null };
+    return require(name);
+  } });
+  const type = embeddedTraining.hubTrainingConfigureMessageType;
+  const Render = (reason, language) => renderToStaticMarkup(createElement(exports.GameSettingsForm, {
+    definition: { schemaVersion: 1, gameId: 'sample-game', sections: [] }, language,
+    notice: embeddedTraining.GetHubTrainingConfigureReason({ type, reason }),
+  }));
+
+  for (const [reason, language, title, detail] of [
+    ['camera-denied', 'en', 'Camera unavailable', 'The browser did not allow the camera'],
+    ['microphone-unavailable', 'zh', '無法使用麥克風', '找不到可用的麥克風'],
+  ]) {
+    const markup = Render(reason, language);
+    const alerts = [...markup.matchAll(/<div\b[^>]*role="alert"[^>]*>(.*?)<\/div>/gs)];
+    assert.equal(alerts.length, 1, reason);
+    assert.ok(alerts[0][1].includes(title), reason);
+    assert.ok(alerts[0][1].includes(detail), reason);
+    assert.ok(!markup.includes(reason), reason);
   }
+  const unknown = 'A game-supplied message';
+  const markup = Render(unknown, 'en');
+  assert.doesNotMatch(markup, /role="alert"/);
+  assert.ok(!markup.includes(unknown));
 });
 
 test('Hub accepts messages only from the expected same-origin runtime frame', () => {
@@ -359,14 +355,6 @@ test('official games accept settings only from their verified Hub parent', (cont
   assert.deepEqual(dispatchedEvents.at(-1)?.detail, message.settings);
   remove();
   assert.equal(listeners.has('message'), false);
-});
-
-test('training results expose exactly one source-aware navigation button', () => {
-  assert.equal((resultActionsSource.match(/<button\b/g) ?? []).length, 1);
-  assert.equal(resultActionsSource.includes('downloadLabel'), false);
-  assert.equal(resultActionsSource.includes('restartLabel'), false);
-  assert.match(resultActionsSource, /isEmbeddedHubTraining \? NotifyHubTrainingExit :/);
-  assert.match(resultActionsSource, /if \(!RequestHubTrainingConfiguration\(\)\) onBackHome\(\)/);
 });
 
 test('standalone games reopen their own configuration without browser history', (context) => {

@@ -253,7 +253,8 @@
     "enforcement": "ci",
     "tests": [
       {"file":"scripts/check-embedded-training-message.test.mjs","name":"Hub accepts messages only from the expected same-origin runtime frame"},
-      {"file":"scripts/check-embedded-training-message.test.mjs","name":"a failed camera or microphone check sends the reason it went back to settings"},
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"embedded training reports active state to its verified Hub origin"},
+      {"file":"scripts/check-embedded-training-message.test.mjs","name":"the settings form displays Hub-owned text for validated permission reasons"},
       {"file":"scripts/check-game-directory-architecture.test.mjs","name":"legacy game pages define every token the settings form uses"}
     ]
   },
@@ -283,7 +284,7 @@
     "enforcement": "ci",
     "tests": [
       {"file":"scripts/check-game-directory-architecture.test.mjs","name":"both official and developer overlays configure before mounting their iframe"},
-      {"file":"scripts/check-embedded-training-message.test.mjs","name":"training results expose exactly one source-aware navigation button"},
+      {"file":"scripts/check-game-chrome-contract.test.mjs","name":"R2 results offer one return button with a label for the launch source"},
       {"file":"scripts/check-embedded-training-message.test.mjs","name":"standalone games reopen their own configuration without browser history"}
     ]
   },
