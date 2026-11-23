@@ -547,7 +547,7 @@ test('build runs beside verification without secrets and deploy consumes only it
   assert.doesNotMatch(build, /secrets\.|^    (?:needs|environment):/m);
   assert.match(build, /timeout-minutes: 20/);
   assert.match(StepBlock(build, 'Checkout'), /fetch-depth: 1/);
-  assert.match(StepBlock(build, 'Setup Node.js'), /node-version: 24\n          cache: npm/);
+  assert.match(StepBlock(build, 'Setup Node.js'), /node-version: 26\n          cache: npm/);
   assert.match(StepBlock(build, 'Compile Worker functions'), /run: node scripts\/build-workers\.mjs\n/);
   assert.deepEqual([...build.matchAll(/^      - name: (.+)$/gm)].map(match => match[1]), [
     'Checkout', 'Setup Node.js', 'Install dependencies', 'Discover Pages app environment', 'Fingerprint build inputs',
@@ -567,7 +567,7 @@ test('build runs beside verification without secrets and deploy consumes only it
   assert.match(deploy, /timeout-minutes: 20/);
   assert.match(StepBlock(deploy, 'Checkout'), /fetch-depth: 0/);
   const setup = StepBlock(deploy, 'Setup Node.js');
-  assert.match(setup, /node-version: 24/);
+  assert.match(setup, /node-version: 26/);
   assert.doesNotMatch(setup, /cache:/);
   const download = StepBlock(deploy, 'Download build output');
   assert.match(download, /uses: actions\/download-artifact@v8/);

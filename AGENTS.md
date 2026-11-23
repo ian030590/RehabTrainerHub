@@ -12,7 +12,7 @@ Hub 的 Next.js App Router 位於 `app/`，後端 `functions/` 編譯進 Worker�
 - [AG-RULES-02] 以 `AGENTS.md` 為唯一權威。根目錄 `CLAUDE.md` 只匯入本檔。
 - [AG-CI-01] 同步 `test:ci` 與 `ci.yml` 的八項 gate、十項工作。遊戲架構分 types／tests／games，每個原命令執行一次。
 - [AG-CI-02] 自動測試須由本機 aggregate 與 CI matrix 同步涵蓋。新增測試未被探索時，同時補上入口。
-- [AG-CI-03] CI 使用 Node 24 與 root 加 workspace 的乾淨安裝，支援 PR、手動、重用。Workflow 與指引變更須觸發 PR 驗證。
+- [AG-CI-03] CI 使用 Node 26 與 root 加 workspace 的乾淨安裝，支援 PR、手動、重用。Workflow 與指引變更須觸發 PR 驗證。
 - [AG-CI-04] 安裝套件不得設定 Git hook。Brave 與需要建置成品的檢查保留本機命令。
 - [AG-CI-05] 依變更範圍補驗。Hub UI／auth／routing／共用套件須建置 Hub。Asteroid Shield、全螢幕或 Pixi 尺寸變更也須建置 Hub。
 - [AG-CI-06] 平台流程或共用設定 UI 有變更時，準備建置成品後以本機 Brave 驗收遊戲架構。

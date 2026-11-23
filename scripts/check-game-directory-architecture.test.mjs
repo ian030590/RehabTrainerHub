@@ -183,7 +183,7 @@ test('the CI matrix covers exactly the local eight gates, including every shard 
   assert.match(workflow, /fail-fast: false/);
   assert.match(workflow, /fetch-depth: 1/);
   assert.doesNotMatch(workflow, /fetch-depth: 0|test:uiux-browser|secrets\./);
-  assert.match(workflow, /node-version: 24\s+cache: npm/);
+  assert.match(workflow, /node-version: 26\s+cache: npm/);
   assert.match(workflow, /run: \$\{\{ matrix\.command \}\}/);
   for (const action of ['actions/checkout@v7', 'actions/setup-node@v6']) {
     assert.ok(workflow.includes(action) && deploy.includes(action), `${action} stays consistent across workflows`);

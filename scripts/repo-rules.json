@@ -35,7 +35,7 @@
   },
   {
     "id": "AG-CI-03",
-    "summary": "CI 使用 Node 24 與 root 加 workspace 的乾淨安裝，支援 PR、手動、重用。Workflow 與指引變更須觸發 PR 驗證。",
+    "summary": "CI 使用 Node 26 與 root 加 workspace 的乾淨安裝，支援 PR、手動、重用。Workflow 與指引變更須觸發 PR 驗證。",
     "enforcement": "ci",
     "tests": [
       {"file":"scripts/check-game-directory-architecture.test.mjs","name":"CI installs root and workspace dependencies without audit or funding requests"},
