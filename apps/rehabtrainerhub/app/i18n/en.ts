@@ -1,3 +1,5 @@
+import type { ActivityFeatureLabels } from './types';
+
 export const en = {
   home: {
     module: {
@@ -162,6 +164,11 @@ export const en = {
       breadcrumbs: 'Breadcrumbs',
       category: 'Category',
       equipment: 'Equipment',
+      features: {
+        content: 'What you do',
+        characteristics: 'Activity characteristics',
+        waysToPlay: 'Ways to play',
+      } satisfies ActivityFeatureLabels,
       details: 'Details',
       start: 'Start',
       install: 'Install this activity',

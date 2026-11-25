@@ -1488,8 +1488,8 @@
       "id": "reaction_type.simple_reaction",
       "dimension": "reaction_type",
       "labels": {
-        "zh-TW": "簡單反應（a）",
-        "en": "Simple reaction (a)"
+        "zh-TW": "簡單反應",
+        "en": "Simple reaction"
       },
       "definition": {
         "zh-TW": "在單一目標訊號出現時做同一個預先指定的反應。",
@@ -1501,8 +1501,8 @@
       "id": "reaction_type.choice_reaction",
       "dimension": "reaction_type",
       "labels": {
-        "zh-TW": "選擇反應（b）",
-        "en": "Choice reaction (b)"
+        "zh-TW": "選擇反應",
+        "en": "Choice reaction"
       },
       "definition": {
         "zh-TW": "依刺激特徵，從兩種以上預先指定的反應中擇一。",
@@ -1514,8 +1514,8 @@
       "id": "reaction_type.go_no_go",
       "dimension": "reaction_type",
       "labels": {
-        "zh-TW": "作答／不作答（c）",
-        "en": "Go/no-go (c)"
+        "zh-TW": "作答／不作答",
+        "en": "Go/no-go"
       },
       "definition": {
         "zh-TW": "看到目標訊號時作答，遇到其他指定訊號時不作答。",

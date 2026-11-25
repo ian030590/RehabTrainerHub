@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DiscoverPagesApps, defaultRepoRoot } from './pages-apps.mjs';
 import { ReadCatalog } from './recommendation-pipeline.mjs';
+import gameFeatures from '../apps/rehabtrainerhub/recommendation/gameFeatures.json' with { type: 'json' };
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -298,6 +299,10 @@ function ValidateSitemapPages(urls, outputDir, siteUrl, role, appFailures) {
 
     const result = ValidateIndexableHtml(html, file, value, appFailures, role === 'hub');
     if (role === 'hub' && /^\/activities\/[^/]+\/$/.test(url.pathname)) {
+      const id = url.pathname.split('/')[2];
+      if (gameFeatures.games[id]?.reviewStatus === 'confirmed' && !/<h2\b[^>]*>活動內容<\/h2>/.test(html)) {
+        appFailures.push(`${file}: missing the activity content heading.`);
+      }
       const nodes = ParseJsonLdNodes(html, file, appFailures);
       const crumbs = nodes?.find(node => HasType(node, 'BreadcrumbList'))?.itemListElement;
       const expected = [[siteUrl, '訓練大廳'], [siteUrl + 'activities/', '練習活動'], [value, result.heading]];

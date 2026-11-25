@@ -4,7 +4,7 @@ import { BuildActivityHref, BuildActivityLink } from '../../activityLinks';
 import { zhTW } from '../../i18n';
 import { CreatePageJsonLd, CreateSeoMetadata, SerializeJsonLd } from '../../seo';
 import { ActivityDetails } from '../ActivityContent';
-import { GetActivityFeatures } from '../activityFeatures';
+import { GetActivityFeatures, GetReviewedActivityDetails } from '../activityFeatures';
 
 const modulesById = new Map(trainingCatalog.map(module => [module.runtimeId, module]));
 type ActivityPageProps = { params: Promise<{ gameId: string }> };
@@ -41,6 +41,7 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SerializeJsonLd(structuredData) }} />
       <ActivityDetails copy={module.copy} category={category.label} mediaPermission={module.mediaPermission}
+        reviewed={GetReviewedActivityDetails(gameId)}
         primaryTags={features.primaryTags} neighbors={neighbors} startHref={BuildHubTrainingHref(module)}
         installHref={BuildTrainingGameInstallHref(module)} />
     </>

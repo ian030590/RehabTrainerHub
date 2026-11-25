@@ -53,6 +53,7 @@ import drawingDefenseCatalog from './drawing-defense/public/game.json';
 import asteroidShieldCatalog from './asteroid-shield/public/game.json';
 import motorCortexCatalog from './motor-cortex-rehab/public/game.json';
 import movingCardCatalog from './moving-card/public/game.json';
+import oculomotorCatalog from './oculomotor-training/public/game.json';
 import gestureBattlerCatalog from './gesture-battler/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
@@ -293,8 +294,8 @@ const seeds: readonly TrainingCatalogSeed[] = [
     purpose: 'vision',
     kind: 'vision',
     path: '/?module=oculomotor-training',
-    zh: ['眼動訓練', '以追視、跳視與多目標追蹤練習眼球運動控制。'],
-    en: ['Oculomotor Training', 'Practise eye-movement control with pursuit, saccades, and multiple-target tracking.'],
+    zh: [oculomotorCatalog.copy['zh-TW'].title, oculomotorCatalog.copy['zh-TW'].description],
+    en: [oculomotorCatalog.copy.en.title, oculomotorCatalog.copy.en.description],
     titleKey: 'home.module.oculomotor.title',
     descriptionKey: 'home.module.oculomotor.desc',
   },

@@ -485,12 +485,38 @@ test('activity map is included in the public sitemap and built SEO checks', () =
   assert.match(readFileSync(new URL('check-seo-output.mjs', import.meta.url), 'utf8'), /['"]activity-map\/['"]/);
 });
 
+test('oculomotor catalog copy matches its game manifest in both languages', () => {
+  const id = 'oculomotor-training';
+  const module = LoadRuntimeCatalog().trainingCatalog.find(entry => entry.runtimeId === id);
+  const manifest = JSON.parse(readFileSync(new URL(`${id}/public/game.json`, gamesRoot), 'utf8'));
+  for (const locale of ['zh-TW', 'en']) assert.deepEqual({ ...module.copy[locale] }, manifest.copy[locale]);
+});
+
+function CheckActivityFacts(html, heading, rows, id) {
+  const section = html.match(new RegExp(`<h2\\b[^>]*>${heading}</h2>(.*?)</section>`, 's'))?.[1];
+  assert.ok(section, `${id} must render ${heading}`);
+  assert.deepEqual([...section.matchAll(/<dt>(.*?)<\/dt><dd>(.*?)<\/dd>/gs)].map(([, term, value]) => [term, value]),
+    rows.map(row => row.map(text => renderToStaticMarkup(text))), `${id}: ${heading}`);
+}
+
+test('equivalent ways to play display once and keep the first setup order', () => {
+  const setups = [['camera', 'input.pointer'], ['input.pointer', 'camera'], ['input.touch']];
+  const game = { ...Game(), reviewStatus: 'confirmed', supportedSetups: setups.map(allCapabilities => ({ allCapabilities })) };
+  const { GetReviewedActivityDetails } = LoadActivityMapModule('activities/activityFeatures.ts', {
+    '../../recommendation/gameFeatures.json': { games: { example: game } },
+  });
+  assert.deepEqual(GetReviewedActivityDetails('example').setups.map(setup => setup.map(label => label.en)),
+    [['Camera', 'Mouse or trackpad'], ['Touchscreen']]);
+});
+
 test('static activity pages use the official catalog, ranked neighbors and localized content', async () => {
   const catalog = LoadRuntimeCatalog();
   const { zhTW } = LoadActivityMapModule('i18n/zh-TW.ts');
   const { en } = LoadActivityMapModule('i18n/en.ts');
   const links = LoadActivityMapModule('activityLinks.ts');
   const ranked = ReadData('generated/featureIndex').games;
+  const profiles = ReadData('gameFeatures').games;
+  const taxonomy = ReadData('taxonomy');
   const seo = { CreateSeoMetadata: value => value, CreatePageJsonLd: value => value, SerializeJsonLd: JSON.stringify };
   const unknown = () => { throw new Error('Unknown activity'); };
   for (const [locale, dictionary] of [['zh-TW', zhTW], ['en', en]]) {
@@ -510,11 +536,12 @@ test('static activity pages use the official catalog, ranked neighbors and local
       assert.deepEqual([...list.matchAll(/href="([^"]+)"/g)].map(match => match[1]),
         Array.from(catalog.trainingCatalog.filter(module => module.trainer === id), module => links.BuildActivityHref(module.runtimeId)));
     }
-    const page = LoadActivityMapModule('activities/[gameId]/page.tsx', {
+    const pageImports = {
       '@rehab-trainer/hub-modules/catalog': catalog, 'next/navigation': { notFound: unknown },
       '../../activityLinks': links, '../../i18n': { zhTW }, '../../seo': seo,
       '../ActivityContent': content, '../activityFeatures': LoadActivityMapModule('activities/activityFeatures.ts'),
-    });
+    };
+    const page = LoadActivityMapModule('activities/[gameId]/page.tsx', pageImports);
     assert.deepEqual(Array.from(page.generateStaticParams(), ({ gameId }) => gameId),
       Array.from(catalog.trainingCatalog, ({ runtimeId }) => runtimeId));
     await assert.rejects(page.default({ params: Promise.resolve({ gameId: 'unlisted-submission' }) }), /Unknown activity/);
@@ -533,7 +560,31 @@ test('static activity pages use the official catalog, ranked neighbors and local
       assert.ok(html.includes(`href="${catalog.BuildTrainingGameInstallHref(module)}"`), module.runtimeId);
       assert.deepEqual([...html.matchAll(/href="\/activities\/([^/"]+)\/"/g)].map(match => match[1]),
         ranked[module.runtimeId].neighbors.slice(0, 3).map(({ gameId }) => gameId));
+      const profile = profiles[module.runtimeId];
+      if (profile.reviewStatus !== 'confirmed') continue;
+      const evidence = taxonomy.tags.filter(tag => Object.hasOwn(profile.evidence, tag.id)).map(tag =>
+        [tag.labels[locale], locale === 'en' ? tag.definition.en : profile.evidence[tag.id]]);
+      assert.ok(evidence.length, module.runtimeId);
+      CheckActivityFacts(html, locale === 'en' ? 'What you do' : '活動內容', evidence, module.runtimeId);
+      const separator = dictionary.hubUi.activityMap.tagSeparator;
+      const characteristics = [];
+      for (const dimension of taxonomy.dimensions.filter(dimension => dimension.group === 'taskDemand')) {
+        const tags = taxonomy.tags.filter(tag => tag.dimension === dimension.id && profile.taskDemandTags[tag.id] === 2);
+        if (tags.length) characteristics.push([dimension.labels[locale], tags.map(tag => tag.labels[locale]).join(separator)]);
+      }
+      const setups = profile.supportedSetups.map(({ allCapabilities }) => allCapabilities.map(id =>
+        taxonomy.capabilities.find(capability => capability.id === id).labels[locale]).join(' + '));
+      characteristics.push([locale === 'en' ? 'Ways to play' : '可用操作方式', [...new Set(setups)].join(separator)]);
+      CheckActivityFacts(html, locale === 'en' ? 'Activity characteristics' : '活動特性', characteristics, module.runtimeId);
     }
+    const id = 'drawing-defense';
+    const draftPage = LoadActivityMapModule('activities/[gameId]/page.tsx', { ...pageImports,
+      '../activityFeatures': LoadActivityMapModule('activities/activityFeatures.ts', {
+        '../../recommendation/gameFeatures.json': { games: { [id]: { ...profiles[id], reviewStatus: 'draft' } } },
+      }),
+    });
+    const draftHtml = renderToStaticMarkup(await draftPage.default({ params: Promise.resolve({ gameId: id }) }));
+    assert.doesNotMatch(draftHtml, /<h2[^>]*>(?:What you do|Activity characteristics|活動內容|活動特性)<\/h2>/);
   }
 });
 

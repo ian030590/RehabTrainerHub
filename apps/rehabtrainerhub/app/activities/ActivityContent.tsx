@@ -1,10 +1,12 @@
 'use client';
 
 import type { TrainingCatalogModule } from '@rehab-trainer/hub-modules/catalog';
+import { Fragment } from 'react';
 import type { ActivityLink } from '../activityLinks';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import type { HubLabel, HubLocale } from '../i18n/types';
+import type { GetReviewedActivityDetails } from './activityFeatures';
 import styles from './Activities.module.css';
 
 function ActivityList({ activities, locale }: { activities: ActivityLink[]; locale: HubLocale }) {
@@ -33,10 +35,11 @@ export function ActivityDirectory({ groups }: {
   );
 }
 
-export function ActivityDetails({ copy, category, primaryTags, mediaPermission, neighbors, startHref, installHref }: {
+export function ActivityDetails({ copy, category, primaryTags, reviewed, mediaPermission, neighbors, startHref, installHref }: {
   copy: TrainingCatalogModule['copy'];
   category: HubLabel;
   primaryTags: HubLabel[];
+  reviewed: ReturnType<typeof GetReviewedActivityDetails>;
   mediaPermission: TrainingCatalogModule['mediaPermission'];
   neighbors: ActivityLink[];
   startHref: string;
@@ -65,6 +68,28 @@ export function ActivityDetails({ copy, category, primaryTags, mediaPermission, 
         <a className={styles.start} href={startHref}>{activities.start}</a>
         <a href={installHref}>{activities.install}</a>
       </div>
+      {reviewed && <>
+        <section aria-labelledby="activity-content">
+          <h2 id="activity-content">{activities.features.content}</h2>
+          <dl className={styles.facts}>
+            {reviewed.content.map(({ label, text }) => (
+              <Fragment key={label.en}><dt>{label[locale]}</dt><dd>{text[locale]}</dd></Fragment>
+            ))}
+          </dl>
+        </section>
+        <section aria-labelledby="activity-characteristics">
+          <h2 id="activity-characteristics">{activities.features.characteristics}</h2>
+          <dl className={styles.facts}>
+            {reviewed.demands.map(({ label, values }) => (
+              <Fragment key={label.en}>
+                <dt>{label[locale]}</dt><dd>{values.map(value => value[locale]).join(activityMap.tagSeparator)}</dd>
+              </Fragment>
+            ))}
+            <dt>{activities.features.waysToPlay}</dt>
+            <dd>{reviewed.setups.map(setup => setup.map(capability => capability[locale]).join(' + ')).join(activityMap.tagSeparator)}</dd>
+          </dl>
+        </section>
+      </>}
       <section aria-labelledby="similar-activities">
         <h2 id="similar-activities">{activityMap.neighbors}</h2>
         <p>{activities.similarityNote}</p>

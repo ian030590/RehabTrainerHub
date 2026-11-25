@@ -1,3 +1,5 @@
+import type { ActivityFeatureLabels } from './types';
+
 export const zhTW = {
   home: {
     module: {
@@ -162,6 +164,11 @@ export const zhTW = {
       breadcrumbs: '頁面路徑',
       category: '活動分類',
       equipment: '設備需求',
+      features: {
+        content: '活動內容',
+        characteristics: '活動特性',
+        waysToPlay: '可用操作方式',
+      } satisfies ActivityFeatureLabels,
       details: '詳細說明',
       start: '開始練習',
       install: '安裝這項活動',
