@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 const sourcePath = resolve(import.meta.dirname, '../apps/rehabtrainerhub/app/HubNavigation.tsx');
 const source = ts.createSourceFile(sourcePath, readFileSync(sourcePath, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-const routeHrefs = ['/', '/progress/', '/qa/', '/download/'];
+const routeHrefs = ['/', '/activities/', '/activity-map/', '/qa/', '/progress/'];
 
 function FindNodes(predicate, root = source) {
   const matches = [];
@@ -18,7 +18,7 @@ function FindNodes(predicate, root = source) {
   return matches;
 }
 
-test('Hub has one four-route navigation map with an accessible current page', () => {
+test('Hub has one five-route navigation map with an accessible current page', () => {
   const declaration = FindNodes((node) => ts.isVariableDeclaration(node) && node.name.getText(source) === 'navigationHrefs');
   assert.equal(declaration.length, 1);
   const routes = declaration[0].initializer;

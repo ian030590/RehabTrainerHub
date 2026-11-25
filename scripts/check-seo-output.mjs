@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DiscoverPagesApps, defaultRepoRoot } from './pages-apps.mjs';
+import { ReadCatalog } from './recommendation-pipeline.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -10,6 +11,8 @@ const args = process.argv.slice(2);
 const validateAll = args.includes('--all');
 const failures = [];
 const hubSiteUrl = 'https://trainerhub.cc/';
+const officialCatalog = await ReadCatalog(new URL('../apps/rehabtrainerhub/games/', import.meta.url));
+const activityPaths = ['activities/', ...officialCatalog.map(({ id }) => `activities/${id}/`)];
 
 const apps = validateAll
   ? DiscoverPagesApps(defaultRepoRoot).filter((app) => app.role !== 'gamehost')
@@ -112,6 +115,7 @@ function ValidateLlmsTxt(source, file, siteUrl, appFailures) {
   const urls = [...source.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]);
   const expectedUrls = [
     siteUrl,
+    ...activityPaths.map(path => siteUrl + path),
     `${siteUrl}activity-map/`,
     `${siteUrl}about/`,
     `${siteUrl}qa/`,
@@ -218,7 +222,7 @@ function ValidateSitemap(source, file, siteUrl, role, appFailures) {
   }
 
   const expectedUrls = role === 'hub'
-    ? ['', 'about/', 'qa/', 'privacy/', 'download/', 'activity-map/'].map((path) => `${siteUrl}${path}`)
+    ? ['', 'about/', 'qa/', 'privacy/', 'download/', 'activity-map/', ...activityPaths].map(path => siteUrl + path)
     : [siteUrl];
   if (!HaveSameValues(urls, expectedUrls)) {
     appFailures.push(`${file}: expected only these canonical public URLs: ${expectedUrls.join(', ')}.`);
@@ -293,6 +297,15 @@ function ValidateSitemapPages(urls, outputDir, siteUrl, role, appFailures) {
     if (html === null) continue;
 
     const result = ValidateIndexableHtml(html, file, value, appFailures, role === 'hub');
+    if (role === 'hub' && /^\/activities\/[^/]+\/$/.test(url.pathname)) {
+      const nodes = ParseJsonLdNodes(html, file, appFailures);
+      const crumbs = nodes?.find(node => HasType(node, 'BreadcrumbList'))?.itemListElement;
+      const expected = [[siteUrl, '訓練大廳'], [siteUrl + 'activities/', '練習活動'], [value, result.heading]];
+      if (!Array.isArray(crumbs) || crumbs.length !== expected.length || expected.some(([item, name], index) =>
+        crumbs[index]?.item !== item || crumbs[index]?.position !== index + 1 || crumbs[index]?.name !== name)) {
+        appFailures.push(`${file}: expected home, directory, and current activity breadcrumbs.`);
+      }
+    }
     RecordUniqueValue(titles, result.title, file, 'title', appFailures);
     RecordUniqueValue(descriptions, result.description, file, 'meta description', appFailures);
     if (role === 'hub') RecordUniqueValue(headings, result.heading, file, 'H1', appFailures);

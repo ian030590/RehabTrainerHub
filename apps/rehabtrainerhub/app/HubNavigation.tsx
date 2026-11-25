@@ -34,8 +34,8 @@ import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
 import { StartHubTour, useHubTourAutoStart } from './tour/hubTour';
 
-const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
-const navigationIcons = ['home', 'monitoring', 'menu_book', 'download'] as const;
+const navigationHrefs = ['/', '/activities/', '/activity-map/', '/qa/', '/progress/'] as const;
+const navigationIcons = ['home', 'sports_esports', 'explore', 'menu_book', 'monitoring'] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
   const role = (user as (AuthUser & { role?: unknown }) | null)?.role;

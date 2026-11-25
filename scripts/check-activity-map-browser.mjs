@@ -91,6 +91,14 @@ async function WaitForPaint() {
   })()`);
 }
 
+async function WaitForActivityPage(path, selector) {
+  await WaitFor(`location.pathname === ${JSON.stringify(path)} && document.readyState === 'complete'
+    && document.querySelector(${JSON.stringify(selector)}) && document.querySelector('.hub-nav')
+    && ['flex', 'grid'].includes(getComputedStyle(document.querySelector('.hub-nav')).display)`);
+  await Evaluate('document.fonts.ready.then(() => true)');
+  await WaitForPaint();
+}
+
 async function WaitForDebugger() {
   for (let attempt = 0; attempt < 100 && !browserExit; attempt++) {
     const endpoint = await readFile(join(profile, 'DevToolsActivePort'), 'utf8').catch(() => '');
@@ -165,6 +173,7 @@ async function CheckViewport(width, height, touch) {
   assert.ok(layout.scrollWidth <= width, `Page scroll width ${layout.scrollWidth} exceeds ${width}px.`);
   assert.ok(layout.ids.length > 0 && layout.targets);
   assert.deepEqual(layout.ids, layout.items);
+  assert.deepEqual(await Evaluate(`Array.from(document.querySelectorAll('.hub-nav a[aria-current="page"]'), link => link.pathname)`), ['/activity-map/']);
   assert.ok(layout.aligned, 'SVG marker centers must match their hit targets.');
   assert.equal(layout.tabStops, 1);
   assert.equal(layout.initiallySelected, false, 'The details panel starts with a prompt and no selected activity.');
@@ -230,17 +239,47 @@ async function CheckViewport(width, height, touch) {
   assert.equal(filtered.checked, false);
   assert.ok(included.border !== filtered.border && included.weight > filtered.weight, 'The included chip has a distinct border and stronger label.');
   const listId = await Evaluate(`document.querySelector('${item}').dataset.mapListItem`);
+  const category = await Evaluate(`document.querySelector('${item}').dataset.category`);
   await Click(`${item}[data-map-list-item="${listId}"]`, touch);
   await CheckDetails(listId);
   const neighborId = await Evaluate(`document.querySelector('[data-map-neighbor]').dataset.mapNeighbor`);
   await Click(`[data-map-neighbor="${neighborId}"]`, touch);
   await CheckDetails(neighborId);
+  await Click(`li a[href="/activities/${listId}/"]`, touch);
+  await WaitForActivityPage(`/activities/${listId}/`, 'main nav [aria-current="page"]');
+  assert.equal(await Evaluate(`document.querySelector('main a[href^="/train/"]').getAttribute('href')`),
+    `/train/?module=${encodeURIComponent(`${category}:${listId}`)}`);
+  assert.deepEqual(await Evaluate(`Array.from(document.querySelectorAll('.hub-nav a[aria-current="page"]'), link => link.pathname)`), ['/activities/']);
+  await CheckNavigationFits();
+  const initialTitle = await Evaluate("document.querySelector('main h1').textContent");
+  const language = await Evaluate('document.documentElement.lang');
+  await Click('.hub-language-toggle', touch);
+  await WaitFor(`document.documentElement.lang !== ${JSON.stringify(language)} && document.querySelector('main h1').textContent !== ${JSON.stringify(initialTitle)}`);
+  await CheckNavigationFits();
+  const similarHref = await Evaluate(`document.querySelector('main section li a').getAttribute('href')`);
+  await Click('main section li a', touch);
+  await WaitForActivityPage(similarHref, 'main nav [aria-current="page"]');
+  await Click('main nav a[href="/activities/"]', touch);
+  await WaitForActivityPage('/activities/', 'main h2[id]');
+  assert.deepEqual(await Evaluate(`Array.from(document.querySelectorAll('main li a'), link => link.pathname).sort()`),
+    layout.ids.map(id => `/activities/${id}/`).sort());
+  assert.ok(await Evaluate('document.documentElement.scrollWidth <= innerWidth'));
+}
+
+async function CheckNavigationFits() {
+  assert.ok(await Evaluate(`(() => {
+    const nav = document.querySelector('.hub-nav').getBoundingClientRect();
+    return document.documentElement.scrollWidth <= innerWidth && Array.from(document.querySelectorAll('.hub-nav a')).every(link => {
+      const rect = link.getBoundingClientRect();
+      return rect.left >= nav.left - 1 && rect.right <= nav.right + 1 && rect.bottom <= nav.bottom + 1
+        && rect.width >= 44 && rect.height >= 44 && link.scrollWidth <= link.clientWidth + 1;
+    });
+  })()`), 'Every navigation link fits within the visible bar and its touch target.');
 }
 
 async function CheckDetails(id) {
   await WaitFor(`document.querySelector('${details}')?.dataset.mapDetails === ${JSON.stringify(id)}`);
-  const category = await Evaluate(`document.querySelector('${marker}[data-map-marker="${id}"]').dataset.category`);
-  assert.equal(await Evaluate(`document.querySelector('${details} a').getAttribute('href')`), `/train/?module=${encodeURIComponent(`${category}:${id}`)}`);
+  assert.equal(await Evaluate(`document.querySelector('${details} a').getAttribute('href')`), `/activities/${id}/`);
   assert.equal(await Evaluate(`document.querySelectorAll('[data-map-neighbor]').length`), 3);
   assert.equal(await Evaluate(`document.querySelectorAll('[data-map-line]').length`), 3);
 }
@@ -265,7 +304,7 @@ try {
   await Send('Network.setBypassServiceWorker', { bypass: true });
   await Send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await Send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
-  for (const [width, height, touch] of [[360, 740, true], [800, 900, false], [1280, 800, false]]) {
+  for (const [width, height, touch] of [[360, 740, true], [800, 900, false], [1280, 800, false], [1600, 900, false]]) {
     try {
       await CheckViewport(width, height, touch);
       console.log(`PASS ${width}x${height}${touch ? ' (touch emulation)' : ''}`);

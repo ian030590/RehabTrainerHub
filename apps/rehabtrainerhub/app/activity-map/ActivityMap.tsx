@@ -52,7 +52,7 @@ function ActivityMapExplorer({ activities, categories }: {
   categories: readonly ActivityMapCategory[];
 }) {
   const { language, locale } = useHubLanguage();
-  const copy = GetHubUiCopy(language).activityMap;
+  const { activityMap: copy, activities: activityCopy } = GetHubUiCopy(language);
   const [enabled, setEnabled] = useState(() => categories.map(({ id }) => id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusId, setFocusId] = useState(activities[0].id);
@@ -176,7 +176,7 @@ function ActivityMapExplorer({ activities, categories }: {
                 <dt>{copy.primaryTags}</dt>
                 <dd>{selected.primaryTags.length ? selected.primaryTags.map(label => label[locale]).join(copy.tagSeparator) : copy.none}</dd>
               </dl>
-              <a className={styles.start} href={selected.href}>{copy.start}</a>
+              <a className={styles.start} href={selected.href}>{activityCopy.details}</a>
               <h3>{copy.neighbors}</h3>
               {neighbors.length ? <ul className={styles.items} role="list">
                 {neighbors.map(({ id, title }) => <li key={id}><button type="button" data-map-neighbor={id}
@@ -195,8 +195,13 @@ function ActivityMapExplorer({ activities, categories }: {
             <section key={category.id} aria-labelledby={`activity-map-group-${category.id}`}>
               <h3 className={styles.category} id={`activity-map-group-${category.id}`}><CategorySymbol category={category} />{category.label[locale]}</h3>
               <ul className={styles.items} role="list">
-                {items.map(({ id, title }) => <li key={id}><button type="button" data-map-list-item={id} data-category={category.id}
-                  aria-pressed={selectedId === id} onClick={() => SelectActivity(id, true)}>{title[locale]}</button></li>)}
+                {items.map(({ id, title, href }) => (
+                  <li className={styles.directoryItem} key={id}>
+                    <button type="button" data-map-list-item={id} data-category={category.id}
+                      aria-pressed={selectedId === id} onClick={() => SelectActivity(id, true)}>{title[locale]}</button>
+                    <a href={href} aria-label={`${activityCopy.details}: ${title[locale]}`}>{activityCopy.details}</a>
+                  </li>
+                ))}
               </ul>
             </section>
           ))}

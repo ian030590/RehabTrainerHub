@@ -12,6 +12,7 @@ import {
 import { GameOverlay } from './train/GameOverlay';
 import { AssignedPracticePlan } from './AssignedPracticePlan';
 import { BuildHubGameCatalog, type HubGame } from './gameCatalog';
+import { BuildActivityHref } from './activityLinks';
 import {
   BuildTrainingModuleHref,
   GetTrainerCategoryTheme,
@@ -599,6 +600,11 @@ export function TrainingLobby() {
                         <span className="lobby-link-label">{platformCopy.install}</span>
                         <span className="material-symbols-outlined" aria-hidden="true">download</span>
                       </a>
+                      {game.launch.contract === 'catalog-v1' && (
+                        <a href={BuildActivityHref(game.id)} aria-label={hubCopy.activities.details + ': ' + game.title}>
+                          <span className="lobby-link-label">{hubCopy.activities.details}</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </article>
@@ -696,6 +702,7 @@ export function TrainingLobby() {
           <a href="/about/">{copy.guide.aboutLink}</a>
           <a href="/qa/">{copy.guide.educationLink}</a>
           <a href="/privacy/">{copy.guide.privacyLink}</a>
+          <a href="/activities/">{hubCopy.activities.title}</a>
           <a href="/activity-map/">{hubCopy.activityMap.title}</a>
         </nav>
       </section>

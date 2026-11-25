@@ -193,7 +193,7 @@
     "summary": "Hub 使用 Next.js App Router 與 `packages/ui/src` 共用 UI、樣式、auth、storage、設定及導覽。Hub Functions 掌管登入、授權與資料寫入。",
     "enforcement": "ci",
     "tests": [
-      {"file":"scripts/check-hub-navigation.test.mjs","name":"Hub has one four-route navigation map with an accessible current page"},
+      {"file":"scripts/check-hub-navigation.test.mjs","name":"Hub has one five-route navigation map with an accessible current page"},
       {"file":"scripts/check-game-directory-architecture.test.mjs","name":"unified config UI remains Tailwind with native accessible controls"},
       {"file":"scripts/check-cloudflare-workers.test.mjs","name":"production entry points match the owner-approved C02 origins"}
     ]
@@ -898,7 +898,7 @@
       {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"activity map signs use the largest absolute coordinate and break ties by id"},
       {"file":"scripts/check-recommendation-pipeline.test.mjs","name":"pipeline checks every generated activity map coordinate and rejects tampering"},
       {"file":"scripts/check-recommendation-features.test.mjs","name":"activity map keyboard moves to the nearest point in the chosen direction with catalog-order ties"},
-      {"file":"scripts/check-recommendation-features.test.mjs","name":"public activity map renders every catalog marker and list item once with matching launch paths and bilingual caption"},
+      {"file":"scripts/check-recommendation-features.test.mjs","name":"public activity map renders every catalog marker and list item once with detail links and bilingual caption"},
       {"file":"scripts/check-recommendation-features.test.mjs","name":"activity map is included in the public sitemap and built SEO checks"}
     ]
   }

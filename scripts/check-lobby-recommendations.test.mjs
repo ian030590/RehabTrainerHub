@@ -184,6 +184,7 @@ test('lobby cards keep their personal order and launch action during search and 
     'react-dom': { flushSync: fn => fn() },
     './train/GameOverlay': { GameOverlay: overlay },
     './gameCatalog': { BuildHubGameCatalog: () => games },
+    './activityLinks': await import('../apps/rehabtrainerhub/app/activityLinks.ts'),
     '@rehab-trainer/hub-modules/catalog': { trainingCatalog: [], trainingPurposes: [{ id: 'attention' }],
       trainingThemes: { attention: theme }, trainerCategoryTags: [{ id: 'cognition', label: { en: 'Cognition' } }],
       categorySubcategories: { cognition: ['attention'] }, GetTrainerCategoryTheme: () => theme },

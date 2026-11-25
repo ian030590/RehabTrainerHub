@@ -201,7 +201,7 @@ test('the progress H1 matches its navigation label and keeps the daily tasks fea
       compilerOptions: { module: ts.ModuleKind.CommonJS },
     }).outputText)(loaded.exports);
     const copy = (loaded.exports.zhTW ?? loaded.exports.en).hubUi;
-    assert.equal(copy.progress.title, copy.navigation.navigationItems[1], language);
+    assert.equal(copy.progress.title, copy.navigation.navigationItems[4], language);
     assert.equal(copy.progress.dailyTasks, language === 'en' ? 'Daily tasks' : '每日任務', language);
   }
 });
@@ -580,6 +580,7 @@ async function Lobby(language = 'en', catalog = games, { fetchCatalog = false } 
     './i18n': { GetHubUiCopy: () => copy },
     './i18n/HubLanguage': { useHubLanguage: () => ({ language: language === 'en' ? 'en' : 'zh', locale: language, t: key => key }) },
     './gameCatalog': { BuildHubGameCatalog: (_modules, published) => [...catalog, ...published] },
+    './activityLinks': await import('../apps/rehabtrainerhub/app/activityLinks.ts'),
     './publishedGames': { FetchPublishedGames: signal => {
       const request = { ...Deferred(), signal, previousAbortedOnStart: requests.map(previous => previous.signal.aborted) };
       requests.push(request);
@@ -983,6 +984,7 @@ test('install is an underlined neutral link beside a wider primary start button'
   assert.match(link, /background:\s*transparent;/);
   assert.match(link, /border:\s*0;/);
   assert.match(link, /flex:\s*0 0 auto;/);
+  assert.match(link, /min-width:\s*44px;/);
   assert.match(link, /min-height:\s*44px;/);
   assert.match(StyleRules(css, '.official-game-actions > button').join('\n'), /flex:\s*1 1 (?:0|auto);/);
   assert.match(StyleRules(css, '.module-card-footer a:focus-visible').join('\n'), /outline:\s*3px solid var\(/);
@@ -1067,7 +1069,7 @@ for (const language of ['zh-TW', 'en']) {
         'The full answer must exist in the initial render, before interaction.');
     }
     assert.deepEqual(guide.filter(node => node.type === 'a').map(node => node.props.href),
-      ['/about/', '/qa/', '/privacy/', '/activity-map/']);
+      ['/about/', '/qa/', '/privacy/', '/activities/', '/activity-map/']);
     assert.doesNotMatch(Text(guide), /5000|5%|escape-character|iframe|Worker/,
       'Developer implementation details do not belong in the lobby guide.');
   });
@@ -1092,6 +1094,14 @@ test('homepage FAQ structured data matches every rendered guide heading and answ
     assert.ok(guide.some(node => node.type === 'p' && Text(node) === question.acceptedAnswer.text),
       `The FAQ answer must match the page: ${question.name}`);
   }
+});
+
+test('only official lobby cards link to an activity detail page', async () => {
+  const submitted = { ...games[1], launch: { contract: 'package-v1', game: {} } };
+  const { render } = await Lobby('en', [games[0], submitted]);
+  const cards = render().filter(node => node.type === 'article');
+  assert.deepEqual(cards.flatMap(card => Elements(card).filter(node => node.type === 'a'
+    && node.props.href.startsWith('/activities/')).map(node => node.props.href)), ['/activities/game-0/']);
 });
 
 test('game actions retain their install destinations and open and close the original overlay', async () => {

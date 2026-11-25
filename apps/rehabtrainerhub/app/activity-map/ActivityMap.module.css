@@ -68,6 +68,7 @@
 .chip:has(input:focus-visible),
 .marker:focus-visible,
 .items button:focus-visible,
+.items a:focus-visible,
 .start:focus-visible,
 .details h2:focus-visible {
   outline: 3px solid var(--focus);
@@ -254,6 +255,22 @@
   border-color: var(--heading);
   background: var(--primary-soft);
   font-weight: 700;
+}
+
+.directoryItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.directoryItem a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--primary);
+  text-underline-offset: 3px;
 }
 
 .start {

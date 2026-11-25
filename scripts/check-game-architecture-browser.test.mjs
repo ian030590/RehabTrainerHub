@@ -251,7 +251,7 @@ test('Brave keeps one Hub navigation usable at 320px, 390px, 768px, and 1024px',
   });
   context.after(() => new Promise((resolveClose) => server.close(resolveClose)));
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const routes = ['/', '/progress/', '/qa/', '/download/'];
+  const routes = ['/', '/activities/', '/activity-map/', '/qa/', '/progress/'];
   const env = { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath };
 
   for (const width of [320, 390, 768, 1024]) {
@@ -263,7 +263,7 @@ test('Brave keeps one Hub navigation usable at 320px, 390px, 768px, and 1024px',
         if (navs.length !== 1 || !main) return false;
         const hrefs = [...nav.querySelectorAll('a[href]')].map(link => new URL(link.href).pathname);
         const current = [...nav.querySelectorAll('a[aria-current="page"]')];
-        if (hrefs.join('|') !== '/|/progress/|/qa/|/download/' || current.length !== 1
+        if (hrefs.join('|') !== ${JSON.stringify(routes.join('|'))} || current.length !== 1
           || new URL(current[0].href).pathname !== ${JSON.stringify(route)}
           || document.documentElement.scrollWidth > innerWidth + 1) return false;
         const rect = nav.getBoundingClientRect();

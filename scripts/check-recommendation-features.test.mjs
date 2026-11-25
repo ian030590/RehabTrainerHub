@@ -421,7 +421,7 @@ test('activity map keyboard moves to the nearest point in the chosen direction w
   assert.equal(ReadActivityMapPoints({ a: [0.00001, 0.3] }, ['a']), null);
 });
 
-test('public activity map renders every catalog marker and list item once with matching launch paths and bilingual caption', () => {
+test('public activity map renders every catalog marker and list item once with detail links and bilingual caption', () => {
   const catalog = LoadRuntimeCatalog();
   const model = LoadActivityMapModule('activity-map/activityMapModel.ts');
   const { zhTW } = LoadActivityMapModule('i18n/zh-TW.ts');
@@ -435,6 +435,8 @@ test('public activity map renders every catalog marker and list item once with m
     });
     const page = LoadActivityMapModule('activity-map/page.tsx', {
       '@rehab-trainer/hub-modules/catalog': catalog,
+      '../activityLinks': LoadActivityMapModule('activityLinks.ts'),
+      '../activities/activityFeatures': LoadActivityMapModule('activities/activityFeatures.ts'),
       '../i18n': { zhTW },
       '../seo': { CreateSeoMetadata: ({ path, title, noIndex = false }) => ({ path, title, noIndex }) },
       '../trainingThemeStyle': LoadActivityMapModule('trainingThemeStyle.ts'),
@@ -451,8 +453,8 @@ test('public activity map renders every catalog marker and list item once with m
     assert.ok(html.includes(dictionary.hubUi.activityMap.selectActivity));
     assert.doesNotMatch(html, /data-map-details=|aria-pressed="true"/);
     for (const entry of view.props.activities) {
-      const module = catalog.trainingCatalog.find(game => game.runtimeId === entry.id);
-      assert.equal(entry.href, catalog.BuildHubTrainingHref(module));
+      assert.equal(entry.href, `/activities/${entry.id}/`);
+      assert.ok(html.includes(`href="${entry.href}"`), entry.id);
       assert.equal(entry.neighborIds.length, 3);
       assert.ok(entry.primaryTags.length > 0);
     }
@@ -468,12 +470,71 @@ test('public activity map renders every catalog marker and list item once with m
 });
 
 test('activity map is included in the public sitemap and built SEO checks', () => {
+  const catalog = LoadRuntimeCatalog();
   const sitemap = LoadActivityMapModule('sitemap.ts', {
+    '@rehab-trainer/hub-modules/catalog': catalog,
+    './activityLinks': LoadActivityMapModule('activityLinks.ts'),
     './seo': { siteContentLastModified: '2026-09-02' }, './siteUrls': { siteUrls: { hub: 'https://trainerhub.cc' } },
   });
   assert.equal(sitemap.publicSitemapPaths.filter(path => path === '/activity-map/').length, 1);
   assert.ok(sitemap.default().some(({ url }) => url === 'https://trainerhub.cc/activity-map/'));
+  const activityUrls = sitemap.default().filter(({ url }) => new URL(url).pathname.startsWith('/activities/'));
+  assert.deepEqual(activityUrls.map(({ url }) => new URL(url).pathname).sort(),
+    ['/activities/', ...Array.from(catalog.trainingCatalog, ({ runtimeId }) => `/activities/${runtimeId}/`)].sort());
+  assert.ok(activityUrls.every(entry => !Object.hasOwn(entry, 'lastModified')));
   assert.match(readFileSync(new URL('check-seo-output.mjs', import.meta.url), 'utf8'), /['"]activity-map\/['"]/);
+});
+
+test('static activity pages use the official catalog, ranked neighbors and localized content', async () => {
+  const catalog = LoadRuntimeCatalog();
+  const { zhTW } = LoadActivityMapModule('i18n/zh-TW.ts');
+  const { en } = LoadActivityMapModule('i18n/en.ts');
+  const links = LoadActivityMapModule('activityLinks.ts');
+  const ranked = ReadData('generated/featureIndex').games;
+  const seo = { CreateSeoMetadata: value => value, CreatePageJsonLd: value => value, SerializeJsonLd: JSON.stringify };
+  const unknown = () => { throw new Error('Unknown activity'); };
+  for (const [locale, dictionary] of [['zh-TW', zhTW], ['en', en]]) {
+    const content = LoadActivityMapModule('activities/ActivityContent.tsx', {
+      '../i18n': { GetHubUiCopy: () => dictionary.hubUi },
+      '../i18n/HubLanguage': { useHubLanguage: () => ({ locale, language: locale === 'en' ? 'en' : 'zh' }) },
+      './Activities.module.css': {},
+    });
+    const directory = LoadActivityMapModule('activities/page.tsx', {
+      '@rehab-trainer/hub-modules/catalog': catalog, '../activityLinks': links,
+      '../i18n': { zhTW }, '../seo': seo, './ActivityContent': content,
+    });
+    const groups = [...renderToStaticMarkup(directory.default()).matchAll(/<h2 id="([^"]+)">([^<]+)<\/h2>(.*?)<\/section>/gs)];
+    assert.deepEqual(groups.map(group => group[1]), Array.from(catalog.trainerCategoryTags, category => category.id));
+    for (const [, id, label, list] of groups) {
+      assert.equal(label, catalog.GetTrainerCategoryTag(id).label[locale]);
+      assert.deepEqual([...list.matchAll(/href="([^"]+)"/g)].map(match => match[1]),
+        Array.from(catalog.trainingCatalog.filter(module => module.trainer === id), module => links.BuildActivityHref(module.runtimeId)));
+    }
+    const page = LoadActivityMapModule('activities/[gameId]/page.tsx', {
+      '@rehab-trainer/hub-modules/catalog': catalog, 'next/navigation': { notFound: unknown },
+      '../../activityLinks': links, '../../i18n': { zhTW }, '../../seo': seo,
+      '../ActivityContent': content, '../activityFeatures': LoadActivityMapModule('activities/activityFeatures.ts'),
+    });
+    assert.deepEqual(Array.from(page.generateStaticParams(), ({ gameId }) => gameId),
+      Array.from(catalog.trainingCatalog, ({ runtimeId }) => runtimeId));
+    await assert.rejects(page.default({ params: Promise.resolve({ gameId: 'unlisted-submission' }) }), /Unknown activity/);
+    for (const module of catalog.trainingCatalog) {
+      const params = Promise.resolve({ gameId: module.runtimeId });
+      assert.deepEqual(await page.generateMetadata({ params }), { ...module.copy['zh-TW'], path: links.BuildActivityHref(module.runtimeId) });
+      const html = renderToStaticMarkup(await page.default({ params }));
+      const copy = module.copy[locale];
+      const breadcrumb = html.match(/<nav\b[^>]*>(.*?)<\/nav>/s)?.[1] ?? '';
+      assert.ok(breadcrumb.includes(`<a href="/">${dictionary.hubUi.navigation.navigationItems[0]}</a>`), module.runtimeId);
+      assert.doesNotMatch(breadcrumb, />\s*\/\s*</);
+      assert.ok(html.includes(renderToStaticMarkup(React.createElement('h1', null, copy.title))), module.runtimeId);
+      assert.ok(html.includes(renderToStaticMarkup(React.createElement('p', null, copy.description))), module.runtimeId);
+      assert.ok(html.includes(dictionary.hubUi.lobby.requirements[module.mediaPermission]), module.runtimeId);
+      assert.ok(html.includes(`href="${catalog.BuildHubTrainingHref(module)}"`), module.runtimeId);
+      assert.ok(html.includes(`href="${catalog.BuildTrainingGameInstallHref(module)}"`), module.runtimeId);
+      assert.deepEqual([...html.matchAll(/href="\/activities\/([^/"]+)\/"/g)].map(match => match[1]),
+        ranked[module.runtimeId].neighbors.slice(0, 3).map(({ gameId }) => gameId));
+    }
+  }
 });
 
 test('the real admin picker groups every runtime game once and displays its known function tags', async () => {

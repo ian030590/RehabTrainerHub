@@ -223,11 +223,16 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
         columns: getComputedStyle(gameGrid).gridTemplateColumns.split(' ').length,
         items: [...document.querySelectorAll('${cards}')].map(card => {
           const cue = card.querySelector('.module-card-order-cue');
+          const actions = card.querySelector('.official-game-actions');
+          actions.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+          const bounds = actions.getBoundingClientRect();
           return { id: card.dataset.runtimeId, title: card.querySelector('h3').textContent, cue: cue?.textContent,
             cueOverflows: cue ? cue.scrollWidth > cue.clientWidth : false,
-            targets: [...card.querySelectorAll('.official-game-actions > :is(a, button)')].map(target => {
-              const { width, height, left, right } = target.getBoundingClientRect();
-              return { width, height, left, right, name: target.getAttribute('aria-label') };
+            targets: [...actions.querySelectorAll('button, a')].map(target => {
+              const { width, height, left, right, top, bottom } = target.getBoundingClientRect();
+              return { tag: target.tagName, href: target.getAttribute('href'), name: target.getAttribute('aria-label'),
+                width, height, insideFooter: left >= bounds.left && right <= bounds.right,
+                insideViewport: left >= 0 && right <= innerWidth && top >= 0 && bottom <= innerHeight };
             }) };
         }) };
     })()`);
@@ -245,25 +250,30 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
     assert.equal(schulteGrid.cue, account ? `Similar to ${hexSchulte.title}` : `與「${hexSchulte.title}」內容相近`);
     for (const item of layout.items) {
       assert.equal(item.cueOverflows, false, `${item.id} cue should wrap within the card.`);
-      assert.equal(item.targets.length, 2);
+      assert.deepEqual(item.targets.map(target => [target.tag, target.href]), [
+        ['BUTTON', null], ['A', `/games/${item.id}/`], ['A', `/activities/${item.id}/`],
+      ], `${item.id} should have Start, Install and Details in order.`);
       for (const target of item.targets) {
-        assert.ok(target.name?.includes(item.title));
-        assert.ok(target.width >= 44 && target.height >= 44 && target.left >= 0 && target.right <= width,
-          `${target.name} should fit the viewport and have a 44px target.`);
+        assert.ok(target.name?.includes(item.title), `${item.id} action should name the activity.`);
+        assert.ok(target.width >= 44 && target.height >= 44, `${target.name} is ${target.width}x${target.height}.`);
+        assert.ok(target.insideFooter && target.insideViewport, `${target.name} should fit the footer and viewport.`);
       }
     }
     assert.equal(progressRequests, account ? 1 : 0);
     const firstButton = `${cards}[data-runtime-id="${hartChart.id}"] .official-game-actions > button`;
     await Evaluate(`document.querySelector(${JSON.stringify(firstButton)}).focus()`);
-    for (const [expectedId, expectedTag] of [[hartChart.id, 'A'], [hexSchulte.id, 'BUTTON'], [hexSchulte.id, 'A'], [exploratorySaccade.id, 'BUTTON']]) {
+    const tabOrder = [hartChart, hexSchulte, exploratorySaccade].flatMap(item =>
+      item.targets.map(target => [item.id, target.tag, target.href]));
+    for (const expected of tabOrder.slice(1)) {
       await Key('Tab');
       const focus = await Evaluate(`(() => {
-        const button = document.activeElement;
-        const style = getComputedStyle(button);
-        return { id: button.closest('[data-runtime-id]')?.dataset.runtimeId, tag: button.tagName, visible: button.matches(':focus-visible'),
+        const action = document.activeElement;
+        const style = getComputedStyle(action);
+        return { id: action.closest('[data-runtime-id]')?.dataset.runtimeId, tag: action.tagName,
+          href: action.getAttribute('href'), visible: action.matches(':focus-visible'),
           outline: style.outlineStyle, size: parseFloat(style.outlineWidth), color: style.outlineColor };
       })()`);
-      assert.deepEqual([focus.id, focus.tag], [expectedId, expectedTag], 'Tab order follows the card order.');
+      assert.deepEqual([focus.id, focus.tag, focus.href], expected, 'Tab order follows the card actions and their destinations.');
       assert.ok(focus.visible && focus.outline === 'solid' && focus.size >= 3
         && !['transparent', 'rgba(0, 0, 0, 0)'].includes(focus.color));
     }

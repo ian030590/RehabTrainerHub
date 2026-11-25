@@ -268,7 +268,7 @@ summary:focus-visible {
 .hub-header {
   z-index: 80;
   display: grid;
-  grid-template-columns: minmax(220px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 220px) minmax(max-content, 1fr) auto;
   align-items: center;
   gap: 20px;
   min-height: 80px;
@@ -1904,6 +1904,7 @@ html:has(dialog.package-game-overlay[open]) {
 .official-game-actions > a {
   flex: 0 0 auto;
   width: auto;
+  min-width: 44px;
   min-height: 44px;
   padding: 10px 4px;
   border: 0;
@@ -3374,11 +3375,11 @@ html:has(dialog.package-game-overlay[open]) {
   }
 }
 
-@media (min-width: 768px) and (max-width: 1180px) {
+@media (min-width: 768px) and (max-width: 1440px) {
   .hub-header {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 4px 16px;
-    padding: 10px 20px 0;
+    padding: 10px 16px 0;
   }
 
   .hub-nav {
@@ -3493,7 +3494,7 @@ html:has(dialog.package-game-overlay[open]) {
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
     height: var(--hub-mobile-nav-height);
     padding: 4px max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));

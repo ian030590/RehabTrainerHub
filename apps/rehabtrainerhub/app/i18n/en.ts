@@ -66,7 +66,7 @@ export const en = {
     navigation: {
       brandSubtitle: 'Home practice hub',
       navigationLabel: 'Rehab Trainer Hub navigation',
-      navigationItems: ['Training Lobby', 'Progress', 'Education', 'Download app'],
+      navigationItems: ['Training Lobby', 'Activities', 'Activity map', 'Education', 'Progress'],
       accountMenu: 'Account menu',
       signIn: 'Sign in',
       developer: 'Developer submissions',
@@ -156,6 +156,17 @@ export const en = {
         privacyLink: 'Privacy policy',
       },
     },
+    activities: {
+      title: 'Activities',
+      description: 'Browse official activities by category and check what each practice involves before you start.',
+      breadcrumbs: 'Breadcrumbs',
+      category: 'Category',
+      equipment: 'Equipment',
+      details: 'Details',
+      start: 'Start',
+      install: 'Install this activity',
+      similarityNote: 'These activities share similar content. The list does not provide a personal assessment or practice advice.',
+    },
     activityMap: {
       title: 'Activity map',
       description: 'Browse official Rehab Trainer Hub activities by category and see which activities have similar content.',
@@ -167,7 +178,6 @@ export const en = {
       selectActivity: 'Select a marker or an activity from the list to see its details.',
       primaryTags: 'Primary function tags',
       tagSeparator: ', ',
-      start: 'Start this activity',
       neighbors: 'Similar activities',
       list: 'Browse activities by category',
       emptyFilter: 'Check a category to show its activities.',
@@ -275,7 +285,7 @@ export const en = {
       steps: {
         navigation: {
           title: 'Main Navigation',
-          text: 'Switch between Training Lobby, Progress, Education, and Download app.',
+          text: 'Open the Training Lobby, Activities, Activity map, Education, or Progress. The app download is in the footer.',
         },
         search: {
           title: 'Activity Search',

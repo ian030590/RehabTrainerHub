@@ -1,0 +1,79 @@
+.page h1 {
+  font-size: clamp(var(--type-headline), 3.5vw, var(--type-display));
+}
+
+.page h2 {
+  scroll-margin-top: 9rem;
+}
+
+.page section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.page a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  text-underline-offset: 3px;
+}
+
+.list, .breadcrumbs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 4px 20px;
+}
+
+.breadcrumbs, .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.breadcrumbs {
+  margin-bottom: 16px;
+  column-gap: 0;
+  color: var(--text-muted);
+}
+
+.breadcrumbs li + li::before {
+  content: '/' / '';
+  margin-inline: 8px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: fit-content(40%) 1fr;
+  gap: 8px 16px;
+  margin-block: 20px;
+}
+
+.facts dt {
+  font-weight: 700;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.start {
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page a:is(:hover, :active) {
+  text-decoration: underline;
+}

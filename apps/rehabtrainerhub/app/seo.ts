@@ -213,11 +213,13 @@ export function CreatePageJsonLd({
   description,
   path,
   type = 'WebPage',
+  breadcrumbs,
 }: {
   name: string;
   description: string;
   path: string;
   type?: 'AboutPage' | 'WebPage';
+  breadcrumbs?: readonly { name: string; path: string }[];
 }) {
   const canonicalPath = path === '/' ? '/' : `${path.replace(/\/+$/, '')}/`;
   const url = new URL(canonicalPath, siteUrls.hub).href;
@@ -239,20 +241,13 @@ export function CreatePageJsonLd({
       {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
-        itemListElement: [
-          {
+        itemListElement: [...(breadcrumbs ?? [{ name: hubLocalName, path: '/' }]), { name, path: canonicalPath }]
+          .map((crumb, index) => ({
             '@type': 'ListItem',
-            position: 1,
-            name: hubLocalName,
-            item: hubUrl,
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name,
-            item: url,
-          },
-        ],
+            position: index + 1,
+            name: crumb.name,
+            item: new URL(crumb.path, siteUrls.hub).href,
+          })),
       },
     ],
   };

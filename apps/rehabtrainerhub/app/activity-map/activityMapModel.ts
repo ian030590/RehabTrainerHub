@@ -1,22 +1,20 @@
 import type { TrainerCategoryId } from '@rehab-trainer/hub-modules/catalog';
 import type { TrainingThemeStyle } from '../trainingThemeStyle';
-import type { HubLocale } from '../i18n/types';
+import type { ActivityLink } from '../activityLinks';
+import type { HubLabel } from '../i18n/types';
 
 export type MapPoint = readonly [number, number];
 type MapPosition = { id: string; point: MapPoint };
-type LocalizedLabel = Readonly<Record<HubLocale, string>>;
 
-export type ActivityMapEntry = MapPosition & {
+export type ActivityMapEntry = ActivityLink & MapPosition & {
   category: TrainerCategoryId;
-  title: LocalizedLabel;
-  primaryTags: readonly LocalizedLabel[];
+  primaryTags: readonly HubLabel[];
   neighborIds: readonly string[];
-  href: string;
 };
 
 export type ActivityMapCategory = {
   id: TrainerCategoryId;
-  label: LocalizedLabel;
+  label: HubLabel;
   style: TrainingThemeStyle;
 };
 

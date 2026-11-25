@@ -66,7 +66,7 @@ export const zhTW = {
     navigation: {
       brandSubtitle: '居家訓練網',
       navigationLabel: '居家訓練網 Rehab Trainer Hub 導覽',
-      navigationItems: ['訓練大廳', '進度追蹤', '衛教資訊', '下載程式'],
+      navigationItems: ['訓練大廳', '練習活動', '活動地圖', '衛教資訊', '進度追蹤'],
       accountMenu: '帳戶選單',
       signIn: '登入帳戶',
       developer: '開發者投稿',
@@ -156,6 +156,17 @@ export const zhTW = {
         privacyLink: '隱私權政策',
       },
     },
+    activities: {
+      title: '練習活動',
+      description: '依分類瀏覽官方活動，開始練習前可先查看活動內容與所需設備。',
+      breadcrumbs: '頁面路徑',
+      category: '活動分類',
+      equipment: '設備需求',
+      details: '詳細說明',
+      start: '開始練習',
+      install: '安裝這項活動',
+      similarityNote: '這些活動依內容相似度列出，不代表個人評估或練習建議。',
+    },
     activityMap: {
       title: '活動地圖',
       description: '用活動地圖瀏覽居家訓練網的官方活動，依分類或內容相似度找練習。',
@@ -167,7 +178,6 @@ export const zhTW = {
       selectActivity: '選取地圖標記或列表中的活動，即可查看內容。',
       primaryTags: '主要功能標籤',
       tagSeparator: '、',
-      start: '開始這個活動',
       neighbors: '內容相近的活動',
       list: '依分類瀏覽活動',
       emptyFilter: '請勾選分類以顯示活動。',
@@ -275,7 +285,7 @@ export const zhTW = {
       steps: {
         navigation: {
           title: '主要功能頁面',
-          text: '在「訓練大廳」、「進度追蹤」、「衛教資訊」與「下載程式」之間切換。',
+          text: '可切換到「訓練大廳」、「練習活動」、「活動地圖」、「衛教資訊」或「進度追蹤」。下載程式的連結在頁尾。',
         },
         search: {
           title: '活動搜尋',
