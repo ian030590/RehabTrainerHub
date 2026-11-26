@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "simon-task",
+  "version": "1.1.1",
+  "name": "Simon 作業",
+  "description": "依圖形按左或右，不管圖形出現在哪一邊，練習排開位置帶來的干擾。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-DqiK9zke.js",
+      "size": 569802,
+      "sha256": "d4dd56c6aad06496e609c3b56754598eb5d6ec2bab2506e6002422952c6c6d59",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-vNnJjUNG.css",
+      "size": 21077,
+      "sha256": "350047839997d941608d39529ec716125721c0a242ce28fde86a8f0286fce1fb",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 496,
+      "sha256": "449c416137c29646f5224ead41de3aefa25c6bd4370d5a889d5b0c65f55cbc5d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "40cd9151b1acf4afa5456e6c856e258270b30bf2c5e5b5bb5a43e93529c445ac",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3888,
+      "sha256": "cce4a6636f6f0e5547bb438706c792c5188c232500d60791805b42852d2397d6",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "f01ecb9683cdbff25fa3dd659e2a6984b4593e4a3407e20addc74d6134cd06da",
+  "approvedAt": "2026-11-26T07:18:26.654Z"
+}

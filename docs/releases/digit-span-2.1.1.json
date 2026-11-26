@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "digit-span",
+  "version": "2.1.1",
+  "name": "數字廣度記憶（Digit Span）",
+  "description": "記住依序出現的數字，再照原本順序或倒過來輸入，練習短期記憶與心智操作廣度。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-DOM7t6hg.js",
+      "size": 575968,
+      "sha256": "bcf4bf90c3d07e1c4510d34aa24ca9467375c8ab41d76b0eeff551250ccf4653",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DbW0pvYd.css",
+      "size": 22008,
+      "sha256": "a5da429f9f53308e7410ca0793d5441837bb6d2684315cdff299eee7cebdb056",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 576,
+      "sha256": "485444d345e6054f0d4b96d24c79cf2c6d2f61b4eb66fcb269238832ba03e2bc",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "833393202323be707e69d3526140ffaea9df3e08a8b9b8d37f777176cc522347",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5912,
+      "sha256": "7797433c14aa808e267be7556e35abfff4b70fa4008e8359c70c0fa072ee78d6",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "b2121d509800a306ba717522df6a2e4459d5dcfaa35e8cf70d43402597cd8e40",
+  "approvedAt": "2026-11-26T06:56:29.236Z"
+}

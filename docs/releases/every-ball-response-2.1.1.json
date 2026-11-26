@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "every-ball-response",
+  "version": "2.1.1",
+  "name": "有球必應",
+  "description": "依球類拍手、拍大腿或抑制反應，練習注意與反應控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "microphone-level",
+    "pointer",
+    "pose-tracking",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BlCToXLD.js",
+      "size": 1144080,
+      "sha256": "b4a11287b65437675e099e675521072d33e7c02db3ed856982f0cfb342e10b05",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CKdxOLFb.css",
+      "size": 28986,
+      "sha256": "bf4b296c9ad6d06fdcc149df12c87793b2f6cf98a3c2e9c4f6e5f1676d87848d",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 491,
+      "sha256": "c8a87cb214223cd56b938cb4d78134c1aadcb6a311c7b8368db441c61491fba6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "49ab7322db6c80241a6caaa64c66b53ce57ea56abe37de92e595cbeaa4721603",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 9404,
+      "sha256": "3c1d6d76a5d49ca37673a009688c4bbe74f8e604664ce77a2b9d9ccee2bdb399",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "ac518f87526970fc4ab64b9cc65edb39df31a1030ff0af99131310f79ef85b13",
+  "approvedAt": "2026-11-26T06:59:16.800Z"
+}

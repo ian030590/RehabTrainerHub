@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "oculomotor-training",
+  "version": "2.2.1",
+  "name": "眼動練習",
+  "description": "選擇中央目標辨識、平滑追蹤、跳視或凝視，依設定進行目標活動。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "eye-tracking",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-7TGhm1un.css",
+      "size": 23752,
+      "sha256": "404f022e1181c7e2776f2dd12ccde8452e7e0a0d8af0c6fa2591439189bea9be",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-B_VhYoo9.js",
+      "size": 497064,
+      "sha256": "732912dafd78a18465599f3161184fd363e0e60703a3d9d7e5cfdefeb8374e0c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 530,
+      "sha256": "4e671b0605775be540c9149b655d8b71608367e53246265b92f5eee2f669f45a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 585,
+      "sha256": "ccec8e03599447d409d46a4723c986866649472471e73ab696ac4d0c5f03820b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 626,
+      "sha256": "34116606f63739b73f1c90102dda414899c1a2ac4cf124b9cb9538b5d53dd3a2",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/LICENSE-OcuTrain.txt",
+      "size": 34523,
+      "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 103308,
+      "sha256": "10b2969952cdbf50dca399e3582d5950a8b789954324d6cf1bd8eb5b69ff223d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3763,
+      "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 570,
+      "sha256": "490807650509a1b05d9e9ac52da5f80ec0a0d8ef0f8cb072ed828a4a451f07d3",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 31333,
+      "sha256": "2d99973ceb1ddbf9970bd653d585ead6f1c80b78db3fabfb9d81e478d66da1f8",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "contentSha256": "df83ac3c0357cd14fddc179a669a8273920db48f345d02662be193e4294acf0f",
+  "approvedAt": "2026-11-26T07:12:40.225Z"
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "reaction-time",
+  "version": "2.1.1",
+  "name": "反應時間",
+  "description": "等待訊號後快速點擊，練習注意力維持與反應控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BPzwLMo-.js",
+      "size": 571624,
+      "sha256": "4a3121f84c1534ae445abe0c8926f32db90dc5cf3f98bed2bd3a2e39c2f374e1",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-ChUzrP9B.css",
+      "size": 20760,
+      "sha256": "8bd7177dc310ee4caf026a14d92a115d3a609166ac648e158bea9673ce90c8d3",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 459,
+      "sha256": "2c3e1e994422f5741387c478ea90d43485cd78ac0d0b692cdd6a3aba2006f935",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "7a6d479d44f9709ad08f03e478c342f92dbc40858d4925a86dba7c51d0c92ca9",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2828,
+      "sha256": "0aaeb80fa29f8dd95bf5425296a51eb6476ce42c5009f96959cdc752dea4285f",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "291473efdd370d3fdb4624bbb55984c73e6b8c0d1dc7ab32043e0293f8391689",
+  "approvedAt": "2026-11-26T07:15:15.424Z"
+}

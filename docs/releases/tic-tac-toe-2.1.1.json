@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tic-tac-toe",
+  "version": "2.1.1",
+  "name": "圈圈叉叉",
+  "description": "與電腦輪流下棋，規劃自己的連線，同時預想電腦的下一步。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Yf4KNiGx.js",
+      "size": 570478,
+      "sha256": "2d83d365792422a60e431066bd99c50745ff863243e59d785408f30432d94d67",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BNPL5Z0Y.css",
+      "size": 20372,
+      "sha256": "8dddf63d1c7cdfb7acef7942949f1aeadbbbd1546cea7005e9c7bc84b7d92369",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 465,
+      "sha256": "9ecf9bd7fa4d8955b70f93bd5c7f446605defe97ab96a065bddb08fcae84ef06",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "696cc7887934119977cb7b52837e8b2d305485461529a41465b8de50da8fae23",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6360,
+      "sha256": "20a0246c7a6a0a22d9ad6fc5e3b93797aa4b7318348fd6d9217b1eeef2bbb857",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "0eeee413021ad725c1781a43b97e47b25cfa37cab4804f0cd0fc312aa04b7aef",
+  "approvedAt": "2026-11-26T07:21:30.403Z"
+}

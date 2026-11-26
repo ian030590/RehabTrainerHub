@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "hex",
+  "version": "2.1.1",
+  "name": "Hex 連線棋",
+  "description": "與電腦輪流下棋，連出一條路接通自己的兩條邊，同時擋住電腦的路。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CAXbrSQp.js",
+      "size": 570982,
+      "sha256": "85028df2c2549908e0b58251d0244385abbc88a5283c9947a20b00a9f98c09b0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-E6G9CwQz.css",
+      "size": 21915,
+      "sha256": "dc8314a4a3932e47e57eacdbc3f3c464ca39f5972b7f2810a90da1bd2bd1405b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 481,
+      "sha256": "89f3432f64a7471f8786bae8db1dfe9e9a3865f3b19b74a803c878e44ec1dde8",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 403,
+      "sha256": "844f43bd21cbdb293de3aa2bdf76d098cf4f6955ed359b9f4c0d0ea83a508c46",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15636,
+      "sha256": "5fa834b98e982bff8de1517bcd788fd906402ad18795709385fe525e07c04d15",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "7aae46d230ddecf74185146fa8903be206883d1b90d571f79a339dcfce94e526",
+  "approvedAt": "2026-11-26T07:05:05.340Z"
+}

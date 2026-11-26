@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "dots-and-boxes",
+  "version": "2.1.1",
+  "name": "點格成盒",
+  "description": "與電腦輪流在點與點之間畫線，畫上第四條邊就得到方格，方格多的一方獲勝。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BdyiKJfD.js",
+      "size": 574041,
+      "sha256": "43069420125c14b47657f9d7549782749989eaee9111dae6d99d094b639baeb0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BaEuzgbJ.css",
+      "size": 22230,
+      "sha256": "7585a0ea4b9c2dbf56678b08c843bdcaa564759012efff836ec0bb3eb6fe77bd",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 525,
+      "sha256": "44ab76e2b3994952b18c828290b8feb9815b767308ebe57bf41230a56d9effa3",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "5343bb1a1df22ec56a14bcbdd7025dc6fa49a567f9f5c702d613a6c00f854c40",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7766,
+      "sha256": "0365fe3b81a1560fe0ce4be0ce40184c5ec13a697fcfaad474733aa751f6a4d9",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "9a26c1467d36fe37779d5b1ba07abf37708c098deb9319e28ed41caae8ac8ca3",
+  "approvedAt": "2026-11-26T06:57:27.147Z"
+}

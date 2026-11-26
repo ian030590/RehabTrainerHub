@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "gabor-patching",
+  "version": "2.1.1",
+  "name": "蓋伯斑塊練習",
+  "description": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CsBS0paP.js",
+      "size": 1142894,
+      "sha256": "6ff90becc39e1e706f461dbcb558caf91d7bd4b69030a1cafa3dbc9b3aa90de4",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DukEEcin.css",
+      "size": 19134,
+      "sha256": "ddfb9faa1582768cd6bc7dba6b006c62306da3b42c120db88ee769ce54efa947",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 490,
+      "sha256": "2cfec8a94ab9533a115c5e1e0ad67aae11717760ae199762fd4d34b21cc2e45e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "2f70571a02c2287c9d0840cc77094ed49956b6f04bfb642fa5767009b16a6d09",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1666,
+      "sha256": "7ea179f798e7ab61008284107fe990ce487280885af3065f759eabb7a6459c9c",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "58ea7637da01b48ebb369b0ee287b01260b78c29cfd668d295d3c47e729bf4e0",
+  "approvedAt": "2026-11-26T07:00:54.473Z"
+}

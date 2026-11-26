@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "letter-memory",
+  "version": "2.1.1",
+  "name": "字母記憶更新（Letter Memory）",
+  "description": "字母一個一個出現，長度不一定；一直記住最新的 4 個，結束後依序輸入，練習隨時更新記住的內容。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CRibzRrV.js",
+      "size": 572935,
+      "sha256": "d88f002b83e37b03177f46ca3dc72605aae6ef4183c02b99228ba0387b091813",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CRFYm-Yb.css",
+      "size": 21285,
+      "sha256": "19794c4e1e7bb8f45ef73a76114d2888ee9da0934eb3d3f548dc1efe1c87943a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 625,
+      "sha256": "f5fd75a609e8a98a9f322cfeecfa1413ef8c99dec0567a1b74e27b33f4330ccb",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 427,
+      "sha256": "e2838e21b37c50ded9e29e95e02218e45942d22f939da7c7231dafc4cd7f9230",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7282,
+      "sha256": "bdcd684cc622e588e44d203b144fb72fa8fda021975822ebe1db32113c5441b9",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "8910839c8143df5490e8913140f05d7483928c53f9ac9398574aac0142e6231d",
+  "approvedAt": "2026-11-26T07:06:11.069Z"
+}

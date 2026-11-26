@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "hart-chart",
+  "version": "2.2.1",
+  "name": "哈特圖訓練",
+  "description": "透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Br6lpJ3A.js",
+      "size": 616197,
+      "sha256": "ec925778b3ac01ef42098d267426795ce08bfa2f027ab1347381f3513dff4900",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-xqamvnoC.css",
+      "size": 32659,
+      "sha256": "bfaad9615834440db49742f1f6af11fc66efdfe941e403fc72fef456e9c9a219",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 458,
+      "sha256": "5dbf2723b2c145cf774ef7d50005001bf213f08a219d9e32025911ca7527ec2b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "5c9cbbecd9443103793b75287752d431a72af8bff6e955bbd860a40ccfe013ee",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 29320,
+      "sha256": "51a55f458dfaed3339c4c1f12a005fb323137eb510f89819787159736c5d465b",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "4df621cbb57b9ac921dc33d841c7b341dcab9c701daee88c5393388303c90751",
+  "approvedAt": "2026-11-26T07:04:03.166Z"
+}

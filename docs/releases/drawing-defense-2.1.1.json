@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "drawing-defense",
+  "version": "2.1.1",
+  "name": "畫畫塔防",
+  "description": "繪製指定圖形，練習上肢精細動作與手眼協調。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-BS4I5wcV.js",
+      "size": 1152031,
+      "sha256": "8d9a6bb99733101886422bfdbef7d9ff4d55745c1b0fdaa68cfa3a345969f3e6",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-oarDhQRn.css",
+      "size": 18334,
+      "sha256": "8e6f940ba3dc8c00ea50afb4fa7279d681ba7f19cc855fab221d684f9621850f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "ab4889833b568169ba13bdc99b7d02df0902b96bb7fee912b90279e2109118ec",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 65868,
+      "sha256": "10b2f50fb9d4e23008038b5d33da93c6f1dd1a923541e3d0b9ffd44ab9dcdc9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "0a3ffd6ea3063ce212c774f7ba51070f0156215d0cd6c224c0b290918a9ea903",
+  "approvedAt": "2026-11-26T06:57:56.132Z"
+}

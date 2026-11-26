@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "lights-out",
+  "version": "2.1.1",
+  "name": "熄燈解題",
+  "description": "點一格會切換它和上下左右格子的亮滅，想辦法讓所有燈都熄滅。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CtEscpmJ.js",
+      "size": 570103,
+      "sha256": "1af5edb86bf96c04791e44fb7253ea02f8c850f620f55bfbef3225b7e413b8e7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-M-7dx_rB.css",
+      "size": 21075,
+      "sha256": "eb65c3e1639fd0d584e28f240f091f0a154bbee54323e42554c4d4a0627ea3d6",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 472,
+      "sha256": "41128f02b256af24d1308529af278662878c81f8b246596843d85d907a693f8d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "1cd0772c1ee001aebd9e067619a9d91a0a017e1c00bdfb2185a2de012d4e75b6",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7530,
+      "sha256": "ad43e95f15ebcb1ea4e6447243e2bdbc2b85e64e8037ce5ee32a7e6ed21da3b8",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "fc27b961e206aecb7d72a51911fb4b11c5ed8254548de97bd668a6c66f955541",
+  "approvedAt": "2026-11-26T07:06:40.555Z"
+}

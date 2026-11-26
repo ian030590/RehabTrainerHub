@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "moving-card",
+  "version": "2.1.1",
+  "name": "移動卡片訓練",
+  "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-C87HfW1m.js",
+      "size": 1146909,
+      "sha256": "e471ba6960a4966af6a44535e932c06dae93356a4b2f79b911e33998d3cdac1d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-8oyQkXz2.css",
+      "size": 19779,
+      "sha256": "f8d95229b94f1fd402f94405994ab72eb44332c22086ebbfb3e7c25ea49f78dc",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "6a39e23445ed2a2165694ed64adc6283e9ae1d0901938dcb811bbafc03fb040c",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "497218fe2e9c3b47bec71a0f7c10433e5882498f8f397f2e66cbc3938aec5752",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 14652,
+      "sha256": "224f2e5f7277268978afed4abe10ea7205ec75b8017eded87dfca0cf0ce24e86",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "10f3cfefbc6070225cb555c01cd366498dc84466e67d7c4a8bc5eeacf7e67791",
+  "approvedAt": "2026-11-26T07:11:07.960Z"
+}

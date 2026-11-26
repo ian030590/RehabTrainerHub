@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "exploratory-saccade",
+  "version": "1.1.1",
+  "name": "探索掃視練習",
+  "description": "在散布的數字與字母中找出所有指定數字，以滑鼠移入或點按標記。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-C8sXaQwi.js",
+      "size": 579250,
+      "sha256": "a8c4c873c3b31e19dfb88900ee358979c21846adf248240736f716a222b3a4b7",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-FvB89z5S.css",
+      "size": 20585,
+      "sha256": "38e2f92f513c47025d17c335402c2834001a6ab257f4bbd4ddaadd1dcd213584",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 551,
+      "sha256": "43d98694cec1585e84ea49a0827985fb957ca5473d1e34017ce25b3f297633a2",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "f5a5e47b6dd3a71489ee41bf159e9bd57cda7d2d9faafb8a5efcd9dc96dcc7aa",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8382,
+      "sha256": "ddf8d86e987ef3e585c388a1f1f6a1f8155260b6955d1375f79c90a3e719bfdd",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "0c6b5cd0c7b814046b86fbf1f8dd6a0766f7a508d415a8446b152a60e4b8ccb0",
+  "approvedAt": "2026-11-26T06:59:46.045Z"
+}

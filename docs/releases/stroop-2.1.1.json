@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "stroop",
+  "version": "2.1.1",
+  "name": "色彩干擾抑制（Stroop）",
+  "description": "辨識文字印刷顏色並抑制字義干擾，練習選擇性注意力與衝動抑制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-rk6hGmtj.js",
+      "size": 572225,
+      "sha256": "ca5d9c0b7f847154628bcf57f19d043572be0b63fae752368bb7e2aac637e195",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-sL3FHpCz.css",
+      "size": 21598,
+      "sha256": "e51d3b34baa6096e3d485253a088451c8df1846bb37b22e482994f856414bb03",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 526,
+      "sha256": "fdf2a32a88965e37a8005047b4215bdc25750596536ca2d028e85cda2e54f05b",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "f7834296d7d86976f4dcf6afc87950108274f28700f5de09ad3d62d6c20f1b5d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5138,
+      "sha256": "06f7720988dbf4dcd9f801344348d1ce7d82f4b6e6c7ecae6cb1e1e94c935c01",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "17082e0aae5f07bc40ba0a567c2690188a6e21d11cb65912a6fbca7e2898c2cf",
+  "approvedAt": "2026-11-26T07:20:28.892Z"
+}

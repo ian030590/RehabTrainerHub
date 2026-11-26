@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "memory-match",
+  "version": "2.1.1",
+  "name": "記憶配對",
+  "description": "翻開卡片找出字母相同的兩張，記住每張卡片的位置。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-ChLX-Ggr.js",
+      "size": 571781,
+      "sha256": "e176252ff135e48efdf07bda5d0b682e7ab043ef84971c0ec3f894741e422676",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BCjjTkHe.css",
+      "size": 21997,
+      "sha256": "cfce8a0abba79034dc31c4442b3951b3b21cbae43e86f4b82c97e23f4bf5f94e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 447,
+      "sha256": "bf73efcbdc0990d427aaed928ec6f2e65421c9d9501f2d80b2a3228af9731bd6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "eb0f27a4f3603f7b61d6400beeaa5d926064f2c9f162077ced3a44b775ab069d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 10958,
+      "sha256": "2cba97d3eddc961ca9fba420ca2c8203ae64293acedf2253123f7668349c41fd",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "402bec37c411d2233b049e8727cb150af528828b088ea4b179a1e743a83ec1ef",
+  "approvedAt": "2026-11-26T07:07:43.126Z"
+}

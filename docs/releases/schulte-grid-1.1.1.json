@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "schulte-grid",
+  "version": "1.1.1",
+  "name": "舒爾特方格",
+  "description": "在打亂的數字方格中依序找出每個數字，練習視覺搜尋與專注。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BvzGtAsv.js",
+      "size": 568627,
+      "sha256": "a1de667905947642ebeb1e692af09b7f3f8ea4926c9865707677568bbcc33b47",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-j6oKeDh5.css",
+      "size": 20626,
+      "sha256": "c419374ef568979f8132fb11cfe68c154456ebceafd7b8255c35571d4c1c5ebf",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 465,
+      "sha256": "10c0474d455a1d9c3826638a89ee022aff293a6b8f4e830e3bc3fe935062e2a2",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "5b172b657128c237a8576093a2d2138f5a69f80e23168a449685454b73562252",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6616,
+      "sha256": "7022aa8e4a0343f74dceecd4699efdce4ddbe23c43315931bde746a51970290a",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "bcf788b8eea4931d239316daa1334848d6f7a182f1726b28a3fd75261474d4d0",
+  "approvedAt": "2026-11-26T07:16:50.748Z"
+}

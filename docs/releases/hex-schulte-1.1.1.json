@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "hex-schulte",
+  "version": "1.1.1",
+  "name": "六角舒爾特方格",
+  "description": "眼睛停在中央記號，用餘光在六角形格子裡依序找出數字，練習擴大注意的範圍。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-C4rb1OzD.js",
+      "size": 571646,
+      "sha256": "07246bee71236438d8fcaf75d8179df46359502c8ffae4e92b905e807ff57b03",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-yJ-uuW-q.css",
+      "size": 21889,
+      "sha256": "68fab55ea2f4633fb5ea481ac7893934c5aa7c6029f099dbd2186a102878cb7b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 553,
+      "sha256": "5bc0a64b6a7ac19826f59ce7857564c7d7a287ba44ee910c7efb3a0d192285ec",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "c85ff8d9b6b0cfc2edd635a2fd8110d20bcbadd8326d264ac4cbefcd97ca2d64",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 15520,
+      "sha256": "20c800de019c3922d67d40149814324aee5699fd996b486c202407a0b00b5143",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "aa09a2aa0a11afc253915e5919eb5a96a7442e7aa45df2bdf8939f567fbc6963",
+  "approvedAt": "2026-11-26T07:04:34.125Z"
+}

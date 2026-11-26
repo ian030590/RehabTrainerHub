@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "popout-search",
+  "version": "1.1.1",
+  "name": "突顯目標",
+  "description": "判斷散布的字母中有沒有中央圓圈裡的目標字，目標與其他字的形狀差異明顯。十二級視覺搜尋的第 1 到 4 級。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-iOhhEuda.js",
+      "size": 582566,
+      "sha256": "ad7b0e1ab8492f749cf4601d2a4129b2a0f80bb8a2dd696ad4321e00fb21ae81",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D1S7dOQC.css",
+      "size": 21250,
+      "sha256": "c6254909f7224ec8bd39c3e3a9e39c2f3c68ca00027e12bd1fa85157ce3593f2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 642,
+      "sha256": "4ffcd317f97cea315f0b68b488980359b06013232f90652790525c5ee3f3ce18",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "48a997505c6dc07c06ab5760b55641a91b605af0e1dc7127d3c6383999e53e43",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5010,
+      "sha256": "17936e786a4513aefb0c07892ce8b571e3a6d9e128b047b54e8063d857b8bbf3",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "18b688ecab6439af91b1edac02adac2439cb2af0f5e877aa9fb1a64758a8761d",
+  "approvedAt": "2026-11-26T07:14:40.240Z"
+}

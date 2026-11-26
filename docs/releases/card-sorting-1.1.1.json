@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "card-sorting",
+  "version": "1.1.1",
+  "name": "卡片規則分類",
+  "description": "依顏色、形狀或數量配對卡片，靠對錯回饋找出規則，規則一換就跟著調整，練習彈性切換想法。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-DfWg9X0_.js",
+      "size": 570758,
+      "sha256": "ff1c0eb09903489d897d47718b3885538329ae572238856bad979d680ed8dfce",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-YRfUz5RB.css",
+      "size": 20817,
+      "sha256": "f6de2466adfbc72009f86962c050697e050053f0a00efdd19693228ff29c9147",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 574,
+      "sha256": "6222f2bbc552f6c4cec7bb98e8d291604d4e3d011e6ab162653c18bf7e8e302d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "925f139f164d1addb84a32b379c1ff2287c9bf4092a5d218355cd502911dccc7",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6640,
+      "sha256": "cf1f7052ca71ef1f07c42d669d62d2eaef11ab2ea4489a429f8f2ea7f629b189",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "3bde72715f811a0c20b0c02b49c04152d4154aed53fdff7ed2c72fe4a84c321f",
+  "approvedAt": "2026-11-26T06:54:01.057Z"
+}

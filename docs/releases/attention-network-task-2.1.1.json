@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "attention-network-task",
+  "version": "2.1.1",
+  "name": "注意力網絡練習（ANT）",
+  "description": "判斷中央箭頭方向並忽略兩側干擾，搭配箭頭出現前的星號提示，練習警覺、定向與衝突控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CbmoorOX.js",
+      "size": 577038,
+      "sha256": "762783a5fa013c119e3e31c45f9fc91c234323685285a67ed96fbd09181a89e2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dhg9z-cX.css",
+      "size": 21925,
+      "sha256": "2c314a5755e27a4b84e98428768ed77b9e5f0d3547b24725082a7c993e542d62",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 610,
+      "sha256": "d9762ab29de66b2710d2715fa02cb97ada754a0cb477837be7ed62c6a251e619",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "152587e66bcc186c89d2a18e01fab05ab29441805086e0a06cd790aa4068a86c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4492,
+      "sha256": "770ea5153e816b4e97836a92ca02343c022e07d5c450060fc8aef22fc9e06b1e",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "c8846340d3d14c527d32d9fc928c1cda960e6b775217383d73bf03d854bd2ea2",
+  "approvedAt": "2026-11-26T06:52:34.638Z"
+}

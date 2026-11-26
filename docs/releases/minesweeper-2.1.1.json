@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "minesweeper",
+  "version": "2.1.1",
+  "name": "踩地雷",
+  "description": "依數字線索打開安全格、插旗標出地雷，可選地雷密度與 6 × 6 到 20 × 20 的盤面。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-DskBvtxH.js",
+      "size": 577361,
+      "sha256": "b041355ccdf8d79a1adf88f0edbd87c258a351d9f82c5f1e18cc9be1de70ae75",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Ciz-NvtH.css",
+      "size": 21907,
+      "sha256": "7036dcbf3413acffce7f087420cbd7c3bf49d10cec615fd374ab8643bd2053a0",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 528,
+      "sha256": "dfe80539e28f4105f6bb43a7a2031b5f0769078d24bc049c934c3d67b045b13e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 399,
+      "sha256": "9286e63dbf68d1b0fdf700c151293bfd8a369d4f273a67c68f271e54f4e3ad71",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8454,
+      "sha256": "356c758bc2e54b10e03106e5152907c3f0ffc8a555f07762c599985372a3b69f",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "7eae2f5f8e924d362fe6b12265d729dc2571d13707e3c72d6c9cff6f77387391",
+  "approvedAt": "2026-11-26T07:08:14.602Z"
+}

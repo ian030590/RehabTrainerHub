@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "asteroid-shield",
+  "version": "2.1.1",
+  "name": "小行星護盾防衛",
+  "description": "移動護盾保護飛船，練習手部定位與上肢控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "LICENSE-pixelfx.md",
+      "size": 1093,
+      "sha256": "0a77565a50c3462831244452f129c38d2adc4fd07897cbeba8adc943f958604e",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "NOTICE.md",
+      "size": 968,
+      "sha256": "b64231ed1baab316777dd7c8a3a226bb234855ccf1275f7f6a848be122baad20",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-DWZo850t.js",
+      "size": 1383269,
+      "sha256": "da19229a9a964883e3172474d5f2d4adf7ac598bb1b2fdde8841191d7d84f878",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-complete-B5wkC1qZ.png",
+      "size": 198696,
+      "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-B3_RAvW5.css",
+      "size": 20296,
+      "sha256": "2472f2f84dc529ed880f933f0d6812bfd7054846a58a6ef74e44ce07c3ecf262",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "c91513db4130588421d95596c6e52be5541296c0f8ce26624ded058720719ecc",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 19210,
+      "sha256": "3c66acc0b921a879499def6d8614bce9c5c95897872d14a50ddbd8c728d5037e",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "eba44eff33a1dfb4dfffc29059b7419c00a3fba53b19bc78b7876229e4d12bd5",
+  "approvedAt": "2026-11-26T06:51:24.624Z"
+}

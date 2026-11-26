@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "time-perception",
+  "version": "1.1.1",
+  "name": "時間感知",
+  "description": "看圓點亮多久，再重現、比較或估計那段時間，練習對時間長短的掌握。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BjdvL6Dh.js",
+      "size": 573659,
+      "sha256": "fe4725e812643dbee6699105efed44bd4678c0a211512189a295f8c776709cfd",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-j5U5xM4S.css",
+      "size": 21048,
+      "sha256": "f4b771d78f2a0d8870c5187bb733296e21f96b92a4fa690568a494065f6acb0f",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 519,
+      "sha256": "19edd1ee6f9f313cd19936bd23e908289946de4a547b38d2be72fc47f2db6efa",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "2cc6a150f11f1df53d3d5f2b4a80c29215add57d9fb88cce33229b3c22390faa",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4432,
+      "sha256": "b65eab407462c2655c528bb7421380e92d582a614babe82c552f58833e7bb429",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "f9a7b8557cfb56f87cd5a043565e2cf606ca15025c30f1e62716eea636c99a21",
+  "approvedAt": "2026-11-26T07:22:02.119Z"
+}

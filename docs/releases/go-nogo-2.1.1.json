@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "go-nogo",
+  "version": "2.1.1",
+  "name": "通行與抑制反應（Go/No-go）",
+  "description": "看到通行訊號時反應，看到禁止訊號時抑制衝動，練習持續專注與抑制控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-z2QdV2vD.js",
+      "size": 572042,
+      "sha256": "2e76944ee1cc86d670fde035fa76771bde84d4760c26c2b40fc80a5910a17ef2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dfbx5VYO.css",
+      "size": 21244,
+      "sha256": "e8a702ad9e63fe40c5c86feb21a865c82f388376e9c717ee372f220f49e14414",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "6ddb9c1f2db99decddc2b4cb788102ca7e380e8e7e6f713147fd846db6bef87f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "fc5eac20517b7179c08c6ef49e013d2aebcebf7a941cb991cecc9999cd10f9ff",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3318,
+      "sha256": "749f4e20c6b47a1a34d04d79a51a7fe2587fbf96dd2cde3fb58395b9a1bfc904",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "282be21cf74d0323d5f277dc59aa2d200001421aedcaedaa5f4bd3e9f59658e3",
+  "approvedAt": "2026-11-26T07:03:33.567Z"
+}

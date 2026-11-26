@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "ufov",
+  "version": "2.2.1",
+  "name": "周邊視野訓練",
+  "description": "以三種活動練習處理速度、分散注意力與選擇性注意力：辨認中央閃過的車輛，並找出外圈汽車的方向。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "result-files",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CXk8zhXu.js",
+      "size": 615381,
+      "sha256": "d0314f4a1ed69e9f53d9304b4c0a79453df91edbc85fe00b022ff6a99f207d17",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-D8bDlI10.css",
+      "size": 26502,
+      "sha256": "21c880937daabc557019d114246682740206401d212af75f1594e7902e64ddf6",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 620,
+      "sha256": "28490f6082430516399f4a5685ce912c470c2a648b73bb283e33df5930942b76",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "d58a0b7c7a2eff49670585ab5e48223a60838a02192e4c5fc28768cedf1e17fa",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4234,
+      "sha256": "aef910ff70bc46c34c0ebbc93d0c8a24352676f1d71fa630ce983a42476a5816",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "43366c87b00fe5dde48ffa6d45a4ae8cf5659e0d4e23bf3bbec685a6f42e8d10",
+  "approvedAt": "2026-11-26T07:23:42.541Z"
+}
