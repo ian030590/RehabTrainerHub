@@ -1,7 +1,8 @@
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CleanupOculomotorCsv } from './cleanup-oculomotor-csv.mjs';
-import { GetCloudflareCredentials } from './cloudflare-credentials.mjs';
+import { GetCloudflareCredentials, WranglerCommand } from './cloudflare-credentials.mjs';
 
 const credentials = { token: 'FAKE_SECRET_TOKEN', account: 'FAKE_ACCOUNT_ID' };
 const getCredentials = async () => credentials;
@@ -108,18 +109,50 @@ test('dot path segments cannot redirect a delete outside the confirmed bucket', 
   assert.equal(deletes, 0);
 });
 
+test('Wrangler token command uses npx on Unix and ComSpec on Windows', () => {
+  const args = ['auth', 'token', '--json'];
+  const npxArgs = ['--yes', 'wrangler@4', ...args];
+  assert.deepEqual(WranglerCommand(args, 'darwin', {}), { file: 'npx', args: npxArgs });
+  const windowsArgs = ['/d', '/s', '/c', 'npx', ...npxArgs];
+  assert.deepEqual(WranglerCommand(args, 'win32', { ComSpec: 'custom.exe' }), { file: 'custom.exe', args: windowsArgs });
+  assert.deepEqual(WranglerCommand(args, 'win32', {}), { file: 'cmd.exe', args: windowsArgs });
+});
+
 test('shared credential lookup supports env and Wrangler OAuth without printing values', async () => {
-  assert.deepEqual(await GetCloudflareCredentials({ env: { CLOUDFLARE_API_TOKEN: credentials.token, CLOUDFLARE_ACCOUNT_ID: credentials.account } }), credentials);
-  let path;
-  assert.deepEqual(await GetCloudflareCredentials({ env: { WRANGLER_AUTH_CONFIG: 'fake.toml' },
-    readFileImpl: async configPath => { path = configPath; return `oauth_token = "${credentials.token}"`; },
+  const calls = [];
+  const runWranglerImpl = async args => {
+    calls.push(args);
+    return JSON.stringify({ type: 'oauth', token: credentials.token });
+  };
+  assert.deepEqual(await GetCloudflareCredentials({
+    env: { CLOUDFLARE_API_TOKEN: credentials.token, CLOUDFLARE_ACCOUNT_ID: credentials.account }, runWranglerImpl,
+  }), credentials);
+  assert.deepEqual(calls, []);
+  assert.deepEqual(await GetCloudflareCredentials({ env: {}, runWranglerImpl,
     fetchImpl: async (url, options) => {
       assert.equal(url, 'https://api.cloudflare.com/client/v4/accounts');
       assert.equal(options.headers.Authorization, `Bearer ${credentials.token}`);
       return respond([{ id: credentials.account }]);
     } }), credentials);
-  assert.equal(path, 'fake.toml');
+  assert.deepEqual(calls, [['auth', 'token', '--json']]);
   await assert.rejects(GetCloudflareCredentials({ env: { CLOUDFLARE_API_TOKEN: credentials.token }, fetchImpl: async () => { throw new Error(credentials.token); } }), error => !error.message.includes(credentials.token));
+});
+
+test('Wrangler failures and missing tokens return only the sign-in instruction', async () => {
+  for (const runWranglerImpl of [
+    async () => { throw new Error(credentials.token); },
+    async () => JSON.stringify({ type: 'oauth', token: '' }),
+    async () => credentials.token,
+  ]) {
+    await assert.rejects(GetCloudflareCredentials({
+      env: { CLOUDFLARE_ACCOUNT_ID: credentials.account }, runWranglerImpl,
+    }), { message: 'Set CLOUDFLARE_API_TOKEN or sign in with Wrangler (npx wrangler login).' });
+  }
+});
+
+test('credential lookup avoids private Wrangler config paths and token fields', async () => {
+  const source = await readFile(new URL('./cloudflare-credentials.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /\.wrangler\/config|oauth_token/);
 });
 
 test('a successful delete with an empty or non-JSON body still counts, but an explicit failure envelope stops', async () => {

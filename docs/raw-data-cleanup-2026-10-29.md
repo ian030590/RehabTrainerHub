@@ -14,7 +14,7 @@
 
 ## 執行前
 
-由擁有者在倉庫根目錄執行，使用自己的 Wrangler 登入或環境變數。工具不接受 URL／命令列中的 token。R2 憑證查找與官方發布工具共用 `scripts/cloudflare-credentials.mjs`：先用 `CLOUDFLARE_API_TOKEN`，否則讀 `WRANGLER_AUTH_CONFIG` 指定的檔案，或 Wrangler 預設 `default.toml` 的 OAuth token。帳號先用 `CLOUDFLARE_ACCOUNT_ID`；未指定時只在帳號清單恰好一筆時採用。R2 清單／刪除須有相應讀寫權限，D1 使用 Wrangler 的 D1 權限。不要把憑證貼進文件、指令、log 或網址。
+由擁有者在倉庫根目錄執行，使用自己的 Wrangler 登入或環境變數。工具不接受 URL／命令列中的 token。R2 憑證查找與官方發布工具共用 `scripts/cloudflare-credentials.mjs`：先用 `CLOUDFLARE_API_TOKEN`，否則執行 `npx --yes wrangler@4 auth token --json` 取得 token。帳號先用 `CLOUDFLARE_ACCOUNT_ID`；未指定時只在帳號清單恰好一筆時採用。R2 清單／刪除須有相應讀寫權限，D1 使用 Wrangler 的 D1 權限。不要把憑證貼進文件、指令、log 或網址。
 
 安排沒有新上傳與寫入的維護時段，並暫停 `raw-data-sync` 排程與其他清理者，避免列舉期間新增物件、同時搬移或重新上傳。同一時間只執行一份工具。D1 分頁不提供跨頁快照；並行新增的較小主鍵可能在本輪看不到。Wrangler 的遠端 SQL 檔案匯入可能短暫影響資料庫服務。
 

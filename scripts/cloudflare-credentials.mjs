@@ -1,17 +1,31 @@
-import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { resolve } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-export async function GetCloudflareCredentials({ env = process.env, readFileImpl = readFile, fetchImpl = fetch } = {}) {
+const execFileAsync = promisify(execFile);
+
+export function WranglerCommand(args, platform = process.platform, env = process.env) {
+  const commandArgs = ['--yes', 'wrangler@4', ...args];
+  return platform === 'win32'
+    ? { file: env.ComSpec ?? 'cmd.exe', args: ['/d', '/s', '/c', 'npx', ...commandArgs] }
+    : { file: 'npx', args: commandArgs };
+}
+
+async function RunWrangler(args) {
+  const command = WranglerCommand(args);
+  const { stdout } = await execFileAsync(command.file, command.args, { timeout: 60000 });
+  return stdout;
+}
+
+export async function GetCloudflareCredentials({ env = process.env, runWranglerImpl = RunWrangler, fetchImpl = fetch } = {}) {
   let token = env.CLOUDFLARE_API_TOKEN;
   if (!token) {
-    const configPath = env.WRANGLER_AUTH_CONFIG || (process.platform === 'win32' && env.APPDATA
-      ? resolve(env.APPDATA, 'xdg.config/.wrangler/config/default.toml')
-      : resolve(homedir(), '.config/.wrangler/config/default.toml'));
-    const source = await readFileImpl(configPath, 'utf8').catch(() => '');
-    token = source.match(/^oauth_token\s*=\s*"([^"]+)"/m)?.[1];
+    try {
+      const stdout = await runWranglerImpl(['auth', 'token', '--json']);
+      const result = JSON.parse(stdout);
+      token = typeof result?.token === 'string' && result.token.trim();
+    } catch {}
+    if (!token) throw new Error('Set CLOUDFLARE_API_TOKEN or sign in with Wrangler (npx wrangler login).');
   }
-  if (!token) throw new Error('Set CLOUDFLARE_API_TOKEN or sign in with Wrangler.');
   let account = env.CLOUDFLARE_ACCOUNT_ID;
   if (!account) {
     let response;
