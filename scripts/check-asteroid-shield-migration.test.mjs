@@ -382,7 +382,7 @@ test('asteroid release owns UI, dependencies, metadata and the captured gameplay
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.2');
+  assert.equal(pkg.version, '2.1.3');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -512,4 +512,27 @@ test('mobile touch layout for asteroid-shield', async () => {
   const css = await readFile(new URL('../apps/rehabtrainerhub/games/asteroid-shield/game.css', import.meta.url), 'utf8');
   assert.match(css, /label:has\(> input\[type=checkbox\]\)\s*\{[^}]*min-height: 44px/);
   assert.match(css, /\.training-config input\[type=range\]\s*\{[^}]*min-height: 44px/);
+});
+
+test('spotlight panel clears asteroid images in a short desktop viewport', async context => {
+  const { StartTour } = await import('../apps/rehabtrainerhub/games/asteroid-shield/runtime/tour.ts');
+  const target = { left: 200, right: 536, width: 336, top: 80, bottom: 192 };
+  let panel;
+  const document = {
+    createElement: () => ({
+      style: {}, setAttribute() {}, append() {}, focus() {},
+      getBoundingClientRect: () => ({ width: 480, height: 248 }),
+    }),
+    querySelector: () => ({ getBoundingClientRect: () => target }),
+    body: { append(spotlight, overlay) { panel = overlay; } },
+  };
+  globalThis.document = document;
+  globalThis.window = { innerWidth: 736, innerHeight: 455, addEventListener() {} };
+  context.after(() => { delete globalThis.window; delete globalThis.document; });
+  StartTour([{ target: '.mock-asteroid-group', place: 'bottom' }], { lang: 'en' });
+  const top = parseFloat(panel.style.top);
+  const left = parseFloat(panel.style.left);
+  assert.ok(top >= 176 || top + 248 <= target.top, `panel overlaps asteroid images at top ${top}`);
+  assert.ok(top >= 8 && top + 248 <= 455 - 8);
+  assert.ok(left >= 8 && left + 480 <= 736 - 8);
 });

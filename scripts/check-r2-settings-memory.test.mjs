@@ -20,7 +20,7 @@ const games = {
   'driving-rehab': { version: '2.2.2', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.1.2', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
   'gabor-patching': { version: '2.1.2', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
-  'asteroid-shield': { version: '2.1.2', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
+  'asteroid-shield': { version: '2.1.3', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
   'gesture-battler': { version: '2.1.2', file: 'GestureBattlerGame.tsx', settings: 'config.ts' },
   'motor-cortex-rehab': { version: '2.2.2', file: 'MotorCortexRehabGame.tsx', settings: 'config.ts' },
   'drawing-defense': { version: '2.1.2', file: 'DrawingTowerDefenseGame.tsx', settings: 'settings.ts' },

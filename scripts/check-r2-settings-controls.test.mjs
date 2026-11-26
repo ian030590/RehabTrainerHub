@@ -36,7 +36,7 @@ async function Version(gameId) {
   return JSON.parse(await readFile(resolve(gamesRoot, gameId, 'package.json'), 'utf8')).version;
 }
 
-for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.1.2'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.1.2']]) {
+for (const [gameId, file, version] of [['gabor-patching', 'GaborPatchingGame.tsx', '2.1.2'], ['asteroid-shield', 'AsteroidShieldGame.tsx', '2.1.3']]) {
   test(`${gameId}: difficulty options lead with a plain name and keep the parameters as detail`, async () => {
     const { source } = await Load(gameId, file);
     assert.equal(await Version(gameId), version);

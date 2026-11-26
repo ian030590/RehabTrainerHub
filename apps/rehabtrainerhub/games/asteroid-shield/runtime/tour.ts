@@ -42,7 +42,9 @@ export function StartTour(steps: TourStep[], options: {
       const above = rect.top - 20 - panel.height;
       const below = rect.bottom + 20;
       const candidates = steps[index].place === 'bottom' ? [below, above] : [above, below];
-      top = candidates.find(value => value >= 8 && value + panel.height <= window.innerHeight - 8) ?? top;
+      const roomBelow = window.innerHeight - rect.bottom;
+      const fallback = roomBelow === rect.top ? candidates[0] : roomBelow > rect.top ? below : above;
+      top = candidates.find(value => value >= 8 && value + panel.height <= window.innerHeight - 8) ?? fallback;
     }
     overlay.style.left = `${Math.max(8, Math.min(window.innerWidth - panel.width - 8, left))}px`;
     overlay.style.top = `${Math.max(8, Math.min(window.innerHeight - panel.height - 8, top))}px`;
