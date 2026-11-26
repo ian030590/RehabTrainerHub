@@ -150,9 +150,14 @@ test('safe cells chime, a mine buzzes, and the board zooms by buttons, wheel and
 });
 
 test('Minesweeper owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'MinesweeperGame', category: 'higher-cognition', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'MinesweeperGame', category: 'higher-cognition', version: '2.1.1' });
 });
 
 test('Minesweeper private bridge accepts only its own parent and replays settings and language', async () => {
   await CheckGameBridge(gameId);
+});
+
+test('mobile touch layout for minesweeper', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/minesweeper/game.css', import.meta.url), 'utf8');
+  assert.match(css, /\.ms-cell\s*\{[^}]*font-size: max\(14px,/);
 });

@@ -158,3 +158,9 @@ async function LoadModule(path) {
   }).outputText)(module, module.exports);
   return module.exports;
 }
+
+test('mobile touch layout for gesture-battler', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/gesture-battler/game.css', import.meta.url), 'utf8');
+  assert.match(css, /\.gesture-mobile-back\s*\{[^}]*min-width: 44px/);
+  assert.match(css, /\.gesture-camera > span\s*\{[^}]*font-size: .875rem/);
+});

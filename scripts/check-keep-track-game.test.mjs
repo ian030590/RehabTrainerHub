@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
@@ -120,9 +121,15 @@ test('Keep Track rows keep the original columns, include the practice block and 
 });
 
 test('Keep Track owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.1.1' });
 });
 
 test('Keep Track private bridge accepts only its own parent and replays settings and language', async () => {
   await CheckGameBridge(gameId);
+});
+
+test('mobile touch layout for keep-track', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/keep-track/game.css', import.meta.url), 'utf8');
+  assert.match(css, /\.kt-options\s*\{[^}]*gap: 8px/);
+  assert.match(css, /\.kt-option\s*\{[^}]*font-size: 1rem/);
 });

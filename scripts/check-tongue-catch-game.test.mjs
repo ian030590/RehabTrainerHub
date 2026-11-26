@@ -449,7 +449,7 @@ test('the apple picture loads through an image element, because the runner block
 test('Tongue Catch owns its runtime, catalogue entry and results without Hub, camera or model code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-tongue-catch');
-  assert.equal(pkg.version, '2.1.0');
+  assert.equal(pkg.version, '2.1.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, capabilities);

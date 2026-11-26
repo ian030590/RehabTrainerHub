@@ -47,7 +47,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .ttt-clock { min-width: 5ch; text-align: right; }
 .ttt-feedback { min-height: 1.6em; margin: 0; text-align: center; color: var(--error); font-weight: 700; }
 .ttt-board-area { container-type: size; display: grid; place-items: center; min-height: 0; }
-.ttt-board { display: grid; grid-template-columns: repeat(var(--board-size), minmax(0, 1fr)); gap: 6px; width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); }
+.ttt-board { display: grid; grid-template-columns: repeat(var(--board-size), minmax(0, 1fr)); grid-template-rows: repeat(var(--board-size), minmax(0, 1fr)); gap: 8px; width: min(100cqw, 100cqh); aspect-ratio: 1; }
 .ttt-cell { display: grid; place-items: center; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border-strong); border-radius: var(--radius);
   background: var(--surface); color: var(--heading); font-size: calc(min(100cqw, 100cqh) / var(--board-size) * .5); font-weight: 700; line-height: 1; cursor: pointer; }
 .ttt-cell[data-mark="X"] { color: var(--primary); }
@@ -60,7 +60,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 @media (max-width: 480px) {
   .ttt-hud p { font-size: 1rem; }
   .ttt-turn { flex-basis: 100%; order: 3; }
-  .ttt-board { gap: 4px; }
 }
 
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }

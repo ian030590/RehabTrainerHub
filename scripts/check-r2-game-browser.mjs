@@ -529,13 +529,17 @@ try {
       'every-ball-response': 'playing', 'tongue-catch': 'playing', 'seagull-flight': 'playing', 'ufov': 'gameplay-answer', 'reaction-time': 'go',
       'tic-tac-toe': 'gameplay-progress', connect4: 'gameplay-progress', hex: 'gameplay-progress', 'dots-and-boxes': 'gameplay-progress',
       'memory-match': 'gameplay-progress', 'digit-span': 'answer' }[gameId] ?? 'gameplay');
-  const makeCapture = folder => CreateGameCapture({ folder: capturePreview ? previewFolder : folder, send, session, frameSession: gameContext.session, game,
+  const layoutAudit = process.argv.includes('--layout-audit') ? { gameId, viewportMode } : undefined;
+  const makeCapture = folder => CreateGameCapture({ folder: capturePreview ? previewFolder : folder, send, session, frameSession: gameContext.session, game, layoutAudit,
     preview: capturePreview ? { gameId, version: manifest.version, phase: previewPhase,
       output: resolve(root, 'apps/rehabtrainerhub/games', gameId, 'public/preview.webp') } : undefined });
   assert.equal(await game('document.fullscreenElement'), null, 'Settings must remain outside fullscreen for every R2 game.');
   await CheckSettingsPresentation(game);
-  const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
-  await writeFile(resolve(profile, 'settings.png'), Buffer.from(settingsScreenshot.data, 'base64'));
+  if (layoutAudit && !capturePreview) await makeCapture(profile)('settings');
+  else {
+    const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+    await writeFile(resolve(profile, 'settings.png'), Buffer.from(settingsScreenshot.data, 'base64'));
+  }
   const checkSpotlight = async selector => {
     const state = await game(`(() => {
       const spotlight = document.querySelector('.game-tour-spotlight');
@@ -686,8 +690,11 @@ try {
   if (firstStep.spotlight.bottom + 12 + firstStep.panel.bottom - firstStep.panel.top <= firstStep.height - 8) {
     assert.ok(firstStep.panel.top >= firstStep.spotlight.bottom, 'Enemy explanation must appear below its spotlight when space permits.');
   }
-  const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
-  await writeFile(resolve(profile, 'tutorial-spotlight.png'), Buffer.from(screenshot.data, 'base64'));
+  if (layoutAudit && !capturePreview) await makeCapture(profile)('tutorial-spotlight');
+  else {
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+    await writeFile(resolve(profile, 'tutorial-spotlight.png'), Buffer.from(screenshot.data, 'base64'));
+  }
   const originalViewport = await evaluate('[innerWidth, innerHeight]');
   await send('Emulation.setDeviceMetricsOverride', { width: originalViewport[0] - 40, height: originalViewport[1] - 40, deviceScaleFactor: 1, mobile: process.argv.includes('--mobile') }, session);
   await until(() => game(`innerWidth !== ${firstStep.width}`), 'resized tutorial viewport');
@@ -723,8 +730,11 @@ try {
   assert.ok(await game(`document.querySelector('.drawing-defense-tutorial').textContent.includes('${drawingDuration}s')`));
   await CheckConfirmationPresentation(game);
   assert.equal(await game('document.fullscreenElement'), null, 'Drawing tutorial and confirmation remain windowed.');
-  const confirmationScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
-  await writeFile(resolve(profile, 'confirmation.png'), Buffer.from(confirmationScreenshot.data, 'base64'));
+  if (layoutAudit && !capturePreview) await makeCapture(profile)('confirmation');
+  else {
+    const confirmationScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+    await writeFile(resolve(profile, 'confirmation.png'), Buffer.from(confirmationScreenshot.data, 'base64'));
+  }
   await game('document.querySelector(".drawing-defense-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-playing canvas"))'), 'Pixi gameplay');
   console.log('Playing.');
@@ -755,7 +765,7 @@ try {
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-results"))'), 'game-owned results');
   const resultScreenshots = resolve(root, '.tmp/drawing-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}`);
   await mkdir(resultScreenshots, { recursive: true });
-  const captureResults = async name => {
+  const captureResults = layoutAudit ? makeCapture(resultScreenshots) : async name => {
     const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
     await writeFile(resolve(resultScreenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64'));
   };

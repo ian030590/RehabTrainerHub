@@ -55,7 +55,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   flex: none; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); grid-template-rows: repeat(var(--n), minmax(0, 1fr)); gap: var(--gap);
   width: var(--side); height: var(--side); margin: auto; padding: var(--gap); border: 3px solid var(--heading); border-radius: 6px; background: var(--grid-line); }
 .ms-cell { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 2px;
-  background: var(--covered); color: var(--heading); font-size: calc(var(--side) / var(--n) * .58); font-weight: 800; line-height: 1;
+  background: var(--covered); color: var(--heading); font-size: max(14px, calc(var(--side) / var(--n) * .58)); font-weight: 800; line-height: 1;
   box-shadow: inset 2px 2px 0 var(--covered-light), inset -2px -2px 0 var(--covered-dark); }
 /* Open cells are flat and light, covered cells raised and dark, so the two read apart without color alone. */
 .ms-cell[data-state="open"] { background: var(--open-cell); box-shadow: none; cursor: default; }

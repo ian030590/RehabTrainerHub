@@ -106,7 +106,7 @@ test('Tower of London rows keep the original columns, add the first-move time an
 });
 
 test('Tower of London owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TowerPlanning', category: 'higher-cognition', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'TowerPlanning', category: 'higher-cognition', version: '2.1.1' });
 });
 
 test('Tower of London private bridge accepts only its own parent and replays settings and language', async () => {

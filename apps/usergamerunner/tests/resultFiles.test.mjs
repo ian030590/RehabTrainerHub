@@ -120,7 +120,7 @@ test('the production-bundled standalone launcher downloads only staged files, af
   const blobs = new Map();
   const frame = { addEventListener: (type, listener) => events.set(type, listener),
     contentWindow: { postMessage: (data, _origin, ports) => posted.push({ data, port: ports[0] }) } };
-  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['install-button', {}], ['runner-error', {}]]);
+  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['runner-error', {}]]);
   let ready;
   // Messages are rebuilt inside the launcher's realm, as a browser's structured clone would do.
   const channel = `class MessageChannel { constructor() {

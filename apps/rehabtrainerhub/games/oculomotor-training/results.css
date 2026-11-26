@@ -56,8 +56,28 @@
 .score-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
 .score-pagination button:disabled { cursor: default; }
 .experiment-results > button { margin: 8px 12px 8px 0; }
+.score-chart svg { cursor: pointer; }
+.score-chart svg circle.is-selected { fill: var(--heading); stroke: var(--surface); stroke-width: 2; }
+.score-chart-readout { margin: 8px 0 4px; color: var(--heading); font-size: 1.1rem; min-height: 1.5em; }
+.score-pagination button { min-height: 44px; min-width: 44px; }
+.experiment-results .results-table th:first-child,
+.experiment-results .results-table td:first-child { position: sticky; left: 0; z-index: 1; }
+@media (pointer: coarse) {
+  .score-chart svg circle { r: 6px; }
+  .score-chart svg circle.is-selected { r: 10px; }
+  .score-chart svg { touch-action: manipulation; cursor: pointer; }
+}
+@media (min-width: 601px) and (max-width: 1023px) {
+  .score-analysis .score-statistics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .score-context dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 600px) {
-  .score-chart svg text { font-size: 24px; }
+  .score-chart svg text { font-size: 26px; }
+  .experiment-results .results-table { min-width: 0; }
+  .experiment-results .results-table th, .experiment-results .results-table td { padding: 10px 12px; }
+  .score-section-header select { width: 100%; min-height: 48px; }
+  .score-section-header label { display: grid; gap: 8px; }
+  .score-pagination button { flex: 1; }
   .score-key-grid { grid-template-columns: 1fr; }
   .score-key-grid > div { padding: 20px; }
   .score-key-grid dd { margin: 0; text-align: right; }

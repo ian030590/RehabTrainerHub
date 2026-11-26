@@ -48,7 +48,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .lm-slot { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border: 2px solid var(--border-strong); border-radius: var(--radius);
   background: var(--background); color: var(--heading); font-size: 1.8rem; font-weight: 800; }
 .lm-slot[data-filled] { border-color: var(--primary); background: var(--primary-soft); }
-.lm-keypad { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.lm-keypad { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(44px, calc((100% - 48px) / 7)), 1fr)); gap: 8px; }
 .lm-key { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; padding: 4px 2px; border: 2px solid var(--border-strong);
   border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.2rem; font-weight: 700; }
 .lm-key:disabled { cursor: default; opacity: .7; }
@@ -60,7 +60,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .lm-hud { flex-wrap: wrap; }
   .lm-progress-label { flex: 1 1 auto; font-size: 1rem; }
   .lm-progress-track { order: 3; flex-basis: 100%; }
-  .lm-keypad { gap: 4px; }
   .lm-key { font-size: 1.1rem; }
   .lm-clear { font-size: .9rem; }
   .lm-message, .lm-feedback { font-size: 1.15rem; }
@@ -72,7 +71,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .lm-hud { grid-column: 1 / -1; }
   .lm-answer-area { grid-column: 2; grid-row: 2; min-height: 0; overflow: auto; gap: 6px; }
   .lm-slot { width: 2.75rem; height: 2.75rem; font-size: 1.5rem; }
-  .lm-key { min-height: 40px; }
+  .lm-key { min-height: 44px; }
 }
 
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }

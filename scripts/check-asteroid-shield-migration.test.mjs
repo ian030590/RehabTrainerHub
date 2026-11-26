@@ -382,7 +382,7 @@ test('asteroid release owns UI, dependencies, metadata and the captured gameplay
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.0');
+  assert.equal(pkg.version, '2.1.1');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -506,4 +506,10 @@ test('asteroid bridge binds once to the parent private port and ignores forged i
   module.exports.RetryGameSave();
   module.exports.ExitGame();
   assert.deepEqual(sent.map(message => [message.type, message.sequence]), [['ready', 0], ['retry', 1], ['exit', 2]]);
+});
+
+test('mobile touch layout for asteroid-shield', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/asteroid-shield/game.css', import.meta.url), 'utf8');
+  assert.match(css, /label:has\(> input\[type=checkbox\]\)\s*\{[^}]*min-height: 44px/);
+  assert.match(css, /\.training-config input\[type=range\]\s*\{[^}]*min-height: 44px/);
 });

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
@@ -94,9 +95,14 @@ test('Letter Memory rows keep the original columns, include practice and save th
 });
 
 test('Letter Memory owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'LetterMemoryRecall', category: 'memory', version: '2.1.1' });
 });
 
 test('Letter Memory private bridge accepts only its own parent and replays settings and language', async () => {
   await CheckGameBridge(gameId);
+});
+
+test('mobile touch layout for letter-memory', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/letter-memory/game.css', import.meta.url), 'utf8');
+  assert.match(css, /\.lm-keypad\s*\{[^}]*gap: 8px/);
 });

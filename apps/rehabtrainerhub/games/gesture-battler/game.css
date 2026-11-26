@@ -34,7 +34,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-battler-canvas { display: block; width: 100%; height: 100%; }
 .gesture-battle-feedback { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; image-rendering: pixelated; }
 .gesture-camera, .gesture-combat-hud { z-index: 2; }
-.gesture-mobile-back { position: absolute; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 20; padding: 8px; }
+.gesture-mobile-back { min-width: 44px; position: absolute; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 20; padding: 8px; }
 .gesture-mobile-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
 .gesture-stop { position: absolute; z-index: 150; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); color: var(--heading); }
 .gesture-stop:hover { color: var(--primary); border-color: var(--primary); }
@@ -59,7 +59,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-camera-hidden { display: none; }
 .gesture-camera canvas { display: block; width: 100%; aspect-ratio: 4 / 3; transform: scaleX(-1); }
 .gesture-camera-placeholder { position: absolute; left: 25%; top: 20%; width: 50%; height: 60%; fill: var(--hand-line); }
-.gesture-camera-label, .gesture-camera > span { margin: 0; padding: 4px; display: block; font-size: .8rem; }
+.gesture-camera-label, .gesture-camera > span { margin: 0; padding: 4px; display: block; font-size: .875rem; }
 .gesture-combat-hud { position: absolute; inset: 0; pointer-events: none; }
 .gesture-enemy-status, .gesture-move-menu { position: absolute; background: var(--surface); border: 2px solid var(--border-strong); padding: 16px; border-radius: var(--radius); }
 .gesture-enemy-status { top: 16px; right: 16px; width: min(300px, 45vw); }
@@ -97,7 +97,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .gesture-calibration-card { grid-template-columns: 1fr 100px; padding: 16px; }
   .gesture-camera { width: 160px; left: 8px; bottom: 8px; }
   .results-table td, .results-table th { padding: 4px; }
-  .gesture-enemy-status, .gesture-move-menu { font-size: .85rem; padding: 8px; right: 8px; }
+  .gesture-enemy-status, .gesture-move-menu { font-size: .875rem; padding: 8px; right: 8px; }
 }
 @media (orientation: portrait) and (pointer: coarse) {
   .gesture-orientation-gate { position: absolute; inset: 0; z-index: 100; background: var(--surface); display: grid; align-content: center; text-align: center; padding: 24px; gap: 16px; }

@@ -68,9 +68,20 @@ export function ScoreAnalysis({ rounds, language }: { rounds: Record<string, num
     <div className="score-chart">
       <p>{en ? 'Round-by-round trend' : '逐回合趨勢'} · {en ? 'Page' : '頁次'} {page + 1} / {pageCount}</p>
       {points.length ? <svg viewBox="0 0 580 220" role="img" tabIndex={0} aria-label={`${en ? 'Trend' : '趨勢'} · ${metric[language]}`}
+        onPointerDown={event => {
+          const { left, width, height } = event.currentTarget.getBoundingClientRect();
+          const scale = Math.min(width / 580, height / 220);
+          if (!scale) return;
+          const chartX = (event.clientX - left - (width - 580 * scale) / 2) / scale;
+          let nearest = 0;
+          for (let position = 1; position < points.length; position++) {
+            if (Math.abs(x(points[position]) - chartX) < Math.abs(x(points[nearest]) - chartX)) nearest = position;
+          }
+          setPoint(nearest);
+        }}
         onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setPoint(current => Math.max(0, Math.min(points.length - 1, current + (event.key === 'ArrowRight' ? 1 : -1)))); } }}>
         <path className="chart-axis" d="M56 30V184H536" />
-        <text x="48" y="35" textAnchor="end">{format(maximum)}</text>
+        <text x="0" y="25">{measure(maximum)}</text>
         <text x="48" y="184" textAnchor="end">{format(minimum)}</text>
         <text x="56" y="210">{page * 50 + 1}</text>
         <text x="536" y="210" textAnchor="end">{page * 50 + pageRows.length}</text>
@@ -79,12 +90,14 @@ export function ScoreAnalysis({ rounds, language }: { rounds: Record<string, num
         </line>}
         <path className="chart-trend" d={line} />
         {pageRows.map((row, index) => row[metric.key] === null || row[metric.key] === undefined ? null
-          : <circle key={index} cx={x(index)} cy={y(row[metric.key]!)} r={index === selectedPoint ? 6 : 3.5}>
+          : <circle key={index} className={index === selectedPoint ? 'is-selected' : undefined} cx={x(index)} cy={y(row[metric.key]!)} r={index === selectedPoint ? 6 : 3.5}>
             <title>{`${en ? 'Round' : '回合'} ${page * 50 + index + 1} · ${metric[language]}: ${format(row[metric.key] ?? null)} ${metric.unit ?? ''}`}</title>
           </circle>)}
       </svg> : <p>{en ? 'No numeric values are available for this metric.' : '此指標沒有可用數值。'}</p>}
-      <p aria-live="polite">{selectedPoint !== undefined ? `${en ? 'Round' : '回合'} ${page * 50 + selectedPoint + 1} · ${metric[language]}: ${measure(pageRows[selectedPoint][metric.key] ?? null)}` : ''}</p>
-      <p className="score-chart-legend">{en ? 'Dashed line: session mean. Use left and right arrows to read points.' : '虛線：當次平均值。使用左右方向鍵讀取資料點。'}</p>
+      <p className="score-chart-readout" aria-live="polite">{selectedPoint !== undefined ? `${en ? 'Round' : '回合'} ${page * 50 + selectedPoint + 1} · ${metric[language]}: ${measure(pageRows[selectedPoint][metric.key] ?? null)}` : ''}</p>
+      <p className="score-chart-legend">{en
+        ? `Dashed line: session mean ${measure(statistics.mean)}. Tap the chart or use the left and right arrow keys to read points.`
+        : `虛線：當次平均值 ${measure(statistics.mean)}。點選圖表或使用左右方向鍵讀取資料點。`}</p>
     </div>
     <header className="score-section-header">
       <div className="score-section-title"><h3 id="score-details-title">{detailsTitle}</h3><p>{en ? 'One row per item shown, practice items included.' : '每列是一排出現過的箭頭或字母，練習題也列在內。'}</p></div>
@@ -101,9 +114,9 @@ export function ScoreAnalysis({ rounds, language }: { rounds: Record<string, num
       </table>
     </div>
     {pageCount > 1 && <nav className="score-pagination" aria-label={en ? 'Result pages' : '成績分頁'}>
-      <button type="button" disabled={page === 0} onClick={() => setPage(page - 1)}>{en ? 'Previous' : '上一頁'}</button>
+      <button type="button" className="btn btn-ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>{en ? 'Previous' : '上一頁'}</button>
       <span>{en ? 'Page' : '頁次'} {page + 1} / {pageCount}</span>
-      <button type="button" disabled={page + 1 === pageCount} onClick={() => setPage(page + 1)}>{en ? 'Next' : '下一頁'}</button>
+      <button type="button" className="btn btn-ghost" disabled={page + 1 === pageCount} onClick={() => setPage(page + 1)}>{en ? 'Next' : '下一頁'}</button>
     </nav>}
   </section>;
 }

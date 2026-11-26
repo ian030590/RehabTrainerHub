@@ -282,7 +282,7 @@ test('result progression follows sending the confirmed config; source includes r
 
 test('pop-out packaging is self contained and registered as vision', async () => {
   const { gameDefinition } = await LoadLevels();
-  await CheckGamePackaging(gameId, { version: '1.1.0', component: 'PopoutSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
+  await CheckGamePackaging(gameId, { version: '1.1.1', component: 'PopoutSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
 });
 
 test('private bridge verifies parent, identity and version and restores language and settings', async () => {

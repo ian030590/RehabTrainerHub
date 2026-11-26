@@ -112,7 +112,7 @@ test('N-back rows keep the original columns, include practice and save through t
 });
 
 test('N-back owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'NBackLetters', category: 'memory', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'NBackLetters', category: 'memory', version: '2.1.1' });
 });
 
 test('N-back private bridge accepts only its own parent and replays settings and language', async () => {

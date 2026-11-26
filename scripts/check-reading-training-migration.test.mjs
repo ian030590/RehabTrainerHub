@@ -176,7 +176,7 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   }
   for (const file of ['settings.json', 'score.json', 'results/ReadingResults.tsx', 'exportCsv.ts']) await assert.rejects(access(resolve(gameRoot, file)), file);
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.0');
+  assert.equal(pkg.version, '2.1.1');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', '@jspsych/plugin-html-button-response', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));

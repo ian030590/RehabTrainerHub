@@ -160,7 +160,7 @@ test('Stop-signal rows keep the original columns, include practice and save thro
 });
 
 test('Stop-signal owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'StopSignalGame', category: 'attention', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'StopSignalGame', category: 'attention', version: '2.1.1' });
 });
 
 test('Stop-signal private bridge accepts only its own parent and replays settings and language', async () => {

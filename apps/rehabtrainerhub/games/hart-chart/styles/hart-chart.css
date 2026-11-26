@@ -57,6 +57,8 @@
 }
 
 .hart-back-button {
+  min-width: 44px;
+  white-space: nowrap;
   min-height: 44px;
   padding: 8px 14px;
   flex: 0 0 auto;
@@ -92,11 +94,12 @@
   min-width: 230px;
   padding: 0 8px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .hart-scale-control input {
+  min-height: 44px;
   min-width: 0;
   accent-color: var(--primary);
 }
@@ -107,7 +110,7 @@
 }
 
 .hart-tool-button {
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 14px;
   border-radius: var(--radius-m);
   font-size: 14px;
@@ -334,9 +337,9 @@
   align-items: center;
   gap: 7px;
   flex: 0 0 auto;
-  min-height: 38px;
+  min-height: 44px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -386,7 +389,7 @@
 
 .hart-code-input {
   width: var(--hart-cell-max);
-  height: 38px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: 7px;
@@ -760,10 +763,6 @@
     min-height: 0;
   }
 
-  .hart-code-input {
-    height: 34px;
-  }
-
   .hart-decoder-status {
     margin-top: 6px;
   }
@@ -780,17 +779,6 @@
     border-radius: var(--radius-m);
   }
 
-  .hart-back-button {
-    min-height: 36px;
-    padding: 5px 8px;
-    font-size: 0;
-  }
-
-  .hart-back-button svg {
-    width: 22px;
-    height: 22px;
-  }
-
   .hart-title-block h1 {
     font-size: 18px;
   }
@@ -804,9 +792,9 @@
   }
 
   .hart-tool-button {
-    min-height: 36px;
+    min-height: 44px;
     padding: 6px 9px;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .hart-decoder-dock-left .hart-workspace {
@@ -830,16 +818,12 @@
   }
 
   .hart-hints-toggle {
-    min-height: 32px;
-    font-size: 12px;
+    min-height: 44px;
+    font-size: 14px;
   }
 
   .hart-code-output {
     column-gap: 10px;
-  }
-
-  .hart-code-input {
-    height: 32px;
   }
 
   .hart-dock-zone-left,
@@ -897,7 +881,7 @@
 
   .hart-back-button,
   .hart-tool-button {
-    min-height: 36px;
+    min-height: 44px;
     padding-top: 5px;
     padding-bottom: 5px;
   }
@@ -919,9 +903,6 @@
     display: none;
   }
 
-  .hart-code-input {
-    height: 32px;
-  }
 }
 
 .hart-finish-button {

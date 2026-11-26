@@ -60,7 +60,7 @@ test('production-bundled launcher hands saved settings to the game and keeps con
   const posted = [];
   const frame = { addEventListener: (type, listener) => events.set(type, listener),
     contentWindow: { postMessage: (message, _origin, ports) => posted.push({ message, port: ports[0] }) } };
-  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['install-button', {}], ['runner-error', {}]]);
+  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['runner-error', {}]]);
   let ready;
   // Messages are rebuilt inside the launcher's realm, as a browser's structured clone would do.
   const channel = `class MessageChannel { constructor() {

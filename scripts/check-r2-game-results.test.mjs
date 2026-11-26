@@ -80,6 +80,17 @@ test('the shared results suite covers every registered R2 game', () => {
   assert.deepEqual([...cases.map(fixture => fixture.id), ...notInSharedResultsSuite].sort(), registeredGameIds);
 });
 
+test('every R2 results stylesheet supports tablet, phone and coarse pointer layouts', async () => {
+  for (const id of registeredGameIds) {
+    const css = await readFile(resolve(gamesRoot, id, 'results.css'), 'utf8');
+    assert.match(css, /@media \(min-width: 601px\) and \(max-width: 1023px\)\s*\{[^@]*?\.score-analysis \.score-statistics\s*\{[^}]*grid-template-columns: repeat\(3,/, id);
+    assert.match(css, /@media \(max-width: 600px\)\s*\{(?:[^{}]*\{[^}]*\})*?\s*\.experiment-results \.results-table\s*\{[^}]*min-width: 0;/, id);
+    assert.match(css, /th:first-child,\s*\.experiment-results \.results-table td:first-child\s*\{[^}]*position: sticky;[^}]*left: 0;/, id);
+    assert.match(css, /\.score-pagination button\s*\{[^}]*min-height: 44px;/, id);
+    assert.match(css, /@media \(pointer: coarse\)\s*\{\s*\.score-chart svg circle\s*\{\s*r: 6px;/, id);
+  }
+});
+
 for (const fixture of cases) {
   test(`${fixture.id}: results show statistics, an accessible chart and localized round details`, async () => {
     for (const language of ['zh', 'en']) {
@@ -96,6 +107,24 @@ for (const fixture of cases) {
       assert.match(markup, /<table[^>]*aria-label=/);
       assert.equal(RoundCount(markup), 2);
       assert.ok(!markup.includes('undefined') && !markup.includes('NaN'));
+      const en = language === 'en';
+      const svg = view.find('svg');
+      assert.equal(typeof svg.props.onPointerDown, 'function');
+      const last = view.find('circle', element => element.props.cx === 536);
+      svg.props.onPointerDown({ clientX: last.props.cx,
+        currentTarget: { getBoundingClientRect: () => ({ left: 0, width: 580, top: 0, height: 220 }) } });
+      const selected = view.render();
+      assert.match(view.find('p', element => element.props['aria-live'] === 'polite').props.children, /^(Round|Move|回合|步驟) 2 ·/);
+      assert.equal(view.find('p', element => element.props['aria-live'] === 'polite').props.className, 'score-chart-readout');
+      assert.equal((selected.match(/<circle[^>]*class="is-selected"/g) ?? []).length, 1);
+      assert.equal(view.find('circle', element => element.props.cx === 536).props.className, 'is-selected');
+      const unit = markup.match(/<dd>3 ([^<]+)<\/dd>/)?.[1];
+      const mean = unit ? `3 ${unit}` : '3';
+      assert.equal(view.find('p', element => element.props.className === 'score-chart-legend').props.children, en
+        ? `Dashed line: session mean ${mean}. Tap the chart or use the left and right arrow keys to read points.`
+        : `虛線：當次平均值 ${mean}。點選圖表或使用左右方向鍵讀取資料點。`);
+      assert.doesNotMatch(renderToStaticMarkup(svg), /chart-mean-label/);
+      assert.equal(view.find('text', element => element.props.y === '25').props.children, unit ? `4 ${unit}` : '4');
       view.find('select').props.onChange({ target: { value: fixture.alternate } });
       assert.match(view.render(), new RegExp(`value="${fixture.alternate}" selected=""`));
     }
@@ -106,6 +135,9 @@ for (const fixture of cases) {
       enemyNumber: index + 1, object: index + 1, castNumber: index + 1 }));
     const view = await LoadAnalysis(fixture.id, { language: 'en', rounds });
     assert.equal(RoundCount(view.render()), 50);
+    for (const label of ['Previous', 'Next']) {
+      assert.equal(view.find('button', element => element.props.children === label).props.className, 'btn btn-ghost');
+    }
     assert.equal(view.find('button', element => element.props.children === 'Previous').props.disabled, true);
     view.find('button', element => element.props.children === 'Next').props.onClick();
     assert.equal(RoundCount(view.render()), 1);
@@ -133,7 +165,7 @@ for (const fixture of cases) {
     const empty = await LoadAnalysis(fixture.id, { language: 'en', rounds: [] });
     assert.match(empty.render(), /No numeric values/);
     assert.match(empty.render(), /No round records/);
-    assert.doesNotMatch(empty.render(), /<svg|NaN|Infinity/);
+    assert.doesNotMatch(empty.render(), /<svg|chart-mean-label|NaN|Infinity/);
     const single = await LoadAnalysis(fixture.id, { language: 'en', rounds: [fixture.row] });
     assert.match(single.render(), /Sample standard deviation<\/dt><dd>N\/A</);
   });

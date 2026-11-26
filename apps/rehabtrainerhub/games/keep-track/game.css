@@ -46,7 +46,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .kt-answer { display: grid; gap: 8px; }
 .kt-row { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: 8px; }
 .kt-category { margin: 0; font-size: 1.15rem; font-weight: 700; }
-.kt-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.kt-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .kt-option { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; padding: 6px 4px; border: 2px solid var(--border-strong);
   border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.1rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; hyphens: manual; }
 .kt-option:disabled { cursor: default; opacity: .7; }
@@ -64,8 +64,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .kt-progress-track { order: 3; flex-basis: 100%; }
   .kt-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .kt-category { font-size: 1rem; }
-  .kt-options { gap: 4px; }
-  .kt-option { padding: 4px 2px; font-size: min(1.1rem, 3.4vw); }
+  .kt-option { padding: 4px 2px; font-size: 1rem; }
   .kt-message, .kt-feedback { font-size: 1.15rem; }
   .kt-submit { width: 100%; }
 }
@@ -75,7 +74,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .kt-hud { grid-column: 1 / -1; }
   .kt-answer-area { grid-column: 2; grid-row: 2; min-height: 0; overflow: auto; }
   .kt-answer { gap: 4px; }
-  .kt-option { min-height: 40px; }
+  .kt-option { min-height: 44px; }
 }
 
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }

@@ -122,7 +122,7 @@ test('Hart numeric results preserve all five original summary and round values w
 
 test('Hart owns its runtime, catalogue, settings and full results and is excluded from Hub bundles', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.2.0');
+  assert.equal(pkg.version, '2.2.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'qrcode']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
   for (const file of await readdir(gameRoot, { recursive: true })) {
@@ -215,4 +215,17 @@ test('Hart exit waits for fullscreen cleanup before returning to Hub or standalo
     resolveFullscreen(); await pending;
     assert.deepEqual(actions,[embedded ? 'exit' : 'game:configure']);
   }
+});
+
+test('mobile touch layout for hart-chart', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/hart-chart/styles/hart-chart.css', import.meta.url), 'utf8');
+  assert.match(css, /\.hart-back-button\s*\{[^}]*min-width: 44px/);
+  assert.match(css, /\.hart-back-button\s*\{[^}]*white-space: nowrap/);
+  assert.match(css, /\.hart-tool-button\s*\{[^}]*min-height: 44px/);
+  assert.match(css, /\.hart-scale-control input\s*\{[^}]*min-height: 44px/);
+  assert.match(css, /\.hart-code-input\s*\{[^}]*min-height: 44px/);
+  assert.doesNotMatch(css, /\.hart-code-input\s*\{[^}]*min-width:\s*44px/);
+  assert.match(css, /--hart-cell-min: 28px/);
+  assert.match(css, /--hart-cell-gap: 3px/);
+  assert.match(css, /--hart-cell-gap: 2px/);
 });

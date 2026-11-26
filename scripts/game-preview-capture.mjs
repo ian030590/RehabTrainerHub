@@ -4,9 +4,11 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 
+import { LayoutProbeExpression } from './r2-layout-probe.mjs';
+
 export class PreviewCaptured extends Error {}
 
-export function CreateGameCapture({ folder, send, session, frameSession, game, preview }) {
+export function CreateGameCapture({ folder, send, session, frameSession, game, preview, layoutAudit }) {
   return async name => {
     if (preview && name !== preview.phase) return;
     if (preview) {
@@ -19,6 +21,12 @@ export function CreateGameCapture({ folder, send, session, frameSession, game, p
     const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
     const png = Buffer.from(screenshot.data, 'base64');
     await writeFile(join(folder, `${name}.png`), png);
+    if (layoutAudit) {
+      const measurement = await game(LayoutProbeExpression(layoutAudit.viewportMode));
+      await writeFile(join(folder, name + '.layout.json'), JSON.stringify({
+        gameId: layoutAudit.gameId, phase: name, ...measurement,
+      }, null, 2) + '\n');
+    }
     if (!preview) return;
     const metadata = await sharp(png).metadata();
     assert.ok(Math.abs(metadata.width / metadata.height - 16 / 9) < 0.01, 'Capture the whole game in a 16:9 viewport.');

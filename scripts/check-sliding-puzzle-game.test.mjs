@@ -123,7 +123,7 @@ test('Sliding Puzzle results save one numeric row per slide through the private 
 });
 
 test('Sliding Puzzle owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SlidingPuzzleGame', category: 'higher-cognition', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'SlidingPuzzleGame', category: 'higher-cognition', version: '2.1.1' });
 });
 
 test('Sliding Puzzle private bridge accepts only its own parent and replays settings and language', async () => {

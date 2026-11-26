@@ -72,7 +72,7 @@ test('Gabor owns UI, dependencies, metadata and the exact original preview; the 
   }
   for (const file of ['settings.json', 'score.json', 'results/GaborResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.0');
+  assert.equal(pkg.version, '2.1.1');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -264,4 +264,10 @@ test('gabor-patching bridge binds once to the parent private port and ignores fo
   module.exports.RetryGameSave();
   module.exports.ExitGame();
   assert.deepEqual(sent.map(message => [message.type, message.sequence]), [['ready', 0], ['retry', 1], ['exit', 2]]);
+});
+
+test('mobile touch layout for gabor-patching', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/gabor-patching/game.css', import.meta.url), 'utf8');
+  assert.match(css, /label:has\(> input\[type=checkbox\]\)\s*\{[^}]*min-height: 44px/);
+  assert.match(css, /\.training-config input\[type=range\]\s*\{[^}]*min-height: 44px/);
 });

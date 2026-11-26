@@ -388,7 +388,7 @@ test('browser clock fixture advances real game timers without a product-only set
   assert.equal(performance.now, clock.now); assert.equal(window.setTimeout, clock.set); assert.equal(window.clearTimeout, clock.clear);
   assert.equal(clock.pending(), 0);
 });
-test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { version: '1.1.0', component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
+test('standard packaging registry assertion', () => CheckGamePackaging(gameId, { version: '1.1.1', component: 'ExploratorySaccadeGame', trainer: 'vision', category: 'vision' }));
 test('catalog entry', async () => assert.ok(/id: 'exploratory-saccade'/.test(await readFile(resolve(root, 'apps/rehabtrainerhub/games/catalog.ts'), 'utf8')), 'catalog must register exploratory-saccade'));
 test('lockfile workspace', async () => {
   const lockfile = JSON.parse(await readFile(resolve(root, 'package-lock.json'), 'utf8'));

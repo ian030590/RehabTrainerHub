@@ -237,7 +237,7 @@ test('production-bundled hand launcher starts its opaque game without acquiring 
   const inline = html.match(/<script nonce="test-nonce">([\s\S]*?)<\/script>/)[1];
   const events = new Map();
   const frame = { addEventListener: (type, listener) => events.set(type, listener) };
-  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['install-button', {}]]);
+  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}]]);
   let ready;
   let brokerCount = 0;
   let cameraCount = 0;
@@ -260,4 +260,17 @@ test('hand launcher names the selected official game and escapes its title', asy
   assert.match(html, /<title>Hand &lt;target&gt;｜居家訓練網<\/title>/);
   assert.match(html, /title="Hand &lt;target&gt;"/);
   assert.doesNotMatch(html, /<title>手勢指令對戰/);
+});
+
+test('standalone game fills the viewport and leaves installation to the browser', async () => {
+  const { RenderHandTrackingLauncher } = await import('../functions/_lib/handTrackingLauncher.js');
+  for (const capabilities of [[], ['pose-tracking']]) {
+    const html = RenderHandTrackingLauncher({ gameId: 'sample', version: '1', capabilities }, '/', 'nonce');
+    assert.doesNotMatch(html, /install-(?:bar|button|dismiss)|beforeinstallprompt/i);
+    assert.match(html, /html,body,iframe\s*\{[^}]*width:100%;height:100%/);
+    assert.match(html, /body\s*\{[^}]*height:100dvh/);
+    assert.match(html, /#game-shell\s*\{[^}]*position:fixed;inset:0/);
+    assert.match(html, /#game-shell iframe\s*\{[^}]*position:absolute;inset:0/);
+    assert.doesNotMatch(html, /grid-template-rows/);
+  }
 });

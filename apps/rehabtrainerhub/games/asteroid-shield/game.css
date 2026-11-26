@@ -10,6 +10,8 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input, select { font: inherit; }
+.training-config label:has(> input[type=checkbox]) { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.training-config input[type=range] { min-height: 44px; }
 .training-config input[type=range], .training-config input[type=checkbox], .training-config input[type=radio] { accent-color: var(--primary); }
 button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--heading); font-weight: 700; }
 button:disabled { opacity: .6; cursor: wait; }

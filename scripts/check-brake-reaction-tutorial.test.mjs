@@ -200,7 +200,7 @@ test('confirmation has three actions, wraps focus in both directions and returns
   assert.deepEqual(actions, ['start', 'demo', 'back', 'back']);
 });
 
-test('the tutorial ships in brake-reaction 1.3.0', async () => {
+test('the tutorial ships in brake-reaction 1.3.1', async () => {
   const pkg = JSON.parse(await readGame('package.json'));
-  assert.equal(pkg.version, '1.3.0');
+  assert.equal(pkg.version, '1.3.1');
 });

@@ -669,7 +669,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       minWidth: '64px',
       height: '44px',
       pointerEvents: 'auto',
-      fontSize: '13px',
+      fontSize: '14px',
     });
     camera.addEventListener('click', (event) => {
       event.preventDefault();
@@ -937,21 +937,21 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         ? 'max(8px, env(safe-area-inset-right))'
         : 'max(14px, env(safe-area-inset-right))';
       pedals.style.bottom = bottomInset;
-      pedals.style.gap = compact ? '6px' : '8px';
+      pedals.style.gap = '8px';
     }
     for (const button of pedalButtons) {
       button.style.minWidth = `${pedalWidth}px`;
       button.style.width = `${pedalWidth}px`;
       button.style.height = `${pedalHeight}px`;
       button.style.borderRadius = compact ? '15px' : '18px';
-      button.style.fontSize = compact ? '12px' : button.getAttribute('aria-label') === 'Throttle' ? '15px' : '13px';
+      button.style.fontSize = button.getAttribute('aria-label') === 'Throttle' ? '15px' : '14px';
     }
     if (camera) {
       camera.style.minWidth = compact ? '54px' : '64px';
-      camera.style.height = compact ? '40px' : '44px';
+      camera.style.height = '44px';
       camera.style.right = pedals?.style.right ?? '';
       camera.style.bottom = `calc(${bottomInset} + ${veryNarrow ? pedalHeight + steeringSize + 26 : pedalHeight + 10}px)`;
-      camera.style.fontSize = compact ? '11px' : '13px';
+      camera.style.fontSize = '14px';
     }
   }
 
@@ -996,21 +996,21 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         Object.assign(directionLabel.style, {
           minHeight: '36px',
           padding: '6px 8px',
-          fontSize: '12px',
+          fontSize: '14px',
           lineHeight: '1.15',
         });
       }
       if (titleBar) titleBar.style.display = 'none';
       if (hudPanel) {
         Object.assign(hudPanel.style, {
-          top: 'max(12px, env(safe-area-inset-top))',
+          top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
           left: 'calc(max(12px, env(safe-area-inset-left)) + 160px)',
           minWidth: '0',
           width: 'min(232px, calc(100vw - 190px))',
           maxWidth: 'calc(100vw - 190px)',
           padding: '7px 9px',
           gap: '4px',
-          fontSize: '11px',
+          fontSize: '14px',
           lineHeight: '1.25',
         });
       }
@@ -1032,21 +1032,21 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         Object.assign(directionLabel.style, {
           minHeight: '34px',
           padding: '5px 7px',
-          fontSize: '11px',
+          fontSize: '14px',
           lineHeight: '1.15',
         });
       }
       if (titleBar) titleBar.style.display = 'none';
       if (hudPanel) {
         Object.assign(hudPanel.style, {
-          top: 'max(10px, env(safe-area-inset-top))',
+          top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
           left: 'calc(max(10px, env(safe-area-inset-left)) + 142px)',
           minWidth: '0',
           width: 'calc(100vw - max(10px, env(safe-area-inset-left)) - 152px)',
           maxWidth: 'none',
           padding: '6px 7px',
           gap: '3px',
-          fontSize: '10px',
+          fontSize: '14px',
           lineHeight: '1.2',
         });
       }
@@ -1083,7 +1083,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         maxWidth: 'min(420px, calc(100vw - 280px))',
         padding: '10px 12px',
         gap: '6px',
-        fontSize: '13px',
+        fontSize: '14px',
         lineHeight: '1.3',
       });
     }
@@ -1146,7 +1146,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       borderRadius: '8px',
       background: 'rgba(15, 23, 42, 0.72)',
       color: '#fff',
-      fontSize: '13px',
+      fontSize: '14px',
       lineHeight: '1.3',
       boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
       backdropFilter: 'blur(4px)',
@@ -1154,7 +1154,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     Object.assign(status.style, { fontWeight: '800' });
     Object.assign(route.style, {
       color: 'rgba(191,219,254,0.95)',
-      fontSize: '12px',
+      fontSize: '14px',
       fontWeight: '800',
       overflowWrap: 'anywhere',
     });
@@ -1165,7 +1165,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       gap: '10px',
       flexWrap: 'wrap',
       color: 'rgba(226,232,240,0.88)',
-      fontSize: '12px',
+      fontSize: '14px',
       fontWeight: '700',
     });
     metrics.append(speed, distance, view);
@@ -1254,7 +1254,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       display: 'flex',
       alignItems: 'center',
       gap: '6px',
-      fontSize: '11px',
+      fontSize: '14px',
       fontWeight: '700',
       color: '#334155',
     });

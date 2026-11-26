@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AcceptsResult, CheckGameBridge, CheckGamePackaging, FakeClock, LoadGameModule } from './brain-r2-game-checks.mjs';
@@ -131,9 +132,15 @@ test('Tic Tac Toe results save one numeric row per move through the private chan
 });
 
 test('Tic Tac Toe owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TicTacToeGame', category: 'higher-cognition', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'TicTacToeGame', category: 'higher-cognition', version: '2.1.1' });
 });
 
 test('Tic Tac Toe private bridge accepts only its own parent and replays settings and language', async () => {
   await CheckGameBridge(gameId);
+});
+
+test('mobile touch layout for tic-tac-toe', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/tic-tac-toe/game.css', import.meta.url), 'utf8');
+  assert.match(css, /\.ttt-board\s*\{[^}]*grid-template-rows: repeat\(var\(--board-size\), minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.ttt-board\s*\{[^}]*aspect-ratio: 1/);
 });

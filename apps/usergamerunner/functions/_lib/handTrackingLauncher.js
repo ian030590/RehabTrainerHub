@@ -34,7 +34,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       #camera-consent { position:fixed;inset:0;background:var(--overlay);display:grid;place-items:center;padding:16px; }
       #camera-consent[hidden] { display:none; } #camera-consent section { max-width:30rem;padding:24px;background:var(--surface);border-radius:8px; }
       button { font:inherit;padding:12px;margin:4px;cursor:pointer; } button:focus-visible { outline:3px solid var(--primary); }
-      #install-button { position:fixed;top:8px;right:8px; } #runner-error { position:fixed;inset:0;padding:24px;background:var(--surface); }
+      #runner-error { position:fixed;inset:0;padding:24px;background:var(--surface); }
       #camera-consent p { white-space:pre-line; }
       #game-shell { position:fixed;inset:0;background:var(--surface); } #game-shell iframe { position:absolute;inset:0;background:transparent;color-scheme:light; }
       #input-preview { position:absolute;overflow:hidden; } #input-preview[hidden] { display:none; }
@@ -128,14 +128,12 @@ ${release.capabilities.includes('result-files') ? `      const ufovTrialColumns 
       const health=async () => { if(!navigator.onLine)return;try{const response=await fetch(config.basePath,{method:'HEAD',cache:'no-store'});if([404,410].includes(response.status)){stop();frame.remove();document.getElementById('runner-error').hidden=false;}}catch{} };
       const timer=setInterval(health,60000);window.addEventListener('online',health);window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
       if(window===window.top && navigator.serviceWorker) navigator.serviceWorker.register(config.basePath+'sw.js',{scope:config.basePath}).catch(()=>{});
-      let installPrompt=null;window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;document.getElementById('install-button').hidden=false;});
-      document.getElementById('install-button').onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;document.getElementById('install-button').hidden=true;}};
       frame.src=config.basePath+'package/index.html';
     });</script>
     </head><body>
       ${cameraSensor ? '<div id="game-shell"><div id="input-preview" hidden></div>' : ''}
       <iframe id="game-frame" title="${EscapeHtml(release.name ?? release.gameId)}" sandbox="allow-scripts" allow="fullscreen; autoplay${release.capabilities.includes('gamepad') ? '; gamepad *' : ''}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       <div id="camera-consent" hidden role="dialog" aria-modal="true" aria-labelledby="camera-consent-title"><section><h2 id="camera-consent-title">啟用相機 / Enable camera</h2><p id="camera-consent-text">${eyeTracking ? '影像只在此裝置由 WebGazer 處理；遊戲只收到眼動座標，不會上傳影像。<br>WebGazer runs on this device. Only gaze coordinates reach the game.' : '影像只在此裝置由 MediaPipe 處理；遊戲只收到手部座標，不會上傳影像。<br>MediaPipe runs on this device. Only hand coordinates reach the game.'}</p><button id="camera-enable" type="button">允許相機 / Enable camera</button><button id="camera-cancel" type="button">取消 / Cancel</button></section></div>${cameraSensor ? '</div>' : ''}
-      <button id="install-button" hidden type="button">安裝 / Install</button><p id="runner-error" hidden role="alert">此版本無法繼續使用，請返回遊戲入口。</p>
+      <p id="runner-error" hidden role="alert">此版本無法繼續使用，請返回遊戲入口。</p>
     </body></html>`;
 }

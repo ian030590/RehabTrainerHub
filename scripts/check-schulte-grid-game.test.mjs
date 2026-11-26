@@ -82,7 +82,7 @@ test('Schulte results save bounded numeric rows through the private channel', as
 });
 
 test('Schulte grid owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'SchulteGridGame', category: 'attention', version: '1.1.0' });
+  await CheckGamePackaging(gameId, { component: 'SchulteGridGame', category: 'attention', version: '1.1.1' });
 });
 
 test('Schulte grid private bridge accepts only its own parent and replays settings and language', async () => {

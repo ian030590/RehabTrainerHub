@@ -502,7 +502,7 @@ test('production-bundled sensor launcher wires preview and fullscreen without op
   assert.match(html, /<div id="input-preview"[^>]*hidden/);
   const inline = html.match(/<script nonce="test-nonce">([\s\S]*?)<\/script>/)[1];
   const Element = () => ({ hidden: true, style: {}, addEventListener(type, listener) { this[type] = listener; }, focus() {} });
-  const elements = new Map(['game-frame', 'game-shell', 'input-preview', 'camera-consent', 'camera-consent-title', 'camera-consent-text', 'camera-enable', 'camera-cancel', 'install-button']
+  const elements = new Map(['game-frame', 'game-shell', 'input-preview', 'camera-consent', 'camera-consent-title', 'camera-consent-text', 'camera-enable', 'camera-cancel']
     .map(id => [id, Element()]));
   const frame = elements.get('game-frame');
   frame.contentWindow = { postMessage: (message, origin, ports) => { frame.init = { message, ports }; } };

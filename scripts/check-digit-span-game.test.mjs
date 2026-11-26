@@ -116,7 +116,7 @@ test('Digit span rows keep the original columns, include practice and save throu
 });
 
 test('Digit span owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'DigitSpanRecall', category: 'memory', version: '2.1.0' });
+  await CheckGamePackaging(gameId, { component: 'DigitSpanRecall', category: 'memory', version: '2.1.1' });
 });
 
 test('Digit span private bridge accepts only its own parent and replays settings and language', async () => {

@@ -177,7 +177,7 @@ test('driving owns its UI and resources and is excluded from the Hub bundle', as
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.2.0');
+  assert.equal(pkg.version, '2.2.1');
   for (const name of ['react', 'react-dom', 'jspsych', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.ok(pkg.rehabTrainer.capabilities.includes('gamepad'));
   assert.ok(pkg.rehabTrainer.capabilities.includes('settings-storage'));
@@ -278,4 +278,13 @@ test('driving-rehab bridge binds once to the parent private port and ignores for
   module.exports.RetryGameSave();
   module.exports.ExitGame();
   assert.deepEqual(sent.map(message => [message.type, message.sequence]), [['ready', 0], ['retry', 1], ['exit', 2]]);
+});
+
+test('mobile touch layout for driving-rehab', async () => {
+  const css = await readFile(new URL('../apps/rehabtrainerhub/games/driving-rehab/game.css', import.meta.url), 'utf8');
+  assert.match(css, /label:has\(> input\[type=checkbox\]\)\s*\{[^}]*min-height: 44px/);
+  assert.match(css, /\.training-config input\[type=range\]\s*\{[^}]*min-height: 44px/);
+  const hud = await readFile(resolve(gameRoot, 'three-driving-rehab.ts'), 'utf8');
+  assert.match(hud, /top: 'calc\(max\(12px, env\(safe-area-inset-top\)\) \+ 52px\)'/);
+  assert.doesNotMatch(hud, /fontSize: '1[0-3]px'/);
 });
