@@ -216,11 +216,14 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
     })()`);
     const layout = await Evaluate(`(() => {
       const gameGrid = document.querySelector('${grid}');
+      const gridStyle = getComputedStyle(gameGrid);
       const note = document.querySelector('${orderNote}');
       return { width: innerWidth, height: innerHeight, pageWidth: document.documentElement.scrollWidth,
         hasSeparateSection: !!document.querySelector('.lobby-recommendations, #lobby-recommendations-title'),
         noteAboveGrid: note.getBoundingClientRect().bottom <= gameGrid.getBoundingClientRect().top,
-        columns: getComputedStyle(gameGrid).gridTemplateColumns.split(' ').length,
+        columns: gridStyle.gridTemplateColumns.split(' ').length,
+        gridWidth: gameGrid.clientWidth - parseFloat(gridStyle.paddingLeft) - parseFloat(gridStyle.paddingRight),
+        cardWidths: [...gameGrid.children].map(card => card.getBoundingClientRect().width),
         items: [...document.querySelectorAll('${cards}')].map(card => {
           const cue = card.querySelector('.module-card-order-cue');
           const actions = card.querySelector('.official-game-actions');
@@ -237,7 +240,11 @@ async function CheckViewport({ width, height, mobile, columns, account }) {
         }) };
     })()`);
     assert.deepEqual([layout.width, layout.height], [width, height]);
-    assert.ok(layout.pageWidth <= width, `Page scroll width ${layout.pageWidth} exceeds ${width}px.`);
+    assert.ok(layout.pageWidth <= layout.width, `Page scroll width ${layout.pageWidth} exceeds ${layout.width}px.`);
+    const minimumWidth = Math.min(450, layout.gridWidth);
+    for (const cardWidth of layout.cardWidths) {
+      assert.ok(cardWidth >= minimumWidth - 0.5, `Card width ${cardWidth}px falls below the ${minimumWidth}px minimum.`);
+    }
     assert.equal(layout.hasSeparateSection, false);
     assert.ok(layout.noteAboveGrid);
     assert.equal(layout.columns, columns);
@@ -338,8 +345,8 @@ try {
 
   const sizes = [
     { width: 360, height: 740, mobile: true, columns: 1 },
-    { width: 800, height: 900, mobile: true, columns: 2 },
-    { width: 1280, height: 800, mobile: false, columns: 3 },
+    { width: 800, height: 900, mobile: true, columns: 1 },
+    { width: 1280, height: 800, mobile: false, columns: 2 },
   ];
   for (const viewport of [false, true].flatMap(account => sizes.map(size => ({ ...size, account })))) {
     const name = `${viewport.account ? 'signed-in' : 'guest'}-${viewport.width}x${viewport.height}`;

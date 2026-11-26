@@ -1120,3 +1120,10 @@ test('game actions retain their install destinations and open and close the orig
   overlay.props.onClose();
   assert.equal(render().some(node => node.props?.game), false);
 });
+
+test('lobby module cards wrap at 450px and fill narrower containers', async () => {
+  const css = await readFile(new URL('globals.css', appRoot), 'utf8');
+  const [base, ...overrides] = StyleRules(css, '.module-grid');
+  assert.match(base, /grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(min\(450px,\s*100%\),\s*1fr\)\);/);
+  for (const rule of overrides) assert.doesNotMatch(rule, /grid-template-columns\s*:/);
+});

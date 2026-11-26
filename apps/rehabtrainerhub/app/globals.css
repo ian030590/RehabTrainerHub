@@ -1656,7 +1656,7 @@ html:has(dialog.package-game-overlay[open]) {
 
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(450px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -2916,10 +2916,6 @@ html:has(dialog.package-game-overlay[open]) {
 }
 
 @media (max-width: 1180px) {
-  .module-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .admin-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2956,10 +2952,6 @@ html:has(dialog.package-game-overlay[open]) {
   .lobby-heading {
     grid-template-columns: 1fr;
     gap: 22px;
-  }
-
-  .module-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .daily-task-list {
@@ -3528,12 +3520,6 @@ html:has(dialog.package-game-overlay[open]) {
 
   .hub-nav a[aria-current="page"] .hub-nav-icon {
     font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-  }
-}
-
-@media (max-width: 600px) {
-  .module-grid {
-    grid-template-columns: 1fr;
   }
 }
 
