@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -96,7 +96,7 @@ test('fake worker receives argv, prompt and nested guard; its exit status is pre
     assert.equal(result.status, 7, result.stderr);
     assert.match(result.stdout, /fake worker output/);
     const record = JSON.parse(readFileSync(recordPath, 'utf8'));
-    assert.equal(path.resolve(record.argv[1]), path.resolve(tempDir));
+    assert.equal(realpathSync(record.argv[1]), realpathSync(tempDir));
     assert.deepEqual([record.argv[0], ...record.argv.slice(2)], ['--cwd', '--sandbox', 'read-only']);
     assert.match(record.prompt, /## Task\nReview only\./);
     assert.equal(record.nested, '1');

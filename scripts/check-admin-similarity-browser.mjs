@@ -44,7 +44,7 @@ let browserStderr = '';
 const pending = new Map();
 const panelSelector = '#admin-panel-similarity';
 const pickerSelector = '#admin-similarity-game';
-const keyCodes = { Tab: 9, Enter: 13, ArrowLeft: 37, ArrowDown: 40 };
+const keyCodes = { Tab: 9, Enter: 13, Escape: 27, ArrowLeft: 37, ArrowDown: 40 };
 const responses = {
   '/api/auth/me': { user },
   '/api/auth/session': { user, token },
@@ -240,7 +240,16 @@ async function CheckViewport({ width, height, mobile }) {
   const initial = await Evaluate(`${picker}.value`);
   assert.equal(initial, options[0]);
   await Key('ArrowDown');
+  if (await Evaluate(`${picker}.matches(':open')`)) {
+    // The native desktop popup ignores CDP navigation keys.
+    await Key('Escape');
+    await WaitFor(`!${picker}.matches(':open')`);
+    const key = await Evaluate(`${picker}.options[1].text[0]`);
+    await Send('Input.dispatchKeyEvent', { type: 'keyDown', key, text: key });
+    await Send('Input.dispatchKeyEvent', { type: 'keyUp', key });
+  }
   await WaitFor(`${picker}.value === ${JSON.stringify(options[1])}`);
+  await CheckFocus('admin-similarity-game');
   await CheckLayout(width, height);
 
   const neighbor = await ChooseNeighbor(mobile);

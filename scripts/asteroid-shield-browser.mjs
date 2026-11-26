@@ -314,7 +314,9 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
     if (hasPixelFx && !capturedFx && await game('window.asteroidFxProbe.draws > 0')) {
       await capture('pixelfx-event'); capturedFx = true;
       await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }, pointerSession);
-      const before = await game('window.asteroidFxProbe.draws');
+      await until(() => game("matchMedia('(prefers-reduced-motion: reduce)').matches"), 'game frame sees reduced motion');
+      const before = await game(`new Promise(resolve => requestAnimationFrame(() =>
+        requestAnimationFrame(() => resolve(window.asteroidFxProbe.draws))))`);
       await new Promise(resolve => setTimeout(resolve, 1000));
       assert.equal(await game('window.asteroidFxProbe.draws'), before, 'Reduced motion stops real canvas playback.');
       await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, pointerSession);
@@ -371,7 +373,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
     assert.ok(cachedPaths.includes(scope + 'package/game.json'));
     assert.ok(cachedPaths.includes(scope + 'package/preview.webp'));
     assert.ok(cachedPaths.filter(path => path.startsWith('/games/')).every(path => path.startsWith(scope)), 'PWA cache must not include other games or versions.');
-    assert.ok(await game(`document.body.textContent.includes(${JSON.stringify(english ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')})`));
+    assert.ok(await game(`document.body.textContent.includes(${JSON.stringify(english ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')})`));
     assert.equal(saveAttempts(), 0);
   } else {
     await until(() => game(`document.body.textContent.includes(${JSON.stringify(english ? 'Save failed' : '保存失敗')})`), 'retry feedback');

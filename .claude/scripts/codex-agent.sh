@@ -90,14 +90,22 @@ audit() (
 ) 2>/dev/null
 
 audit "Agent invoked: $AGENT (sandbox $SANDBOX)" || true
-declare -A BEFORE_STATUS AFTER_STATUS EXISTED_PATHS CHANGED_PATHS
-if [ "$SANDBOX" = workspace-write ]; then
-  while IFS= read -r -d '' ENTRY; do
-    BEFORE_STATUS["${ENTRY:3}"]="$ENTRY"
-    case "${ENTRY:0:2}" in *R*|*C*) IFS= read -r -d '' OLD_PATH ;; esac
+read_status() {
+  local entry old_path
+  while IFS= read -r -d '' entry; do
+    printf '%s\0' "$entry"
+    case "${entry:0:2}" in *R*|*C*) IFS= read -r -d '' old_path ;; esac
   done < <(git status --porcelain=v1 -uall -z)
+}
+
+if [ "$SANDBOX" = workspace-write ]; then
+  BEFORE_STATUS=()
+  EXISTED_PATHS=()
   while IFS= read -r -d '' ENTRY; do
-    [ ! -e "$ENTRY" ] || EXISTED_PATHS["$ENTRY"]=yes
+    BEFORE_STATUS+=("$ENTRY")
+  done < <(read_status)
+  while IFS= read -r -d '' ENTRY; do
+    [ ! -e "$ENTRY" ] || EXISTED_PATHS+=("$ENTRY")
   done < <(git ls-files --cached --others --exclude-standard -z)
 fi
 export CCGS_CODEX_WORKER=1
@@ -105,17 +113,30 @@ printf '%s\n' "$PROMPT" | node "$WORKER_NATIVE" --cwd "$ROOT_NATIVE" --sandbox "
 WORKER_EXIT=${PIPESTATUS[1]}
 
 if [ "$SANDBOX" = workspace-write ]; then
+  CHANGED_PATHS=()
   while IFS= read -r -d '' ENTRY; do
-    AFTER_STATUS["${ENTRY:3}"]="$ENTRY"
-    case "${ENTRY:0:2}" in *R*|*C*) IFS= read -r -d '' OLD_PATH ;; esac
-  done < <(git status --porcelain=v1 -uall -z)
-  for CHANGED_PATH in "${!BEFORE_STATUS[@]}" "${!AFTER_STATUS[@]}"; do
-    [ "${BEFORE_STATUS[$CHANGED_PATH]:-}" = "${AFTER_STATUS[$CHANGED_PATH]:-}" ] || CHANGED_PATHS["$CHANGED_PATH"]=yes
+    for INDEX in "${!BEFORE_STATUS[@]}"; do
+      BEFORE_ENTRY=${BEFORE_STATUS[INDEX]}
+      [ "${BEFORE_ENTRY:3}" = "${ENTRY:3}" ] || continue
+      unset 'BEFORE_STATUS[INDEX]'
+      [ "$BEFORE_ENTRY" = "$ENTRY" ] && continue 2
+      break
+    done
+    CHANGED_PATHS+=("${ENTRY:3}")
+  done < <(read_status)
+  for ENTRY in "${BEFORE_STATUS[@]}"; do
+    CHANGED_PATHS+=("${ENTRY:3}")
   done
-  for CHANGED_PATH in "${!CHANGED_PATHS[@]}"; do
+  for CHANGED_PATH in "${CHANGED_PATHS[@]}"; do
+    EXISTED=no
+    for ENTRY in "${EXISTED_PATHS[@]}"; do
+      [ "$ENTRY" = "$CHANGED_PATH" ] || continue
+      EXISTED=yes
+      break
+    done
     while IFS= read -r OBSERVATION; do
       [ -z "$OBSERVATION" ] || printf 'codex-agent: write-guard: %s\n' "$OBSERVATION" >&2
-    done < <(bash .claude/scripts/write-guard.sh --root . check "$CHANGED_PATH" --agent "$AGENT" --existed "${EXISTED_PATHS[$CHANGED_PATH]:-no}" 2>&1)
+    done < <(bash .claude/scripts/write-guard.sh --root . check "$CHANGED_PATH" --agent "$AGENT" --existed "$EXISTED" 2>&1)
   done
 fi
 audit "Agent completed: $AGENT (exit $WORKER_EXIT)" || true
