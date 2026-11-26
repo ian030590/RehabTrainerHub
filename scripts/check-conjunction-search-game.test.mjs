@@ -282,7 +282,7 @@ test('result progression follows sending the confirmed config; source includes r
 
 test('conjunction-search packaging is self contained and registered as vision', async () => {
   const { gameDefinition } = await LoadLevels();
-  await CheckGamePackaging(gameId, { version: '1.1.1', component: 'ConjunctionSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
+  await CheckGamePackaging(gameId, { version: '1.1.2', component: 'ConjunctionSearchGame', trainer: 'vision', category: 'vision', title: gameDefinition.title.zh });
 });
 
 test('private bridge verifies parent, identity and version and restores language and settings', async () => {

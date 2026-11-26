@@ -24,6 +24,7 @@ label > input:not([type=checkbox]), label > select { display: block; width: 100%
 .asteroid-shield-canvas { display: block; }
 .asteroid-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; image-rendering: pixelated; }
 .asteroid-shield-phase-results .asteroid-fx { z-index: 21; }
+.asteroid-shield-results-container { border-radius: var(--radius); }
 .asteroid-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .asteroid-finish-anchor { flex: 0 0 64px; height: 48px; }
 @media (prefers-reduced-motion: reduce) { .asteroid-fx { display: none; } }

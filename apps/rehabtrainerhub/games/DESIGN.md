@@ -90,13 +90,13 @@ components:
     padding: "8px"
     height: "44px"
   key-metric-lead:
-    backgroundColor: "{colors.primary-movement}"
-    textColor: "{colors.text-on-accent}"
-    padding: "24px"
-  key-metric:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "transparent"
     textColor: "{colors.heading}"
-    padding: "24px"
+    padding: "0"
+  key-metric:
+    backgroundColor: "transparent"
+    textColor: "{colors.heading}"
+    padding: "0"
   interrupt-panel:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.md}"
@@ -139,11 +139,11 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 1。三組元素在每款遊戲刻意長得�
 - **認知棕**（`primary-cognition`／`-hover`）：注意力、記憶、高階認知、語言類。淡底 10%。
 - **口腔紫**（`primary-oral`／`-hover`）：口腔訓練類。淡底 9%。
 
-分類色只用在：主要按鈕底色、成果第一格主要指標底色、焦點外框、圖表資料點與趨勢線、設定摘要徽章文字與淡底、表單控制的 `accent-color`。
+分類色只用在：主要按鈕底色、焦點外框、圖表資料點與趨勢線、設定摘要徽章文字與淡底、表單控制的 `accent-color`。
 
 ### Neutral
 - **淺灰底**（`background`）：設定對話框內層、表格斑馬列。
-- **白表面**（`surface`）：設定區塊、指標格、中斷面板、表格儲存格、次要按鈕。
+- **白表面**（`surface`）：設定區塊、成果統計區塊、中斷面板、表格儲存格、次要按鈕。
 - **內文墨**（`text`）與**標題墨**（`heading`）：內文與 H1 到 H3。
 - **輔助灰**（`text-muted`）：說明、保存狀態、表頭、圖表座標文字。
 - **細邊線**（`border`）：區塊與表格分隔。**控制輪廓**（`border-strong`）：輸入框、次要按鈕外框。
@@ -199,6 +199,8 @@ Dial: ENERGY 1 / RHYTHM 1 / MOTION 1。三組元素在每款遊戲刻意長得�
 
 溫和的方：對話框、區塊、按鈕、輸入框都是 8px（`--radius`）；設定摘要徽章 6px。不使用膠囊形或正圓按鈕（手勢遊戲的圖示返回鈕除外，見 Components）。
 
+成果畫面所有帶底色、邊框或焦點外框的區塊與控制項一律使用 `--radius` 圓角，包括面板、當次設定、統計區塊、表格捲動區、可展開的明細與標題、按鈕及下拉選單。
+
 ## Components
 
 ### Buttons
@@ -253,7 +255,7 @@ div.experiment-container.results-container
     header.score-header > h1（當次成果）+ p（遊戲名稱）
     section.score-priority
       p.score-complete     已完成本次活動（Activity complete）
-      div.score-key-grid > div.score-key-metric × 1–3   第一格分類主色實心
+      div.score-key-grid > div.score-key-metric × 1–3   各指標皆透明、無邊框，僅以 24px 間距分隔
     p.score-save-status [role=status]   保存中…／已保存／保存失敗，請重試。／獨立練習，成果未保存至 Hub。
     div.score-actions
       button.btn.btn-ghost.score-retry-button   重試保存（只在失敗時）

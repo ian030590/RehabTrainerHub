@@ -911,6 +911,7 @@
 }
 
 .hart-results-container {
+  border-radius: var(--radius);
   min-height: 100dvh;
 }
 

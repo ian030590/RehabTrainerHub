@@ -245,3 +245,21 @@ async function LoadAnalysis(gameId, props) {
 function RoundCount(markup) {
   return (markup.match(/<tbody>(.*?)<\/tbody>/s)?.[1].match(/<tr>/g) ?? []).length;
 }
+
+test('registered result screens use spaced metrics and rounded controls', async () => {
+  for (const id of registeredGameIds) {
+    const css = await readFile(resolve(gamesRoot, id, 'results.css'), 'utf8');
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]+)\}/g)];
+    const declarations = selector => rules.filter(([, selectors]) =>
+      selectors.split(',').some(part => part.trim() === selector)).map(match => match[2]).join(' ');
+    assert.match(declarations('.score-key-grid > div'), /background:\s*transparent;/, id);
+    assert.match(declarations('.score-key-grid > div'), /border:\s*(?:0|none);/, id);
+    assert.doesNotMatch(declarations('.score-key-grid > div:first-child'), /background[^;]*--primary/, id);
+    assert.match(declarations('.score-key-grid'), /gap:\s*[1-9][\d.]*(?:px|rem|em);/, id);
+    for (const selector of ['.score-context', '.score-analysis .score-statistics', '.score-section-header select',
+      '.experiment-results .results-scroll', '.score-pagination button', '.experiment-results .score-return-button',
+      '.experiment-results .score-retry-button']) {
+      assert.match(declarations(selector), /border-radius:\s*var\(--radius/, id + ' ' + selector);
+    }
+  }
+});

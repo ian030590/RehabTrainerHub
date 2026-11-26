@@ -132,7 +132,7 @@ test('Tic Tac Toe results save one numeric row per move through the private chan
 });
 
 test('Tic Tac Toe owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'TicTacToeGame', category: 'higher-cognition', version: '2.1.1' });
+  await CheckGamePackaging(gameId, { component: 'TicTacToeGame', category: 'higher-cognition', version: '2.1.2' });
 });
 
 test('Tic Tac Toe private bridge accepts only its own parent and replays settings and language', async () => {

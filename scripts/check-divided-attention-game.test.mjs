@@ -99,7 +99,7 @@ test('divided attention results save bounded numeric rows through the private ch
 });
 
 test('divided attention owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'DividedAttentionGame', category: 'attention', version: '1.1.1' });
+  await CheckGamePackaging(gameId, { component: 'DividedAttentionGame', category: 'attention', version: '1.1.2' });
 });
 
 test('divided attention private bridge accepts only its own parent and replays settings and language', async () => {

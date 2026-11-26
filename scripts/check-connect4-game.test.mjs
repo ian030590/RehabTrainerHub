@@ -139,7 +139,7 @@ test('Connect 4 results save one numeric row per move through the private channe
 });
 
 test('Connect 4 owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'Connect4Game', category: 'higher-cognition', version: '2.1.1' });
+  await CheckGamePackaging(gameId, { component: 'Connect4Game', category: 'higher-cognition', version: '2.1.2' });
 });
 
 test('Connect 4 private bridge accepts only its own parent and replays settings and language', async () => {

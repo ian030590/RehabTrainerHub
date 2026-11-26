@@ -8,7 +8,23 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
   assert.equal(await game('getComputedStyle(document.querySelector(".experiment-results")).maxWidth'), '1248px');
   assert.equal(await game('getComputedStyle(document.querySelector(".experiment-container")).padding'),
     await game('innerWidth <= 600') ? '16px' : '24px');
-  assert.equal(await game('getComputedStyle(document.querySelector(".score-return-button")).backgroundColor === getComputedStyle(document.querySelector(".score-key-metric")).backgroundColor'), true, 'The main result action uses the same primary color.');
+  assert.ok(await game(`(() => {
+    const button = document.querySelector('.score-return-button');
+    const probe = document.createElement('span');
+    probe.style.backgroundColor = 'var(--primary)';
+    button.append(probe);
+    const primary = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return primary === getComputedStyle(button).backgroundColor && primary !== 'rgba(0, 0, 0, 0)';
+  })()`), 'The return button uses the game primary color.');
+  assert.ok(await game(`Array.from(document.querySelectorAll('.score-key-grid > *')).every(metric => {
+    const style = getComputedStyle(metric);
+    return style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.borderTopWidth === '0px' && style.borderLeftWidth === '0px';
+  })`), 'Key metrics have transparent backgrounds and zero-width borders.');
+  assert.ok(await game(`(() => {
+    const style = getComputedStyle(document.querySelector('.score-key-grid'));
+    return parseFloat(style.columnGap) > 0 && parseFloat(style.rowGap) > 0;
+  })()`), 'The key metrics grid has positive row and column gaps.');
   assert.equal(await game('document.querySelectorAll(".score-key-grid > div").length'), 3);
   const resultsText = await game('document.querySelector(".experiment-results").textContent');
   for (const placeholder of [String.fromCharCode(0x2014), 'undefined', 'NaN']) {
@@ -42,6 +58,8 @@ export async function CheckResultsPresentation(game, { defaultMetric, alternateM
     }
   }
   assert.equal(await game('Boolean(document.querySelector(".score-context dl"))'), true);
+  assert.ok(await game(`Array.from(document.querySelectorAll('.score-context, .score-analysis .score-statistics, .score-return-button'))
+    .every(element => parseFloat(getComputedStyle(element).borderTopLeftRadius) > 0)`), 'Result context, statistics and return buttons have rounded corners.');
   assert.equal(await game('document.querySelector(".score-analysis select").value'), defaultMetric);
   assert.equal(await game('Boolean(document.querySelector(".score-chart svg[role=img]"))'), true);
   assert.ok(await game(`document.querySelector(".score-analysis").textContent.includes(${JSON.stringify(english ? 'Round details' : '逐回合細節')})`));

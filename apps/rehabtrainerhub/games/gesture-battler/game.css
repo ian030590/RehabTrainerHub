@@ -87,7 +87,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-cue .extended { fill: var(--primary); }
 .gesture-cue strong, .gesture-calibration-notice { display: block; }
 .gesture-orientation-gate { display: none; }
-.gesture-results-container { position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; z-index: 30; }
+.gesture-results-container { border-radius: var(--radius); position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; z-index: 30; }
 .experiment-results { max-width: 960px; margin: auto; }
 .gesture-result-summary { display: flex; flex-wrap: wrap; gap: 20px; }
 .gesture-result-summary small, .gesture-result-summary strong { display: block; }

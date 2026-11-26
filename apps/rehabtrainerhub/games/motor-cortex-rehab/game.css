@@ -129,7 +129,7 @@ button:disabled { opacity: .6; cursor: default; }
 .game-tour h2 { font-size: 1.4em; margin: 0; }
 .game-tour p { line-height: 1.6; }
 .game-tour button { margin: 4px; }
-.motor-results-container { position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; }
+.motor-results-container { border-radius: var(--radius); position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; }
 .experiment-results { max-width: 960px; margin: auto; }
 @media(max-width:639px) {
   .motor-cortex-play { padding: 8px; gap: 8px; }

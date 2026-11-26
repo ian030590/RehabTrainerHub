@@ -7,15 +7,14 @@
 .experiment-results h2, .experiment-results h3 { margin: 0 0 12px; color: var(--heading); font-size: 1.2rem; }
 .experiment-results .score-note { margin: 10px 0 28px; color: var(--text-muted); }
 .score-priority, .score-analysis, .score-gesture-summary { padding: 24px 0; border-top: 1px solid var(--border); }
-.score-key-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 0; }
-.score-key-grid > div { padding: 24px; border: 1px solid var(--border); background: var(--surface); }
-.score-key-grid > div:first-child { background: var(--primary); color: var(--text-on-accent); }
+.score-key-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 24px; }
+.score-key-grid > div { min-width: 0; border: 0; background: transparent; }
 .score-key-grid dt { font-size: 1rem; }
 .score-key-grid p { margin: 0; font-size: 1rem; }
 .score-key-grid strong { display: block; margin: 12px 0 0; font-size: clamp(2.1rem, 4vw, 3rem); font-weight: 900; line-height: 1.1; letter-spacing: -.035em; }
 .score-key-grid dd { margin: 12px 0 0; font-size: clamp(2.1rem, 4vw, 3rem); font-weight: 900; line-height: 1.1; letter-spacing: -.035em; }
 .score-key-grid small { font-size: 1rem; letter-spacing: 0; }
-.score-flight-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 20px 0 0; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
+.score-flight-details { border-radius: var(--radius); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 20px 0 0; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
 .score-flight-details dt { color: var(--text-muted); font-size: .95rem; }
 .score-flight-details dd { margin: 4px 0 0; overflow-wrap: anywhere; }
 .score-context { padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 24px; }
@@ -75,7 +74,7 @@
   .score-section-header label { display: grid; gap: 8px; }
   .score-pagination button { flex: 1; }
   .score-key-grid { grid-template-columns: 1fr; }
-  .score-key-grid > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; }
+  .score-key-grid > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .score-key-grid dd { margin: 0; text-align: right; }
   .score-key-grid strong { margin: 0; text-align: right; }
   .score-context dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -102,3 +101,18 @@
 .score-details summary { min-height: 44px; padding: 10px 0; cursor: pointer; color: var(--heading); }
 .score-details .score-context { margin-top: 16px; }
 @media (max-width: 600px) { .score-actions { flex-direction: column; } .score-actions button { width: 100%; } }
+
+.results-container,
+.experiment-results,
+.experiment-results h1,
+.experiment-results button,
+.experiment-results .score-return-button,
+.experiment-results .score-retry-button,
+.score-pagination button,
+.score-section-header select,
+.score-details,
+.score-details summary,
+.score-context,
+.score-analysis .score-statistics,
+.score-chart svg,
+.experiment-results .results-scroll { border-radius: var(--radius); }

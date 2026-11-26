@@ -78,7 +78,7 @@ test('moving card owns dependencies, UI and captured gameplay preview and is exc
   }
   for (const file of ['settings.json', 'score.json', 'exportCsv.ts', 'results/DefaultTrainingResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.1.1');
+  assert.equal(pkg.version, '2.1.2');
   assert.deepEqual(pkg.rehabTrainer?.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));

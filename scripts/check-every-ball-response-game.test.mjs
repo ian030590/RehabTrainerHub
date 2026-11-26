@@ -713,7 +713,7 @@ test('the ball sits where the legacy stage put it on wide, tall and short screen
 test('Every Ball owns its runtime, catalogue entry and results without Hub or camera code', async () => {
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@rehab-trainer/game-every-ball-response');
-  assert.equal(pkg.version, '2.1.1');
+  assert.equal(pkg.version, '2.1.2');
   for (const name of ['react', 'react-dom', 'jspsych', 'pixi.js', 'tone']) assert.ok(pkg.dependencies[name], name);
   assert.equal(pkg.dependencies['@rehab-trainer/ui'], undefined);
   assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'microphone-level', 'pointer', 'pose-tracking', 'settings-storage', 'touch']);

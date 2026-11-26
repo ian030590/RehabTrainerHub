@@ -121,7 +121,7 @@ test('Keep Track rows keep the original columns, include the practice block and 
 });
 
 test('Keep Track owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.1.1' });
+  await CheckGamePackaging(gameId, { component: 'KeepTrackRecall', category: 'memory', version: '2.1.2' });
 });
 
 test('Keep Track private bridge accepts only its own parent and replays settings and language', async () => {

@@ -121,7 +121,7 @@ test('Hex results save one numeric row per move through the private channel', as
 });
 
 test('Hex owns its runtime, catalogue entry and results without Hub dependencies', async () => {
-  await CheckGamePackaging(gameId, { component: 'HexGame', category: 'higher-cognition', version: '2.1.1' });
+  await CheckGamePackaging(gameId, { component: 'HexGame', category: 'higher-cognition', version: '2.1.2' });
 });
 
 test('Hex private bridge accepts only its own parent and replays settings and language', async () => {
