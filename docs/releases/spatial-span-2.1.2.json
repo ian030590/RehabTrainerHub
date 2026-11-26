@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "spatial-span",
+  "version": "2.1.2",
+  "name": "空間廣度記憶（Spatial Span）",
+  "description": "記住方格依序亮起的位置，再照原本順序或倒過來點回去，練習視覺空間工作記憶與路徑維持。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Cj-CzG-n.js",
+      "size": 577559,
+      "sha256": "1d0ed2ae4489330880e709120564ca3e0af80c52a101bf08bbd806a08302db70",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-B-8c1UAC.css",
+      "size": 22085,
+      "sha256": "5edbbd3a387d80609c3dd790c8ca821ee9a286f57517536744fad56b1f2dedaf",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 590,
+      "sha256": "3225ff6c471b2d53ebe5e8eafbe87bcb169c19c6a43e1bf9fe493005881719ef",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 426,
+      "sha256": "3d18f476f8fa74d97384cd26f9541c045fb2aa3a989245e93b16ff252b40b891",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 7574,
+      "sha256": "c22cf665ce790e3471785f13595641b2622836d1d2d7dcb8b5d3817a01c13321",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "c13d82d09934577dd12bfcc494e9a2b84f2ddc810731356a25ad87e8098a028a",
+  "approvedAt": "2026-11-26T13:22:18.125Z"
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "driving-rehab",
+  "version": "2.2.2",
+  "name": "駕駛注意力模擬練習",
+  "description": "在送貨任務中回應突發事件；紀錄僅反映當次操作，不判定駕駛能力。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/driving-sprites-BiQdvI-R.png",
+      "size": 318396,
+      "sha256": "573a8fa6a47c41301f020afed512494b50edb6e8d6df2fcf9472311f45bee73b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-DgrfWo20.js",
+      "size": 734135,
+      "sha256": "a06d3dc7a537f30bca3f1986654f267a73eee3100837854cea19c5dca9b3c657",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-CU-EYMyz.svg",
+      "size": 3334,
+      "sha256": "18606feaddf80a01446009f472d5d3a6b949f1a2a3ef4ea4e82ea8d50da8e2d7",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-DSUDGG7W.css",
+      "size": 20752,
+      "sha256": "be1f21b447cda2ce699decb827b2b2ad14ed9b54ba58b36c94fa080d831646eb",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "efa1a3147742d8a77c6805e6ffa6e20704657f33cf379b99ad411639e8504b4e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 29606,
+      "sha256": "1822387a884043b3b4dd942f5f6b6a415a3a7add7ffa3753223ce754a05fbbd3",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "bf87b8918648c0b4fb8427142622139893703605bf7243ee7485d06a2af21674",
+  "approvedAt": "2026-11-26T12:56:01.728Z"
+}

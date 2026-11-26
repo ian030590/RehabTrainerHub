@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "stop-signal",
+  "version": "2.1.2",
+  "name": "煞車抑制反應（Stop-Signal）",
+  "description": "依形狀快速按左或右，看到形狀周圍出現星形停止訊號時立即收手，練習動作衝動抑制與專注控制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BYqMBPRa.js",
+      "size": 581281,
+      "sha256": "db48339431e36785c9633c98a0b8d3c26bc1af1ce4d8064636f59a646a1e114e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CCKYoSWg.css",
+      "size": 22246,
+      "sha256": "c9a06036c0e2806520e98a22f6e7a739144d4af386cdc7f263fd74fd9d71b1bb",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 600,
+      "sha256": "79c9bf6ae5036b2455b06b6a7c28c33c8f67b0a11c597508614c0b9d9c155d0e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "0b4931ce1faa9758072e24d9b94a21d07a2217626dd8f9693984fbdfbf5c73d2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3040,
+      "sha256": "859e0f3e3b927d71f73d61bc07fd800ccc99408e031c858ef87b15cc06002e17",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "e63be3375f920c4db53696ae411da91173dd49191cea8317c72339fe17999f69",
+  "approvedAt": "2026-11-26T13:22:55.519Z"
+}

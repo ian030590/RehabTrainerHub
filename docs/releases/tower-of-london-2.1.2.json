@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tower-of-london",
+  "version": "2.1.2",
+  "name": "倫敦塔規劃（Tower of London）",
+  "description": "依柱子容量限制移動彩球達成目標排列，練習前額葉執行功能、問題解決與心智預先規劃。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BkhUoMpi.js",
+      "size": 576507,
+      "sha256": "b028797854343c4a5858aec5072b817da1e4c9e9722edbc8d09af6da27a30e0a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C3uJVheE.css",
+      "size": 23463,
+      "sha256": "20313d1412d382f300c9030189ea9c549d519aed4d297f960a13bb76d3904f76",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 589,
+      "sha256": "ae6f3014e08b1aea3c3e9ce76f479881821708cbf36749bf345ca1183dd9c8c4",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 426,
+      "sha256": "7ef2f54a00c65c03178cd9fa0a1f821b1cc7fbab1ed478e5c2ad3498896d89e0",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 12820,
+      "sha256": "c4a041d34f3829aca0e0cf111a3d9ee7911906b8361ca6722c7a5cc7e4fcac51",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "ce30c3969240397b0fc1d703533277bce35d70e8cc9cf5ee5f827c3b817da452",
+  "approvedAt": "2026-11-26T13:26:59.910Z"
+}

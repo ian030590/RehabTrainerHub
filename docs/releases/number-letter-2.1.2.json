@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "number-letter",
+  "version": "2.1.2",
+  "name": "數字字母切換（Number-Letter）",
+  "description": "字母數字組合出現在畫面四格之一：上半部判斷數字奇偶，下半部判斷字母是子音或母音，練習在兩種規則間切換。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BXvNbTeH.js",
+      "size": 579572,
+      "sha256": "0b2916bd2e304a98b09cc31297e0018b32c894235d72fe9fa90105338fee9e65",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-C2UKXV42.css",
+      "size": 22469,
+      "sha256": "f41fa3fbe1caf4d6e869303b1676b0fc627ff777e418a3dff45c29b81ed09d13",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 685,
+      "sha256": "70f331b743aed78632f930899422073605878a9c316da7ccf90578405853ea3f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 427,
+      "sha256": "db9f8e9aecbc07bae71d7ed46b2416b866145cc37f0862027cf779c904607637",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5458,
+      "sha256": "cef66ebb99be2133173b0bf4952f742ea8e736def50737c6797540ae4144918e",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "2b2c3a643cd41aef72f1f8117e838eac869554af687783db9875f02ec81bed8a",
+  "approvedAt": "2026-11-26T13:13:10.466Z"
+}

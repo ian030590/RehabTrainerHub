@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "sudoku",
+  "version": "2.1.2",
+  "name": "數獨",
+  "description": "依規則把數字填進空格：初級是拉丁方陣，中級是魔方陣，高級是 9 × 9 數獨。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-fLYutW8q.js",
+      "size": 573128,
+      "sha256": "22030c3e898f85494ca1317fce8d193e36d4e86eade1cd33f2b808e7eb15e1c0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CbowIh0b.css",
+      "size": 20921,
+      "sha256": "e21f15d4bc341b02788dd4f4e08a0a9059cf2a230c40f5904687bd1ce8ca03e1",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 506,
+      "sha256": "9de6d72ddd29797b748d705162a3c63854a5a9839b25878d15cd576d256c69c8",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 396,
+      "sha256": "d3da7549db8c6ad30d3fd9dbbf7cbc58474c530b6b92030cf154947328581520",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4996,
+      "sha256": "e717f6446c92bdbe7fc00911ff4d6669191ab63664bf7f2ea21a9b7047efe73a",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "e6ea01bdf5fef2a14d92bf17dfe8b89ab64b7941ae0610ba2148e148ca49d13f",
+  "approvedAt": "2026-11-26T13:24:09.021Z"
+}

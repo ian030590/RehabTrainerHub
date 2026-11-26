@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "reading-training",
+  "version": "2.1.2",
+  "name": "閱讀訓練（RSVP）",
+  "description": "使用快速連續視覺呈現練習閱讀速度與文章理解。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-OyVz_HX6.js",
+      "size": 1188730,
+      "sha256": "81c7ae7d451cb8c0d5cdb81cb63cb2af528fdf1737e47c8331b05b0d1770c469",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Cl94Nq9J.css",
+      "size": 21510,
+      "sha256": "55152dbd682710347c06121557a1e03b1c5df0f70206b454d1d6fbd323ee9089",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 499,
+      "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 412,
+      "sha256": "20d1f9edd30460c13b0c6cdf713a98bb9dcb1d8efa3f1e4f89a1a567a7e10d64",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1990,
+      "sha256": "b61a74dcba26f8fe0435f91ad53e735351d07c5fbc45f13b2cdd0575b50673a9",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "a8fa8a05c85eb0c0a0c2f8ffc09669623fe3833ac0108a04f134ade4390e09a8",
+  "approvedAt": "2026-11-26T13:17:51.641Z"
+}

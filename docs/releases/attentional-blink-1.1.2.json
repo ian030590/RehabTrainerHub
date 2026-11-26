@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "attentional-blink",
+  "version": "1.1.2",
+  "name": "注意力眨眼",
+  "description": "一串字母在中央快速閃過，從中抓出夾在裡面的兩個數字，練習在極短時間內連續捕捉目標。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-D7zgXZ-x.js",
+      "size": 569003,
+      "sha256": "f86e3d9408d33f5be32a55a246c13776dc102de6d60675b6fa72709099c6f405",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BPoOM32m.css",
+      "size": 20982,
+      "sha256": "1cdd67ea56a51939a60850e72e5fde4c0f33aaca6c02c1417b097e363a7458c6",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 547,
+      "sha256": "f8874096cff1c3446d605da319ba6ded9417e74dc4f3afc375d35edbf3f4b99a",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "448f6a6e56b37d09fbfb7d7d529076380c5690098765d63e3a672785bc3f5a33",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4010,
+      "sha256": "8f1360eddeb3583c89b60ba63c8c3e6b4563bacf15fad8e3ba754bb98a7aa8ea",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "dea1fc8b80294b75468b962b8652b08630415363509c8a91e586dd7e3b03955d",
+  "approvedAt": "2026-11-26T12:49:01.566Z"
+}

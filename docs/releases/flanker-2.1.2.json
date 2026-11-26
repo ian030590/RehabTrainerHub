@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "flanker",
+  "version": "2.1.2",
+  "name": "側翼干擾選擇（Flanker）",
+  "description": "辨識中央箭頭指向並忽略兩側干擾，練習視覺聚焦與干擾抑制。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CPo9TzcE.js",
+      "size": 573897,
+      "sha256": "be8e0bf4a4308c1211621d89f13fba8e60d5741b5e991657b6f259ce4d155a83",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Ipz3IPH4.css",
+      "size": 21914,
+      "sha256": "fef801941ce6078693498b5440495b65b6effcffba3ae7c427e5ce7638157d70",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 525,
+      "sha256": "ac359b5beaa3ed464d35f5e19d1992f5c45870d0a3d7b50b01aaf69cf3696373",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 421,
+      "sha256": "d9ef0532e87705d6bcdf5116a2cffdce789a274db825714967bd076f13519c09",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4394,
+      "sha256": "737b31525edbdff8e597dd14568213e709e84dab56e5e13268e99ba7cc2455de",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "a0a07391ea6cc217acbbbfd400054f8edd6e7ada7f6236acfd6628274d5b8cc5",
+  "approvedAt": "2026-11-26T12:58:12.132Z"
+}

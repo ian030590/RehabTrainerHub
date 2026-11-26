@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "divided-attention",
+  "version": "1.1.2",
+  "name": "分配注意力",
+  "description": "一邊用滑鼠或手指跟住移動的圓點，一邊回答下方不時出現的算式，練習同時顧到兩件事。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-_CvIxvmI.js",
+      "size": 573042,
+      "sha256": "7f49284600935849e1ac39cf3394d3192c18cfc4c4f8ab3d14baa3a560b38e81",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DDVaZ3XG.css",
+      "size": 22082,
+      "sha256": "9db135deabca30dc613b0534bec38ef29c9809c22509c506cac2d5e2d20f3700",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 567,
+      "sha256": "0b94c75f8294919487293a6e204ac3f6b230099e563f760cb5945ea709d21a77",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 405,
+      "sha256": "4d9e4974e4e8885ba07471ba9f556ba79de8fd38e215d696d8a7e9f615fe240e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4620,
+      "sha256": "7d9ca3045af18e7f1e8a4da98f84d3ead7bff2d94fb0f6be6b8a836790c0f5d8",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "0cec6b909f46fb5d124003fc58bc7825985aed565fa1fcd78fe9f6c2034a886c",
+  "approvedAt": "2026-11-26T12:54:00.692Z"
+}

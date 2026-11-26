@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "sliding-puzzle",
+  "version": "2.1.2",
+  "name": "滑塊拼圖",
+  "description": "把空格旁的方塊滑進空格，一步步把數字排回順序。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Do7u0lXQ.js",
+      "size": 571326,
+      "sha256": "ba9216953a07f469b38a9e422cda5274bc18e56c8732034b8c1ab3de56ee4a84",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dzbmz8IJ.css",
+      "size": 20934,
+      "sha256": "c3e5136b6beaf9595625b813ada3eb865afa858d4bdd3460fc582f7e73a284f0",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 464,
+      "sha256": "80d209e3af3e8a4d4c9b2a08572a489bf5977b641a361b7a597ae3217376543e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "0451e08fc54ee04d5a57c18f9e0886f05d8291f11e765cae06519996ec28e19a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6968,
+      "sha256": "7b1f717a0970c5235a82308925bd9b6bea2b99f8ae39210835bc9685c033c826",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "85888c226dd6bf29574f12c06b3bc3fc22e0508caf74ab842769417bdf095ea0",
+  "approvedAt": "2026-11-26T13:21:41.370Z"
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "continuous-performance",
+  "version": "1.1.2",
+  "name": "連續表現作業（CPT）",
+  "description": "字母一個接一個快速出現，只有看到目標字母才按，練習在長時間等待中保持警覺。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CJjVtGwk.js",
+      "size": 571640,
+      "sha256": "195f955b857052c7046eaf65d1c81cae8004d6c9d0ecc659a2304e477c2a0636",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Bl8l0Y-6.css",
+      "size": 20754,
+      "sha256": "45ba8a8320f48bac5e355e49979652db630454628c97a09ed9a192e5e7ad7344",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 566,
+      "sha256": "b8c6849897c5a570d16f020579e70ad850c5a7e12a81934478dc9ec54b5454d3",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 417,
+      "sha256": "5cec1bad2819e50762fedc06dc037cbecd6f7a32115204de39c2efbec8544de9",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3480,
+      "sha256": "2ba8573dae73d19cf9cb7dcb3dd7db00739724bc9c003b0042d9a836e61ca3cb",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "734965a3c4b882efd6f808cbc78d2b92f7b4cc4dc42773cc1716839f3fc72429",
+  "approvedAt": "2026-11-26T12:52:48.906Z"
+}

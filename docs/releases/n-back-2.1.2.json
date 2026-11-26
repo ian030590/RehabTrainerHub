@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "n-back",
+  "version": "2.1.2",
+  "name": "工作記憶更新（N-back）",
+  "description": "觀察依序出現的字母，判斷是否和前 N 個相同，練習工作記憶的動態更新與維持。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-D8VCPOHM.js",
+      "size": 575730,
+      "sha256": "f659cdb616f0242389d8108ded16eaa27a5c96cbaca08c94fa7a97acad5ee913",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DuTcqiXY.css",
+      "size": 21049,
+      "sha256": "269252dfc9c0e88502acac5a04e304c702a5410c31d93a78ad58129d470c3ef2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 579,
+      "sha256": "9cfa69f3bc431d2a540d773080cbcade992cf2a89787afcca5866aae6964239f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 420,
+      "sha256": "dbd69dc40db9174a3f14fbe53d4125a4ba0afe26f4671065a33fec48111142f0",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 4252,
+      "sha256": "432f42dfa622d8ba91f4367a49a8a2098942e98d59362c6469ce5f3609371dea",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "0e0bb14ef2135d70129d990bf5464f287d3c0963b069840dd983fc5892df87ff",
+  "approvedAt": "2026-11-26T13:12:31.739Z"
+}

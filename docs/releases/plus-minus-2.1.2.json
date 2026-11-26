@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "plus-minus",
+  "version": "2.1.2",
+  "name": "心算加減切換（Plus-Minus）",
+  "description": "二位數一個一個出現，依序做加 3、減 3 與加減輪流三段心算，用大數字鍵作答，練習在規則之間切換。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Ba6mEjXy.js",
+      "size": 572552,
+      "sha256": "141de72b726147120e8516e5ba1a4234f059cfc558df9643841b98999b552986",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DO34aRhL.css",
+      "size": 21974,
+      "sha256": "93ab08efa5ff4d6b533047aa5cc6c3f7f8a1957001681fcdaeef1595320de88b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 617,
+      "sha256": "89a8935438d59832f6696cf89a6ebe3297a6cb36188c0c3b7a6ccbc97f26e6d6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "fe0cf0d8ab66b8b82866d17a69aeb8b3c675033b3957a6c9d59fcb44aba906d4",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6436,
+      "sha256": "bb8112488a9c3d2fdbe25ce6463dae5d7b292acd2c3f460b7db04ce0f75c3c94",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "2fe5b9c20e47e8c4f63f53486439f132c9f851d4f74f92de5d073b439846bb97",
+  "approvedAt": "2026-11-26T13:15:48.484Z"
+}

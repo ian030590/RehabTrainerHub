@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "pattern-memory",
+  "version": "1.1.2",
+  "name": "圖形記憶",
+  "description": "記住九宮格裡的彩色圖形，短暫空白後判斷畫面有沒有改變，練習短時間記住看到的畫面。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BcpCrmuR.js",
+      "size": 572451,
+      "sha256": "b5033e1ec2c3886ff9f6e42c82bb55c22b98a8ca643d7123c34c03666b136bbc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CsTM-UtF.css",
+      "size": 21707,
+      "sha256": "3d47451ae46c88ef77a3b807029ac4f6c76e28e95b0dd2259a7c418f808fcdea",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 566,
+      "sha256": "bdb2bcbb7b3f84af27ab881fe318688e8cec7630212c9e79321d7dac373cbf32",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "312320021457473425ec1c45154c38954e46af4c4758e7f6b0a27ae8ae0ecce2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5356,
+      "sha256": "13080dd37e7bd2cbef2c16eebb928acbb9648698905597d447043eca8657aa30",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "96136a6d2ef47e773558717866fe0f16bec0fb67f63f6f48d0a73832bd0ed47e",
+  "approvedAt": "2026-11-26T13:15:09.479Z"
+}

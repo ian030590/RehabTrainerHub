@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "sart",
+  "version": "1.1.2",
+  "name": "持續注意反應（SART）",
+  "description": "數字依序快速出現，看到指定數字時忍住不按，其他數字都要按，練習長時間維持專注。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-CfMEEkFo.js",
+      "size": 569075,
+      "sha256": "a87ecbf2619a1a379ca69bfe97dffefdbbf1606005e25bbc050619af4de6bfa2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-B_yYwZGS.css",
+      "size": 20945,
+      "sha256": "58e9bb7e1a9469195dbba60bae1ae825506d2527da109e2f8cb48ffcafa54a98",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 557,
+      "sha256": "06a9ba2691902de3a981fc7367dde60576e3fd979a73331ba06c9928e5a0ed5e",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 418,
+      "sha256": "ec1df6d443c1cc6d30e660cbbd76f8e402f4773d4aa06331b7cf3d1492cee647",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2752,
+      "sha256": "dea12c40c04896fd56078d30d0ad4d38435f6ccf269759406689a9c7db6d5597",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "924cfaaa392ea4b92b4a46cb6f74b6e49f4f8d93300ed0676f3a907edf127722",
+  "approvedAt": "2026-11-26T13:18:30.496Z"
+}

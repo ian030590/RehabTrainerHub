@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "keep-track",
+  "version": "2.1.2",
+  "name": "類別記憶追蹤（Keep Track）",
+  "description": "詞語一個一個出現，記住指定類別各自最新出現的詞，最後點選作答，練習隨時更新記住的內容。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BL2w0C-v.js",
+      "size": 574737,
+      "sha256": "c5c300fc70d3aca49dfe4a07f6d93a6f0c9f9d76bafdc00ac07f2905738f870a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BeVquY1N.css",
+      "size": 21999,
+      "sha256": "dbe78fb38ce90cd9787e034e99ffe3bafe97351208e5134b1ebad8ed03c853cc",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 592,
+      "sha256": "47cd04b1e0ad4fc682b720922445ab92320f71686943145f1fe49591a0b16135",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 424,
+      "sha256": "38b7f641169d540c073cbcccb773a97cbc851076c19ce35fe353efcba1b44c65",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8056,
+      "sha256": "ff1cdb14923aff009bc411fe8f7222b2a0062ac45139a2ae0e2cd38b29f4d143",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "846e9c78144f879b0a4d7d4c4077bafa77dcbcf356f010480e2b266646d74269",
+  "approvedAt": "2026-11-26T13:04:47.598Z"
+}

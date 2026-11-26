@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "maze",
+  "version": "2.1.2",
+  "name": "迷宮",
+  "description": "每局產生新的迷宮，一格一格找路，從起點走到綠色終點。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-686FwO4m.js",
+      "size": 573614,
+      "sha256": "15458a92bd33c76afbb24f3fd78ae45e4bfc39bc7ae2756508dbd6445977d99c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CHLEAEte.css",
+      "size": 21857,
+      "sha256": "6dd3564b6d1a8adf25f646885f0fc615d76a5d834fb18f3844de502dc57fda1b",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 454,
+      "sha256": "1c124c206f2226a549e7cf16c5553b643b0b1c219f4e2adc3bdc0d8461ef0e53",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 396,
+      "sha256": "c4a2c3ef47198675968fa6c9363fc977a1d86646936c08252304d7da1bdd5d59",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5508,
+      "sha256": "5888cc0f73c6df498de31788a11f6ce7f4683b5d42df69ee77fd91399ca8e000",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "10ee483c443b3d193dba2a3ad792bc15b266c571d14b01fccb7da50b90ade4a5",
+  "approvedAt": "2026-11-26T13:06:53.889Z"
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "simon-says",
+  "version": "2.1.2",
+  "name": "順序記憶",
+  "description": "看四個按鈕依序亮起，再照同樣的順序點回來；每答對一次會多加一個。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-BO5BOsBh.js",
+      "size": 571173,
+      "sha256": "e8a687a53fbf0303ed94f575daed7dcf6707660bb8a69dbbfe012c43c38f7035",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DrCYXfmO.css",
+      "size": 22592,
+      "sha256": "b810fbee75fee414a86f0e8060b28dc72cb45cef617799f62a750439c691c79a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 497,
+      "sha256": "bce5dec392eb284f77d67ceab447e5b7b8eafb9baa9271876f12bd44cc4f739f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "4a13a9d21ab21201979d8e581805778b75f930b99707fd42d126852c91624174",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 6498,
+      "sha256": "cb4954afdb7f786b71ee96b3d87ca4db0a800460ae33ebd9c9eadf9ad5f6fd44",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "987bdfb252ffc311d9702b005022e3f913377a376aed47a18438653e8ccf35b5",
+  "approvedAt": "2026-11-26T13:20:25.982Z"
+}

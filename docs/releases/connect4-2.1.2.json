@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "connect4",
+  "version": "2.1.2",
+  "name": "四子棋",
+  "description": "與電腦輪流投入棋子，規劃四子連線，同時留意電腦的連線。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-gVG9-rUM.js",
+      "size": 570959,
+      "sha256": "5a30fa3f94d6b992ccdc31a95e419648e7ba39f1fe74066718020ff979170e4c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CttIO8nx.css",
+      "size": 21771,
+      "sha256": "40ba14e28e6e38dd92febd1b5e1455d2941a11b382613a9990732a2bc8cfc545",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 464,
+      "sha256": "514fa4fe265306ade8b3e3c7a4fb77e5136415fd2b7bc6b63740fe06570420ad",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 399,
+      "sha256": "bda30701560fa6bd54902df1d913e9b138d9f4f57a1f28d2881a1852468bafbc",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 22430,
+      "sha256": "f14cc8a2f8fb6e38df6b026587b7da551c807e836180445f533c133327d59263",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "8dda1e545ac97382e59d07f9876c208ada7bea4a20b88421c78c154ce7d6faab",
+  "approvedAt": "2026-11-26T12:52:13.540Z"
+}

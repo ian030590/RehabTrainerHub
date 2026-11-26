@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "antisaccade",
+  "version": "2.1.2",
+  "name": "反向眼跳抑制（Antisaccade）",
+  "description": "方塊在一側閃現時改看另一側，趁花紋蓋住前看出箭頭指向左、上或右，練習不被突然出現的東西拉走視線。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Ih0x921G.js",
+      "size": 572683,
+      "sha256": "33b42d49a994170957dbf5d61d35645153886a15cad431efeb28cbec5a3289e0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CC73KnXo.css",
+      "size": 21670,
+      "sha256": "51d04d412f6c555e4f7a4437a6c1a7b31ce8cb76ad3e3ff0d18ebb18b9718f3d",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 638,
+      "sha256": "b69e19c181355e457ff7bac56f6914ccb8524b8fa4e5766c7c56f7ceb3d4fb56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 425,
+      "sha256": "a5fb43d37074833e340b11a270d4b8aab1a1ed1d3c9578875e44c895c85971ae",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 3088,
+      "sha256": "e6c6d9203019802a9473b1b6e50faae2b8b09eed85c9694ea6196efa07c05e2e",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "28723ffe1835a9589b596d375643dcb6e9cf9646f0822fee17737b3233b3be2a",
+  "approvedAt": "2026-11-26T12:46:26.642Z"
+}

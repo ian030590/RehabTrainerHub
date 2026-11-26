@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "seagull-flight",
+  "version": "1.1.2",
+  "name": "海鷗飛行",
+  "description": "點頭拍翅、轉頭滑翔，帶著海鷗穿過左右圓環，練習頭部動作與視線注視。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "head-tracking",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "THIRD-PARTY-NOTICES.txt",
+      "size": 3682,
+      "sha256": "56cc5314d707dcf05d7d14996b8a098cf1fdbc53f19169d66a8dff2208ad7078",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BFFWSJLl.js",
+      "size": 1100517,
+      "sha256": "343408e562b8173ffd634bea33bc5583cc1420d6be1c98c592df6c859a77b578",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DXQRmvNO.css",
+      "size": 25444,
+      "sha256": "1794bbd3e195a9f1db1d53cd1db36a9eb9aa8de427d2b168e44fb1aacdd13989",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 515,
+      "sha256": "3aeae7d6b42e0fc876276617404235505ec2ecfd9d0040b107fb9d05d2c691ba",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 382,
+      "sha256": "4b7ff42d3a055d06c2acc631189e9c3001e63de46000ac32cccc418497545e6b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8448,
+      "sha256": "6a315c768079165416f816359e4f80b03496fb748c941dde358fbb1161f061a6",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "a11231ed141656eff4e2827ba62bbdb11e59a2b7ccdf22051aaeb89da62aef1d",
+  "approvedAt": "2026-11-26T13:19:39.721Z"
+}
